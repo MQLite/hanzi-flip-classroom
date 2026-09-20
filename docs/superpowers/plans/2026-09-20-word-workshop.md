@@ -50,11 +50,11 @@ markWorkshopCurrent(session, state, options) // session; wraps markCurrent, enfo
 collectedWords(session, state) // { word, teamId, questionId }[], correct records only
 ```
 
-- [ ] Write failing real tests for repeated characters, non-BMP Han, invalid bounds/missing target, teacher-accepted non-reference words, immutable settled drafts, single settlement and palette limits.
-- [ ] Run `npm test -- tests/workshop.test.js`; inspect failure from missing implementation.
-- [ ] Implement the exports above; reuse `markCurrent` and current question accessor from core.
-- [ ] Run `npm test`; expected all existing and new unit tests pass.
-- [ ] Report files and observed output; coordinator commits validated task changes.
+- [x] Write failing real tests for repeated characters, non-BMP Han, invalid bounds/missing target, teacher-accepted non-reference words, immutable settled drafts, single settlement and palette limits.
+- [x] Run `npm test -- tests/workshop.test.js`; inspect failure from missing implementation.
+- [x] Implement the exports above; reuse `markCurrent` and current question accessor from core.
+- [x] Run `npm test`; expected all existing and new unit tests pass.
+- [x] Report files and observed output; coordinator commits validated task changes.
 
 Representative independent expectations:
 
@@ -71,12 +71,12 @@ Files: create `src/workshop.js`, `src/workshop-scene.js`, `src/workshop.css`; mo
 
 View owns stable input DOM and word tile controls; main provides current session, draft state and callbacks. Renderer owns scene lifecycle only, exposes setActive, setSimple, update, reward, dispose. Scene update consumes word length and number of collected words, never changes scores.
 
-- [ ] Coordinator adds browser acceptance tests first and observes failure on the absent mode control.
-- [ ] Implement accessible mode buttons with exact names 识字翻翻乐 and 组词小工坊, per-mode state snapshots and current-scene dispatch.
-- [ ] Implement target, palette, word slots, input, undo/clear, reference/teacher judgment flow, collected words and summary. Preserve existing classroom control IDs and core behavior.
-- [ ] Implement locally modeled desk, tiles, conveyor with rollers, stamp and shelf, short add/reward animations, reduced motion, context-loss/simple fallback and explicit lifecycle.
-- [ ] Update main's keyboard handling for buttons, IME, dialog and input isolation; release/pause old scenes when switching.
-- [ ] Run `npm test`, `npm run test:ui`, `npm run build`. Visually check 1920×1080, 1280×720 and 390×844 and real animation with reduced motion disabled.
+- [x] Coordinator adds browser acceptance tests first and observes failure on the absent mode control.
+- [x] Implement accessible mode buttons with exact names 识字翻翻乐 and 组词小工坊, per-mode state snapshots and current-scene dispatch.
+- [x] Implement target, palette, word slots, input, undo/clear, reference/teacher judgment flow, collected words and summary. Preserve existing classroom control IDs and core behavior.
+- [x] Implement locally modeled desk, tiles, conveyor with rollers, stamp and shelf, short add/reward animations, reduced motion, context-loss/simple fallback and explicit lifecycle.
+- [x] Update main's keyboard handling for buttons, IME, dialog and input isolation; release/pause old scenes when switching.
+- [x] Run `npm test`, `npm run test:ui`, `npm run build`. Visually check 1920×1080, 1280×720 and 390×844 and real animation with reduced motion disabled.
 
 Browser contracts used by acceptance tests:
 
@@ -93,15 +93,28 @@ Keep common controls `#progress`, `#correct`, `#practice`, `#back`, `#next`, `#s
 
 Files: `tests/workshop-ui.spec.js`, `playwright.config.js` to include both UI suites; README and this plan/HANDOFF.
 
-- [ ] Add representative browser acceptance tests for full round and review, invalid/correct scoring, custom input, mode snapshot restoration, empty bank, layout and context fallback. Use existing real fixtures and real page state, no production test-only API.
-- [ ] Execute failing browser test before UI implementation; then the complete unit/browser/build commands after integration.
-- [ ] Capture and inspect real browser screenshots of workshop and reduced/simple variants; fix any actual obstruction or clipping.
-- [ ] Update README with mode use, generic models, independent in-memory progress, teacher semantic judgment and input limits.
-- [ ] Dispatch independent reviewer with approved spec, plan, current Git diff and tests. Fix important findings and rerun affected tests; report any unresolved limits truthfully.
-- [ ] Commit completed work on feature branch; preserve local worktree for access. No push or deploy.
+- [x] Add representative browser acceptance tests for full round and review, invalid/correct scoring, custom input, mode snapshot restoration, empty bank, layout and context fallback. Use existing real fixtures and real page state, no production test-only API.
+- [x] Execute failing browser test before UI implementation; then the complete unit/browser/build commands after integration.
+- [x] Capture and inspect real browser screenshots of workshop and reduced/simple variants; fix any actual obstruction or clipping.
+- [x] Update README with mode use, generic models, independent in-memory progress, teacher semantic judgment and input limits.
+- [x] Dispatch independent reviewer with approved spec, plan, current Git diff and tests. Fix important findings and rerun affected tests; report any unresolved limits truthfully.
+- [x] Commit completed work on feature branch; preserve local worktree for access. No push or deploy.
 
 ## Execution evidence
 
 - Baseline before implementation: `npm test` passed 28 tests in 4 files on original checkout. Clean Git baseline `45fe130`.
 - New worktree dependency setup: `npm ci` passed, 0 vulnerabilities reported.
 - Task progress and runtime routing evidence are recorded in `docs/codex/word-workshop/HANDOFF.md` (local ignored execution record).
+
+## Final validation
+
+- `npm test`: PASS, 46 tests in 5 files (2026-09-20 local).
+- `npm run test:ui`: PASS, 47 browser tests, 36.7 seconds. Includes both original classroom and workshop, real GPU context loss/restoration, focus/IME/keyboard, independent mode state, and projector layout regressions.
+- `npm run build`: PASS. Existing Three.js vendor chunk is 532.98 kB (132.67 kB gzip), generating the Vite 500 kB advisory; no new dependencies or raised warning threshold.
+- `git diff --check`: PASS.
+- Visual QA in the live in-app browser: 1920×1080, 1280×720,390×844; inspected target/word/reference/controls, detailed generic desk/conveyor/stamp/shelf, selected blocks and collected result. Short projection prioritizes readable text and reachable controls with a smaller scene.
+- Independent read-only native reviewer (fresh context) found two P2 bugs. Focused-button arrow navigation and GPU restoration were reproduced in failing regression tests, fixed, and passed the full suite. Re-review: both resolved; no remaining important findings.
+- Existing Space test now clicks the scene before using the global shortcut. Space on a focused button intentionally retains native button activation; test intent is preserved.
+- UI layout iterations removed tray/model and target/progress overlaps, then kept before/after-reveal primary buttons within both projector sizes.
+- Final source is retained on `feat/word-workshop` in the isolated worktree. No push, publication or deployment performed.
+- Route v2.3 native minimal-context dispatch requested Sol Medium for rules and Astra High for UI/review. Tools exposed requested target support but no actual model/effort execution metadata; ActualRoute remains UNVERIFIED. Review independence is confirmed by `fork_turns: none`.

@@ -1,7 +1,7 @@
 import { defineConfig } from "@playwright/test";
 export default defineConfig({
   testDir: "./tests",
-  testMatch: "ui.spec.js",
+  testMatch: /(?:^|[\\/])(?:workshop-)?ui\.spec\.js$/,
   timeout: 30000,
   fullyParallel: false,
   use: {

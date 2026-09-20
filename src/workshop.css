@@ -1,0 +1,145 @@
+.game-modes { display:flex; padding:4px; border:1px solid #d8dfcf; border-radius:12px; background:#edeee2; gap:3px; }
+.game-modes button { padding:9px 16px; font-size:13px; border-color:transparent; background:transparent; }
+.game-modes button[aria-pressed="true"] { background:#244e41; color:#fffaf0; box-shadow:0 3px 8px #244e4117; }
+.lesson-heading { flex-wrap:wrap; gap:12px; }
+.lesson-heading > p { margin-left:auto; margin-right:14px; }
+.workshop-mode .play-area { background:#e8eee1; }
+.workshop-mode .classroom { align-items:start; row-gap:0; }
+.workshop-mode .score-panel { grid-column:2; grid-row:1 / span 2; }
+.workshop-mode .game-controls { width:100%; grid-column:1; margin-top:12px; }
+#workshop { padding:48px 24px 0; }
+.workshop-topline { display:flex; align-items:center; gap:18px; }
+.workshop-target-card { min-width:86px; width:86px; height:92px; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#fffaf0; border:1px solid #e1c69c; border-radius:13px; box-shadow:3px 4px 0 #d9bc91; }
+#workshop-target { font-family:'KaiTi','STKaiti',serif; font-size:53px; line-height:1.15; font-weight:500; }
+#workshop-pinyin { font-size:17px; min-height:21px; }
+.workshop-topline h3 { font-size:23px; }
+.workshop-topline p { font-size:12px; margin-top:7px; color:#687b64; }
+.workshop-topline .eyebrow { font-size:10px; margin-bottom:6px; }
+.workshop-bench { position:relative; margin-top:4px; }
+#workshop-scene { height:300px; position:relative; }
+#workshop-scene canvas { display:block; width:100%; height:100%; }
+.workshop-word-wrap { position:relative; width:min(100%,530px); margin:0 auto; padding:6px 15px; border-radius:11px; background:#fffaf0ee; border:1px solid #d7c4a7; box-shadow:0 4px 12px #5e492419; text-align:center; pointer-events:none; }
+.workshop-word-wrap > span { display:block; font-size:10px; color:#7b785e; letter-spacing:2px; margin-bottom:3px; }
+#workshop-word { min-height:39px; font-family:'KaiTi','STKaiti',serif; font-size:34px; letter-spacing:6px; overflow-wrap:anywhere; line-height:1.25; }
+#workshop-word[data-empty="true"]::before { content:'□ □'; color:#b9b29b; }
+.workshop-edit { margin:12px 0 10px; }
+.workshop-palette-row { display:flex; align-items:center; gap:10px; justify-content:space-between; }
+#workshop-tiles { display:flex; flex-wrap:wrap; gap:7px; min-width:0; }
+#workshop-tiles button { width:44px; height:45px; padding:2px; font:27px 'KaiTi','STKaiti',serif; border:1px solid #ceb58d; background:#f8e8c9; border-radius:7px; box-shadow:0 3px 0 #bd9465; }
+#workshop-tiles .target-tile { background:#ffedba; border-color:#b88a40; }
+#workshop-tiles button:hover { background:#fff5d5; }
+.workshop-edit-actions { display:flex; gap:4px; flex-shrink:0; }
+.workshop-edit-actions button { padding:7px 8px; font-size:11px; background:#f5f5e9; }
+#workshop-palette-note { font-size:10px; color:#657961; line-height:1.5; margin-top:8px; }
+.workshop-input-row { display:grid; grid-template-columns:auto minmax(0,1fr); gap:4px 12px; align-items:center; margin-top:10px; }
+.workshop-input-row label { font-size:12px; }
+.workshop-input-row input { padding:8px 11px; font-size:16px; min-width:0; }
+#workshop-validation { grid-column:2; font-size:11px; line-height:1.5; color:#627b58; min-height:17px; }
+#workshop-validation.invalid { color:#9b552e; }
+#workshop-reference { margin-top:9px; padding:9px 12px; background:#faf7e9; border-left:3px solid #d7aa66; border-radius:5px; line-height:1.65; }
+#workshop-reference-words { font-size:19px; font-weight:600; }
+#workshop-reference-sentence { font-size:15px; }
+#workshop-reference small { font-size:11px; color:#796d53; }
+#workshop-status { min-height:420px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px; text-align:center; padding:20px 0 35px; }
+#workshop-status > p { font-size:14px; }
+#workshop-status > small { font-size:12px; }
+#workshop-collection-panel { padding:9px 0 18px; }
+#workshop-collection-panel h4 { font-size:13px; margin:0 0 10px; font-weight:500; }
+#workshop-collection-panel h4 span { color:#bb8c42; }
+#workshop-collection { display:flex; flex-wrap:wrap; gap:7px; }
+#workshop-collection small { font-size:11px; color:#7b866a; line-height:1.7; }
+.collected-word { font-size:16px; padding:5px 8px; border-radius:6px; background:#f2e7cd; color:#735531; overflow-wrap:anywhere; max-width:100%; }
+.workshop-simple-art { display:none; position:absolute; inset:18px 15% 35px; border:2px solid #d1b28a; border-radius:12px; background:repeating-linear-gradient(0deg,#eed8b5 0 31px,#dec099 32px,#eed8b5 33px); text-align:center; box-shadow:7px 9px 0 #b6956b; }
+.workshop-simple-art span { font-size:40px; color:#7e987b; letter-spacing:10px; }
+.workshop-simple-art i { display:block; margin:4px auto; width:70%; height:9px; border-radius:9px; background:#8eaa90; }
+.workshop-simple-art small { color:#795e3c; font-size:12px; }
+#workshop-scene[data-mode="simple"] .workshop-simple-art { display:block; }
+@media (min-width:1000px) and (min-height:801px) {
+  .workshop-mode .site-header { padding-top:20px; padding-bottom:20px; }
+  .workshop-mode main { padding-top:24px; }
+  .workshop-mode .lesson-heading { margin-bottom:16px; }
+  .workshop-mode #textbook-notice { padding:8px 12px; margin:6px 0 10px; font-size:12px; }
+  .workshop-mode #textbook-notice button { padding:5px 10px; margin:0 0 0 12px; }
+  #workshop { position:relative; }
+  .workshop-topline { position:absolute; left:24px; top:126px; width:300px; }
+  .workshop-topline h3 { font-size:19px; white-space:nowrap; }
+  .workshop-topline p { max-width:190px; line-height:1.7; }
+  #workshop-scene { width:calc(100% - 290px); margin-left:290px; }
+  .workshop-revealed .workshop-edit { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:5px 18px; align-items:start; }
+  .workshop-revealed .workshop-palette-row,
+  .workshop-revealed #workshop-palette-note,
+  .workshop-revealed .workshop-input-row { grid-column:1; margin-top:0; }
+  .workshop-revealed .workshop-palette-row { flex-wrap:wrap; }
+  .workshop-revealed #workshop-reference { grid-column:2; grid-row:1 / span 3; margin:0; height:100%; }
+}
+@media (min-width:1000px) and (max-height:800px) {
+  .workshop-mode .site-header { padding-top:5px; padding-bottom:5px; }
+  .workshop-mode .lesson-heading > div > .eyebrow { display:none; }
+  .workshop-mode .lesson-toolbar { padding-top:5px; padding-bottom:5px; }
+  .game-modes button { padding:7px 12px; }
+  .workshop-mode .lesson-heading > p { display:none; }
+  .workshop-mode #textbook-notice { padding:5px 12px; margin:4px 0 8px; font-size:11px; }
+  .workshop-mode #textbook-notice button { padding:4px 8px; margin:0 0 0 10px; }
+  #workshop { padding:32px 20px 0; position:relative; }
+  .workshop-topline { gap:12px; position:absolute; left:20px; top:52px; width:245px; z-index:1; }
+  .workshop-target-card { min-width:68px; width:68px; height:72px; }
+  #workshop-target { font-size:43px; }
+  #workshop-pinyin { font-size:15px; min-height:18px; }
+  .workshop-topline h3 { font-size:18px; white-space:nowrap; }
+  .workshop-topline p { display:none; }
+  .workshop-topline .eyebrow { display:none; }
+  #workshop-scene { height:130px; width:calc(100% - 230px); margin-left:230px; }
+  .workshop-word-wrap { width:min(100%,460px); padding:3px 10px; }
+  #workshop-word { font-size:30px; min-height:36px; }
+  .workshop-word-wrap > span { display:none; }
+  .workshop-edit { margin-top:8px; margin-bottom:5px; }
+  #workshop-tiles button { width:36px; height:36px; font-size:24px; }
+  #workshop-palette-note { margin-top:6px; }
+  .workshop-input-row { margin-top:5px; gap:2px 10px; }
+  .workshop-input-row input { padding:5px 9px; }
+  #workshop-reference { padding:4px 10px; margin-top:4px; line-height:1.4; }
+  #workshop-reference-words { font-size:18px; }
+  #workshop-reference-sentence { font-size:14px; }
+  #workshop-status { min-height:340px; }
+  .workshop-mode .stage-bottom { padding-bottom:8px; min-height:28px; }
+  .workshop-mode .game-controls { margin-top:9px; }
+  .workshop-revealed .workshop-edit { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:4px 14px; align-items:start; }
+  .workshop-revealed .workshop-palette-row,
+  .workshop-revealed #workshop-palette-note,
+  .workshop-revealed .workshop-input-row { grid-column:1; margin-top:0; }
+  .workshop-revealed .workshop-palette-row { flex-wrap:wrap; }
+  .workshop-revealed #workshop-reference { grid-column:2; grid-row:1 / span 3; margin:0; height:100%; }
+}
+@media (max-width:1000px) {
+  .lesson-heading > p { display:none; }
+  .workshop-topline h3 { font-size:18px; }
+  #workshop { padding-left:16px; padding-right:16px; }
+  .workshop-palette-row { flex-wrap:wrap; }
+  #workshop-scene { height:210px; }
+  #workshop-word { font-size:30px; letter-spacing:3px; }
+  .workshop-input-row { grid-template-columns:1fr; }
+  #workshop-validation { grid-column:1; }
+}
+@media (max-width:720px) {
+  .lesson-heading { gap:16px; }
+  .game-modes { width:100%; }
+  .game-modes button { flex:1; padding:9px 5px; }
+  .workshop-mode .classroom { gap:14px; }
+  .workshop-mode .game-controls { order:1; margin-top:0; }
+  .workshop-mode .score-panel { order:2; width:100%; }
+  #workshop { padding-top:44px; }
+  .workshop-target-card { min-width:68px; width:68px; height:80px; }
+  #workshop-target { font-size:45px; }
+  .workshop-topline { gap:12px; }
+  .workshop-topline h3 { font-size:18px; }
+  .workshop-topline p { font-size:11px; line-height:1.6; }
+  .workshop-topline .eyebrow { display:none; }
+  #workshop-scene { height:215px; }
+  #workshop-word { font-size:29px; letter-spacing:1px; }
+  .workshop-word-wrap { padding:7px 8px; }
+  .workshop-mode .stage-bottom { padding-left:16px; padding-right:16px; gap:8px; }
+  .workshop-mode #judgment-note { font-size:10px; }
+  #workshop-reference-words { font-size:19px; }
+  #workshop-reference-sentence { font-size:15px; }
+  .workshop-mode .play-area { width:100%; }
+}

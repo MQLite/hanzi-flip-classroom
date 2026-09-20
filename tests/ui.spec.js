@@ -19,6 +19,8 @@ test("classroom reveal, one settlement, back navigation and review", async ({
     page.getByRole("button", { name: "答对了", exact: true }),
   ).toBeDisabled();
   await page.getByRole("button", { name: "下一字", exact: true }).click();
+  // Global reveal applies outside buttons; Space on Next activates Next natively.
+  await page.locator("#scene").click();
   await page.keyboard.press("Space");
   await page.getByRole("button", { name: "再练一次", exact: true }).click();
   for (let i = 0; i < 7; i++)

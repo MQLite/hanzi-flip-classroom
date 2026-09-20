@@ -7,6 +7,8 @@ export function createClassroomScene(host, face, onFallback) {
     flipStart = 0,
     rewardUntil = 0,
     simple = false,
+    active = true,
+    disposed = false,
     contextAvailable = true;
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const scene = new THREE.Scene();
@@ -70,8 +72,9 @@ export function createClassroomScene(host, face, onFallback) {
     if (message) onFallback(message);
   }
   function resize() {
-    if (!renderer) return;
+    if (!renderer || disposed) return;
     const { width, height } = host.getBoundingClientRect();
+    if (!width || !height) return;
     card.scale.x = innerHeight <= 800 && width > 600 ? 1.5 : 1;
     blocks.forEach((block) => {
       block.position.x = block.userData.baseX * card.scale.x;
@@ -81,7 +84,7 @@ export function createClassroomScene(host, face, onFallback) {
     renderer.setSize(width, height, false);
   }
   function draw(t) {
-    if (simple || document.hidden) return;
+    if (simple || !active || disposed || document.hidden) return;
     let turn = 0;
     if (flipStart) {
       const p = Math.min((t - flipStart) / (reduced ? 1 : 650), 1);
@@ -118,11 +121,8 @@ export function createClassroomScene(host, face, onFallback) {
     renderer.domElement.setAttribute("aria-label", "立体汉字卡片与学习积木");
     host.prepend(renderer.domElement);
     host.dataset.mode = "webgl";
-    renderer.domElement.addEventListener("webglcontextlost", (event) => {
-      event.preventDefault();
-      contextAvailable = false;
-      fallback("立体显示暂不可用，已切换简化显示。");
-    });
+    renderer.domElement.addEventListener("webglcontextlost", contextLost);
+    renderer.domElement.addEventListener("webglcontextrestored", contextRestored);
     resize();
     frame = requestAnimationFrame(draw);
   } catch {
@@ -131,11 +131,31 @@ export function createClassroomScene(host, face, onFallback) {
   }
   const observer = new ResizeObserver(resize);
   observer.observe(host);
-  document.addEventListener("visibilitychange", () => {
+  function contextLost(event) {
+    event.preventDefault();
+    contextAvailable = false;
+    fallback("立体显示暂不可用，已切换简化显示。");
+  }
+  function contextRestored() {
+    contextAvailable = true;
+    // Keep the accessible view until the teacher explicitly returns to 3D.
+  }
+  function visibility() {
     cancelAnimationFrame(frame);
-    if (!document.hidden && !simple) frame = requestAnimationFrame(draw);
-  });
+    if (!document.hidden && !simple && active && !disposed) frame = requestAnimationFrame(draw);
+  }
+  document.addEventListener("visibilitychange", visibility);
   return {
+    setActive(value) {
+      active = value;
+      cancelAnimationFrame(frame);
+      flipStart = rewardUntil = 0;
+      card.rotation.y = 0;
+      face.style.transform = '';
+      face.style.opacity = '1';
+      face.getAnimations().forEach(animation => animation.cancel());
+      if (value) { resize(); visibility(); }
+    },
     flip() {
       flipStart = performance.now();
       if (simple && !reduced)
@@ -159,13 +179,26 @@ export function createClassroomScene(host, face, onFallback) {
         renderer.domElement.hidden = false;
         resize();
         cancelAnimationFrame(frame);
-        frame = requestAnimationFrame(draw);
+        if (active && !document.hidden && !disposed) frame = requestAnimationFrame(draw);
       } else onFallback("此设备暂不支持立体显示，请继续使用简化显示。");
     },
     dispose() {
+      disposed = true;
       cancelAnimationFrame(frame);
       observer.disconnect();
+      document.removeEventListener('visibilitychange', visibility);
+      renderer?.domElement.removeEventListener('webglcontextlost', contextLost);
+      renderer?.domElement.removeEventListener('webglcontextrestored', contextRestored);
+      const geometries = new Set(), materials = new Set();
+      scene.traverse(object => {
+        if(object.geometry) geometries.add(object.geometry);
+        if(object.material) (Array.isArray(object.material) ? object.material : [object.material]).forEach(material => materials.add(material));
+      });
+      geometries.forEach(geometry => geometry.dispose());
+      materials.forEach(material => material.dispose());
+      sun.shadow.dispose();
       renderer?.dispose();
+      renderer?.domElement.remove();
     },
   };
 }
