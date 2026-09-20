@@ -1,6 +1,6 @@
 import "./styles.css";
 import { DEFAULT_QUESTIONS } from "./data.js";
-import { COURSES, STAGES, TEXTBOOK_QUESTIONS, filterCurriculum, curriculumLabel, mergeTextbookQuestions } from './curriculum.js';
+import { coursesForTextbook, TEXTBOOK_ID, PARADISE_ID, PARADISE_QUESTIONS, STAGES, TEXTBOOK_QUESTIONS, filterCurriculum, curriculumLabel, mergeAllTextbookQuestions as mergeTextbookQuestions } from './curriculum.js';
 import {
   createSession,
   getCurrentQuestion,
@@ -38,12 +38,12 @@ $('.lesson-heading').insertAdjacentHTML('beforeend', '<nav class="game-modes" ar
 $('#scene').insertAdjacentHTML('afterend', '<div id="workshop" hidden></div>');
 $('.practice-box').insertAdjacentHTML('beforebegin', '<div id="workshop-collection-panel" hidden><h4>收集到的词语 <span>✦</span></h4><div id="workshop-collection" aria-live="polite"></div></div>');
 $('#help-dialog').insertAdjacentHTML('beforeend', '<p>活字组词工坊：备选栏中有参考词所需的活字，也有干扰字。按顺序点选 2–8 个活字，点击“融合印版”。与本题参考词匹配时，活字融合成一块印版、记 1 星并自动进入下一题；未匹配时活字散落归位，可以重试。点选已选活字可放回，也可撤回或清空。两种模式分别保留进度、小组和排字；刷新后课堂进度重置。</p>');
-const allDefaults = [...DEFAULT_QUESTIONS, ...TEXTBOOK_QUESTIONS];
-$('.teacher-badge').textContent = '中文乐园 · 课本1–3';
-$('.lesson-toolbar').insertAdjacentHTML('afterbegin', `<label class="curriculum-field">题库<select id="bank-source" aria-label="题库来源"><option value="textbook">中文乐园（新版）</option><option value="personal">个人 / 通用题库</option></select></label><label class="curriculum-field textbook-field">阶段<select id="stage" aria-label="学习阶段">${STAGES.map(s=>`<option>${s}</option>`).join('')}</select></label><label class="curriculum-field textbook-field">范围<select id="scope" aria-label="练习范围"><option value="stage">整个阶段</option><option value="lesson">本课</option><option value="cumulative">截至本课累计</option></select></label><label class="curriculum-field textbook-field">课次<select id="lesson" aria-label="选择课次"></select></label>`);
-$('.lesson-toolbar').insertAdjacentHTML('afterend', '<p id="curriculum-note" class="curriculum-note"></p><div id="textbook-notice" class="notice" hidden><span></span><button id="add-textbook">添加新版教材题库</button></div>');
+const allDefaults = [...DEFAULT_QUESTIONS, ...TEXTBOOK_QUESTIONS, ...PARADISE_QUESTIONS];
+$('.teacher-badge').textContent = '汉语乐园 · 1A–3B';
+$('.lesson-toolbar').insertAdjacentHTML('afterbegin', `<label class="curriculum-field">题库<select id="bank-source" aria-label="题库来源"><option value="paradise">汉语乐园（1A–3B）</option><option value="textbook">中文乐园（新版）</option><option value="personal">个人 / 通用题库</option></select></label><label class="curriculum-field textbook-field">阶段<select id="stage" aria-label="学习阶段">${STAGES.map(s=>`<option>${s}</option>`).join('')}</select></label><label class="curriculum-field textbook-field">范围<select id="scope" aria-label="练习范围"><option value="stage">整个阶段</option><option value="lesson">本课</option><option value="cumulative">截至本课累计</option></select></label><label class="curriculum-field textbook-field">课次<select id="lesson" aria-label="选择课次"></select></label>`);
+$('.lesson-toolbar').insertAdjacentHTML('afterend', '<p id="curriculum-note" class="curriculum-note"></p><div id="textbook-notice" class="notice" hidden><span></span><button id="add-textbook">补充教材题库</button></div>');
 $('#help-dialog .help-steps li').textContent = '选择教材阶段和练习范围，或切换到个人 / 通用题库按年级练习。';
-$('#help-dialog').insertAdjacentHTML('beforeend', '<p>新版《中文乐园》课本1–3：A为第1–6课，B为第7–12课。A/B是游戏学习阶段，不是出版社分册。教材字表按官方教学大纲；组词、读音语境和例句由本项目配编，可由老师修改。</p>');
+$('#help-dialog').insertAdjacentHTML('beforeend', '<p>《汉语乐园》按原书1A–3B分册：A为第1–6课，B为第7–12课。题目覆盖核心词汇中的汉字及学写字栏目；参考词优先采用本课教材词，补充例词和例句为配编。与新版题库分开选择。</p><p>新版《中文乐园》课本1–3：A为第1–6课，B为第7–12课。A/B是游戏学习阶段，不是出版社分册。教材字表按官方教学大纲；组词、读音语境和例句由本项目配编，可由老师修改。</p>');
 let toastTimer;
 function notify(message) {
   $("#toast").textContent = message;
@@ -77,23 +77,23 @@ let load = store.load(),
   showPinyin = true,
   extensionOpen = false,
   strokeCleanup = null;
-let selection = {source: bank.questions.some(q=>q.textbook) ? 'textbook' : 'personal', stage:'1A', scope:'stage', lesson:1};
+let selection = {source: bank.questions.some(q=>q.textbook === PARADISE_ID) ? 'paradise' : bank.questions.some(q=>q.textbook === TEXTBOOK_ID) ? 'textbook' : 'personal', stage:'1A', scope:'stage', lesson:1};
 function currentSession() {
-  const questions = selection.source === 'textbook'
-    ? filterCurriculum(bank.questions, selection)
+  const questions = selection.source !== 'personal'
+    ? filterCurriculum(bank.questions, {...selection, textbook: selection.source === 'paradise' ? PARADISE_ID : TEXTBOOK_ID})
     : bank.questions.filter(q=>!q.textbook);
   return createSession({questions, grade: selection.source === 'personal' ? grade : undefined, teamNames});
 }
 function refreshTextbookNotice() {
   const missing = mergeTextbookQuestions(bank.questions).length - bank.questions.length;
   $('#textbook-notice').hidden = !bankLoaded || missing === 0;
-  $('#textbook-notice span').textContent = `可补充 ${missing} 道新版《中文乐园》教材题，保留已有题目和修改。`;
+  $('#textbook-notice span').textContent = `可补充 ${missing} 道教材题（含《汉语乐园》1A–3B），保留已有题目和修改。`;
 }
 function syncSelection() {
   $('#bank-source').value = selection.source;
   $('#stage').value = selection.stage;
   $('#scope').value = selection.scope;
-  $('#lesson').replaceChildren(...COURSES.filter(c=>c.stage===selection.stage).map(c=>{
+  $('#lesson').replaceChildren(...coursesForTextbook(selection.source === 'paradise' ? PARADISE_ID : TEXTBOOK_ID).filter(c=>c.stage===selection.stage).map(c=>{
     const option = document.createElement('option');
     option.value = c.lesson;
     option.textContent = `第${c.lesson}课 ${c.title}`;
@@ -102,9 +102,11 @@ function syncSelection() {
   $('#lesson').value = selection.lesson;
   $('#lesson').disabled = selection.scope === 'stage';
   $('.grade-label').hidden = selection.source !== 'personal';
-  document.querySelectorAll('.textbook-field').forEach(e=>e.hidden=selection.source !== 'textbook');
-  $('#curriculum-note').textContent = selection.source === 'textbook'
-    ? `《中文乐园》课本1–3 · A/B为游戏分组（A：第1–6课，B：第7–12课） · ${selection.scope === 'cumulative' ? `课本1第1课至课本${selection.stage[0]}第${selection.lesson}课` : selection.scope === 'lesson' ? `${selection.stage} 第${selection.lesson}课` : `${selection.stage} 全阶段`} · 例词例句为配编`
+  document.querySelectorAll('.textbook-field').forEach(e=>e.hidden=selection.source === 'personal');
+  $('#curriculum-note').textContent = selection.source !== 'personal'
+    ? selection.source === 'paradise'
+      ? `《汉语乐园》${selection.stage} · 原书分册及课次 · ${selection.scope === 'cumulative' ? `1A第1课至${selection.stage}第${selection.lesson}课` : selection.scope === 'lesson' ? `第${selection.lesson}课` : '全册'} · 核心词汇识字与学写字 · 例句为配编`
+      : `《中文乐园》课本1–3 · A/B为游戏分组（A：第1–6课，B：第7–12课） · ${selection.scope === 'cumulative' ? `课本1第1课至课本${selection.stage[0]}第${selection.lesson}课` : selection.scope === 'lesson' ? `${selection.stage} 第${selection.lesson}课` : `${selection.stage} 全阶段`} · 例词例句为配编`
     : '个人 / 通用题库 · 年级为难度建议';
   refreshTextbookNotice();
 }
@@ -398,6 +400,7 @@ function render() {
     b.onclick = () => editor.open();
     face.append(b);
   }
+  scene.setCharacter(active ? q.character : null);
   $("#reveal").hidden = !active || revealed;
   $("#reveal").disabled = !active;
   $("#correct").hidden = !revealed;
@@ -503,7 +506,7 @@ for (const [id, key] of [['bank-source','source'],['stage','stage'],['scope','sc
     selection = {...selection, [key]:key === 'lesson' ? Number(event.target.value) : event.target.value};
     if (key === 'stage') selection.lesson = selection.stage.endsWith('A') ? 1 : 7;
     if (key === 'stage' || key === 'source') {
-      showPinyin = (selection.source === 'textbook' ? Number(selection.stage[0]) : grade) <= 2;
+      showPinyin = (selection.source !== 'personal' ? Number(selection.stage[0]) : grade) <= 2;
       $('#pinyin').checked = showPinyin;
     }
     syncSelection();
@@ -513,7 +516,7 @@ for (const [id, key] of [['bank-source','source'],['stage','stage'],['scope','sc
 $('#add-textbook').onclick = () => {
   if (!mayRestart()) return;
   editor.addTextbook(() => {
-    selection.source = 'textbook';
+    selection.source = 'paradise';
     syncSelection();
     newRound();
   });

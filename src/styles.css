@@ -1771,3 +1771,15 @@ dialog > label {
   #textbook-notice button { margin: 8px 0 0; }
   .curriculum-note { font-size: 10px; }
 }
+
+/* A grassy reading island surrounding the physical letter monument. */
+#scene { background: radial-gradient(ellipse at 45% 35%, #f4f5df, #cfdfc7); }
+#scene .stage-orbit, #scene .stage-spark, #scene .scene-caption { display: none; }
+#scene[data-mode="webgl"][data-glyph-state="ready"] .hanzi { color: transparent; text-shadow: none; }
+#scene .card-eyebrow { color: #806344; }
+#scene .card-prompt { color: #795f40; }
+#scene .pinyin { color: #476e57; }
+#scene .words span { background: #f7eddb; border: 1px solid #b3bd93; color: #354d3d; box-shadow: 0 3px 0 #98a77f; }
+#scene[data-mode="simple"] #card-face { background: #fff2d4; border-color: #9ead87; box-shadow: 7px 10px 0 #859971, 0 20px 35px #5e3b2526; }
+body:not(.workshop-mode) .play-area { border-color: #becfad; background: #e4edda; }
+body:not(.workshop-mode) .stage-top { color: #68573d; }

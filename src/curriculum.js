@@ -1,4 +1,6 @@
 import { CHARACTER_EXAMPLES } from './curriculum-examples.js'
+import { PARADISE_ID, PARADISE_COURSES, PARADISE_QUESTIONS } from './paradise.js'
+export { PARADISE_ID, PARADISE_COURSES, PARADISE_QUESTIONS }
 
 // Chinese Characters columns, publisher's public syllabi. See docs/curriculum-sources.md.
 export const TEXTBOOK_ID = 'chinese-paradise-2023'
@@ -39,23 +41,29 @@ export const TEXTBOOK_QUESTIONS = COURSES.flatMap(course => [...course.character
 }))
 
 export function curriculumCourse(question) {
-  if (question?.textbook !== TEXTBOOK_ID) return undefined
-  return COURSES.find(c => c.book === question.book && c.lesson === question.lesson && c.characters.includes(question.character))
+  return coursesForTextbook(question?.textbook).find(c => c.book === question.book && c.lesson === question.lesson && c.characters.includes(question.character))
+}
+
+export function coursesForTextbook(textbook) {
+  if (textbook === PARADISE_ID) return PARADISE_COURSES
+  if (textbook === TEXTBOOK_ID) return COURSES
+  return []
 }
 
 export function curriculumLabel(question) {
   const course = curriculumCourse(question)
-  return course ? `${course.stage} · 第${course.lesson}课 ${course.title}` : '个人 / 通用题库'
+  const name = question?.textbook === PARADISE_ID ? '汉语乐园' : '中文乐园（新版）'
+  return course ? `${name} · ${course.stage} · 第${course.lesson}课 ${course.title}` : '个人 / 通用题库'
 }
 
-export function filterCurriculum(questions, {stage, lesson, scope}) {
+export function filterCurriculum(questions, {stage, lesson, scope, textbook = TEXTBOOK_ID}) {
   if (!STAGES.includes(stage) || !['stage','lesson','cumulative'].includes(scope)) return []
   const book = Number(stage[0])
-  const selected = COURSES.find(c => c.stage === stage && c.lesson === lesson)
+  const selected = coursesForTextbook(textbook).find(c => c.stage === stage && c.lesson === lesson)
   if (scope !== 'stage' && !selected) return []
   return questions.filter(q => {
     const course = curriculumCourse(q)
-    if (!course) return false
+    if (!course || q.textbook !== textbook) return false
     if (scope === 'stage') return course.stage === stage
     if (scope === 'lesson') return course.book === book && course.lesson === lesson
     return course.book < book || (course.book === book && course.lesson <= lesson)
@@ -64,14 +72,18 @@ export function filterCurriculum(questions, {stage, lesson, scope}) {
 
 function identity(q) { return `${q.textbook}/${q.book}/${q.lesson}/${q.character}` }
 
-export function mergeTextbookQuestions(questions) {
+export function mergeTextbookQuestions(questions, additionsFrom = TEXTBOOK_QUESTIONS) {
   const existing = new Set(questions.map(identity))
   const ids = new Set(questions.map(q => q.id))
-  const additions = TEXTBOOK_QUESTIONS.filter(q => !existing.has(identity(q))).map(q => {
+  const additions = additionsFrom.filter(q => !existing.has(identity(q))).map(q => {
     let id = q.id
     while (ids.has(id)) id += '-added'
     ids.add(id)
     return {...q, id, words:[...q.words]}
   })
   return [...questions, ...additions]
+}
+
+export function mergeAllTextbookQuestions(questions) {
+  return mergeTextbookQuestions(questions, [...PARADISE_QUESTIONS, ...TEXTBOOK_QUESTIONS])
 }

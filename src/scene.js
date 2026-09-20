@@ -1,5 +1,6 @@
 import * as THREE from "three";
-import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+import { SVGLoader } from "three/addons/loaders/SVGLoader.js";
+import { createClassroomModel } from "./classroom-model.js";
 
 export function createClassroomScene(host, face, onFallback) {
   let renderer,
@@ -14,52 +15,71 @@ export function createClassroomScene(host, face, onFallback) {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
   camera.position.set(0, 0, 11);
-  const card = new THREE.Mesh(
-    new RoundedBoxGeometry(5.5, 5.35, 0.26, 4, 0.16),
-    new THREE.MeshStandardMaterial({ color: 0xfffcf1, roughness: 0.8 }),
-  );
-  card.castShadow = true;
-  scene.add(card);
-  const floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(40, 40),
-    new THREE.ShadowMaterial({ opacity: 0.12 }),
-  );
-  floor.position.z = -0.65;
-  floor.receiveShadow = true;
-  scene.add(floor);
-  scene.add(new THREE.AmbientLight(0xffffff, 2));
-  const sun = new THREE.DirectionalLight(0xfff6d9, 3.2);
-  sun.position.set(-4, 7, 8);
-  sun.castShadow = true;
-  sun.shadow.mapSize.set(1024, 1024);
-  scene.add(sun);
-  const blocks = [];
-  [
-    [-3.55, 1.7, 0.53, 0xe4a572],
-    [3.6, -1.35, 0.65, 0x6da894],
-    [-3.5, -1.9, 0.36, 0xf5d070],
-    [3.65, 2.05, 0.32, 0xa7c4ab],
-  ].forEach(([x, y, s, color], i) => {
-    const block = new THREE.Mesh(
-      new RoundedBoxGeometry(s, s, s, 3, 0.06),
-      new THREE.MeshStandardMaterial({ color, roughness: 0.55 }),
-    );
-    block.position.set(x, y, -0.2);
-    block.userData.baseX = x;
-    block.rotation.set(0.2, 0.3, 0.18 * (i % 2 ? 1 : -1));
-    block.castShadow = true;
-    scene.add(block);
-    blocks.push(block);
-  });
-  const stars = Array.from({ length: 10 }, (_, i) => {
-    const star = new THREE.Mesh(
-      new THREE.OctahedronGeometry(0.075),
-      new THREE.MeshStandardMaterial({ color: 0xf5b04e }),
-    );
-    star.visible = false;
-    scene.add(star);
-    return star;
-  });
+  const model = createClassroomModel(scene);
+  const { card, stars } = model;
+  scene.add(new THREE.HemisphereLight(0xfff3d9, 0x84988a, 2.2));
+  const sun = new THREE.DirectionalLight(0xffecd0, 3.1);
+  sun.position.set(-4, 7, 8); sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  Object.assign(sun.shadow.camera, {left:-12,right:12,top:10,bottom:-10});
+  sun.shadow.normalBias = .035; scene.add(sun);
+  let needsRender = true, wasAnimating = false;
+  let glyph = null, currentCharacter = null, glyphRequest = null;
+  function clearGlyph() {
+    if (!glyph) return;
+    card.remove(glyph);
+    glyph.traverse(o => o.geometry?.dispose());
+    glyph = null;
+  }
+  function positionModels() {
+    needsRender = true;
+    if (flipStart) return;
+    const bounds = host.getBoundingClientRect(), textBounds = face.getBoundingClientRect();
+    if (!bounds.height || !textBounds.height) return;
+    const units = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z / bounds.height;
+    model.resize(textBounds.width * units + .12, textBounds.height * units + .12, bounds.width * units);
+    const letter = face.querySelector('.hanzi');
+    if (glyph && letter) {
+      const r = letter.getBoundingClientRect();
+      const size = Math.min(r.width, r.height) * units * .91;
+      glyph.scale.set(size / 1024, size / 1024, 1);
+      glyph.position.set((r.left+r.width/2-bounds.left-bounds.width/2)*units,
+        -(r.top+r.height/2-bounds.top-bounds.height/2)*units, .26);
+      glyph.visible = true;
+      host.dataset.glyphState = 'ready';
+      renderer?.domElement.setAttribute('aria-label', `汉字奇遇岛，立体汉字：${currentCharacter}`);
+    }
+  }
+  async function setCharacter(character) {
+    if (character === currentCharacter) { if(!flipStart) positionModels(); return; }
+    currentCharacter = character;
+    needsRender = true;
+    glyphRequest?.abort(); clearGlyph();
+    host.dataset.glyphState = character ? 'loading' : 'empty';
+    renderer?.domElement.setAttribute('aria-label', '汉字奇遇岛');
+    if (!character) return;
+    const controller = new AbortController(); glyphRequest = controller;
+    try {
+      const response = await fetch(`${import.meta.env.BASE_URL}strokes/${encodeURIComponent(character)}.json`, {signal:controller.signal});
+      if (!response.ok) throw new Error('No stroke geometry');
+      const data = await response.json();
+      if (controller.signal.aborted || disposed) return;
+      if (!Array.isArray(data.strokes) || !data.strokes.length || !data.strokes.every(p=>typeof p==='string' && /^[Mm]/.test(p) && !/[<>"&]/.test(p))) throw new Error('Invalid stroke geometry');
+      const paths = new SVGLoader().parse(`<svg xmlns="http://www.w3.org/2000/svg">${data.strokes.map(d=>`<path d="${d}"/>`).join('')}</svg>`).paths;
+      const group = new THREE.Group();
+      for (const path of paths) for (const shape of path.toShapes()) {
+        const geometry = new THREE.ExtrudeGeometry(shape, {depth:.10,bevelEnabled:false,steps:1,curveSegments:8});
+        // Hanzi Writer coordinates run upward; align the standard 1024-unit em square.
+        geometry.translate(-512,-388,0);
+        const mesh = new THREE.Mesh(geometry,model.ink); mesh.castShadow=true; mesh.receiveShadow=true;group.add(mesh);
+      }
+      if (!group.children.length) throw new Error('Empty character');
+      glyph=group; glyph.visible=false; card.add(glyph); positionModels();
+    } catch(error) {
+      if(controller.signal.aborted || disposed) return;
+      clearGlyph(); host.dataset.glyphState='fallback';
+    }
+  }
   function fallback(message) {
     simple = true;
     host.dataset.mode = "simple";
@@ -75,29 +95,25 @@ export function createClassroomScene(host, face, onFallback) {
     if (!renderer || disposed) return;
     const { width, height } = host.getBoundingClientRect();
     if (!width || !height) return;
-    card.scale.x = innerHeight <= 800 && width > 600 ? 1.5 : 1;
-    blocks.forEach((block) => {
-      block.position.x = block.userData.baseX * card.scale.x;
-    });
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
     renderer.setSize(width, height, false);
+    if (!flipStart) positionModels();
   }
   function draw(t) {
     if (simple || !active || disposed || document.hidden) return;
+    const animating = Boolean(flipStart) || (!reduced && t < rewardUntil);
+    if (!needsRender && !animating && !wasAnimating) { frame = requestAnimationFrame(draw); return; }
+    wasAnimating = animating; needsRender = false;
     let turn = 0;
     if (flipStart) {
       const p = Math.min((t - flipStart) / (reduced ? 1 : 650), 1);
       turn = Math.sin(p * Math.PI) * Math.PI;
-      if (p === 1) flipStart = 0;
+      if (p === 1) { flipStart = 0; face.style.transform=""; positionModels(); }
     }
     card.rotation.y = turn;
     face.style.transform = `perspective(900px) rotateY(${turn > Math.PI / 2 ? turn - Math.PI : turn}rad)`;
     face.style.opacity = Math.abs(Math.cos(turn)) < 0.18 ? "0" : "1";
-    if (!reduced)
-      blocks.forEach((b, i) => {
-        b.rotation.y = 0.3 + Math.sin(t / 2400 + i) * 0.16;
-      });
     stars.forEach((s, i) => {
       s.visible = !reduced && t < rewardUntil;
       if (s.visible) {
@@ -107,7 +123,8 @@ export function createClassroomScene(host, face, onFallback) {
           Math.sin(i * 0.65) * p * 3,
           1,
         );
-        s.scale.setScalar(1 - p);
+        s.scale.setScalar((1 - p) * .14);
+        s.rotation.set(p*2,i+p*3,.15);
       }
     });
     renderer.render(scene, camera);
@@ -115,10 +132,12 @@ export function createClassroomScene(host, face, onFallback) {
   }
   try {
     renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.7));
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.1;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
-    renderer.domElement.setAttribute("aria-label", "立体汉字卡片与学习积木");
+    renderer.domElement.setAttribute("aria-label", "汉字奇遇岛");
     host.prepend(renderer.domElement);
     host.dataset.mode = "webgl";
     renderer.domElement.addEventListener("webglcontextlost", contextLost);
@@ -146,6 +165,7 @@ export function createClassroomScene(host, face, onFallback) {
   }
   document.addEventListener("visibilitychange", visibility);
   return {
+    setCharacter,
     setActive(value) {
       active = value;
       cancelAnimationFrame(frame);
@@ -186,6 +206,9 @@ export function createClassroomScene(host, face, onFallback) {
       disposed = true;
       cancelAnimationFrame(frame);
       observer.disconnect();
+      glyphRequest?.abort();
+      clearGlyph();
+      model.dispose();
       document.removeEventListener('visibilitychange', visibility);
       renderer?.domElement.removeEventListener('webglcontextlost', contextLost);
       renderer?.domElement.removeEventListener('webglcontextrestored', contextRestored);

@@ -1,5 +1,5 @@
 import { validateBank, previewImport, exportBank } from "./storage.js";
-import { STAGES, curriculumCourse, curriculumLabel, mergeTextbookQuestions } from './curriculum.js';
+import { STAGES, PARADISE_ID, TEXTBOOK_ID, curriculumCourse, curriculumLabel, mergeAllTextbookQuestions as mergeTextbookQuestions } from './curriculum.js';
 
 export function downloadText(
   text,
@@ -27,7 +27,7 @@ export function createEditor({ store, getBank, onBank, defaults, notify, canEdit
   const $ = (s) => dialog.querySelector(s),
     form = $("#question-form");
   $('.bank-toolbar').insertAdjacentHTML('beforeend', '<button id="append-textbook">补充缺失教材题</button>');
-  $('.bank-filters').insertAdjacentHTML('beforeend', `<select id="bank-stage" aria-label="筛选学习阶段"><option value="">全部来源</option><option value="personal">个人 / 通用</option>${STAGES.map(s=>`<option value="${s}">${s}</option>`).join('')}</select>`);
+  $('.bank-filters').insertAdjacentHTML('beforeend', `<select id="bank-stage" aria-label="筛选学习阶段"><option value="">全部来源</option><option value="personal">个人 / 通用</option>${STAGES.map(s=>`<option value="paradise:${s}">汉语乐园 ${s}</option>`).join('')}${STAGES.map(s=>`<option value="${s}">中文乐园（新版）${s}</option>`).join('')}</select>`);
   form.insertAdjacentHTML('afterbegin', '<p id="question-origin" class="muted"></p>');
   let selected = null,
     textbookAssignment = null,
@@ -62,7 +62,7 @@ export function createEditor({ store, getBank, onBank, defaults, notify, canEdit
     const items = getBank().questions.filter(
       (q) =>
         (!grade || q.grade === Number(grade)) &&
-        (!stage || (stage === 'personal' ? !q.textbook : curriculumCourse(q)?.stage === stage)) &&
+        (!stage || (stage === 'personal' ? !q.textbook : (q.textbook === (stage.startsWith('paradise:') ? PARADISE_ID : TEXTBOOK_ID) && curriculumCourse(q)?.stage === stage.replace('paradise:', '')))) &&
         [q.character, q.pinyin, ...q.words]
           .join(" ")
           .toLowerCase()
@@ -90,7 +90,7 @@ export function createEditor({ store, getBank, onBank, defaults, notify, canEdit
     invalidateImport();
     selected = q.id;
     textbookAssignment = q.textbook ? {textbook:q.textbook, book:q.book, lesson:q.lesson} : null;
-    $('#question-origin').textContent = curriculumLabel(q) + (q.textbook ? ' · 官方汉字范围；例词例句为配编，修改汉字或年级将移入个人题库。' : '');
+    $('#question-origin').textContent = curriculumLabel(q) + (q.textbook ? ' · 教材识字范围；参考词含教材词及配编词，例句为配编，修改汉字或年级将移入个人题库。' : '');
     dirty = false;
     pending = null;
     pendingSuccess = null;
@@ -241,7 +241,7 @@ export function createEditor({ store, getBank, onBank, defaults, notify, canEdit
     if (!mayLeave()) return;
     const questions = mergeTextbookQuestions(getBank().questions);
     const count = questions.length - getBank().questions.length;
-    if (!count) { notify('新版教材题已齐全，已有修改保持不变。'); onSuccess?.(); return; }
+    if (!count) { notify('教材题已齐全，已有修改保持不变。'); onSuccess?.(); return; }
     saveBank({schemaVersion:1, questions}, () => {
       reset();
       $('#bank-feedback').textContent = `已补充 ${count} 道教材题，已有题目和修改保持不变。`;

@@ -1,3 +1,5 @@
+import { PARADISE_QUESTIONS } from '../src/curriculum.js';
+const DEFAULT_BANK_SIZE = 156 + PARADISE_QUESTIONS.length;
 import { test, expect } from "@playwright/test";
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
@@ -71,7 +73,7 @@ test("import preview cancel and deliberate empty bank survive reload", async ({
   await page.locator("#import-file").setInputFiles(file);
   await expect(page.locator("#import-preview")).toContainText("共 0 题");
   await page.getByRole("button", { name: "取消替换" }).click();
-  await expect(page.locator(".question-row")).toHaveCount(156);
+  await expect(page.locator(".question-row")).toHaveCount(DEFAULT_BANK_SIZE);
   await page.locator("#import-file").setInputFiles(file);
   await page.getByRole("button", { name: "确认替换题库" }).click();
   await expect(page.locator(".question-row")).toHaveCount(0);
@@ -155,6 +157,7 @@ test("new question, metadata clear, and snapshot isolation", async ({
   await page.getByRole("button", { name: "关闭题库" }).click();
   await page.reload();
   await page.getByRole("button", { name: "题库管理", exact: true }).click();
+  await page.getByLabel("筛选学习阶段").selectOption("personal");
   await page.getByLabel("搜索汉字").fill("田");
   await expect(page.locator(".question-row")).toHaveCount(1);
 });
@@ -173,7 +176,7 @@ test("failed import retains original bank and offers export and retry outside fo
     buffer: Buffer.from('{"schemaVersion":1,"questions":[]}'),
   });
   await page.getByRole("button", { name: "确认替换题库" }).click();
-  await expect(page.locator(".question-row")).toHaveCount(156);
+  await expect(page.locator(".question-row")).toHaveCount(DEFAULT_BANK_SIZE);
   await expect(
     page.getByRole("button", { name: "导出待保存题库" }),
   ).toBeVisible();
@@ -194,6 +197,7 @@ test("grade change cancel preserves progress and grade defaults update hints", a
 });
 
 test('curriculum stage, lesson, cumulative selection and cancellation', async ({ page }) => {
+  await page.getByLabel('题库来源').selectOption('textbook');
   await expect(page.getByLabel('题库来源')).toHaveValue('textbook');
   await expect(page.locator('#curriculum-note')).toContainText('A/B为游戏分组');
   await page.getByLabel('练习范围').selectOption('lesson');
@@ -221,11 +225,11 @@ test('upgrading an old bank appends textbooks without replacing teacher work and
   });
   await page.reload();
   await expect(page.getByLabel('题库来源')).toHaveValue('personal');
-  await page.getByRole('button', {name:'添加新版教材题库', exact:true}).click();
-  await expect(page.getByLabel('题库来源')).toHaveValue('textbook');
+  await page.getByRole('button', {name:'补充教材题库', exact:true}).click();
+  await expect(page.getByLabel('题库来源')).toHaveValue('paradise');
   await page.reload();
   const bank = await page.evaluate(()=>JSON.parse(localStorage.getItem('hanzi-flip.question-bank')));
-  expect(bank.questions).toHaveLength(109);
+  expect(bank.questions).toHaveLength(109 + PARADISE_QUESTIONS.length);
   expect(bank.questions.find(q=>q.id==='teacher-one').sentence).toBe('老师自己的例句。');
   await page.getByRole('button', {name:'题库管理',exact:true}).click();
   await page.getByLabel('筛选学习阶段').selectOption('1A');
@@ -251,7 +255,7 @@ test('unreadable bank cannot be overwritten by appending textbooks or adding a q
   page.once('dialog', dialog=>dialog.accept());
   await page.locator('#restore-bank').click();
   await expect(append).toBeEnabled();
-  await expect(page.locator('.question-row')).toHaveCount(156);
+  await expect(page.locator('.question-row')).toHaveCount(DEFAULT_BANK_SIZE);
 });
 test("four teams and revealed card fit projector view", async ({ page }) => {
   await page.getByRole("button", { name: "小组设置" }).click();
@@ -372,7 +376,7 @@ test("invalid imported records identify their fields without changing bank", asy
   await expect(page.locator("#bank-feedback")).toContainText(
     "questions[0].pinyin",
   );
-  await expect(page.locator(".question-row")).toHaveCount(156);
+  await expect(page.locator(".question-row")).toHaveCount(DEFAULT_BANK_SIZE);
 });
 test("context loss keeps fallback when teacher attempts 3D again", async ({
   page,
@@ -443,7 +447,7 @@ test("a rejected second import invalidates the previous replacement preview", as
   await expect(page.getByRole("button", { name: "确认替换题库" })).toHaveCount(
     0,
   );
-  await expect(page.locator(".question-row")).toHaveCount(156);
+  await expect(page.locator(".question-row")).toHaveCount(DEFAULT_BANK_SIZE);
 });
 test("late stroke data cannot append an earlier glyph to the current panel", async ({
   page,
@@ -490,34 +494,30 @@ test("retrying a failed deletion completes the deletion form transition", async 
     () => (Storage.prototype.setItem = window.originalSetItem),
   );
   await page.getByRole("button", { name: "重试保存" }).click();
-  await expect(page.locator(".question-row")).toHaveCount(155);
+  await expect(page.locator(".question-row")).toHaveCount(DEFAULT_BANK_SIZE - 1);
   await expect(page.locator("#question-form")).toBeHidden();
   await page.locator("#close-editor").click();
   await page.reload();
   await page.locator("#open-bank").click();
-  await expect(page.locator(".question-row")).toHaveCount(155);
+  await expect(page.locator(".question-row")).toHaveCount(DEFAULT_BANK_SIZE - 1);
 });
 test("switching to simplified mode at the edge of a flip keeps the face visible", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.clock.install({ time: new Date("2026-01-01T00:00:00Z") });
   await page.reload();
-  await page.locator("#reveal").click();
-  await page.waitForFunction(
-    () => {
-      const face = document.querySelector("#card-face");
-      if (face.style.opacity === "0") {
-        document.querySelector("#simplify").click();
-        return true;
-      }
-      return false;
-    },
-    {},
-    { polling: "raf" },
-  );
+  await page.clock.pauseAt(new Date("2026-01-01T00:01:00Z"));
+  // Drive the edge frame deterministically: software WebGL can skip this brief
+  // opacity window at real-time frame rates.
+  await page.locator("#reveal").evaluate(button => button.click());
+  await page.clock.runFor(112);
+  await expect(page.locator("#card-face")).toHaveCSS("opacity", "0");
+  await page.locator("#simplify").evaluate(button => button.click());
   await expect(page.locator("#scene")).toHaveAttribute("data-mode", "simple");
   await expect(page.locator("#card-face")).toHaveCSS("opacity", "1");
 });
+
 test("an older asynchronous file read cannot revive its import preview", async ({
   page,
 }) => {
@@ -548,7 +548,7 @@ test("an older asynchronous file read cannot revive its import preview", async (
   await expect(page.getByRole("button", { name: "确认替换题库" })).toHaveCount(
     0,
   );
-  await expect(page.locator(".question-row")).toHaveCount(156);
+  await expect(page.locator(".question-row")).toHaveCount(DEFAULT_BANK_SIZE);
 });
 for (const action of [
   "invalid import",
@@ -611,14 +611,14 @@ for (const action of [
     await expect(page.locator("#export-pending")).toBeHidden();
     // An abandoned pending action must be disarmed, not merely visually hidden.
     await page.locator("#retry-save").evaluate((button) => button.click());
-    await expect(page.locator(".question-row")).toHaveCount(156);
+    await expect(page.locator(".question-row")).toHaveCount(DEFAULT_BANK_SIZE);
     expect(
       await page.evaluate(
         () =>
           JSON.parse(localStorage.getItem("hanzi-flip.question-bank")).questions
             .length,
       ),
-    ).toBe(156);
+    ).toBe(DEFAULT_BANK_SIZE);
     let prompted = false;
     page.once("dialog", async (dialog) => {
       prompted = true;
@@ -660,4 +660,83 @@ test("declining abandonment preserves a failed import for deliberate retry", asy
   await expect(page.getByRole("button", { name: "重试保存" })).toBeVisible();
   await page.getByRole("button", { name: "重试保存" }).click();
   await expect(page.locator(".question-row")).toHaveCount(0);
+});
+
+test('3D character follows the question and survives reveal and display switching', async ({page}) => {
+  await expect(page.locator('#scene')).toHaveAttribute('data-glyph-state','ready');
+  const first = await page.locator('#card-face .hanzi').textContent();
+  await expect(page.locator('#scene canvas')).toHaveAttribute('aria-label', `汉字奇遇岛，立体汉字：${first}`);
+  await page.getByRole('button',{name:'翻牌揭晓',exact:true}).click();
+  await expect(page.locator('#scene')).toHaveAttribute('data-glyph-state','ready');
+  await page.getByRole('button',{name:'简化显示',exact:true}).click();
+  await expect(page.locator('#card-face .hanzi')).toHaveCSS('color','rgb(35, 75, 60)');
+  await page.getByRole('button',{name:'立体显示',exact:true}).click();
+  await expect(page.locator('#scene')).toHaveAttribute('data-mode','webgl');
+  await page.getByRole('button',{name:'下一字',exact:true}).click();
+  const next = await page.locator('#card-face .hanzi').textContent();
+  await expect(page.locator('#scene canvas')).toHaveAttribute('aria-label', `汉字奇遇岛，立体汉字：${next}`);
+  await expect(page.locator('#scene')).toHaveAttribute('data-glyph-state','ready');
+});
+
+test('a glyph arriving during a flip waits for the unrotated layout', async ({page}) => {
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  let release;
+  await page.route('**/strokes/*.json', async route => {
+    const response=await route.fetch();
+    await new Promise(resolve=>{release=resolve;});
+    await route.fulfill({response}).catch(()=>{});
+  });
+  await page.reload();
+  await expect.poll(()=>Boolean(release)).toBe(true);
+  await page.locator('#reveal').click();
+  release();
+  await page.waitForTimeout(180);
+  await expect(page.locator('#scene')).toHaveAttribute('data-glyph-state','loading',{timeout:100});
+  await expect(page.locator('#scene')).toHaveAttribute('data-glyph-state','ready');
+});
+
+test('missing 3D glyph retains readable text and allows scoring', async ({page}) => {
+  await page.route('**/strokes/*.json',route=>route.fulfill({status:404,body:'missing'}));
+  await page.reload();
+  await expect(page.locator('#scene')).toHaveAttribute('data-glyph-state','fallback');
+  await expect(page.locator('#card-face .hanzi')).toHaveCSS('color','rgb(35, 75, 60)');
+  await page.locator('#reveal').click();await page.locator('#correct').click();
+  await expect(page.locator('[data-score="team-1"]')).toHaveText('1');
+});
+
+test('late 3D glyph cannot replace a newer question', async ({page}) => {
+  let release, firstUrl;
+  await page.route('**/strokes/*.json',async route=>{
+    const response=await route.fetch();
+    if(!firstUrl){firstUrl=route.request().url();await new Promise(resolve=>{release=resolve;});}
+    await route.fulfill({response}).catch(()=>{});
+  });
+  await page.reload();await expect.poll(()=>Boolean(release)).toBe(true);
+  await page.locator('#next').click();
+  const next=await page.locator('#card-face .hanzi').textContent();
+  await expect(page.locator('#scene')).toHaveAttribute('data-glyph-state','ready');
+  release();await page.waitForTimeout(100);
+  await expect(page.locator('#scene canvas')).toHaveAttribute('aria-label',`汉字奇遇岛，立体汉字：${next}`);
+});
+
+test('PDF bank is the default, preserves actual lessons, and works in both modes', async ({page}) => {
+  await expect(page.getByLabel('题库来源')).toHaveValue('paradise');
+  await expect(page.locator('#curriculum-note')).toContainText('原书分册及课次');
+  await page.getByLabel('练习范围').selectOption('lesson');
+  const first = PARADISE_QUESTIONS.filter(q => q.book === 1 && q.lesson === 1);
+  expect(first.map(q => q.character)).toContain(await page.locator('.hanzi').textContent());
+  await page.getByRole('button', {name:'组词小工坊', exact:true}).click();
+  await expect(page.locator('#workshop-target')).toBeVisible();
+  const target = await page.locator('#workshop-target').textContent();
+  const answer = first.find(q => q.character === target).words[0];
+  for (const character of answer) {
+    await page.locator('#workshop-tiles button:not([aria-pressed="true"])').filter({hasText:new RegExp(`^${character}$`)}).first().click();
+  }
+  await page.getByRole('button', {name:'融合印版', exact:true}).click();
+  await expect(page.locator('#workshop-collection')).toContainText(answer);
+  await page.getByRole('button', {name:'题库管理', exact:true}).click();
+  await page.getByLabel('筛选学习阶段').selectOption('paradise:3B');
+  await expect(page.locator('.question-row')).toHaveCount(PARADISE_QUESTIONS.filter(q => q.book === 3 && q.lesson >= 7).length);
+  await page.locator('.question-row').first().click();
+  await expect(page.locator('#question-origin')).toContainText('汉语乐园');
 });

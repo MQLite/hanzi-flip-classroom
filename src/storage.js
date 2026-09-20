@@ -77,7 +77,7 @@ export function validateBank(input) {
     }
     const hasCurriculum = ['textbook', 'book', 'lesson'].some(key => question[key] !== undefined)
     if (hasCurriculum && (!curriculumCourse(question) || question.grade !== question.book)) {
-      errors.push(issue(`${base}.textbook`, 'invalid-curriculum', '教材归属必须对应新版《中文乐园》1–3册的实际课次、汉字和级别。'))
+      errors.push(issue(`${base}.textbook`, 'invalid-curriculum', '教材归属必须对应所选教材版本的实际课次、汉字和级别。'))
     }
     if (typeof question.character === 'string' && !/^\p{Script=Han}$/u.test(question.character)) {
       errors.push(issue(`${base}.character`, 'invalid-character', 'character 必须是单个汉字。'))

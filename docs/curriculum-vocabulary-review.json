@@ -1,0 +1,82 @@
+{
+  "textbook": "chinese-paradise-2023",
+  "reviewedAt": "2026-09-20",
+  "status": "partial-source-review-not-imported",
+  "scope": "Vocabulary boxes in Let's learn and Let's talk; excludes inferred vocabulary and words from other editions.",
+  "lessons": [
+    {
+      "book": 1,
+      "lesson": 2,
+      "title": "我叫明明",
+      "isbn": "9787561964279",
+      "source": "https://www.blcup.com/cpn/viewRes?id=6468",
+      "pdf": "https://cpnfile.blcup.com/ElpgRes202507/6276f035-d410-4816-98fa-6d73842869421.pdf",
+      "vocabulary": [
+        {"word": "叫", "pinyin": "jiào", "page": 8, "section": "Let's learn"},
+        {"word": "什么", "pinyin": "shén me", "page": 8, "section": "Let's learn"},
+        {"word": "名字", "pinyin": "míng zi", "page": 8, "section": "Let's learn"},
+        {"word": "我", "pinyin": "wǒ", "page": 8, "section": "Let's learn"},
+        {"word": "他", "pinyin": "tā", "page": 9, "section": "Let's learn"},
+        {"word": "她", "pinyin": "tā", "page": 9, "section": "Let's learn"},
+        {"word": "它", "pinyin": "tā", "page": 9, "section": "Let's learn"}
+      ]
+    },
+    {
+      "book": 2,
+      "lesson": 3,
+      "title": "这是谁的毛衣",
+      "isbn": "9787561965108",
+      "source": "https://www.blcup.com/cpn/viewRes?id=6469",
+      "pdf": "https://cpnfile.blcup.com/ElpgRes202603/8a5af8d3-6142-40d0-8308-d517e5d04113.pdf",
+      "vocabulary": [
+        {"word": "谁的", "pinyin": "shéi de", "page": 16, "section": "Let's learn"},
+        {"word": "毛衣", "pinyin": "máo yī", "page": 16, "section": "Let's learn"},
+        {"word": "帽子", "pinyin": "mào zi", "page": 16, "section": "Let's learn"},
+        {"word": "外套", "pinyin": "wài tào", "page": 17, "section": "Let's learn"},
+        {"word": "裙子", "pinyin": "qún zi", "page": 17, "section": "Let's learn"},
+        {"word": "裤子", "pinyin": "kù zi", "page": 17, "section": "Let's learn"},
+        {"word": "袜子", "pinyin": "wà zi", "page": 17, "section": "Let's learn"},
+        {"word": "鞋", "pinyin": "xié", "page": 17, "section": "Let's learn"},
+        {"word": "手套", "pinyin": "shǒu tào", "page": 17, "section": "Let's learn"},
+        {"word": "T恤", "pinyin": "T xù", "page": 20, "section": "Let's talk"},
+        {"word": "短裤", "pinyin": "duǎn kù", "page": 20, "section": "Let's talk"},
+        {"word": "眼镜", "pinyin": "yǎn jìng", "page": 20, "section": "Let's talk"},
+        {"word": "墨镜", "pinyin": "mò jìng", "page": 20, "section": "Let's talk"}
+      ]
+    },
+    {
+      "book": 3,
+      "lesson": 2,
+      "title": "我想当音乐家",
+      "isbn": "9787561966303",
+      "source": "https://www.blcup.com/cpn/viewRes?id=6472",
+      "pdf": "https://cpnfile.blcup.com/ElpgRes202603/7e30dd73-8c8b-410f-9538-7682518a94ce.pdf",
+      "vocabulary": [
+        {"word": "想", "pinyin": "xiǎng", "page": 8, "section": "Let's learn"},
+        {"word": "当", "pinyin": "dāng", "page": 8, "section": "Let's learn"},
+        {"word": "警察", "pinyin": "jǐng chá", "page": 8, "section": "Let's learn"},
+        {"word": "为什么", "pinyin": "wèi shén me", "page": 8, "section": "Let's learn"},
+        {"word": "音乐家", "pinyin": "yīn yuè jiā", "page": 8, "section": "Let's learn"},
+        {"word": "画家", "pinyin": "huà jiā", "page": 9, "section": "Let's learn"},
+        {"word": "作家", "pinyin": "zuò jiā", "page": 9, "section": "Let's learn"},
+        {"word": "演员", "pinyin": "yǎn yuán", "page": 9, "section": "Let's learn"},
+        {"word": "运动员", "pinyin": "yùn dòng yuán", "page": 9, "section": "Let's learn"},
+        {"word": "记者", "pinyin": "jì zhě", "page": 12, "section": "Let's talk"},
+        {"word": "导演", "pinyin": "dǎo yǎn", "page": 12, "section": "Let's talk"},
+        {"word": "科学家", "pinyin": "kē xué jiā", "page": 12, "section": "Let's talk"},
+        {"word": "飞行员", "pinyin": "fēi xíng yuán", "page": 12, "section": "Let's talk"}
+      ]
+    }
+  ],
+  "missingLessons": {
+    "1": [1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    "2": [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    "3": [1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+  },
+  "notes": [
+    "Pinyin records the printed word pronunciation; derive character readings in context, preserving polyphonic readings and light-tone explanations.",
+    "T in T恤 is a Latin letter and must not become a Han-character card.",
+    "Publisher public sample PDFs do not contain the complete New Words appendix. Full lesson vocabulary requires textbook pages or authorized resource access.",
+    "This review file is not a complete vocabulary corpus and is not imported by the game."
+  ]
+}
