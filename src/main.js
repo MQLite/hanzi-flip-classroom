@@ -83,6 +83,7 @@ let load = store.load(),
   showPinyin = true,
   extensionOpen = false,
   strokeCleanup = null;
+let cardStrokeKey = null, cardStrokeView = null, cardStrokeCleanup = null;
 let selection = {source: bank.questions.some(q=>q.textbook === PARADISE_ID) ? 'paradise' : bank.questions.some(q=>q.textbook === TEXTBOOK_ID) ? 'textbook' : 'personal', stage:'1A', scope:'stage', lesson:1};
 let gameMode = 'flip', workshopState = null;
 function currentSession() {
@@ -390,6 +391,12 @@ function render() {
     trainView.update(session);return;
   }
   const face = $("#card-face");
+  $('#pinyin').closest('label').hidden = gameMode === 'flip';
+  const writingKey = active && revealed && gameMode === 'flip' ? JSON.stringify([q.id,q.character,q.strokeCount,q.radical]) : null;
+  if (writingKey !== cardStrokeKey) {
+    cardStrokeCleanup?.();
+    cardStrokeCleanup = null; cardStrokeView = null; cardStrokeKey = writingKey;
+  }
   face.className = revealed ? "revealed" : "";
   face.replaceChildren();
   if (active) {
@@ -400,8 +407,15 @@ function render() {
         "card-eyebrow",
       ),
     );
-    if (showPinyin || revealed) face.append(el("div", q.pinyin, "pinyin"));
-    face.append(el("div", q.character, "hanzi"));
+    if (revealed || (gameMode !== 'flip' && showPinyin)) face.append(el("div", q.pinyin, "pinyin"));
+    if (writingKey) {
+      if (!cardStrokeView) {
+        cardStrokeView = el('div', undefined, 'hanzi hanzi-writing');
+        cardStrokeView.id = 'card-strokes';
+        cardStrokeCleanup = mountStrokes(cardStrokeView, q, {inline:true, autoplay:true, delay:matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 700});
+      }
+      face.append(cardStrokeView);
+    } else face.append(el("div", q.character, "hanzi"));
     if (revealed) {
       const words = el("div", undefined, "words");
       q.words.forEach((word) => words.append(el("span", word)));
@@ -447,7 +461,7 @@ function render() {
     b.onclick = () => editor.open();
     face.append(b);
   }
-  scene.setCharacter(active ? q.character : null);
+  scene.setCharacter(active && !writingKey ? q.character : null);
   $("#reveal").hidden = !active || revealed;
   $("#reveal").disabled = !active;
   $("#correct").hidden = !revealed;

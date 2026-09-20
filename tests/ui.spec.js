@@ -331,7 +331,7 @@ test("missing and mismatched stroke data provide textual fallback", async ({
       status: 200,
       contentType: "application/json",
       body: JSON.stringify({
-        strokes: ["a"],
+        strokes: ["M0 0 L1 1 Z"],
         medians: [
           [
             [0, 0],
@@ -472,7 +472,7 @@ test("late stroke data cannot append an earlier glyph to the current panel", asy
   // Wait for the released fetch and JSON continuation to run before counting diagrams.
   await page.waitForTimeout(100);
   await expect(page.locator("#stroke-target")).toHaveCount(1);
-  await expect(page.locator(".stroke-controls")).toHaveCount(1);
+  await expect(page.locator("#extension .stroke-controls")).toHaveCount(1);
 });
 test("retrying a failed deletion completes the deletion form transition", async ({
   page,
@@ -659,14 +659,15 @@ test("declining abandonment preserves a failed import for deliberate retry", asy
   await expect(page.locator(".question-row")).toHaveCount(0);
 });
 
-test('3D character follows the question and survives reveal and display switching', async ({page}) => {
+test('3D question becomes stroke writing on reveal and survives display switching', async ({page}) => {
   await expect(page.locator('#scene')).toHaveAttribute('data-glyph-state','ready');
   const first = await page.locator('#card-face .hanzi').textContent();
   await expect(page.locator('#scene canvas')).toHaveAttribute('aria-label', `汉字奇遇岛，立体汉字：${first}`);
   await page.getByRole('button',{name:'翻牌揭晓',exact:true}).click();
-  await expect(page.locator('#scene')).toHaveAttribute('data-glyph-state','ready');
+  await expect(page.locator('#scene')).toHaveAttribute('data-glyph-state','empty');
+  await expect(page.locator('#card-stroke-target svg')).toBeVisible();
   await page.getByRole('button',{name:'简化显示',exact:true}).click();
-  await expect(page.locator('#card-face .hanzi')).toHaveCSS('color','rgb(35, 75, 60)');
+  await expect(page.locator('#card-stroke-target svg')).toBeVisible();
   await page.getByRole('button',{name:'立体显示',exact:true}).click();
   await expect(page.locator('#scene')).toHaveAttribute('data-mode','webgl');
   await page.getByRole('button',{name:'下一字',exact:true}).click();
@@ -675,21 +676,20 @@ test('3D character follows the question and survives reveal and display switchin
   await expect(page.locator('#scene')).toHaveAttribute('data-glyph-state','ready');
 });
 
-test('a glyph arriving during a flip waits for the unrotated layout', async ({page}) => {
+test('a late 3D question glyph cannot cover stroke writing after reveal', async ({page}) => {
   await page.emulateMedia({reducedMotion:'no-preference'});
-  let release;
+  let release, held=false;
   await page.route('**/strokes/*.json', async route => {
     const response=await route.fetch();
-    await new Promise(resolve=>{release=resolve;});
+    if(!held) { held=true; await new Promise(resolve=>{release=resolve;}); }
     await route.fulfill({response}).catch(()=>{});
   });
   await page.reload();
   await expect.poll(()=>Boolean(release)).toBe(true);
-  await page.locator('#reveal').click();
-  release();
-  await page.waitForTimeout(180);
-  await expect(page.locator('#scene')).toHaveAttribute('data-glyph-state','loading',{timeout:100});
-  await expect(page.locator('#scene')).toHaveAttribute('data-glyph-state','ready');
+  await page.locator('#reveal').click(); release();
+  await expect(page.locator('#card-stroke-target svg')).toBeVisible();
+  await expect(page.locator('#scene')).toHaveAttribute('data-glyph-state','empty');
+  await expect(page.locator('#card-strokes')).toHaveAttribute('data-stroke-state',/playing|complete/);
 });
 
 test('missing 3D glyph retains readable text and allows scoring', async ({page}) => {
@@ -797,4 +797,102 @@ test('last island answer completes the round with reduced motion',async({page})=
   await expect(page.getByText('这一轮，真棒！',{exact:true})).toBeVisible();
   await expect(page.locator('[data-score="team-1"]')).toHaveText('1');
   await expect(page.locator('#scene')).toHaveAttribute('data-journey','idle');
+});
+
+
+test('stone hides question pinyin and autoplays stroke writing only after reveal', async ({page})=>{
+  await expect(page.locator('#card-face .pinyin')).toHaveCount(0);
+  await expect(page.locator('#pinyin').locator('..')).toBeHidden();
+  await expect(page.locator('#card-strokes')).toHaveCount(0);
+  await page.locator('#reveal').click();
+  await expect(page.locator('#card-face .pinyin')).toBeVisible();
+  await expect(page.locator('#card-stroke-target svg')).toBeVisible();
+  await expect(page.locator('#card-strokes')).toHaveAttribute('data-stroke-state',/playing|complete/);
+  await expect(page.locator('#scene')).toHaveAttribute('data-glyph-state','empty');
+  await expect(page.locator('#extension')).toBeHidden();
+  await page.getByRole('button',{name:'重播笔顺',exact:true}).click();
+  await expect(page.locator('#card-strokes')).toHaveAttribute('data-stroke-state','playing');
+  await page.locator('#next').click();
+  await expect(page.locator('#card-strokes')).toHaveCount(0);
+  await expect(page.locator('#card-face .pinyin')).toHaveCount(0);
+  await expect(page.locator('#scene')).toHaveAttribute('data-glyph-state','ready');
+});
+
+test('stone stroke animation is preserved when extension is toggled and cleared on mode switch', async ({page})=>{
+  await page.locator('#reveal').click();
+  await expect(page.locator('#card-stroke-target svg')).toBeVisible();
+  await page.locator('#card-stroke-target svg').evaluate(svg=>svg.dataset.preserved='yes');
+  await page.locator('#extension-toggle').click();
+  await expect(page.locator('#card-stroke-target svg')).toHaveAttribute('data-preserved','yes');
+  await expect(page.locator('#stroke-target svg')).toBeVisible();
+  await page.locator('#mode-workshop').click();
+  await expect(page.locator('#card-strokes')).toHaveCount(0);
+  await expect(page.locator('#pinyin').locator('..')).toBeVisible();
+  await page.locator('#mode-flip').click();
+  await expect(page.locator('#card-stroke-target svg')).toBeVisible();
+});
+
+test('stone keeps a readable character when stroke data is missing', async ({page})=>{
+  await page.route('**/strokes/*.json',route=>route.fulfill({status:404,body:'missing'}));
+  await page.reload(); const character=await page.locator('#card-face .hanzi').textContent();
+  await page.locator('#reveal').click();
+  await expect(page.locator('#card-stroke-fallback')).toHaveText(character);
+  await expect(page.locator('#card-stroke-fallback')).toBeVisible();
+  await expect(page.locator('#card-strokes')).toHaveAttribute('data-stroke-state','fallback');
+  await page.locator('#correct').click();
+  await expect(page.locator('#progress')).toHaveText('02 / 08');
+});
+
+test('a late stone writing response cannot return after navigating away', async ({page})=>{
+  let release;
+  await page.route('**/strokes/*.json',async route=>{
+    const response=await route.fetch();
+    if(await page.locator('#card-strokes').count()) await new Promise(resolve=>{release=resolve;});
+    await route.fulfill({response}).catch(()=>{});
+  });
+  await page.reload(); await expect(page.locator('#scene')).toHaveAttribute('data-glyph-state','ready');
+  await page.locator('#reveal').click();await expect.poll(()=>Boolean(release)).toBe(true);
+  await page.locator('#next').click();release();
+  await expect(page.locator('#scene')).toHaveAttribute('data-glyph-state','ready');
+  await expect(page.locator('#card-strokes')).toHaveCount(0);
+  await expect(page.locator('#card-face .pinyin')).toHaveCount(0);
+});
+
+
+test('stone writing releases document listeners when leaving a question', async ({page})=>{
+  await page.addInitScript(()=>{
+    const add=document.addEventListener.bind(document), remove=document.removeEventListener.bind(document);
+    const listeners={mouseup:new Set(),touchend:new Set()};
+    document.addEventListener=(type,fn,...rest)=>{listeners[type]?.add(fn);return add(type,fn,...rest);};
+    document.removeEventListener=(type,fn,...rest)=>{listeners[type]?.delete(fn);return remove(type,fn,...rest);};
+    window.pointerListenerCount=()=>listeners.mouseup.size+listeners.touchend.size;
+  });
+  await page.reload(); const before=await page.evaluate(()=>pointerListenerCount());
+  await page.locator('#reveal').click();await expect(page.locator('#card-stroke-target svg')).toBeVisible();
+  await page.locator('#next').click();
+  await expect.poll(()=>page.evaluate(()=>pointerListenerCount())).toBe(before);
+});
+
+test('invalid local stroke geometry keeps the original character readable',async({page})=>{
+  const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  await page.route('**/strokes/*.json',route=>route.fulfill({contentType:'application/json',body:JSON.stringify({strokes:['M0 0 L10 10 Z'],medians:[]})}));
+  await page.reload();await page.locator('#reveal').click();
+  await expect(page.locator('#card-strokes')).toHaveAttribute('data-stroke-state','fallback');
+  await expect(page.locator('#card-stroke-fallback')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+
+test('failed writer initialization does not rethrow during navigation cleanup',async({page})=>{
+  const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  await page.route('**/strokes/*.json',async route=>{
+    const response=await route.fetch();const data=await response.json();data.radStrokes={};
+    await route.fulfill({contentType:'application/json',body:JSON.stringify(data)});
+  });
+  await page.reload();await page.locator('#reveal').click();
+  await expect(page.locator('#card-strokes')).toHaveAttribute('data-stroke-state','fallback');
+  await expect(page.locator('#card-stroke-fallback')).toBeVisible();
+  await page.locator('#next').click();
+  await expect(page.locator('#progress')).toHaveText('02 / 08');
+  expect(errors).toEqual([]);
 });
