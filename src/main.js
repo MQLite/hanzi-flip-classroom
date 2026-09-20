@@ -1,4 +1,8 @@
 import "./styles.css";
+import './sentence-train.css';
+import {createTrainView} from './sentence-train.js';
+import {resolveTrainQuestion} from './sentence-train-data.js';
+import {createTrainSession,toggleTrainTile,undoTrainTile,clearTrainSelection,checkTrainAnswer,acceptTrainAnswer,revealTrainAnswer,markTrainPractice,nextTrainQuestion,previousTrainQuestion,startTrainPractice,finishTrainDeparture,getTrainScores} from './sentence-train-core.js';
 import { DEFAULT_QUESTIONS } from "./data.js";
 import { coursesForTextbook, TEXTBOOK_ID, PARADISE_ID, PARADISE_QUESTIONS, STAGES, TEXTBOOK_QUESTIONS, filterCurriculum, curriculumLabel, mergeAllTextbookQuestions as mergeTextbookQuestions } from './curriculum.js';
 import {
@@ -34,10 +38,12 @@ app.innerHTML = `<header class="site-header"><a class="brand" href="./" aria-lab
 <dialog id="settings-dialog" aria-labelledby="settings-title"><div class="dialog-heading"><div><span class="eyebrow">OUR LITTLE TEAMS</span><h2 id="settings-title">为小组起个名字</h2></div><button class="close-dialog icon-button" aria-label="关闭小组设置">×</button></div><p>应用设置会开始新一轮，清空本轮得分。</p><label>小组数量<select id="team-count"><option value="2">2 个小组</option><option value="3">3 个小组</option><option value="4">4 个小组</option></select></label><div id="team-fields"></div><button id="apply-teams" class="primary">应用并开始新一轮</button></dialog>
 <dialog id="help-dialog" aria-labelledby="help-title"><div class="dialog-heading"><h2 id="help-title">欢迎来到汉字奇遇岛</h2><button class="close-dialog icon-button" aria-label="关闭帮助">×</button></div><ol class="help-steps"><li>选择年级，认读屏幕上的汉字。</li><li>翻牌揭晓拼音、组词和例句。</li><li>选中小组，再点“答对了”，就会沿踏石走到下一座小岛，自动换字；想巩固的字点“再练一次”。每字只结算一次。</li><li>一轮结束后，带着需要巩固的字再出发。</li></ol><p>跳过的字记为未作答；回看不会重复加分。多音字按照本题例句判断，其他读音也可能正确。</p><p>题库自动保存在此设备的此浏览器中，请定期导出备份。课堂得分、小组和进度不会在刷新后恢复。</p><p>年级是难度建议，不对应特定教材。打开面板或输入文字时，课堂快捷键会暂停。</p><p>立体显示不流畅时，可随时切换“简化显示”，本轮进度保留。</p></dialog>`;
 const $ = (s) => document.querySelector(s);
-$('.lesson-heading').insertAdjacentHTML('beforeend', '<nav class="game-modes" aria-label="游戏模式"><button id="mode-flip" aria-pressed="true">识字翻翻乐</button><button id="mode-workshop" aria-pressed="false">组词小工坊</button></nav>');
-$('#scene').insertAdjacentHTML('afterend', '<div id="workshop" hidden></div>');
+$('.lesson-heading').insertAdjacentHTML('beforeend', '<nav class="game-modes" aria-label="游戏模式"><button id="mode-flip" aria-pressed="true">识字翻翻乐</button><button id="mode-workshop" aria-pressed="false">组词小工坊</button><button id="mode-train" aria-pressed="false">句子小火车</button></nav>');
+$('#scene').insertAdjacentHTML('afterend', '<div id="workshop" hidden></div><div id="sentence-train" hidden></div>');
 $('.practice-box').insertAdjacentHTML('beforebegin', '<div id="workshop-collection-panel" hidden><h4>收集到的词语 <span>✦</span></h4><div id="workshop-collection" aria-live="polite"></div></div>');
 $('#help-dialog').insertAdjacentHTML('beforeend', '<p>活字组词工坊：备选栏中有参考词所需的活字，也有干扰字。按顺序点选 2–8 个活字，点击“融合印版”。与本题参考词匹配时，活字融合成一块印版、记 1 星并自动进入下一题；未匹配时活字散落归位，可以重试。点选已选活字可放回，也可撤回或清空。两种模式分别保留进度、小组和排字；刷新后课堂进度重置。</p>');
+$('.practice-box').insertAdjacentHTML('beforebegin', '<div class="train-ledger-panel" hidden><h4>旅程记录</h4><div id="train-ledger" aria-live="polite"></div></div>');
+$('#help-dialog').insertAdjacentHTML('beforeend', '<p>句子小火车：点击词语车厢，从左到右排列句子。全部接齐后发车；未命中可调整或由老师判对。看过参考句后须由老师判对才计分。再练一次只加入明确标记的句子；跳过的句子不算错。三种游戏独立保存本页进度，刷新重置。题库中的“句子小火车设置”可用 / 分隔词语，内置涵盖汉语乐园 1A–3B 各课配编句。</p>');
 const allDefaults = [...DEFAULT_QUESTIONS, ...TEXTBOOK_QUESTIONS, ...PARADISE_QUESTIONS];
 $('.teacher-badge').textContent = '汉语乐园 · 1A–3B';
 $('.lesson-toolbar').insertAdjacentHTML('afterbegin', `<label class="curriculum-field">题库<select id="bank-source" aria-label="题库来源"><option value="paradise">汉语乐园（1A–3B）</option><option value="textbook">中文乐园（新版）</option><option value="personal">个人 / 通用题库</option></select></label><label class="curriculum-field textbook-field">阶段<select id="stage" aria-label="学习阶段">${STAGES.map(s=>`<option>${s}</option>`).join('')}</select></label><label class="curriculum-field textbook-field">范围<select id="scope" aria-label="练习范围"><option value="stage">整个阶段</option><option value="lesson">本课</option><option value="cumulative">截至本课累计</option></select></label><label class="curriculum-field textbook-field">课次<select id="lesson" aria-label="选择课次"></select></label>`);
@@ -78,10 +84,12 @@ let load = store.load(),
   extensionOpen = false,
   strokeCleanup = null;
 let selection = {source: bank.questions.some(q=>q.textbook === PARADISE_ID) ? 'paradise' : bank.questions.some(q=>q.textbook === TEXTBOOK_ID) ? 'textbook' : 'personal', stage:'1A', scope:'stage', lesson:1};
+let gameMode = 'flip', workshopState = null;
 function currentSession() {
   const questions = selection.source !== 'personal'
     ? filterCurriculum(bank.questions, {...selection, textbook: selection.source === 'paradise' ? PARADISE_ID : TEXTBOOK_ID})
     : bank.questions.filter(q=>!q.textbook);
+  if(gameMode === 'train') return createTrainSession({questions: questions.filter(q=>selection.source!=='personal'||q.grade===grade).map(resolveTrainQuestion).filter(Boolean),teamNames});
   return createSession({questions, grade: selection.source === 'personal' ? grade : undefined, teamNames});
 }
 function refreshTextbookNotice() {
@@ -111,7 +119,6 @@ function syncSelection() {
   refreshTextbookNotice();
 }
 let session = currentSession();
-let gameMode = 'flip', workshopState = null;
 const modeSnapshots = {};
 syncSelection();
 const editor = createEditor({
@@ -150,35 +157,45 @@ const workshopView = createWorkshopView($('#workshop'), tileId => {
 });
 $('#desk-ledger-slot').append($('#workshop-collection-panel'));
 let workshopScene;
-function activeScene() { return gameMode === 'workshop' ? workshopScene : scene; }
+const trainView = createTrainView($('#sentence-train'), trainIntent, message=>{notify(message);if(gameMode==='train')syncSimpleControl()});
+function activeScene() { return gameMode === 'train' ? trainView.scene : gameMode === 'workshop' ? workshopScene : scene; }
 function syncSimpleControl() {
-  const simple = $(gameMode === 'workshop' ? '#workshop-scene' : '#scene').dataset.mode === 'simple';
+  const simple = $(gameMode === 'train' ? '#train-scene' : gameMode === 'workshop' ? '#workshop-scene' : '#scene').dataset.mode === 'simple';
   $('#simplify').textContent = simple ? '立体显示' : '简化显示';
   $('#simplify').setAttribute('aria-pressed', String(simple));
 }
 function switchMode(mode) {
   if (mode === gameMode) return;
+  if (gameMode === 'train' && session.departure) finishDeparture(session.departure);
   if (gameMode === 'flip' && flipTransition) finishFlipTransition(flipTransition);
   if(gameMode === 'workshop' && workshopTransition) finishWorkshopTransition(workshopTransition);
   modeSnapshots[gameMode] = { session, grade, teamNames: [...teamNames], selectedTeam, showPinyin, selection: {...selection}, extensionOpen, workshopState };
   activeScene()?.setActive(false);
   const saved = modeSnapshots[mode];
+  gameMode = mode;
   if (saved) ({ session, grade, teamNames, selectedTeam, showPinyin, selection, extensionOpen, workshopState } = saved);
   else { session = currentSession(); selectedTeam = 'team-1'; extensionOpen = false; workshopState = createWorkshopState(session); }
   gameMode = mode;
   document.body.classList.toggle('workshop-mode', mode === 'workshop');
-  $('#scene').hidden = mode === 'workshop';
+  document.body.classList.toggle('train-mode',mode === 'train');
+  $('#sentence-train').hidden=mode!=='train';
+  $('.train-ledger-panel').hidden=mode!=='train';
+  $('#mode-train').setAttribute('aria-pressed',String(mode==='train'));
+  $('.practice-box > span').textContent=mode==='train'?'还想再练的句子':'还想再认识的字';
+  $('#back').setAttribute('aria-label',mode==='train'?'上一句':'上一字');$('#back span').textContent=mode==='train'?'上一句':'上一字';
+  $('#next').setAttribute('aria-label',mode==='train'?'下一句':'下一字');$('#next span').textContent=mode==='train'?'下一句':'下一字';
+  $('#scene').hidden = mode !== 'flip';
   $('#workshop').hidden = mode !== 'workshop';
   $('#workshop-collection-panel').hidden = mode !== 'workshop';
   $('#mode-flip').setAttribute('aria-pressed',String(mode === 'flip'));
   $('#mode-workshop').setAttribute('aria-pressed',String(mode === 'workshop'));
-  $('.lesson-heading h2').textContent = mode === 'workshop' ? '组词小工坊' : '识字翻翻乐';
-  $('.lesson-heading > p').textContent = mode === 'workshop' ? '挑活字 · 排词语 · 融合木质印版' : '看一看 · 读一读 · 说一说';
+  $('.lesson-heading h2').textContent = mode === 'train' ? '句子小火车' : mode === 'workshop' ? '组词小工坊' : '识字翻翻乐';
+  $('.lesson-heading > p').textContent = mode === 'train' ? '接车厢 · 排句子 · 快乐出发' : mode === 'workshop' ? '挑活字 · 排词语 · 融合木质印版' : '看一看 · 读一读 · 说一说';
   $('#reveal').textContent = mode === 'workshop' ? '揭晓参考词' : '翻牌揭晓';
   $('#reveal').setAttribute('aria-label',mode === 'workshop' ? '揭晓参考词' : '翻牌揭晓');
   const shortcutLabel = $('footer > span');
   shortcutLabel.replaceChildren();
-  shortcutLabel.append(el('kbd','空格'), document.createTextNode(mode === 'workshop' ? ' 融合印版　/　' : ' 翻牌　/　'), el('kbd','←'), document.createTextNode(' '), el('kbd','→'), document.createTextNode(' 切换汉字'));
+  shortcutLabel.append(el('kbd','空格'), document.createTextNode(mode === 'train' ? ' 发车　/　' : mode === 'workshop' ? ' 融合印版　/　' : ' 翻牌　/　'), el('kbd','←'), document.createTextNode(' '), el('kbd','→'), document.createTextNode(mode === 'train' ? ' 切换句子' : ' 切换汉字'));
   $('#grade').value = grade; $('#pinyin').checked = showPinyin;
   if (mode === 'workshop') {
     $('.classroom').append($('.game-controls'));
@@ -188,6 +205,7 @@ function switchMode(mode) {
 }
 $('#mode-flip').onclick = () => switchMode('flip');
 $('#mode-workshop').onclick = () => switchMode('workshop');
+$('#mode-train').onclick = () => switchMode('train');
 
 function renderWorkshop() {
   if (gameMode !== 'workshop') return;
@@ -231,6 +249,18 @@ function finishWorkshopTransition(transition) {
   if(transition.outcome === 'correct') { session = navigateNext(session); workshopFeedback = ''; }
   if(gameMode === 'workshop') render();
 }
+function finishDeparture(token){
+  if(gameMode!=='train'||session.departure!==token)return;
+  session=finishTrainDeparture(session,token);trainView.scene.cancelAnimation();render();
+}
+async function trainIntent(intent,id){
+  if(gameMode!=='train')return;
+  if(intent==='editor'){editor.open();return;}
+  const actions={tile:()=>toggleTrainTile(session,id),undo:()=>undoTrainTile(session),clear:()=>clearTrainSelection(session),check:()=>checkTrainAnswer(session,{teamId:selectedTeam}),accept:()=>acceptTrainAnswer(session,{teamId:selectedTeam}),reveal:()=>revealTrainAnswer(session),review:()=>startTrainPractice(session)};
+  if(!actions[intent])return;
+  const old=session;session=actions[intent]();render();
+  if(session.departure&&session.departure!==old.departure){const token=session.departure;await trainView.scene.animateDeparture();finishDeparture(token);}
+}
 function storageAlert(result) {
   const box = $("#storage-alert");
   box.hidden = false;
@@ -273,6 +303,7 @@ function storageAlert(result) {
 if (!load.ok) storageAlert(load);
 function progressed() {
   return (
+    (gameMode === 'train' && (session.selections.some(a=>a.length)||session.judgments.some(Boolean))) ||
     (gameMode === 'workshop' && workshopState?.drafts.some(value => value.length > 0)) ||
     session.currentIndex > 0 ||
     session.revealed.some(Boolean) ||
@@ -283,6 +314,7 @@ function mayRestart() {
   return !progressed() || confirm("开始新一轮会清空本轮得分和进度，继续吗？");
 }
 function newRound() {
+  if(gameMode==='train') { session={...session,departure:null}; trainView.scene.cancelAnimation(); }
   flipTransition = null; scene.cancelJourney();
   workshopTransition = null; workshopFeedback = ''; workshopScene?.cancelAnimation();
   session = currentSession();
@@ -318,7 +350,7 @@ function render() {
       el("i", "", i <= session.currentIndex ? "filled" : ""),
     ),
   );
-  const scores = getScores(session);
+  const scores = gameMode==='train'?getTrainScores(session):getScores(session);
   $("#teams").replaceChildren(
     ...session.teams.map((team, i) => {
       const b = el(
@@ -342,9 +374,21 @@ function render() {
   const practice = getPracticeQuestions(session);
   $("#practice-list").replaceChildren(
     ...(practice.length
-      ? practice.map((q) => el("span", q.character, "practice-chip"))
+      ? practice.map((q) => el("span", gameMode==='train'?q.sentence:q.character, "practice-chip"))
       : [el("small", "每一次练习，都会更熟悉。")]),
   );
+  if(gameMode==='train') {
+    $('#round-caption').textContent=`本轮 ${session.questions.length} 句 · 最多 8 句`;
+    $('#reveal').hidden=true;$('#correct').hidden=true;$('#practice').hidden=!active;
+    $('#practice').disabled=Boolean(judgment)||Boolean(session.departure);
+    $('#next').disabled=!active||Boolean(session.departure);$('#back').disabled=Boolean(session.departure)||(session.currentIndex<=0&&session.phase!=='complete');
+    for(const id of ['#extension-toggle','#extension-hint','#extension'])$(id).hidden=true;
+    strokeCleanup?.();strokeCleanup=null;
+    $('#judgment-note').textContent=session.departure?'列车出发，前往下一站…':'先选作答小组 · 每句只记一颗星';
+    const records=session.judgments.flatMap((j,index)=>j?.outcome==='correct'?[{...j,index}]:[]);
+    $('#train-ledger').replaceChildren(...(records.length?records.map(j=>{const p=el('p',j.sentence);p.append(el('small',`${j.source==='teacher'?'教师接受':'参考匹配'} · ${session.teams.find(t=>t.id===j.teamId)?.name??''}`));return p}):[el('small','完成的句子，会在这里留下足迹。')]));
+    trainView.update(session);return;
+  }
   const face = $("#card-face");
   face.className = revealed ? "revealed" : "";
   face.replaceChildren();
@@ -460,6 +504,7 @@ function reveal() {
   if (gameMode === 'flip') scene.flip();
 }
 function next() {
+  if(gameMode==='train'){session=nextTrainQuestion(session);render();return;}
   if (flipTransition) return;
   if(gameMode === 'workshop' && workshopTransition) return;
   workshopFeedback = '';
@@ -471,6 +516,7 @@ function next() {
   }
 }
 function back() {
+  if(gameMode==='train'){session=previousTrainQuestion(session);render();return;}
   if (flipTransition) return;
   if(gameMode === 'workshop' && workshopTransition) return;
   workshopFeedback = '';
@@ -508,6 +554,7 @@ function finishFlipTransition(transition) {
 }
 $("#correct").onclick = answerCorrect;
 $("#practice").onclick = () => {
+  if(gameMode==='train'){session=markTrainPractice(session);render();return;}
   if (flipTransition) return;
   if(gameMode === 'workshop' && workshopTransition) return;
   if (gameMode === 'workshop') session = revealCurrent(session);
@@ -568,7 +615,7 @@ $("#fullscreen").onclick = async () => {
   }
 };
 $("#simplify").onclick = () => {
-  const host = $(gameMode === 'workshop' ? '#workshop-scene' : '#scene');
+  const host = $(gameMode === 'train' ? '#train-scene' : gameMode === 'workshop' ? '#workshop-scene' : '#scene');
   activeScene()?.setSimple(host.dataset.mode !== 'simple');
   syncSimpleControl();
 };
@@ -616,7 +663,7 @@ document.addEventListener("keydown", (event) => {
   if (event.code === "Space") {
     if (event.target.closest('button,a')) return;
     event.preventDefault();
-    if (gameMode === 'workshop') submitWord(); else reveal();
+    if(gameMode==='train') trainIntent('check'); else if (gameMode === 'workshop') submitWord(); else reveal();
   }
   if (event.code === "ArrowRight") {
     event.preventDefault();

@@ -2,7 +2,7 @@ import { defineConfig } from "@playwright/test";
 const port = process.env.PLAYWRIGHT_PORT || "5175";
 export default defineConfig({
   testDir: "./tests",
-  testMatch: /(?:^|[\\/])(?:workshop-)?ui\.spec\.js$/,
+  testMatch: /(?:^|[\\/])(?:(?:workshop|sentence-train)-)?ui\.spec\.js$/,
   timeout: 30000,
   fullyParallel: false,
   use: {

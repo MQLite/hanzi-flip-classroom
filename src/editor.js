@@ -1,3 +1,4 @@
+import {resolveTrainQuestion,validateSentenceTrain} from './sentence-train-data.js';
 import { validateBank, previewImport, exportBank } from "./storage.js";
 import { STAGES, PARADISE_ID, TEXTBOOK_ID, curriculumCourse, curriculumLabel, mergeAllTextbookQuestions as mergeTextbookQuestions } from './curriculum.js';
 
@@ -28,6 +29,7 @@ export function createEditor({ store, getBank, onBank, defaults, notify, canEdit
     form = $("#question-form");
   $('.bank-toolbar').insertAdjacentHTML('beforeend', '<button id="append-textbook">补充缺失教材题</button>');
   $('.bank-filters').insertAdjacentHTML('beforeend', `<select id="bank-stage" aria-label="筛选学习阶段"><option value="">全部来源</option><option value="personal">个人 / 通用</option>${STAGES.map(s=>`<option value="paradise:${s}">汉语乐园 ${s}</option>`).join('')}${STAGES.map(s=>`<option value="${s}">中文乐园（新版）${s}</option>`).join('')}</select>`);
+  form.insertAdjacentHTML('beforeend', `<details class="train-editor-settings"><summary>句子小火车设置</summary><p class="muted">每题 3–7 节，每节 1–6 个汉字，正文最多 28 字。/ 仅用于编辑时分隔车厢，不属于句子。</p><label><input type="checkbox" name="trainEnabled">启用手动切分</label><label>词语车厢<textarea name="trainTokens" rows="2" placeholder="老师 / 在 / 看书"></textarea></label><label>句尾标点<select name="trainPunctuation"><option>。</option><option>？</option><option>！</option></select></label><label>其他参考顺序（每行一条，最多五条）<textarea name="trainAlternatives" rows="3" placeholder="词语 / 顺序 / 示例"></textarea></label><p id="train-editor-preview" class="train-editor-preview" aria-live="polite"></p><button type="button" id="train-clear-manual">清除手动切分</button></details>`);
   form.insertAdjacentHTML('afterbegin', '<p id="question-origin" class="muted"></p>');
   let selected = null,
     textbookAssignment = null,
@@ -116,8 +118,26 @@ export function createEditor({ store, getBank, onBank, defaults, notify, canEdit
       : "新题草稿 · 填写完整后自动保存";
     $("#retry-save").hidden = true;
     $("#export-pending").hidden = true;
+    const train=resolveTrainQuestion(q)?.train;
+    form.elements.trainEnabled.checked=Boolean(q.sentenceTrain);
+    fillTrainFields(train);
+    trainPreview(q);
     list();
   }
+  function fillTrainFields(train){
+    form.elements.trainTokens.value=train?.tokens.join(' / ')??'';
+    form.elements.trainPunctuation.value=train?.punctuation??'。';
+    form.elements.trainAlternatives.value=train?.alternatives.map(a=>a.join(' / ')).join('\n')??'';
+  }
+  function trainPreview(q){
+    const manual=form.elements.trainEnabled.checked;
+    for(const name of ['trainTokens','trainPunctuation','trainAlternatives'])form.elements[name].disabled=!manual;
+    const resolved=resolveTrainQuestion(q);
+    const errors=manual?validateSentenceTrain(q.sentenceTrain,q.sentence).errors:[];
+    $('#train-editor-preview').textContent=errors.length?errors.map(e=>typeof e==='string'?e:e.message).join(' '):resolved?`${manual?'手动切分':'内置切分'}：${resolved.train.tokens.join(' / ')} ${resolved.train.punctuation}`:'此例句尚未设置有效车厢切分';
+    if(!manual)fillTrainFields(resolved?.train);
+  }
+  $('#train-clear-manual').onclick=()=>{form.elements.trainEnabled.checked=false;form.elements.trainEnabled.dispatchEvent(new Event('input',{bubbles:true}));};
   function reset() {
     invalidateImport();
     selected = null;
@@ -172,6 +192,7 @@ export function createEditor({ store, getBank, onBank, defaults, notify, canEdit
     for (const key of ["radical", "structure", "components"])
       if (f[key].value.trim()) q[key] = f[key].value;
     if (f.strokeCount.value !== "") q.strokeCount = Number(f.strokeCount.value);
+    if(f.trainEnabled.checked)q.sentenceTrain={tokens:f.trainTokens.value.split('/').map(t=>t.trim()),punctuation:f.trainPunctuation.value,alternatives:f.trainAlternatives.value.split('\n').filter(t=>t.trim()).map(line=>line.split('/').map(t=>t.trim()))};
     return q;
   }
   form.addEventListener("input", (event) => {
@@ -192,6 +213,7 @@ export function createEditor({ store, getBank, onBank, defaults, notify, canEdit
     }
     const q = collect(),
       questions = getBank().questions.filter((x) => x.id !== selected);
+    trainPreview(q);
     const oldIndex = getBank().questions.findIndex((x) => x.id === selected);
     questions.splice(oldIndex < 0 ? questions.length : oldIndex, 0, q);
     const result = validateBank({ schemaVersion: 1, questions });
