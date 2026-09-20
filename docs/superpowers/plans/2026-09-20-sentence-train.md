@@ -35,16 +35,16 @@
 
 All mutations return new sessions. Session has `questions,teams,currentIndex,phase,mode,judgments,revealed` and per-question `palettes,selections,checks`; palette items `{id,text}`. `departure` is null or a unique token object; finalization validates token identity. Checks are null or `match`/`mismatch`; selection changes clear checks. Judgments include `outcome,teamId,sentence,source` for correct answers. `getTrainCurrent` returns question or null. UI obtains chosen tokens from palette IDs. Notify UI owner of any interface refinements before edits.
 
-- [ ] Write focused tests for all spec data constraints, 36-course coverage, old-bank compatibility, optional-field validation, copy isolation, duplicate words, check/reveal/teacher scoring, stale departure, navigation and practice.
-- [ ] Run `npm test -- tests/sentence-train.test.js tests/sentence-train-data.test.js tests/storage.test.js`; observe missing-feature failures before implementation.
-- [ ] Implement explicit content map, validation and session state. Reuse curriculum filtering externally; core deduplicates resolved reference sentences. Validation shape example:
+- [x] Write focused tests for all spec data constraints, 36-course coverage, old-bank compatibility, optional-field validation, copy isolation, duplicate words, check/reveal/teacher scoring, stale departure, navigation and practice.
+- [x] Run `npm test -- tests/sentence-train.test.js tests/sentence-train-data.test.js tests/storage.test.js`; observe missing-feature failures before implementation.
+- [x] Implement explicit content map, validation and session state. Reuse curriculum filtering externally; core deduplicates resolved reference sentences. Validation shape example:
 
 ```js
 expect(validateSentenceTrain({tokens:['老师','在','看书'],punctuation:'。',alternatives:[]}, '老师在看书。').ok).toBe(true)
 expect(resolveTrainQuestion({...source, sentence:'老师在写字。'})).toBeNull()
 ```
 
-- [ ] Run targeted tests and `npm test`; commit only Task 1 files. Report API and test evidence to controller.
+- [x] Run targeted tests and `npm test`; commit only Task 1 files. Report API and test evidence to controller.
 
 ## Task 2: 三维车站与可访问界面（Astra High）
 
@@ -52,16 +52,16 @@ expect(resolveTrainQuestion({...source, sentence:'老师在写字。'})).toBeNul
 
 **Interfaces:** Consume Task 1 state. View exposes update/dispose and dispatches tile/undo/clear/check/accept/reveal/practice/navigation intents. Scene exposes update, setActive, setSimple, animateDeparture, cancelAnimation, dispose; owns rendering only. Controller may combine view and scene lifecycle in an additional `src/sentence-train-controller.js` to avoid bloating main.js.
 
-- [ ] Add browser assertions against user-visible controls before UI implementation:
+- [x] Add browser assertions against user-visible controls before UI implementation:
 
 ```js
 await page.getByRole('button',{name:'句子小火车',exact:true}).click()
 await expect(page.getByRole('button',{name:'发车',exact:true})).toBeDisabled()
 ```
 
-- [ ] Confirm new mode test fails on the baseline. Build real wheel/body/coupler meshes with canvas word textures; candidate selection and train movement reflect shared state, with semantic buttons and keyboard fallback.
-- [ ] Use a left-facing engine and left-to-right tokens, local narrow-screen track scrolling, stable palette positions and a journey ledger. Add actual animation completion/cancellation guarantees and reduced-motion/no-WebGL paths.
-- [ ] Verify screenshot sizes, control reachability, text readability, keyboard behavior, failure retaining order, scene fallback and departure. Keep visuals within existing project palette. Commit owned files after the integrated test passes.
+- [x] Confirm new mode test fails on the baseline. Build real wheel/body/coupler meshes with canvas word textures; candidate selection and train movement reflect shared state, with semantic buttons and keyboard fallback.
+- [x] Use a left-facing engine and left-to-right tokens, local narrow-screen track scrolling, stable palette positions and a journey ledger. Add actual animation completion/cancellation guarantees and reduced-motion/no-WebGL paths.
+- [x] Verify screenshot sizes, control reachability, text readability, keyboard behavior, failure retaining order, scene fallback and departure. Keep visuals within existing project palette. Commit owned files after the integrated test passes.
 
 ## Task 3: 课堂与题库编辑集成（Astra High）
 
@@ -69,19 +69,19 @@ await expect(page.getByRole('button',{name:'发车',exact:true})).toBeDisabled()
 
 **Interfaces:** Task 1 resolve/validate/core functions and Task 2 view/controller. Current mode dispatch must use train state for scores/practice/restart/navigation while old modes continue using their existing core. Save mode-specific snapshots including selection and team names. Optional editor fields round-trip in `sentenceTrain` without changing original source IDs.
 
-- [ ] Add meaningful browser coverage for mode preservation, old game journeys, form persistence, changed-sentence stale mapping, teacher acceptance after reveal, departure switching, and focus isolation.
-- [ ] Implement the third mode, current-filter question resolution, train captions/help, hidden single-character pinyin and extension controls; provide empty-state editor entry and actual round counts.
-- [ ] Add editor foldout with `/`-separated tokens, punctuation and alternative lines. Apply shared validation before persistence; allow clearing manual fields; retain fields when editing unrelated inputs.
-- [ ] Run `npm test`, `npm run test:ui` on isolated `PLAYWRIGHT_PORT=5186`, and `npm run build`. Fix in-scope failures with targeted regression evidence. Update README with gameplay, question count, customization and state limits. Commit owned files.
+- [x] Add meaningful browser coverage for mode preservation, old game journeys, form persistence, changed-sentence stale mapping, teacher acceptance after reveal, departure switching, and focus isolation.
+- [x] Implement the third mode, current-filter question resolution, train captions/help, hidden single-character pinyin and extension controls; provide empty-state editor entry and actual round counts.
+- [x] Add editor foldout with `/`-separated tokens, punctuation and alternative lines. Apply shared validation before persistence; allow clearing manual fields; retain fields when editing unrelated inputs.
+- [x] Run `npm test`, `npm run test:ui` on isolated `PLAYWRIGHT_PORT=5186`, and `npm run build`. Fix in-scope failures with targeted regression evidence. Update README with gameplay, question count, customization and state limits. Commit owned files.
 
 ## Task 4: 独立验收与本地交付（Sol High code review; Astra High visual review）
 
 **Files:** Read full diff against `57aee16`; update this plan completion boxes and `docs/codex/sentence-train/HANDOFF.md` with evidence.
 
-- [ ] Fresh-context reviewer reads original spec, current diff and direct test evidence; inspect Review Focus conditions, report actionable findings with severity/file/line.
-- [ ] Return material findings to corresponding implementer, reproduce with tests, fix and rerun affected checks; request scoped review when required.
-- [ ] Verify final Git state, full test/build summaries and screenshot artifacts; start a localhost preview on a free fixed port and open it for the user.
-- [ ] Keep branch and worktree for user inspection, report commit, evidence and local preview URL. No push, deployment or merge is authorized by Route automation alone.
+- [x] Fresh-context reviewer reads original spec, current diff and direct test evidence; inspect Review Focus conditions, report actionable findings with severity/file/line.
+- [x] Return material findings to corresponding implementer, reproduce with tests, fix and rerun affected checks; request scoped review when required.
+- [x] Verify final Git state, full test/build summaries and screenshot artifacts; start a localhost preview on a free fixed port and open it for the user.
+- [x] Keep branch and worktree for user inspection, report commit, evidence and local preview URL. No push, deployment or merge is authorized by Route automation alone.
 
 ## Routing and execution record
 
@@ -90,3 +90,8 @@ Task ID `sentence-train`; Route policy 2.3; RouteOffset 0 (default); execution h
 Task 1 NormalRoute/RequestedRoute/ExecutionTarget `gpt-5.6-sol high`. Tasks 2–3 `gpt-6-astra high`. Independent code review `gpt-5.6-sol high`; visual review `gpt-6-astra high`. AdjustmentResult UNCHANGED. ActualRoute recorded from agent runtime metadata if exposed, otherwise UNVERIFIED. Root planning/coordination ActualRoute UNVERIFIED; no live switch claimed.
 
 Tasks 1 and 2 can proceed concurrently under the fixed interface contract and separate file ownership; Task 3 waits for the data/state contract to be verified. Controller handles baseline, verification orchestration, documents and review. Route's explicit automatic-execution authorization supersedes routine plan approval pauses. Subagents receive fresh minimal context, not full conversation history.
+
+
+## Completion — 2026-09-21
+
+Complete for local delivery. Implementation HEAD2cc8adb, branchfeat/sentence-train retained. Unit82/82, stable browser77/77, productionbuildPASS. Fresh final code review and independent visual review passed; restart mouse-target and duplicate-answer findings fixed with regression evidence. No merge/push/deploy. Preview http://127.0.0.1:5189/ (select 句子小火车). Detailed local handoff and review reports: docs/codex/sentence-train/HANDOFF.md and final-review.md. Route2.3 offset0; requested SolHigh logic/review and AstraHigh UI/visual through fresh native subagents; ActualRouteUNVERIFIED because runtime metadata was not exposed. Optional polish: stronger model lighting/depth and mobile horizontal-scroll hint; neither blocks accepted functionality.

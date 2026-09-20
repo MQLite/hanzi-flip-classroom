@@ -25,3 +25,5 @@ The requested Task 1 execution target was Sol High. The runtime does not expose 
 - Ruling: reject limits outside `0…8`, consistent with the constructor's existing validation of invalid limit values; silently capping a caller error would hide a broken integration.
 - RED: `npm test -- tests/sentence-train.test.js` failed because `limit: 9` did not throw.
 - GREEN: the same focused suite passed 13/13 after tightening the public range guard.
+
+Controller verification at7bb180a: npm test82/82 passed, raw output unit-final.log.
