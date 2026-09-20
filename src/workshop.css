@@ -1,114 +1,18 @@
-.game-modes { display:flex; padding:3px; border:1px solid #d8dfcf; border-radius:11px; background:#edeee2; gap:3px; }
-.game-modes button { padding:8px 16px; font-size:12px; border-color:transparent; background:transparent; }
-.game-modes button[aria-pressed="true"] { background:#244e41; color:#fffaf0; box-shadow:0 3px 8px #244e4117; }
-.lesson-heading { flex-wrap:wrap; gap:12px; }
-.lesson-heading > p { margin-left:auto; margin-right:14px; }
-.workshop-mode { background:#f4f1e8; }
-.workshop-mode .site-header { padding:8px 28px; max-width:1600px; }
-.workshop-mode .brand-mark { width:34px; height:36px; font-size:24px; border-radius:10px; }
-.workshop-mode .brand h1 { font-size:20px; letter-spacing:2px; }
-.workshop-mode .brand p { display:none; }
-.workshop-mode main { max-width:1544px; margin:0 auto; padding:10px 28px 8px; }
-.workshop-mode .lesson-heading { margin-bottom:8px; align-items:center; }
-.workshop-mode .lesson-heading h2 { font-size:23px; letter-spacing:2px; }
-.workshop-mode .lesson-heading .eyebrow { display:none; }
-.workshop-mode .lesson-heading > p { font-size:11px; letter-spacing:1px; }
-.workshop-mode .lesson-toolbar { padding:7px 11px; gap:10px; border-radius:10px; background:#ebece1; }
-.workshop-mode .curriculum-note { margin:5px 2px 7px; font-size:10px; }
-.workshop-mode .classroom { display:block; position:relative; }
-.workshop-mode .play-area { background:#ded4be; border:1px solid #c8aa84; border-radius:20px; box-shadow:0 9px 22px #66431c15; overflow:hidden; }
-.workshop-mode .stage-top { top:14px; left:24px; right:auto; width:45%; z-index:8; font-size:10px; color:#766046; }
-.workshop-mode .stage-bottom { padding:5px 22px; min-height:30px; background:#f8f0df; color:#79664d; }
-.workshop-mode .stage-bottom button { font-size:11px; color:#6a7159; }
-.workshop-mode .score-panel { position:absolute; z-index:9; top:5px; right:16px; display:flex; flex-direction:row; align-items:center; gap:8px; padding:0; border:0; background:none; border-radius:0; }
-.workshop-mode .score-heading,.workshop-mode .score-panel > .muted,.workshop-mode .practice-box,.workshop-mode .teacher-tip { display:none; }
-.workshop-mode .score-panel #teams,.workshop-mode .score-panel #teams:has(.team:nth-child(3)) { display:flex; gap:7px; }
-.workshop-mode .team,.workshop-mode .score-panel #teams:has(.team:nth-child(3)) .team { min-height:35px; width:auto; padding:5px 10px; margin:0; gap:7px; background:#fff6e3e8; border-color:#ddc19b; border-radius:8px; }
-.workshop-mode .team.active { background:#e2efe1; border-color:#547e61; box-shadow:0 2px 0 #547e6129; }
-.workshop-mode .team-icon { display:none; }
-.workshop-mode .team-name { max-width:110px; font-size:11px; }
-.workshop-mode .team strong { font-size:20px; }
-.workshop-mode .score-panel > #team-settings { margin:0; font-size:10px; color:#625c45; }
-.workshop-mode .game-controls { width:100%; margin:6px 0 0; min-height:32px; }
-.workshop-mode .game-controls > button { padding:8px 10px; }
-.workshop-mode .answer-controls button { min-width:0; padding:7px 16px; font-size:12px; letter-spacing:0; box-shadow:none; }
-.workshop-mode footer { display:none; }
-#workshop { padding:0; }
-#workshop-scene { height:clamp(395px,calc(100vh - 290px),740px); position:relative; isolation:isolate; }
-#workshop-scene canvas { position:absolute; inset:0; display:block; width:100%; height:100%; z-index:0; }
-.desk-intro { position:absolute; left:11.2%; top:18%; width:16%; text-align:center; pointer-events:none; z-index:2; }
-.desk-kicker { display:none; font-size:11px; letter-spacing:3px; color:#886d4b; }
-.workshop-target-card { margin-top:9px; height:110px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-#workshop-target { font:72px/1.1 'KaiTi','STKaiti',serif; color:#31574b; }
-#workshop-pinyin { font-size:21px; height:26px; color:#8e765b; }
-.desk-intro p { font-size:11px; line-height:1.9; color:#816a4d; margin-top:20px; }
-.desk-tray-caption { position:absolute; left:28%; top:19%; width:35%; text-align:center; z-index:2; pointer-events:none; }
-.desk-tray-caption > span { font-size:11px; color:#426758; letter-spacing:4px; }
-#workshop-word { font-size:12px; color:transparent; height:24px; margin-top:7px; }
-#workshop-word[data-empty="true"]::after { content:'把喜欢的词语放在这里'; color:#5c8070; letter-spacing:1px; font-size:13px; }
-#workshop-tiles { position:absolute; inset:0; pointer-events:none; z-index:4; }
-#workshop-tiles button { position:absolute; pointer-events:auto; padding:0 5px; transform:translate(-50%,-50%); background:transparent; border:2px solid transparent; border-radius:10px; color:#5b432d; font-family:'KaiTi','STKaiti','Microsoft YaHei',serif; font-weight:600; white-space:nowrap; letter-spacing:2px; text-shadow:0 1px #fff8e5; transition:color .2s,background .2s; }
-#workshop-tiles button:hover { background:#fff9dc45; color:#244e41; }
-#workshop-tiles button:active { transform:translate(-50%,-50%); }
-#workshop-tiles button[aria-pressed="true"] { color:#244e41; }
-#workshop-tiles button:focus-visible { outline:3px solid #497e69; outline-offset:2px; background:#fff9dc30; }
-.desk-submit { position:absolute; top:44%; left:29%; width:34%; text-align:center; z-index:7; }
-#workshop-submit { background:#316a5e; color:#fffaf0; border:1px solid #285347; border-radius:9px; padding:10px 28px; font-size:15px; box-shadow:0 4px 0 #234c43,0 6px 12px #305b4329; letter-spacing:2px; }
-#workshop-submit span { margin-left:17px; }
-#workshop-submit:disabled { opacity:.48; }
-.desk-submit p { font-size:10px; margin-top:12px; color:#4c7462; }
-.desk-palette-caption { position:absolute; top:66%; left:18%; font-size:12px; font-weight:600; color:#725435; z-index:2; letter-spacing:1px; }
-.desk-palette-caption span { margin-left:16px; color:#957653; font-size:10px; font-weight:400; }
-#desk-notebook { position:absolute; top:18%; bottom:13%; right:13.3%; width:15%; padding:5px 2px 0 11px; z-index:3; display:flex; flex-direction:column; }
-.notebook-tab { align-self:start; color:#fff6e5; background:#c77e5e; padding:5px 12px; font-size:10px; border-radius:2px 7px 7px 2px; margin:0 0 17px -16px; box-shadow:0 2px 0 #a45f3f; }
-#desk-ledger-slot { min-height:0; flex:1; overflow:auto; scrollbar-width:thin; }
-#workshop-collection-panel { padding:0; }
-#workshop-collection-panel h4 { font-size:16px; font-family:'KaiTi','STKaiti',serif; font-weight:600; margin:0 0 12px; color:#495f4b; }
-#workshop-collection-panel h4 span { color:#bd8e4e; }
-#workshop-collection { display:flex; flex-direction:column; gap:0; }
-#workshop-collection small { font-size:11px; line-height:2.4; color:#a49378; border-bottom:1px solid #ded3b8; padding-bottom:7px; }
-.collected-word { font-family:'KaiTi','STKaiti',serif; font-size:22px; color:#41654f; padding:7px 2px; border-bottom:1px solid #ded3b8; overflow-wrap:anywhere; max-width:100%; line-height:1.35; }
-.collected-word::before { content:'✓'; font:12px sans-serif; color:#b19a6e; margin-right:10px; }
-.notebook-foot { color:#9e8d70; font-size:9px; padding-top:13px; }
-#workshop-status { min-height:395px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; background:#f8f0de; text-align:center; }
-#workshop-status #workshop-collection-panel { width:min(460px,85%); margin:8px 0 20px; padding:15px 20px; border:1px solid #deceb0; background:#fff7e2; border-radius:10px; }
-#workshop-status #workshop-collection { flex-direction:row; flex-wrap:wrap; justify-content:center; gap:4px 14px; max-height:180px; overflow:auto; }
-.workshop-simple-art { display:none; position:absolute; inset:0; border:9px solid #c39565; background:repeating-linear-gradient(1deg,#e7c59a 0 31px,#ddba90 32px,#e7c59a 34px); }
-.workshop-simple-art::after { content:''; position:absolute; left:29%; top:16%; width:34%; height:43%; border:7px solid #588375; border-radius:16px; background:#bdd2bc; box-shadow:inset 0 4px 8px #3c61462b,0 5px 0 #8b6745; }
-#workshop-scene[data-mode="simple"] .workshop-simple-art { display:block; }
-#workshop-scene[data-mode="simple"] #workshop-tiles button { background:#fff0ca; border:1px solid #cc9f66; box-shadow:0 7px 0 #bc8a55,0 11px 15px #6a482628; }
-#workshop-scene[data-mode="simple"] #workshop-tiles button[aria-pressed="true"] { background:#fff8df; box-shadow:0 7px 0 #bc8a55,0 0 0 5px #62927655,0 14px 20px #4d673f35; }
-#workshop-scene[data-mode="simple"] #desk-notebook { padding:12px; right:6%; width:22%; background:#fff5db; box-shadow:5px 6px 0 #426b58; border-radius:4px; }
-#workshop-scene[data-mode="simple"] .workshop-target-card { background:#fff5da; border-radius:5px; box-shadow:3px 5px 0 #a87d5055; }
-@media(min-width:1500px) { .desk-intro { top:20%; } .workshop-target-card { height:145px; } #workshop-target { font-size:94px; } #workshop-pinyin { font-size:26px; } .desk-intro p { font-size:14px; } .desk-submit { top:44%; } #workshop-submit { font-size:19px; padding:14px 36px; } .desk-submit p { font-size:12px; } }
-@media(max-width:1000px) and (min-width:721px) { .workshop-mode .lesson-heading > p { display:none; } .workshop-mode main { padding-inline:18px; } #workshop-scene { height:400px; } .desk-intro { top:24%; } .desk-kicker { font-size:10px; } #workshop-target { font-size:57px; } .workshop-target-card { height:82px; margin-top:2px; } .desk-intro p { margin-top:9px; } .desk-tray-caption { top:25%; } .desk-submit { top:47%; } .desk-palette-caption { top:64%; } #desk-notebook { top:23%; bottom:20%; } .workshop-mode .stage-top { width:37%; } .workshop-mode .progress-dots { display:none; } }
-@media(max-width:720px) {
-  .game-modes { width:100%; } .game-modes button { flex:1; }
-  .workshop-mode .site-header { padding:9px 12px; } .workshop-mode main { padding:10px 10px; }
-  .workshop-mode .lesson-heading { gap:8px; } .workshop-mode .lesson-heading h2 { font-size:23px; }
-  .workshop-mode .lesson-toolbar { gap:8px; } .workshop-mode .curriculum-note { font-size:9px; }
-  .workshop-mode .score-panel { position:relative; top:auto; right:auto; order:0; width:100%; padding:9px 0; flex-wrap:wrap; }
-  .workshop-mode .classroom { display:flex; flex-direction:column; gap:0; } .workshop-mode .play-area { order:1; width:100%; }
-  .workshop-mode .game-controls { order:2; } .workshop-mode .score-panel #teams { flex:1; }
-  .workshop-mode .team { flex:1; } .workshop-mode .stage-top { top:11px; left:14px; width:calc(100% - 28px); }
-  #workshop-scene { height:575px; background:#e5c092; }
-  #workshop-scene canvas { opacity:.25; }
-  .desk-intro { top:9%; left:6%; width:28%; }
-  .workshop-target-card { background:#fff1d0; border:1px solid #e1b784; height:100px; border-radius:8px; box-shadow:3px 5px 0 #ac7c4e55; margin-top:7px; }
-  #workshop-target { font-size:57px; } #workshop-pinyin { font-size:18px; } .desk-intro p { font-size:10px; margin-top:12px; }
-  .desk-tray-caption { left:41%; top:12%; width:53%; }
-  #workshop-word[data-empty="true"]::after { font-size:11px; letter-spacing:0; }
-  .desk-submit { left:39%; top:39%; width:56%; }
-  #workshop-submit { padding:10px 16px; font-size:13px; }
-  .desk-submit p { font-size:9px; line-height:1.6; }
-  .desk-palette-caption { top:51%; left:7%; }
-  .desk-palette-caption span { margin-left:8px; }
-  #workshop-tiles button { background:#ffedc7; border:1px solid #c49a67; box-shadow:0 6px 0 #ad7b4c,0 10px 15px #79533130; letter-spacing:0; width:40% !important; height:48px !important; font-size:min(22px,calc((100vw - 70px) / var(--word-length) * .4)) !important; top:61% !important; left:27% !important; transition:top .45s,left .45s,background .2s; }
-  #workshop-tiles button:nth-child(even) { left:73% !important; }
-  #workshop-tiles button:nth-child(n+3) { top:70% !important; }
-  #workshop-tiles button[aria-pressed="true"] { left:67% !important; top:28% !important; background:#fff8e0; box-shadow:0 6px 0 #bc8a55,0 0 0 5px #62927655; }
-  #desk-notebook,#workshop-scene[data-mode="simple"] #desk-notebook { top:78%; bottom:3%; right:7%; width:86%; background:#fff3d5; padding:12px 15px; border-radius:6px; box-shadow:4px 5px 0 #416d59; }
-  .notebook-tab,.notebook-foot { display:none; } #workshop-collection-panel h4 { font-size:14px; margin-bottom:7px; }
-  #workshop-collection { flex-direction:row; flex-wrap:wrap; gap:6px 12px; } .collected-word { font-size:18px; padding:3px; } #workshop-collection small { font-size:10px; }
-  .workshop-simple-art::after { left:39%; top:10%; width:53%; height:34%; }
-}
+.game-modes{display:flex;padding:3px;border:1px solid #d8d4c8;border-radius:9px;background:#eae6dc;gap:3px}.game-modes button{padding:8px 16px;font-size:12px;border-color:transparent;background:transparent}.game-modes button[aria-pressed="true"]{background:#314a3b;color:#fff6e3}.lesson-heading{flex-wrap:wrap;gap:12px}.lesson-heading>p{margin-left:auto;margin-right:14px}
+.workshop-mode{background:#f0eadf;color:#423a2d}.workshop-mode .site-header{padding:7px 28px;max-width:1600px;border-color:#d9d1c2}.workshop-mode .brand-mark{width:34px;height:36px;font-size:24px;border-radius:8px;background:#4d6049}.workshop-mode .brand h1{font-size:20px;letter-spacing:2px}.workshop-mode .brand p{display:none}.workshop-mode main{max-width:1600px;margin:0 auto;padding:8px 28px}.workshop-mode .lesson-heading{margin-bottom:7px;align-items:center}.workshop-mode .lesson-heading h2{font-size:23px;letter-spacing:2px}.workshop-mode .lesson-heading .eyebrow{display:none}.workshop-mode .lesson-heading>p{font-size:11px;letter-spacing:1px}.workshop-mode .lesson-toolbar{padding:6px 11px;gap:10px;border-radius:9px;background:#e7e3d8;border-color:#d9d4c7}.workshop-mode .curriculum-note{margin:4px 2px 6px;font-size:10px}.workshop-mode .classroom{display:block;position:relative}.workshop-mode .play-area{background:#ddd4c1;border:1px solid #bdaa8c;border-radius:13px;box-shadow:0 8px 20px #51402c1c;overflow:hidden}.workshop-mode .stage-top{top:10px;left:20px;right:auto;width:43%;z-index:8;font-size:10px;color:#665843}.workshop-mode .stage-bottom{padding:3px 18px;min-height:27px;background:#e9e0ce;color:#695c46}.workshop-mode .stage-bottom button{font-size:11px;color:#605f47}.workshop-mode .score-panel{position:absolute;z-index:9;top:3px;right:13px;display:flex;flex-direction:row;align-items:center;gap:8px;padding:0;border:0;background:none;border-radius:0}.workshop-mode .score-heading,.workshop-mode .score-panel>.muted,.workshop-mode .practice-box,.workshop-mode .teacher-tip{display:none}.workshop-mode .score-panel #teams,.workshop-mode .score-panel #teams:has(.team:nth-child(3)){display:flex;gap:6px}.workshop-mode .team,.workshop-mode .score-panel #teams:has(.team:nth-child(3)) .team{min-height:32px;width:auto;padding:4px 9px;margin:0;gap:7px;background:#fbf0dce8;border-color:#c8b494;border-radius:7px}.workshop-mode .team.active{background:#dfe8d5;border-color:#6f7b55}.workshop-mode .team-icon{display:none}.workshop-mode .team-name{max-width:100px;font-size:11px}.workshop-mode .team strong{font-size:19px}.workshop-mode .score-panel>#team-settings{margin:0;font-size:10px;color:#625a45}.workshop-mode .game-controls{width:100%;margin:4px 0 0;min-height:29px}.workshop-mode .game-controls>button{padding:6px 10px}.workshop-mode .answer-controls button{min-width:0;padding:6px 14px;font-size:11px;letter-spacing:0;box-shadow:none}.workshop-mode footer{display:none}
+#workshop{position:relative}#workshop-scene{height:clamp(425px,calc(100vh - 278px),760px);position:relative;isolation:isolate;background:radial-gradient(ellipse at 45% 40%,#f0e9d8,#d8ceb9)}#workshop-scene canvas{position:absolute;inset:0;display:block;width:100%;height:100%;z-index:0}.printshop-brief{position:absolute;left:20px;top:43px;z-index:2;display:flex;align-items:center;gap:9px;color:#574730;pointer-events:none}.printshop-brief>span:first-child{font-size:10px;letter-spacing:2px}.printshop-brief strong{font:36px/1 KaiTi,STKaiti,serif;color:#3e3424}.printshop-brief #workshop-pinyin{font-size:16px}.printshop-brief p{font-size:10px;margin-left:10px;color:#806c4c}.printshop-rack-label,.printshop-shelf-label{position:absolute;transform:translate(-50%,-50%);z-index:2;font-size:11px;letter-spacing:2px;color:#fff0ce;text-shadow:0 1px 3px #281608;background:#624324bd;border:1px solid #aa8250;border-radius:3px;padding:4px 8px;white-space:nowrap;pointer-events:none}.printshop-rack-label small{font-size:9px;letter-spacing:0;color:#eddcbb}.printshop-shelf-label{font-size:10px}
+#workshop-tiles{position:absolute;inset:0;z-index:4;pointer-events:none}#workshop-tiles button{position:absolute;transform:translate(-50%,-50%);pointer-events:auto;padding:0;border:2px solid transparent;border-radius:5px;background:transparent;color:transparent;font:27px KaiTi,STKaiti,serif;text-shadow:none;transition:background .15s}#workshop-tiles button:hover{background:#ffeb9f25;border-color:#f1d49066}#workshop-tiles button:active{transform:translate(-50%,-50%)}#workshop-tiles button:focus-visible{outline:3px solid #fff0ab;outline-offset:2px;background:#f5e0a728}#workshop-tiles button:disabled{opacity:1}#workshop-tiles button[aria-pressed="true"]::after{content:attr(data-order);position:absolute;right:-6px;top:-9px;width:17px;height:17px;border-radius:50%;background:#304f3c;color:#fff4d6;font:10px/17px sans-serif;box-shadow:0 2px 2px #0003}
+.printshop-feedback{position:absolute;left:50%;top:54px;transform:translateX(-50%);z-index:7;max-width:48%;padding:6px 15px;border-radius:6px;font-size:11px;color:#665137;background:#f4ebd59e;border:1px solid #d6c29d;text-align:center;pointer-events:none}.printshop-dock{position:absolute;bottom:9px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;z-index:8;background:#f4e9d3f2;border:1px solid #bca47f;box-shadow:0 5px 18px #3d281e22;border-radius:10px;padding:9px 14px;max-width:90%}.printshop-draft{min-width:145px}.printshop-draft>span{font-size:9px;color:#8e7957;letter-spacing:2px;display:block}#workshop-word{font:26px/1.3 KaiTi,STKaiti,serif;letter-spacing:3px;min-height:34px;white-space:nowrap;color:#423820}#workshop-word[data-empty="true"]::after{content:'选择 2–8 个活字';font:12px/34px sans-serif;letter-spacing:1px;color:#a18e70}.printshop-edit{display:flex;gap:6px}.printshop-edit button{padding:8px 10px;font-size:11px;border-color:#d3be98;background:#eadcc2;color:#6e5738;white-space:nowrap}#workshop-submit{font-size:15px;letter-spacing:2px;padding:12px 22px;background:#3e5a42;border-color:#263f2b;box-shadow:0 4px 0 #293c2a;white-space:nowrap}#workshop-submit:disabled{opacity:.45}#workshop-scene[data-feedback="failure"] .printshop-feedback{color:#8b3326;background:#ffe4d2;border-color:#c77253}#workshop-scene[data-feedback="success"] .printshop-feedback{color:#244b32;background:#e4edcf;border-color:#839d59}
+#desk-ledger-slot{background:#e9e0ce;padding:6px 18px 8px;border-top:1px solid #c6b492}#workshop-collection-panel{display:flex;align-items:baseline;gap:14px}#workshop-collection-panel h4{font-size:11px;color:#7c6847;margin:0;white-space:nowrap;font-weight:500}#workshop-collection{display:flex;flex-wrap:wrap;gap:5px 13px;min-height:20px}#workshop-collection small{font-size:10px;color:#988468}.collected-word{font:18px/1.2 KaiTi,STKaiti,serif;color:#584229;border-bottom:1px solid #aa8d5d;padding:1px 2px;overflow-wrap:anywhere}#workshop-status{position:absolute;left:31%;top:30%;width:35%;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;border:1px solid #b89967;border-radius:12px;background:#fff0d9ee;box-shadow:0 12px 35px #2e1c1833;padding:20px;text-align:center}#workshop-status h2{font-size:23px}#workshop-status p,#workshop-status small{font-size:12px;line-height:1.7}#workshop[data-phase="empty"] #workshop-status{position:relative;left:auto;top:auto;width:100%;min-height:425px;box-shadow:none;border:0;border-radius:0}#workshop[data-phase="complete"] .printshop-dock,#workshop[data-phase="complete"] .printshop-feedback,#workshop[data-phase="complete"] .printshop-brief{display:none}
+.workshop-simple-art{display:none;position:absolute;inset:0;background:repeating-linear-gradient(2deg,#bc8b56 0 64px,#794f2e 65px,#c6945f 68px);border:12px solid #745030;border-bottom-width:24px;box-shadow:inset 0 8px 20px #462c1c55}.workshop-simple-art::after{content:'排 字 台';position:absolute;left:39%;top:28%;width:30%;height:24%;display:grid;place-items:center;border:8px solid #7b512d;background:#ad7c4944;color:#5c3c22;font-size:16px;letter-spacing:9px;box-shadow:inset 0 4px 10px #38231655}#workshop-scene[data-mode="simple"] .workshop-simple-art{display:block}#workshop-scene[data-mode="simple"] #workshop-tiles button{background:linear-gradient(125deg,#e1bc84,#be8d51);border:1px solid #7d532a;box-shadow:3px 7px 0 #79502f,5px 10px 12px #39251240;color:#302518}#workshop-scene[data-mode="simple"] #workshop-tiles button[aria-pressed="true"]{background:#e4c28e;outline:2px solid #f6df9a}
+@media(min-width:1500px){.printshop-brief{top:48px}.printshop-dock{bottom:15px;padding:12px 20px}.printshop-draft{min-width:180px}#workshop-word{font-size:31px}.printshop-feedback{top:59px;font-size:13px}}
+@media(max-width:1000px){.workshop-mode .lesson-heading>p{display:none}.printshop-brief p{display:none}.printshop-feedback{max-width:50%;left:62%;font-size:10px}.workshop-mode .progress-dots{display:none}.workshop-mode .stage-top{width:35%}}
+@media(max-width:720px){.game-modes{width:100%}.game-modes button{flex:1}.workshop-mode .site-header{padding:8px 12px}.workshop-mode main{padding:8px 10px}.workshop-mode .lesson-heading{gap:8px}.workshop-mode .lesson-heading h2{font-size:22px}.workshop-mode .lesson-toolbar{gap:8px}.workshop-mode .curriculum-note{font-size:9px}.workshop-mode .score-panel{position:relative;top:auto;right:auto;order:0;width:100%;padding:8px 0;flex-wrap:wrap}.workshop-mode .classroom{display:flex;flex-direction:column;gap:0}.workshop-mode .play-area{order:1;width:100%}.workshop-mode .game-controls{order:2}.workshop-mode .score-panel #teams{flex:1}.workshop-mode .team{flex:1}.workshop-mode .stage-top{top:10px;left:13px;width:calc(100% - 26px)}#workshop-scene{height:auto;min-height:520px;padding:128px 20px 154px}#workshop-scene canvas{display:none}.workshop-simple-art{display:block;border-width:7px;border-bottom-width:16px}.workshop-simple-art::after{display:none}.printshop-brief{top:39px;left:18px;gap:8px}.printshop-brief strong{font-size:31px}.printshop-feedback{top:88px;left:50%;max-width:88%;width:88%;padding:6px;font-size:10px;background:#f6e8cce8}.printshop-rack-label,.printshop-shelf-label{display:none}#workshop-tiles{position:relative;inset:auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px 12px;pointer-events:auto}#workshop-tiles button{position:relative!important;left:auto!important;top:auto!important;width:100%!important;height:53px!important;transform:none!important;font-size:29px;color:#2f2518;background:linear-gradient(125deg,#e5c08b,#c38e53);border:1px solid #845932;box-shadow:3px 7px 0 #754b29,4px 10px 12px #39251240;border-radius:5px}#workshop-tiles button[aria-pressed="true"]{background:#f0d39e;outline:3px solid #658052;transform:translateY(-3px)!important}.printshop-dock{bottom:15px;width:calc(100% - 30px);max-width:none;display:grid;grid-template-columns:1fr auto;gap:6px 8px;padding:9px 11px}.printshop-draft{grid-column:1/-1;min-width:0}#workshop-word{font-size:25px;letter-spacing:1px;overflow-wrap:anywhere;white-space:normal}.printshop-edit{gap:5px}.printshop-edit button{padding:7px;font-size:10px}#workshop-submit{font-size:12px;padding:9px 12px;letter-spacing:1px}#desk-ledger-slot{padding:8px 11px}#workshop-collection-panel{display:block}#workshop-collection-panel h4{margin-bottom:7px}#workshop-status{left:7%;top:22%;width:86%;padding:17px}#workshop[data-phase="complete"] #workshop-scene{min-height:470px}}
+@media(prefers-reduced-motion:reduce){#workshop-tiles button{transition:none}}
+@media(max-width:720px){#workshop-tiles button{clip-path:none!important}}
+
+/* Focus paint belongs inside the projected face: an external outline is clipped. */
+#workshop-tiles button:focus-visible{outline:0;border-color:#fff1a8;background:#fff2ae80;box-shadow:inset 0 0 0 4px #24563b}
+#workshop-tiles button[aria-pressed="true"]::after{right:14%;top:30%;width:12px;height:12px;font-size:8px;line-height:12px;box-shadow:none}
+#workshop-scene[data-mode="simple"] #workshop-tiles button{clip-path:none!important}
+#workshop-scene[data-mode="simple"] #workshop-tiles button:focus-visible{background:linear-gradient(125deg,#fff7bd,#eec96c);border-color:#24563b;box-shadow:inset 0 0 0 3px #24563b,3px 7px 0 #79502f,5px 10px 12px #39251240}

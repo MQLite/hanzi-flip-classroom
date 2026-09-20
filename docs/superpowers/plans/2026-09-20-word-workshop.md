@@ -1,6 +1,21 @@
 # Word Workshop Implementation Plan
 
-## Revision 2: immersive word desk (current)
+## Revision 3: wooden movable-type fusion (current)
+
+User rejects revision 2 and now explicitly requires candidate **characters with distractors**, visibly modeled wooden desktop and wooden printing blocks, successful fusion into one physical word block collected aside with a refreshed palette, and incorrect fusion scattering animation. This supersedes complete-word single selection.
+
+- [x] Rules (Sol Medium): multi-select character tile IDs in order, multiplicity sufficient for valid reference words, at least three distractor characters, exact reference-word judgment, incorrect retry without scoring, correct immutable collection and one score, duplicate-submit protection.
+- [x] UI/rendering (Astra High): oblique perspective exposing thick wood/plank edges, actual mesh ink textures on beveled wooden character blocks, candidate rack, central typesetting rail, successful convergence into one word stamp moving to a physical collection rack, incorrect shake/scatter. Accessible projected hit targets and fallback. Automatic next question after successful animation; failure retries current question. Undo and clear.
+- [x] Root verifies correct/incorrect flows, regeneration and physical animation paths, lifecycle cancellation and mode state, keyboard, reduced motion/GPU fallback, real desktop/mobile images. Preserve original flip classroom behavior and bank.
+- [x] Fresh independent review and resolved findings, including a clipped keyboard focus indicator. Final tests/build verified; release the correction to the same site under the user's existing push/deploy authorization.
+
+Same Route v2.3 offset0 workflow and worktree; revision 2 baseline ff43b95. Native existing implementation agents continue with bounded handoffs; actual model/effort metadata remains UNVERIFIED. Existing reference words are the answer set for each target: UI must say this is the current question's matching rule rather than claiming every rejected assembly is linguistically invalid.
+
+Validation: 48 unit tests and all 46 browser tests passed on the final frozen implementation; production build passed. Browser coverage includes incorrect retry, successful collection/advancement, duplicates, 8-character answers, mode switching during fusion, actual GPU loss/restoration, keyboard, and 1920/1280/390 viewport bounds. Independent visual review confirmed the modeled wood surface and blocks, failed fusion retry, and one legible physical word stamp collected after success. Camera and shelf label were corrected after visual inspection. A focused-tile regression failed before the CSS correction; independent screenshots then confirmed visible focus and selection order in WebGL and fallback. The existing Three.js bundle size advisory remains; no warning threshold was changed.
+
+Sections below retain historical specifications and validation.
+
+## Revision 2: immersive word desk (historical)
 
 User supersedes the earlier character assembly flow: use complete-word blocks, single selection moves to the center with a 3D effect, submission returns the block and records the word. Complete-word interpretation explicitly confirmed. The workbench fills the play surface; the old miniature scene and separate text-entry form are replaced.
 
