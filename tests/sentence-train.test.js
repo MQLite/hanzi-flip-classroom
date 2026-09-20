@@ -42,6 +42,12 @@ function selectIds(session, ids) {
 }
 
 describe('sentence train session setup and selection', () => {
+  it('rejects limits above the eight-question round maximum', () => {
+    expect(() => createTrainSession({ questions: [], limit: 9 })).toThrow(
+      'limit must be an integer from 0 to 8',
+    )
+  })
+
   it('deduplicates by reference sentence, limits the round, and snapshots nested question data', () => {
     const source = question()
     const sameSentence = question({ id: 'train-copy', character: '师', pinyin: 'shī' })

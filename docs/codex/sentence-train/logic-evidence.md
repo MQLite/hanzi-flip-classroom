@@ -18,3 +18,10 @@ Task 1 implements the non-UI content, validation, session state, and schema-vers
 - Build check succeeded with Vite; its existing Three.js chunk-size advisory remains non-fatal.
 
 The requested Task 1 execution target was Sol High. The runtime does not expose verifiable model metadata here, so ActualRoute is `UNVERIFIED`.
+
+## Independent review fix
+
+- The reviewer reproduced that `createTrainSession({ limit: 9 })` could create a round above the eight-question maximum.
+- Ruling: reject limits outside `0…8`, consistent with the constructor's existing validation of invalid limit values; silently capping a caller error would hide a broken integration.
+- RED: `npm test -- tests/sentence-train.test.js` failed because `limit: 9` did not throw.
+- GREEN: the same focused suite passed 13/13 after tightening the public range guard.

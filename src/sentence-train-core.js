@@ -126,7 +126,9 @@ export function createTrainSession({
 } = {}) {
   if (!Array.isArray(questions)) throw new TypeError('questions must be an array')
   if (typeof random !== 'function') throw new TypeError('random must be a function')
-  if (!Number.isInteger(limit) || limit < 0) throw new RangeError('limit must be a non-negative integer')
+  if (!Number.isInteger(limit) || limit < 0 || limit > 8) {
+    throw new RangeError('limit must be an integer from 0 to 8')
+  }
   const teams = makeTeams(teamNames)
   const unique = []
   const sentences = new Set()
