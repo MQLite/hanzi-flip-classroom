@@ -28,28 +28,28 @@
 
 **Own:** `src/sentence-train-scene.js`, `src/sentence-train.js`, `src/sentence-train.css`, optional `src/sentence-train-models.js`, `src/sentence-train-effects.js`, train UI tests, README, narrowly necessary main integration. Pure state/storage untouched.
 
-- [ ] Write failing tests for one scene canvas, existing model-coordinate selection, same-question restart, moving selection/return and success/cancel lifecycle. Representative new expectation:
+- [x] Write failing tests for one scene canvas, existing model-coordinate selection, same-question restart, moving selection/return and success/cancel lifecycle. Representative new expectation:
 
 ```js
 await page.getByRole('button', {name:'句子小火车',exact:true}).click();
 await expect(page.locator('#train-scene canvas')).toHaveCount(1);
 ```
 
-- [ ] Observe RED against split-canvas baseline, then implement shared camera/world with reusable model builders, ground/terrain/station/vegetation/railway/departure structure. Keep student text at readable projected size and keep consistent global perspective.
-- [ ] Implement carriage motion and coordinate-aligned semantic controls; use world object locations and camera projection, update every needed animation/layout revision.
-- [ ] Implement fireworks/steam on successful `animateDeparture()` with deterministic lifetime bounds and safe completion/cancellation. Add meaningful lifecycle regressions using actual gameplay and screenshots of intermediate fireworks frames.
-- [ ] Adapt old layout-specific browser assertions to unified viewport while preserving their original user-facing guarantees. Do not weaken no-overflow, full-model/controls fit, focus, restart, teacher/mode and score assertions.
-- [ ] Run targeted tests on isolated port5193, then full unit/UI and production-base build once source stable. Capture actual idle/selected/success1920,1280 and390images. Update README; commit owned files and evidence.
+- [x] Observe RED against split-canvas baseline, then implement shared camera/world with reusable model builders, ground/terrain/station/vegetation/railway/departure structure. Keep student text at readable projected size and keep consistent global perspective.
+- [x] Implement carriage motion and coordinate-aligned semantic controls; use world object locations and camera projection, update every needed animation/layout revision.
+- [x] Implement fireworks/steam on successful `animateDeparture()` with deterministic lifetime bounds and safe completion/cancellation. Add meaningful lifecycle regressions using actual gameplay and screenshots of intermediate fireworks frames.
+- [x] Adapt old layout-specific browser assertions to unified viewport while preserving their original user-facing guarantees. Do not weaken no-overflow, full-model/controls fit, focus, restart, teacher/mode and score assertions.
+- [x] Run targeted tests on isolated port5193, then full unit/UI and production-base build once source stable. Capture actual idle/selected/success1920,1280 and390images. Update README; commit owned files and evidence.
 
 ## Task2: Fresh independent review — Astra High visual, Sol High code
 
-- [ ] Review actual screenshots/motion capture and relevant changed code against original user requirement and this spec. Code review checks scene/control lifecycle and unchanged game rules; visual review checks unified world, appreciable depth/shadows, legibility and actual fireworks.
-- [ ] Fix material findings through original implementer with focused regressions and appropriate rechecks; no unrelated polish expansion.
-- [ ] Record review findings, remedies, raw test logs and route requests; actual model metadata is UNVERIFIED unless exposed.
+- [x] Review actual screenshots/motion capture and relevant changed code against original user requirement and this spec. Code review checks scene/control lifecycle and unchanged game rules; visual review checks unified world, appreciable depth/shadows, legibility and actual fireworks.
+- [x] Fix material findings through original implementer with focused regressions and appropriate rechecks; no unrelated polish expansion.
+- [x] Record review findings, remedies, raw test logs and route requests; actual model metadata is UNVERIFIED unless exposed.
 
 ## Task3: Deploy and online acceptance — controller
 
-- [ ] Check latest main, integrate any intervening changes safely, revalidate affected scope.
+- [x] Check latest main, integrate any intervening changes safely, revalidate affected scope. Origin main remained at 177c19a; no further integration change was needed.
 - [ ] Merge/push to existing main only after required checks; track matching-SHA GitHub Pages run to success.
 - [ ] In a fresh browser context verify online one-canvas scene, word selection, successful train/fireworks and no runtime errors; preserve screenshot.
 - [ ] Update local handoff, report deployment URL, final commit and exact check results.
