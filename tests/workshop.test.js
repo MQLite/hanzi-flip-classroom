@@ -5,8 +5,10 @@ import {
   buildWordAnswers,
   clearWorkshopSelection,
   collectedWords,
+  continueWorkshopBatch,
   createWorkshopState,
   getWorkshopScores,
+  remainingWorkshopWords,
   resolveWorkshopWord,
   submitWorkshopWord,
   toggleWorkshopTile,
@@ -110,6 +112,71 @@ describe('workshop batch creation', () => {
       pending: null,
       wordCount: 4,
     })
+  })
+})
+
+describe('workshop batch continuation', () => {
+  it('starts another batch from unused references while preserving records and scores', () => {
+    const session = sessionFor(
+      question('dad', '爸', ['爸爸', '老爸']),
+      question('tree', '木', ['木头', '树木']),
+      question('sky', '天', ['今天', '白天']),
+    )
+    let state = createWorkshopState(session, { wordCount: 4, random: () => 0.999 })
+
+    for (const [index, word] of state.references.entries()) {
+      state = submitWorkshopWord(session, selectCharacters(state, session, word), {
+        teamId: index % 2 === 0 ? 'team-1' : 'team-2',
+      }).state
+    }
+
+    expect(state.phase).toBe('complete')
+    expect(remainingWorkshopWords(session, state)).toEqual(['今天', '白天'])
+
+    const continued = continueWorkshopBatch(session, state, { random: () => 0.999 })
+
+    expect(continued).toMatchObject({
+      phase: 'active',
+      references: ['今天', '白天'],
+      wordCount: 4,
+      selections: [],
+      draft: '',
+      pending: null,
+    })
+    expect(continued.records).toEqual(state.records)
+    expect(continued.palette.map(({ character }) => character)).toEqual([...'今天白天'])
+    expect(getWorkshopScores(session, continued)).toEqual({ 'team-1': 2, 'team-2': 2 })
+  })
+
+  it('does not offer teacher-approved words again and changes nothing when no batch remains', () => {
+    const session = sessionFor(question('dad', '爸', ['爸爸', '爸妈', '妈爸']))
+    let state = createWorkshopState(session, { wordCount: 2, random: () => 0.999 })
+    const pending = submitWorkshopWord(
+      session,
+      selectCharacters(state, session, '妈爸'),
+      { teamId: 'team-1' },
+    )
+    state = resolveWorkshopWord(session, pending.state, {
+      accepted: true,
+      pending: pending.state.pending,
+    }).state
+
+    for (const word of state.references) {
+      state = submitWorkshopWord(session, selectCharacters(state, session, word), {
+        teamId: 'team-2',
+      }).state
+    }
+
+    expect(state.phase).toBe('complete')
+    expect(remainingWorkshopWords(session, state)).toEqual([])
+    expect(continueWorkshopBatch(session, state, { random: () => 0.999 })).toBe(state)
+  })
+
+  it('cannot continue an unfinished batch', () => {
+    const session = sessionFor(question('dad', '爸', ['爸爸', '爸妈', '妈爸']))
+    const state = createWorkshopState(session, { wordCount: 2, random: () => 0.999 })
+
+    expect(continueWorkshopBatch(session, state)).toBe(state)
   })
 })
 

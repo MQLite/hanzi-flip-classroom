@@ -97,16 +97,7 @@ function buildReferencePool(session) {
   return references
 }
 
-export function createWorkshopState(
-  session,
-  { wordCount = 4, random = Math.random } = {},
-) {
-  if (!Number.isInteger(wordCount) || wordCount < 1) {
-    throw new RangeError('wordCount must be a positive integer')
-  }
-  if (typeof random !== 'function') throw new TypeError('random must be a function')
-
-  const references = shuffle(buildReferencePool(session), random).slice(0, wordCount)
+function createBatchState(references, wordCount, random, records = []) {
   const characters = shuffle([...references.join('')], random)
   const palette = characters.map((character, slot) => ({
     id: `tile-${slot + 1}`,
@@ -121,10 +112,46 @@ export function createWorkshopState(
     totalSlots: palette.length,
     selections: [],
     draft: '',
-    records: [],
+    records,
     pending: null,
     wordCount,
   }
+}
+
+export function createWorkshopState(
+  session,
+  { wordCount = 4, random = Math.random } = {},
+) {
+  if (!Number.isInteger(wordCount) || wordCount < 1) {
+    throw new RangeError('wordCount must be a positive integer')
+  }
+  if (typeof random !== 'function') throw new TypeError('random must be a function')
+
+  const references = shuffle(buildReferencePool(session), random).slice(0, wordCount)
+  return createBatchState(references, wordCount, random)
+}
+
+export function remainingWorkshopWords(session, state) {
+  const collected = new Set(
+    (Array.isArray(state?.records) ? state.records : []).map((record) => record.word),
+  )
+  return buildReferencePool(session).filter((word) => !collected.has(word))
+}
+
+export function continueWorkshopBatch(
+  session,
+  state,
+  { random = Math.random } = {},
+) {
+  if (state?.phase !== 'complete') return state
+  if (typeof random !== 'function') throw new TypeError('random must be a function')
+
+  const remaining = remainingWorkshopWords(session, state)
+  if (remaining.length === 0) return state
+
+  const wordCount = Number.isInteger(state.wordCount) && state.wordCount > 0 ? state.wordCount : 4
+  const references = shuffle(remaining, random).slice(0, wordCount)
+  return createBatchState(references, wordCount, random, state.records)
 }
 
 function canEdit(state) {

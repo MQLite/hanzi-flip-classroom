@@ -21,7 +21,7 @@ import { createClassroomScene } from "./scene.js";
 import { createEditor, downloadText } from "./editor.js";
 import { mountStrokes } from "./strokes.js";
 import './workshop.css';
-import { createWorkshopState, toggleWorkshopTile, undoWorkshopTile, clearWorkshopSelection, submitWorkshopWord, resolveWorkshopWord, collectedWords, getWorkshopScores } from './workshop-core.js';
+import { createWorkshopState, continueWorkshopBatch, remainingWorkshopWords, toggleWorkshopTile, undoWorkshopTile, clearWorkshopSelection, submitWorkshopWord, resolveWorkshopWord, collectedWords, getWorkshopScores } from './workshop-core.js';
 import { createWorkshopView } from './workshop.js';
 import { createWorkshopScene } from './workshop-scene.js';
 
@@ -221,7 +221,9 @@ function renderWorkshop() {
   if (gameMode !== 'workshop') return;
   const {phase,references,totalSlots,pending}=workshopState;
   const active=phase==='active', words=collectedWords(session,workshopState);
-  const completed=words.filter(item=>item.source==='reference').length;
+  const completed=references.filter(word=>words.some(item=>item.source==='reference'&&item.word===word)).length;
+  const remaining=remainingWorkshopWords(session,workshopState);
+  const teacherTotal=words.filter(item=>item.source==='teacher').length;
   const value=workshopTransition?.value??workshopState.draft;
   const palette=workshopTransition?.palette??workshopState.palette;
   const selections=workshopTransition?.selections??workshopState.selections;
@@ -230,8 +232,10 @@ function renderWorkshop() {
     statusNodes.push(el('h2','当前范围暂无有效参考词'),el('p','在题库中添加 2–8 字的参考词，再开始新一轮。'));
     const edit=el('button','修改题库','primary');edit.onclick=()=>editor.open();statusNodes.push(edit);
   } else if(phase==='complete') {
-    statusNodes.push(el('h2','这一盘，全部完成！'),el('p',`收集了 ${references.length} 个参考词，另有 ${words.length-completed} 个教师认可词。`));
-    const restart=el('button','再来一盘','primary');restart.onclick=()=>{if(mayRestart())newRound();};statusNodes.push(restart);
+    statusNodes.push(el('h2','这一盘，全部完成！'),el('p',`本盘完成 ${references.length} 个参考词，累计收集 ${words.length} 个词，其中 ${teacherTotal} 个由教师认可。`));
+    if(remaining.length) {
+      const nextBatch=el('button','继续下一盘','primary');nextBatch.onclick=continueWorkshopRound;statusNodes.push(nextBatch);
+    } else statusNodes.push(el('p','本课/阶段的参考词已全部完成。'));
   }
   $('#mode-label').textContent='共享字盘 · 参考词进度';
   $('#progress').textContent=`${String(completed).padStart(2,'0')} / ${String(references.length).padStart(2,'0')}`;
@@ -262,6 +266,16 @@ async function applyWorkshopResult(result) {
   render();
   await workshopScene?.animateResult({outcome:result.outcome==='duplicate'?'incorrect':result.outcome,word:result.word,source:result.source,returnTiles:result.returnTiles,recordIndex:workshopState.records.length-1});
   finishWorkshopTransition(transition);
+}
+function continueWorkshopRound() {
+  if(gameMode!=='workshop'||workshopTransition)return;
+  const next=continueWorkshopBatch(session,workshopState);
+  if(next===workshopState)return;
+  workshopState=next;
+  workshopFeedback='';
+  workshopRound++;
+  workshopScene?.cancelAnimation();
+  render();
 }
 function submitWord() {
   if(gameMode!=='workshop'||workshopTransition||workshopState.pending)return;

@@ -54,6 +54,33 @@ test('all reference words can be collected from one tray, including shared lette
  await expect(page.locator('#workshop-collection')).toBeVisible();
 });
 
+test('continues with unused lesson words while keeping cumulative scores and stamps',async({page})=>{
+ const bank=[
+  ...questions,
+  {id:'sky',grade:1,character:'天',pinyin:'tiān',words:['今天','白天'],sentence:'今天是晴天。'},
+ ];
+ await openWorkshop(page,bank);
+ const referenceWords=()=>page.locator('#workshop-references .workshop-reference').allTextContents();
+ const firstBatch=await referenceWords();
+ expect(firstBatch).toHaveLength(4);
+ for(const word of firstBatch)await submit(page,word);
+ await expect(page.locator('#workshop')).toHaveAttribute('data-phase','complete');
+ await expect(score(page)).toHaveText('4');await expect(stamps(page)).toHaveCount(4);
+
+ await page.getByRole('button',{name:'继续下一盘',exact:true}).click();
+
+ await expect(page.locator('#workshop')).toHaveAttribute('data-phase','active');
+ await expect(page.locator('#progress')).toHaveText('00 / 02');
+ await expect(score(page)).toHaveText('4');await expect(stamps(page)).toHaveCount(4);
+ const secondBatch=await referenceWords();
+ expect(secondBatch).toHaveLength(2);
+ expect(secondBatch.every(word=>!firstBatch.includes(word))).toBe(true);
+ for(const word of secondBatch)await submit(page,word);
+ await expect(score(page)).toHaveText('6');await expect(stamps(page)).toHaveCount(6);
+ await expect(page.locator('#workshop-status')).toContainText('本课/阶段的参考词已全部完成');
+ await expect(page.getByRole('button',{name:'继续下一盘',exact:true})).toHaveCount(0);
+});
+
 test('unmatched word waits for teacher; approval restores exact tiles and gives a distinct stamp',async({page})=>{
  await openWorkshop(page);const initial=await ids(page);
  await submit(page,'爸木');
