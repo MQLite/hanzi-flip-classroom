@@ -26,13 +26,13 @@ All commands executed from `D:/Repository/hanzi-sentence-train`.
 | Command | Result | Raw log |
 | --- | --- | --- |
 | `npm test` | **82/82 passed**, 8 files, exit 0 | `ui-unit.log` |
-| `$env:PLAYWRIGHT_PORT='5186'; npm run test:ui` | **75/75 passed**, exit 0, 1.5 min | `ui-final.log` |
+| `$env:PLAYWRIGHT_PORT='5186'; npm run test:ui` | **77/77 passed**, exit 0, 1.6 min | `ui-final.log` |
 | `npm run build` | **PASS**, exit 0 | `ui-build.log` |
 | Enhanced natural keyboard test after the full suite | **1/1 passed**, exit 0, both WebGL/simple; one initial focus followed only by Tab/Space/Enter to assemble and check | `ui-keyboard.log` |
 
-No production behavior changed after the full unit/browser/build run. The later keyboard test strengthened the existing test; Playwright config only had a trailing blank line removed. The build retains the existing warning about the ~598 kB Three.js chunk. Browser logs include expected renderer errors from tests deliberately disabling WebGL, plus environment `NO_COLOR`/`FORCE_COLOR` warnings; no unexpected browser errors were accepted.
+The final 77-test browser run includes the strengthened natural keyboard test and both review-fix regressions. The final build was run after the data normalization commit `c253132` and the UI fix below. The build retains the existing warning about the ~598 kB Three.js chunk. Browser logs include expected renderer errors from tests deliberately disabling WebGL, plus environment `NO_COLOR`/`FORCE_COLOR` warnings; no unexpected browser errors were accepted.
 
-The 18 train browser tests cover stable candidates, adjustment, wrong/teacher/reveal paths, independent modes and island scoring, fallback keyboard, editor preservation, seven long tokens and local scrolling, actual departure/switch/restart, practice versus skipped summary, repeated-mode/context loss, dialog input isolation, screenshot resize errors, viewport fit, native focus, default textbook, revealed/error fit, page hiding, and changed-sentence stale mapping.
+The 20 train browser tests cover stable candidates, adjustment, wrong/teacher/reveal paths, independent modes and island scoring, fallback keyboard, editor preservation, seven long tokens and local scrolling, actual departure/switch/restart, practice versus skipped summary, repeated-mode/context loss, dialog input isolation, screenshot resize errors, viewport fit, native focus, default textbook, revealed/error fit, page hiding, and changed-sentence stale mapping.
 
 ## Visual artifacts (local evidence)
 
@@ -43,3 +43,13 @@ The 18 train browser tests cover stable candidates, adjustment, wrong/teacher/re
 Primary actions, all candidate controls plus wheel margin, and feedback have explicit viewport-bound assertions on both projector sizes. The 390px test asserts no page horizontal overflow, actual track overflow and the appended carriage fully visible. Mobile intentionally permits vertical scrolling.
 
 No push, merge, or deployment was performed. No optional visual-polish expansion beyond review fixes was pursued.
+
+## Independent review fix: restarted-round mouse targets
+
+The independent reviewer reproduced a P1 in `0b4dfff`: restarting an untouched one-question round rebuilt candidate buttons, but the scene cache saw the same question/mode/index/selection and skipped projection. The new buttons had empty inline coordinates and overlapping targets.
+
+- RED: `restarting an untouched one-question round realigns replacement mouse targets` failed because replacement button `left`/`top` styles were empty. Same-first-question practice coverage passed and was retained. Raw `ui-restart-red.log`.
+- Fix: the view increments `controlsRevision` whenever it replaces candidate or selected semantic controls; the scene includes that revision in its layout cache key. Ordinary feedback-only renders remain cached. No core or model geometry changes were needed.
+- GREEN: three untouched restarts and two same-first-question practice rounds retain distinct projected targets; actual coordinate-based mouse clicks select the displayed word. Targeted **2/2 PASS**, raw `ui-restart-green.log`. Independent reviewer also reran the original reproduction and confirmed actual mouse selection.
+- First post-fix full run had **76 passes / 1 timeout** in the existing workshop long-answer test while commit `c253132` changed an imported data module. The failure snapshot shows a reloaded page back in the initial reading mode. This hot-reload-interrupted run is retained as `ui-hot-reload-interrupted.log` and `ui-hot-reload-context.md`; it is not reported as a passing suite.
+- With application source held stable, the full browser suite reran: **77/77 PASS**, exit 0, 1.6 min, raw `ui-final.log`. The prior failing workshop test passed in 7.8 seconds. Fresh UI-unit verification was **82/82 PASS**; the final build after `c253132` was **PASS**, exit 0. No further application source edits were made after that stable run.

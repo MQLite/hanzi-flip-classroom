@@ -103,3 +103,19 @@ test('changed built-in sentence loses its mapping without changing current-round
  const bank=[{id:'hypy-1A-1-老',grade:1,character:'老',pinyin:'lǎo',words:['老师','老人'],sentence:'老师在看书。'}];await open(page,{bank});await expect(page.locator('#train-palette button')).toHaveCount(3);
  await page.getByRole('button',{name:'题库管理',exact:true}).click();await page.locator('.question-row').click();await page.getByText('句子小火车设置',{exact:true}).click();await expect(page.locator('#train-editor-preview')).toContainText('内置切分');await page.locator('[name="sentence"]').fill('老师在写字。');await expect(page.locator('#train-editor-preview')).toContainText('尚未设置有效');await page.getByRole('button',{name:'关闭题库',exact:true}).click();await expect(page.locator('#train-palette button')).toHaveCount(3);await page.locator('#restart').click();await expect(page.getByText('当前范围没有可用句子',{exact:true})).toBeVisible();
 });
+async function assertTrainMouseTargets(page){
+ const buttons=page.locator('#train-palette button');
+ const positions=await buttons.evaluateAll(nodes=>nodes.map(e=>{const r=e.getBoundingClientRect();return {left:e.style.left,top:e.style.top,x:r.x+r.width/2,y:r.y+r.height/2,text:e.textContent}}));
+ expect(positions.every(p=>p.left&&p.top)).toBe(true);
+ expect(new Set(positions.map(p=>`${p.x}:${p.y}`)).size).toBe(positions.length);
+ await page.mouse.click(positions[0].x,positions[0].y);
+ await expect(page.locator('#train-reading')).toHaveText(positions[0].text+'。');
+ await expect(page.locator('#train-selected button')).toHaveCount(1);
+}
+test('restarting an untouched one-question round realigns replacement mouse targets',async({page})=>{
+ await open(page);await expect(page.locator('#train-scene')).toHaveAttribute('data-mode','webgl');
+ for(let attempt=0;attempt<3;attempt++){await page.locator('#restart').click();await assertTrainMouseTargets(page);await page.locator('#train-clear').click();}
+});
+test('practice of the same first question rebuilds aligned and clickable carriages',async({page})=>{
+ await open(page);for(let attempt=0;attempt<2;attempt++){await page.locator('#practice').click();await page.locator('#next').click();await page.getByRole('button',{name:'开始复习',exact:true}).click();await assertTrainMouseTargets(page);await page.locator('#train-clear').click();}
+});
