@@ -1,4 +1,5 @@
 import { validateBank, previewImport, exportBank } from "./storage.js";
+import { STAGES, curriculumCourse, curriculumLabel, mergeTextbookQuestions } from './curriculum.js';
 
 export function downloadText(
   text,
@@ -13,7 +14,7 @@ export function downloadText(
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export function createEditor({ store, getBank, onBank, defaults, notify }) {
+export function createEditor({ store, getBank, onBank, defaults, notify, canEdit = () => true }) {
   const dialog = document.createElement("dialog");
   dialog.className = "editor-dialog";
   dialog.setAttribute("aria-label", "题库管理");
@@ -25,7 +26,11 @@ export function createEditor({ store, getBank, onBank, defaults, notify }) {
   document.body.append(dialog);
   const $ = (s) => dialog.querySelector(s),
     form = $("#question-form");
+  $('.bank-toolbar').insertAdjacentHTML('beforeend', '<button id="append-textbook">补充缺失教材题</button>');
+  $('.bank-filters').insertAdjacentHTML('beforeend', `<select id="bank-stage" aria-label="筛选学习阶段"><option value="">全部来源</option><option value="personal">个人 / 通用</option>${STAGES.map(s=>`<option value="${s}">${s}</option>`).join('')}</select>`);
+  form.insertAdjacentHTML('afterbegin', '<p id="question-origin" class="muted"></p>');
   let selected = null,
+    textbookAssignment = null,
     dirty = false,
     pending = null,
     pendingSuccess = null,
@@ -47,11 +52,17 @@ export function createEditor({ store, getBank, onBank, defaults, notify }) {
     $("#import-preview").replaceChildren();
   }
   function list() {
+    for (const id of ['#append-textbook', '#add-question']) {
+      $(id).disabled = !canEdit();
+      $(id).title = canEdit() ? '' : '原题库尚未成功读取，请先备份并恢复，或确认导入替换。';
+    }
     const search = $("#bank-search").value.trim().toLowerCase(),
-      grade = $("#bank-grade").value;
+      grade = $("#bank-grade").value,
+      stage = $('#bank-stage').value;
     const items = getBank().questions.filter(
       (q) =>
         (!grade || q.grade === Number(grade)) &&
+        (!stage || (stage === 'personal' ? !q.textbook : curriculumCourse(q)?.stage === stage)) &&
         [q.character, q.pinyin, ...q.words]
           .join(" ")
           .toLowerCase()
@@ -67,7 +78,7 @@ export function createEditor({ store, getBank, onBank, defaults, notify }) {
       const char = document.createElement("strong");
       char.textContent = q.character;
       const text = document.createElement("span");
-      text.textContent = `${q.pinyin} · ${q.grade} 年级`;
+      text.textContent = `${q.pinyin} · ${q.textbook ? curriculumLabel(q) : `${q.grade} 年级 · 个人 / 通用`}`;
       b.append(char, text);
       b.onclick = () => {
         if (mayLeave()) edit(q);
@@ -78,6 +89,8 @@ export function createEditor({ store, getBank, onBank, defaults, notify }) {
   function edit(q) {
     invalidateImport();
     selected = q.id;
+    textbookAssignment = q.textbook ? {textbook:q.textbook, book:q.book, lesson:q.lesson} : null;
+    $('#question-origin').textContent = curriculumLabel(q) + (q.textbook ? ' · 官方汉字范围；例词例句为配编，修改汉字或年级将移入个人题库。' : '');
     dirty = false;
     pending = null;
     pendingSuccess = null;
@@ -108,6 +121,7 @@ export function createEditor({ store, getBank, onBank, defaults, notify }) {
   function reset() {
     invalidateImport();
     selected = null;
+    textbookAssignment = null;
     dirty = false;
     pending = null;
     pendingSuccess = null;
@@ -147,6 +161,7 @@ export function createEditor({ store, getBank, onBank, defaults, notify }) {
   function collect() {
     const f = form.elements;
     const q = {
+      ...(textbookAssignment || {}),
       id: selected,
       grade: Number(f.grade.value),
       character: f.character.value,
@@ -161,6 +176,10 @@ export function createEditor({ store, getBank, onBank, defaults, notify }) {
   }
   form.addEventListener("input", (event) => {
     dirty = true;
+    if (textbookAssignment && ['character','grade'].includes(event.target.name)) {
+      textbookAssignment = null;
+      $('#question-origin').textContent = '个人 / 通用题库 · 已移除原教材归属';
+    }
     if (event.target.name === "character") {
       for (const key of ["strokeCount", "radical", "structure", "components"])
         form.elements[key].value = "";
@@ -206,6 +225,7 @@ export function createEditor({ store, getBank, onBank, defaults, notify }) {
     else reset();
   });
   $("#add-question").onclick = () => {
+    if (!canEdit()) { notify('原题库尚未成功读取，请先处理读取问题。'); return; }
     if (mayLeave())
       edit({
         id: crypto.randomUUID(),
@@ -215,6 +235,21 @@ export function createEditor({ store, getBank, onBank, defaults, notify }) {
   };
   $("#bank-search").oninput = list;
   $("#bank-grade").onchange = list;
+  $('#bank-stage').onchange = list;
+  function addTextbook(onSuccess) {
+    if (!canEdit()) { notify('原题库尚未成功读取，不能补充题目覆盖原始数据。'); return; }
+    if (!mayLeave()) return;
+    const questions = mergeTextbookQuestions(getBank().questions);
+    const count = questions.length - getBank().questions.length;
+    if (!count) { notify('新版教材题已齐全，已有修改保持不变。'); onSuccess?.(); return; }
+    saveBank({schemaVersion:1, questions}, () => {
+      reset();
+      $('#bank-feedback').textContent = `已补充 ${count} 道教材题，已有题目和修改保持不变。`;
+      notify(`已补充 ${count} 道教材题`);
+      onSuccess?.();
+    });
+  }
+  $('#append-textbook').onclick = () => addTextbook();
   $("#export-bank").onclick = () => downloadText(exportBank(getBank()));
   $("#retry-save").onclick = () => {
     if (pending) {
@@ -242,7 +277,7 @@ export function createEditor({ store, getBank, onBank, defaults, notify }) {
     if (!mayLeave()) return;
     if (
       !confirm(
-        "恢复默认将替换全部个人修改。建议先点击“导出题库”备份。确定恢复 48 道默认题目吗？",
+        `恢复默认将替换全部个人修改。建议先点击“导出题库”备份。确定恢复 ${defaults.length} 道默认题目吗？`,
       )
     )
       return;
@@ -324,6 +359,7 @@ export function createEditor({ store, getBank, onBank, defaults, notify }) {
       dialog.showModal();
     },
     restore,
+    addTextbook,
     hasDraft: () => dirty,
   };
 }

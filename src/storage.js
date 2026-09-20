@@ -1,3 +1,5 @@
+import { curriculumCourse } from './curriculum.js'
+
 export const SCHEMA_VERSION = 1
 export const STORAGE_KEY = 'hanzi-flip.question-bank'
 
@@ -73,6 +75,10 @@ export function validateBank(input) {
     if (!Number.isInteger(question.grade) || question.grade < 1 || question.grade > 4) {
       errors.push(issue(`${base}.grade`, 'invalid-grade', 'grade 必须是 1 至 4 的整数。'))
     }
+    const hasCurriculum = ['textbook', 'book', 'lesson'].some(key => question[key] !== undefined)
+    if (hasCurriculum && (!curriculumCourse(question) || question.grade !== question.book)) {
+      errors.push(issue(`${base}.textbook`, 'invalid-curriculum', '教材归属必须对应新版《中文乐园》1–3册的实际课次、汉字和级别。'))
+    }
     if (typeof question.character === 'string' && !/^\p{Script=Han}$/u.test(question.character)) {
       errors.push(issue(`${base}.character`, 'invalid-character', 'character 必须是单个汉字。'))
     }
@@ -109,13 +115,15 @@ export function validateBank(input) {
       typeof question.character === 'string' &&
       typeof question.pinyin === 'string'
     ) {
-      const signature = `${question.grade}\u0000${question.character}\u0000${normalizePinyin(question.pinyin)}`
+      const signature = hasCurriculum
+        ? `${question.textbook}\u0000${question.book}\u0000${question.lesson}\u0000${question.character}`
+        : `${question.grade}\u0000${question.character}\u0000${normalizePinyin(question.pinyin)}`
       if (signatures.has(signature)) {
         errors.push(
           issue(
             base,
             'duplicate-question',
-            `年级、汉字和读音与 questions[${signatures.get(signature)}] 重复。`,
+            `题目归属和汉字与 questions[${signatures.get(signature)}] 重复（通用题按年级及读音区分）。`,
           ),
         )
       } else {

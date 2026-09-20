@@ -50,7 +50,7 @@ await capture("classroom-1440-reveal", 1440, 900);
 await capture("classroom-1920", 1920, 1080);
 await capture("classroom-mobile", 390, 844);
 page.once("dialog", (dialog) => dialog.accept());
-await page.locator("#grade").selectOption("4");
+await page.locator("#stage").selectOption("3B");
 await page.locator("#reveal").click();
 await capture("classroom-1280-reveal", 1280, 720);
 await page.locator("#extension-toggle").click();

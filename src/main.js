@@ -1,5 +1,6 @@
 import "./styles.css";
 import { DEFAULT_QUESTIONS } from "./data.js";
+import { COURSES, STAGES, TEXTBOOK_QUESTIONS, filterCurriculum, curriculumLabel, mergeTextbookQuestions } from './curriculum.js';
 import {
   createSession,
   getCurrentQuestion,
@@ -29,6 +30,12 @@ app.innerHTML = `<header class="site-header"><a class="brand" href="./" aria-lab
 <dialog id="settings-dialog" aria-labelledby="settings-title"><div class="dialog-heading"><div><span class="eyebrow">OUR LITTLE TEAMS</span><h2 id="settings-title">为小组起个名字</h2></div><button class="close-dialog icon-button" aria-label="关闭小组设置">×</button></div><p>应用设置会开始新一轮，清空本轮得分。</p><label>小组数量<select id="team-count"><option value="2">2 个小组</option><option value="3">3 个小组</option><option value="4">4 个小组</option></select></label><div id="team-fields"></div><button id="apply-teams" class="primary">应用并开始新一轮</button></dialog>
 <dialog id="help-dialog" aria-labelledby="help-title"><div class="dialog-heading"><h2 id="help-title">欢迎来到汉字奇遇岛</h2><button class="close-dialog icon-button" aria-label="关闭帮助">×</button></div><ol class="help-steps"><li>选择年级，认读屏幕上的汉字。</li><li>翻牌揭晓拼音、组词和例句。</li><li>选中小组，再点“答对了”；想巩固的字点“再练一次”。每字只结算一次。</li><li>一轮结束后，带着需要巩固的字再出发。</li></ol><p>跳过的字记为未作答；回看不会重复加分。多音字按照本题例句判断，其他读音也可能正确。</p><p>题库自动保存在此设备的此浏览器中，请定期导出备份。课堂得分、小组和进度不会在刷新后恢复。</p><p>年级是难度建议，不对应特定教材。打开面板或输入文字时，课堂快捷键会暂停。</p><p>立体显示不流畅时，可随时切换“简化显示”，本轮进度保留。</p></dialog>`;
 const $ = (s) => document.querySelector(s);
+const allDefaults = [...DEFAULT_QUESTIONS, ...TEXTBOOK_QUESTIONS];
+$('.teacher-badge').textContent = '中文乐园 · 课本1–3';
+$('.lesson-toolbar').insertAdjacentHTML('afterbegin', `<label class="curriculum-field">题库<select id="bank-source" aria-label="题库来源"><option value="textbook">中文乐园（新版）</option><option value="personal">个人 / 通用题库</option></select></label><label class="curriculum-field textbook-field">阶段<select id="stage" aria-label="学习阶段">${STAGES.map(s=>`<option>${s}</option>`).join('')}</select></label><label class="curriculum-field textbook-field">范围<select id="scope" aria-label="练习范围"><option value="stage">整个阶段</option><option value="lesson">本课</option><option value="cumulative">截至本课累计</option></select></label><label class="curriculum-field textbook-field">课次<select id="lesson" aria-label="选择课次"></select></label>`);
+$('.lesson-toolbar').insertAdjacentHTML('afterend', '<p id="curriculum-note" class="curriculum-note"></p><div id="textbook-notice" class="notice" hidden><span></span><button id="add-textbook">添加新版教材题库</button></div>');
+$('#help-dialog .help-steps li').textContent = '选择教材阶段和练习范围，或切换到个人 / 通用题库按年级练习。';
+$('#help-dialog').insertAdjacentHTML('beforeend', '<p>新版《中文乐园》课本1–3：A为第1–6课，B为第7–12课。A/B是游戏学习阶段，不是出版社分册。教材字表按官方教学大纲；组词、读音语境和例句由本项目配编，可由老师修改。</p>');
 let toastTimer;
 function notify(message) {
   $("#toast").textContent = message;
@@ -51,9 +58,10 @@ try {
 }
 const store = createQuestionBankStore({
   storage,
-  defaultQuestions: DEFAULT_QUESTIONS,
+  defaultQuestions: allDefaults,
 });
 let load = store.load(),
+  bankLoaded = load.ok,
   bank = load.ok ? load.bank : { schemaVersion: 1, questions: [] },
   grade = 1,
   teamNames = ["向日葵组", "小树苗组"],
@@ -61,15 +69,50 @@ let load = store.load(),
   showPinyin = true,
   extensionOpen = false,
   strokeCleanup = null;
-let session = createSession({ questions: bank.questions, grade, teamNames });
+let selection = {source: bank.questions.some(q=>q.textbook) ? 'textbook' : 'personal', stage:'1A', scope:'stage', lesson:1};
+function currentSession() {
+  const questions = selection.source === 'textbook'
+    ? filterCurriculum(bank.questions, selection)
+    : bank.questions.filter(q=>!q.textbook);
+  return createSession({questions, grade: selection.source === 'personal' ? grade : undefined, teamNames});
+}
+function refreshTextbookNotice() {
+  const missing = mergeTextbookQuestions(bank.questions).length - bank.questions.length;
+  $('#textbook-notice').hidden = !bankLoaded || missing === 0;
+  $('#textbook-notice span').textContent = `可补充 ${missing} 道新版《中文乐园》教材题，保留已有题目和修改。`;
+}
+function syncSelection() {
+  $('#bank-source').value = selection.source;
+  $('#stage').value = selection.stage;
+  $('#scope').value = selection.scope;
+  $('#lesson').replaceChildren(...COURSES.filter(c=>c.stage===selection.stage).map(c=>{
+    const option = document.createElement('option');
+    option.value = c.lesson;
+    option.textContent = `第${c.lesson}课 ${c.title}`;
+    return option;
+  }));
+  $('#lesson').value = selection.lesson;
+  $('#lesson').disabled = selection.scope === 'stage';
+  $('.grade-label').hidden = selection.source !== 'personal';
+  document.querySelectorAll('.textbook-field').forEach(e=>e.hidden=selection.source !== 'textbook');
+  $('#curriculum-note').textContent = selection.source === 'textbook'
+    ? `《中文乐园》课本1–3 · A/B为游戏分组（A：第1–6课，B：第7–12课） · ${selection.scope === 'cumulative' ? `课本1第1课至课本${selection.stage[0]}第${selection.lesson}课` : selection.scope === 'lesson' ? `${selection.stage} 第${selection.lesson}课` : `${selection.stage} 全阶段`} · 例词例句为配编`
+    : '个人 / 通用题库 · 年级为难度建议';
+  refreshTextbookNotice();
+}
+let session = currentSession();
+syncSelection();
 const editor = createEditor({
   store,
   getBank: () => bank,
+  canEdit: () => bankLoaded,
   onBank: (value) => {
     bank = value;
+    bankLoaded = true;
     $("#storage-alert").hidden = true;
+    refreshTextbookNotice();
   },
-  defaults: DEFAULT_QUESTIONS,
+  defaults: allDefaults,
   notify,
 });
 const scene = createClassroomScene($("#scene"), $("#card-face"), (message) => {
@@ -92,7 +135,9 @@ function storageAlert(result) {
         load = store.load();
         if (load.ok) {
           bank = load.bank;
+          bankLoaded = true;
           box.hidden = true;
+          syncSelection();
           newRound();
         } else notify("仍无法读取，请备份原始数据。");
       },
@@ -126,7 +171,7 @@ function mayRestart() {
   return !progressed() || confirm("开始新一轮会清空本轮得分和进度，继续吗？");
 }
 function newRound() {
-  session = createSession({ questions: bank.questions, grade, teamNames });
+  session = currentSession();
   selectedTeam = "team-1";
   extensionOpen = false;
   render();
@@ -143,7 +188,7 @@ function render() {
     revealed = active && session.revealed[session.currentIndex],
     judgment = active && session.judgments[session.currentIndex];
   $("#mode-label").textContent =
-    session.mode === "practice" ? "再一次，小小的进步" : "今日探索";
+    session.mode === "practice" ? "再一次，小小的进步" : q?.textbook ? curriculumLabel(q) : "今日探索";
   $("#progress").textContent =
     session.phase === "empty"
       ? "00 / 00"
@@ -234,7 +279,7 @@ function render() {
     face.className = "empty-card";
     face.append(
       el("span", "字", "empty-symbol"),
-      el("h2", "这个年级还没有题目"),
+      el("h2", "当前范围还没有题目"),
       el("p", "添加几个汉字，就能开始新的探索。"),
     );
     const b = el("button", "添加课堂题目", "primary");
@@ -327,6 +372,27 @@ $("#practice").onclick = () => {
 };
 $("#restart").onclick = () => {
   if (mayRestart()) newRound();
+};
+for (const [id, key] of [['bank-source','source'],['stage','stage'],['scope','scope'],['lesson','lesson']]) {
+  $(`#${id}`).onchange = event => {
+    if (!mayRestart()) { syncSelection(); return; }
+    selection = {...selection, [key]:key === 'lesson' ? Number(event.target.value) : event.target.value};
+    if (key === 'stage') selection.lesson = selection.stage.endsWith('A') ? 1 : 7;
+    if (key === 'stage' || key === 'source') {
+      showPinyin = (selection.source === 'textbook' ? Number(selection.stage[0]) : grade) <= 2;
+      $('#pinyin').checked = showPinyin;
+    }
+    syncSelection();
+    newRound();
+  };
+}
+$('#add-textbook').onclick = () => {
+  if (!mayRestart()) return;
+  editor.addTextbook(() => {
+    selection.source = 'textbook';
+    syncSelection();
+    newRound();
+  });
 };
 $("#grade").onchange = (event) => {
   if (!mayRestart()) {

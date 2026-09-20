@@ -1716,3 +1716,58 @@ dialog > label {
     scroll-behavior: auto !important;
   }
 }
+
+/* Curriculum controls keep the existing classroom and personal bank in one flow. */
+.lesson-toolbar {
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 0;
+}
+.curriculum-field {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  min-width: 0;
+}
+.curriculum-field select {
+  width: auto;
+  min-width: 66px;
+  max-width: 175px;
+  padding: 7px 9px;
+  font-size: 12px;
+}
+.curriculum-field #lesson { max-width: 165px; }
+.curriculum-note {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #547263;
+  margin: 5px 0 4px;
+}
+#textbook-notice { margin-bottom: 14px; }
+#textbook-notice button { margin-left: 12px; }
+.bank-filters { flex-wrap: wrap; }
+#bank-stage { width: 100%; }
+#question-origin { line-height: 1.7; }
+.question-row span { white-space: normal; line-height: 1.5; }
+#mode-label { max-width: 66%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (min-width: 1000px) {
+  .lesson-toolbar #round-caption { display: none; }
+  .lesson-toolbar .switch-label { margin-left: auto; }
+}
+@media (max-height: 800px) and (min-width: 1000px) {
+  .lesson-toolbar { padding: 10px 12px; gap: 8px; }
+  .curriculum-note { margin: 5px 0 8px; font-size: 10px; }
+  .curriculum-field select { padding: 6px; max-width: 150px; }
+  .curriculum-field #lesson { max-width: 150px; }
+}
+@media (max-width: 720px) {
+  .lesson-toolbar { gap: 10px; }
+  .curriculum-field { flex: 1 1 42%; justify-content: space-between; }
+  .curriculum-field select { flex: 1; width: 0; min-width: 0; max-width: none; }
+  .curriculum-field #lesson { max-width: none; }
+  #textbook-notice button { margin: 8px 0 0; }
+  .curriculum-note { font-size: 10px; }
+}

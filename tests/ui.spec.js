@@ -69,12 +69,12 @@ test("import preview cancel and deliberate empty bank survive reload", async ({
   await page.locator("#import-file").setInputFiles(file);
   await expect(page.locator("#import-preview")).toContainText("共 0 题");
   await page.getByRole("button", { name: "取消替换" }).click();
-  await expect(page.locator(".question-row")).toHaveCount(48);
+  await expect(page.locator(".question-row")).toHaveCount(156);
   await page.locator("#import-file").setInputFiles(file);
   await page.getByRole("button", { name: "确认替换题库" }).click();
   await expect(page.locator(".question-row")).toHaveCount(0);
   await page.reload();
-  await expect(page.getByText("这个年级还没有题目")).toBeVisible();
+  await expect(page.getByText("当前范围还没有题目")).toBeVisible();
 });
 test("local stroke controls and user-selected simplified mode", async ({
   page,
@@ -171,7 +171,7 @@ test("failed import retains original bank and offers export and retry outside fo
     buffer: Buffer.from('{"schemaVersion":1,"questions":[]}'),
   });
   await page.getByRole("button", { name: "确认替换题库" }).click();
-  await expect(page.locator(".question-row")).toHaveCount(48);
+  await expect(page.locator(".question-row")).toHaveCount(156);
   await expect(
     page.getByRole("button", { name: "导出待保存题库" }),
   ).toBeVisible();
@@ -180,6 +180,7 @@ test("failed import retains original bank and offers export and retry outside fo
 test("grade change cancel preserves progress and grade defaults update hints", async ({
   page,
 }) => {
+  await page.getByLabel("题库来源").selectOption("personal");
   await page.getByRole("button", { name: "翻牌揭晓", exact: true }).click();
   page.once("dialog", (d) => d.dismiss());
   await page.getByLabel("选择年级").selectOption("3");
@@ -188,6 +189,67 @@ test("grade change cancel preserves progress and grade defaults update hints", a
   await page.getByLabel("选择年级").selectOption("3");
   await expect(page.locator(".pinyin")).toHaveCount(0);
   await expect(page.locator("#progress")).toHaveText("01 / 08");
+});
+
+test('curriculum stage, lesson, cumulative selection and cancellation', async ({ page }) => {
+  await expect(page.getByLabel('题库来源')).toHaveValue('textbook');
+  await expect(page.locator('#curriculum-note')).toContainText('A/B为游戏分组');
+  await page.getByLabel('练习范围').selectOption('lesson');
+  await expect(page.locator('#progress')).toHaveText('01 / 03');
+  expect(['一','二','三']).toContain(await page.locator('.hanzi').textContent());
+  await page.getByRole('button', {name:'翻牌揭晓', exact:true}).click();
+  page.once('dialog', d=>d.dismiss());
+  await page.getByLabel('学习阶段', {exact:true}).selectOption('3B');
+  await expect(page.getByLabel('学习阶段', {exact:true})).toHaveValue('1A');
+  await expect(page.locator('#progress')).toHaveText('01 / 03');
+  page.once('dialog', d=>d.accept());
+  await page.getByLabel('学习阶段', {exact:true}).selectOption('3B');
+  await expect(page.getByLabel('选择课次')).toHaveValue('7');
+  expect(['相','机','板']).toContain(await page.locator('.hanzi').textContent());
+  await page.getByLabel('练习范围').selectOption('cumulative');
+  await expect(page.locator('#progress')).toHaveText('01 / 08');
+  await expect(page.locator('#curriculum-note')).toContainText('课本1第1课至课本3第7课');
+});
+
+test('upgrading an old bank appends textbooks without replacing teacher work and persists', async ({page}) => {
+  await page.evaluate(() => {
+    localStorage.setItem('hanzi-flip.question-bank', JSON.stringify({schemaVersion:1, questions:[{
+      id:'teacher-one', grade:1, character:'田', pinyin:'tián', words:['田地','水田'], sentence:'老师自己的例句。'
+    }]}));
+  });
+  await page.reload();
+  await expect(page.getByLabel('题库来源')).toHaveValue('personal');
+  await page.getByRole('button', {name:'添加新版教材题库', exact:true}).click();
+  await expect(page.getByLabel('题库来源')).toHaveValue('textbook');
+  await page.reload();
+  const bank = await page.evaluate(()=>JSON.parse(localStorage.getItem('hanzi-flip.question-bank')));
+  expect(bank.questions).toHaveLength(109);
+  expect(bank.questions.find(q=>q.id==='teacher-one').sentence).toBe('老师自己的例句。');
+  await page.getByRole('button', {name:'题库管理',exact:true}).click();
+  await page.getByLabel('筛选学习阶段').selectOption('1A');
+  await expect(page.locator('.question-row')).toHaveCount(18);
+  await page.locator('.question-row').first().click();
+  await page.getByLabel('例句', {exact:true}).fill('我有一个新书包。');
+  await expect(page.locator('#question-origin')).toContainText('1A');
+  await page.getByLabel('汉字', {exact:true}).fill('田');
+  await expect(page.locator('#question-origin')).toContainText('个人');
+  const edited = await page.evaluate(()=>JSON.parse(localStorage.getItem('hanzi-flip.question-bank')).questions.find(q=>q.id==='cp2023-1-1-一'));
+  expect(edited.textbook).toBeUndefined();
+});
+
+test('unreadable bank cannot be overwritten by appending textbooks or adding a question', async ({page}) => {
+  await page.evaluate(()=>localStorage.setItem('hanzi-flip.question-bank', 'UNREADABLE ORIGINAL BANK'));
+  await page.reload();
+  await page.getByRole('button', {name:'题库管理',exact:true}).click();
+  const append = page.getByRole('button', {name:'补充缺失教材题',exact:true});
+  await append.evaluate(button=>button.click());
+  expect(await page.evaluate(()=>localStorage.getItem('hanzi-flip.question-bank'))).toBe('UNREADABLE ORIGINAL BANK');
+  await expect(append).toBeDisabled();
+  await expect(page.getByRole('button', {name:'新增题目'})).toBeDisabled();
+  page.once('dialog', dialog=>dialog.accept());
+  await page.locator('#restore-bank').click();
+  await expect(append).toBeEnabled();
+  await expect(page.locator('.question-row')).toHaveCount(156);
 });
 test("four teams and revealed card fit projector view", async ({ page }) => {
   await page.getByRole("button", { name: "小组设置" }).click();
@@ -248,6 +310,7 @@ test("corrupt data is preserved and can be downloaded before restore", async ({
 test("missing and mismatched stroke data provide textual fallback", async ({
   page,
 }) => {
+  await page.getByLabel("题库来源").selectOption("personal");
   await page.route("**/strokes/*.json", (route) =>
     route.fulfill({
       status: 200,
@@ -307,7 +370,7 @@ test("invalid imported records identify their fields without changing bank", asy
   await expect(page.locator("#bank-feedback")).toContainText(
     "questions[0].pinyin",
   );
-  await expect(page.locator(".question-row")).toHaveCount(48);
+  await expect(page.locator(".question-row")).toHaveCount(156);
 });
 test("context loss keeps fallback when teacher attempts 3D again", async ({
   page,
@@ -331,6 +394,7 @@ test("short projector learning text remains large after reveal", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 720 });
+  await page.getByLabel("题库来源").selectOption("personal");
   await page.getByLabel("选择年级").selectOption("4");
   await page.getByRole("button", { name: "翻牌揭晓", exact: true }).click();
   expect(
@@ -377,7 +441,7 @@ test("a rejected second import invalidates the previous replacement preview", as
   await expect(page.getByRole("button", { name: "确认替换题库" })).toHaveCount(
     0,
   );
-  await expect(page.locator(".question-row")).toHaveCount(48);
+  await expect(page.locator(".question-row")).toHaveCount(156);
 });
 test("late stroke data cannot append an earlier glyph to the current panel", async ({
   page,
@@ -424,12 +488,12 @@ test("retrying a failed deletion completes the deletion form transition", async 
     () => (Storage.prototype.setItem = window.originalSetItem),
   );
   await page.getByRole("button", { name: "重试保存" }).click();
-  await expect(page.locator(".question-row")).toHaveCount(47);
+  await expect(page.locator(".question-row")).toHaveCount(155);
   await expect(page.locator("#question-form")).toBeHidden();
   await page.locator("#close-editor").click();
   await page.reload();
   await page.locator("#open-bank").click();
-  await expect(page.locator(".question-row")).toHaveCount(47);
+  await expect(page.locator(".question-row")).toHaveCount(155);
 });
 test("switching to simplified mode at the edge of a flip keeps the face visible", async ({
   page,
@@ -482,7 +546,7 @@ test("an older asynchronous file read cannot revive its import preview", async (
   await expect(page.getByRole("button", { name: "确认替换题库" })).toHaveCount(
     0,
   );
-  await expect(page.locator(".question-row")).toHaveCount(48);
+  await expect(page.locator(".question-row")).toHaveCount(156);
 });
 for (const action of [
   "invalid import",
@@ -545,14 +609,14 @@ for (const action of [
     await expect(page.locator("#export-pending")).toBeHidden();
     // An abandoned pending action must be disarmed, not merely visually hidden.
     await page.locator("#retry-save").evaluate((button) => button.click());
-    await expect(page.locator(".question-row")).toHaveCount(48);
+    await expect(page.locator(".question-row")).toHaveCount(156);
     expect(
       await page.evaluate(
         () =>
           JSON.parse(localStorage.getItem("hanzi-flip.question-bank")).questions
             .length,
       ),
-    ).toBe(48);
+    ).toBe(156);
     let prompted = false;
     page.once("dialog", async (dialog) => {
       prompted = true;

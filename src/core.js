@@ -51,14 +51,14 @@ function shuffle(values, random) {
 }
 
 export function selectQuestions(questions, { grade, limit = 8, random = Math.random } = {}) {
-  assertGrade(grade)
+  if (grade !== undefined) assertGrade(grade)
   if (!Array.isArray(questions)) throw new TypeError('questions must be an array')
   if (!Number.isInteger(limit) || limit < 0) throw new RangeError('limit must be a non-negative integer')
   if (typeof random !== 'function') throw new TypeError('random must be a function')
   if (limit === 0) return []
 
   const candidates = shuffle(
-    questions.filter((question) => question?.grade === grade),
+    questions.filter((question) => grade === undefined || question?.grade === grade),
     random,
   )
   const characters = new Set()
