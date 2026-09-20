@@ -12,10 +12,7 @@ test("classroom reveal, one settlement, back navigation and review", async ({
   await page.getByRole("button", { name: "翻牌揭晓", exact: true }).click();
   await page.getByRole("button", { name: "答对了", exact: true }).click();
   await expect(page.locator('[data-score="team-1"]')).toHaveText("1");
-  await expect(
-    page.getByRole("button", { name: "答对了", exact: true }),
-  ).toBeDisabled();
-  await page.getByRole("button", { name: "下一字", exact: true }).click();
+  await expect(page.locator("#progress")).toHaveText("02 / 08");
   await page.getByRole("button", { name: "上一字", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "答对了", exact: true }),
@@ -739,4 +736,65 @@ test('PDF bank is the default, preserves actual lessons, and works in both modes
   await expect(page.locator('.question-row')).toHaveCount(PARADISE_QUESTIONS.filter(q => q.book === 3 && q.lesson >= 7).length);
   await page.locator('.question-row').first().click();
   await expect(page.locator('#question-origin')).toContainText('汉语乐园');
+});
+
+
+async function prepareIslandWalk(page) {
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  await page.clock.install({time:new Date('2026-01-01T00:00:00Z')});
+  await page.reload();
+  await expect(page.locator('#scene')).toHaveAttribute('data-glyph-state','ready');
+  await page.clock.pauseAt(new Date('2026-01-01T00:01:00Z'));
+  await page.locator('#reveal').evaluate(button=>button.click());
+  await page.clock.runFor(700);
+  await page.locator('#correct').evaluate(button=>button.click());
+}
+
+test('island journey locks duplicate scoring and advances exactly once on arrival', async ({page})=>{
+  await prepareIslandWalk(page);
+  await expect(page.locator('#scene')).toHaveAttribute('data-journey','walking');
+  await expect(page.locator('#next')).toBeDisabled();
+  await expect(page.locator('#back')).toBeDisabled();
+  await page.locator('#correct').evaluate(button=>button.click());
+  await page.keyboard.press('ArrowRight');
+  await page.clock.runFor(900);
+  await expect(page.locator('#progress')).toHaveText('01 / 08');
+  await expect(page.locator('[data-score="team-1"]')).toHaveText('1');
+  await page.clock.runFor(1600);
+  await expect(page.locator('#progress')).toHaveText('02 / 08');
+  await expect(page.locator('#scene')).toHaveAttribute('data-journey','idle');
+  await expect(page.locator('#reveal')).toBeVisible();
+  await page.locator('#back').evaluate(button=>button.click());
+  await expect(page.locator('#correct')).toBeDisabled();
+});
+
+test('switching modes during island journey settles only the reading session', async ({page})=>{
+  await prepareIslandWalk(page);
+  await page.locator('#mode-workshop').evaluate(button=>button.click());
+  await page.clock.runFor(2600);
+  await expect(page.locator('#progress')).toHaveText('01 / 08');
+  await expect(page.locator('[data-score="team-1"]')).toHaveText('0');
+  await page.locator('#mode-flip').evaluate(button=>button.click());
+  await expect(page.locator('#progress')).toHaveText('02 / 08');
+  await expect(page.locator('[data-score="team-1"]')).toHaveText('1');
+});
+
+for(const interruption of ['simple','context-loss','restart']) test(`island journey handles ${interruption} without stale navigation`, async ({page})=>{
+  await prepareIslandWalk(page);
+  if(interruption==='simple') await page.locator('#simplify').evaluate(button=>button.click());
+  else if(interruption==='context-loss') await page.locator('#scene canvas').evaluate(canvas=>canvas.dispatchEvent(new Event('webglcontextlost',{cancelable:true})));
+  else { page.once('dialog',dialog=>dialog.accept()); await page.locator('#restart').evaluate(button=>button.click()); }
+  await page.clock.runFor(2600);
+  await expect(page.locator('#scene')).toHaveAttribute('data-journey','idle');
+  await expect(page.locator('#progress')).toHaveText(interruption==='restart'?'01 / 08':'02 / 08');
+  await expect(page.locator('[data-score="team-1"]')).toHaveText(interruption==='restart'?'0':'1');
+  await expect(page.locator('#card-face')).toHaveCSS('opacity','1');
+});
+
+test('last island answer completes the round with reduced motion',async({page})=>{
+  await page.addInitScript(()=>localStorage.setItem('hanzi-flip.question-bank',JSON.stringify({schemaVersion:1,questions:[{id:'one',grade:1,character:'木',pinyin:'mù',words:['木头','树木'],sentence:'这里有树木。'}]})));
+  await page.reload();await page.locator('#reveal').click();await page.locator('#correct').click();
+  await expect(page.getByText('这一轮，真棒！',{exact:true})).toBeVisible();
+  await expect(page.locator('[data-score="team-1"]')).toHaveText('1');
+  await expect(page.locator('#scene')).toHaveAttribute('data-journey','idle');
 });

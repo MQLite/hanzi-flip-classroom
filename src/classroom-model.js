@@ -3,16 +3,17 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 
 // A modeled reading island: earth, grass, rocks, trees, books and raised glyphs.
 export function createClassroomModel(scene) {
+  const world = new THREE.Group(); scene.add(world);
   const mat=(color,roughness=.82)=>new THREE.MeshStandardMaterial({color,roughness});
   const cream=mat(0xffedc7),rim=mat(0x91ab81),stone=mat(0xb7c4a6),earth=mat(0xaf8870);
   const grass=mat(0x9dbb77),leaf=mat(0x668f67),lightLeaf=mat(0x91b57b),trunk=mat(0x94684e);
   const ink=mat(0x294e41,.58),gold=mat(0xf1bd5b,.44),paper=mat(0xfff6dc),coral=mat(0xd58c6b),blue=mat(0x749faf);
   const rounded=new RoundedBoxGeometry(1,1,1,4,.07);
-  function mesh(geometry,material,parent=scene){const m=new THREE.Mesh(geometry,material);m.castShadow=m.receiveShadow=true;parent.add(m);return m;}
-  function box(w,h,d,x,y,z,material,parent=scene){const m=mesh(rounded,material,parent);m.scale.set(w,h,d);m.position.set(x,y,z);return m;}
+  function mesh(geometry,material,parent=world){const m=new THREE.Mesh(geometry,material);m.castShadow=m.receiveShadow=true;parent.add(m);return m;}
+  function box(w,h,d,x,y,z,material,parent=world){const m=mesh(rounded,material,parent);m.scale.set(w,h,d);m.position.set(x,y,z);return m;}
   const sphere=new THREE.SphereGeometry(1,20,14);
-  function ball(x,y,z,sx,sy,sz,material,parent=scene){const m=mesh(sphere,material,parent);m.position.set(x,y,z);m.scale.set(sx,sy,sz);return m;}
-  const island=new THREE.Group();island.position.set(0,-1.78,-2.0);island.rotation.x=.32;scene.add(island);
+  function ball(x,y,z,sx,sy,sz,material,parent=world){const m=mesh(sphere,material,parent);m.position.set(x,y,z);m.scale.set(sx,sy,sz);return m;}
+  const island=new THREE.Group();island.position.set(0,-1.78,-2.0);island.rotation.x=.32;world.add(island);
   const soil=mesh(new THREE.CylinderGeometry(6.6,5.6,.8,48),earth,island);soil.scale.z=.47;soil.position.y=-.32;
   const turf=mesh(new THREE.CylinderGeometry(6.67,6.6,.16,48),grass,island);turf.scale.z=.47;turf.position.y=.1;
   const rockGeometry=new THREE.DodecahedronGeometry(1,0);
@@ -28,7 +29,7 @@ export function createClassroomModel(scene) {
     const blade=mesh(new THREE.ConeGeometry(.09,.4+i*.05,5),leaf,island);
     blade.position.set(x+i*.13,.35,1.15);blade.rotation.z=(i-1)*.25;
   }
-  const card=new THREE.Group();scene.add(card);
+  const card=new THREE.Group();world.add(card);
   const frame=box(5.8,5.4,.55,0,0,-.22,rim,card);
   const inset=box(5.48,5.08,.22,0,0,.10,cream,card);
   const stand=box(6.1,.3,1.4,0,-2.74,.05,stone);
@@ -61,12 +62,12 @@ export function createClassroomModel(scene) {
   const starGeometry=new THREE.ExtrudeGeometry(shape,{depth:.20,bevelEnabled:true,bevelThickness:.035,bevelSize:.035,bevelSegments:2,steps:1});
   const trophy=mesh(starGeometry,gold,books);trophy.scale.setScalar(.43);trophy.position.set(0,1.55,.05);trophy.rotation.y=.25;
   box(.13,.38,.13,0,1.22,.10,gold,books);
-  const stars=Array.from({length:10},()=>{const s=mesh(starGeometry,gold);s.visible=false;return s;});
+  const stars=Array.from({length:10},()=>{const s=mesh(starGeometry,gold,scene);s.visible=false;return s;});
   // Distant clouds provide depth without competing with the reading surface.
   const cloudMat=mat(0xf8faf0);
   for(const sign of [-1,1])for(let i=0;i<3;i++)ball(sign*(4.3+i*.37),2.2+Math.sin(i)*.17,-2.3,.60,.24,.28,cloudMat);
-  const backdrop=mesh(new THREE.PlaneGeometry(80,80),mat(0xe5eddf));backdrop.position.z=-4;backdrop.castShadow=false;
-  return {card,stars,ink,
+  const backdrop=mesh(new THREE.PlaneGeometry(80,80),mat(0xe5eddf),scene);backdrop.position.z=-4;backdrop.castShadow=false;
+  return {card,stars,ink,world,backdrop,
     resize(w,h,worldWidth){
       frame.scale.set(w+.32,h+.32,.55);inset.scale.set(w,h,.22);
       pins.forEach(({pin,x,y})=>pin.position.set(x*(w/2-.03),y*(h/2-.03),.25));

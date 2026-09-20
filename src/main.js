@@ -32,7 +32,7 @@ app.innerHTML = `<header class="site-header"><a class="brand" href="./" aria-lab
 <div class="extension-row"><button id="extension-toggle" class="text-button" hidden aria-expanded="false">拓展学习</button><span id="extension-hint" hidden>一起看看汉字是怎样写成的</span></div><section id="extension" hidden aria-label="拓展学习"></section>
 <footer><span><kbd>空格</kbd> 翻牌 <span class="footer-divider">/</span> <kbd>←</kbd> <kbd>→</kbd> 切换汉字</span><span>给汉字一点好奇心，让学习多一点欢喜。</span></footer></main><div id="toast" role="status"></div>
 <dialog id="settings-dialog" aria-labelledby="settings-title"><div class="dialog-heading"><div><span class="eyebrow">OUR LITTLE TEAMS</span><h2 id="settings-title">为小组起个名字</h2></div><button class="close-dialog icon-button" aria-label="关闭小组设置">×</button></div><p>应用设置会开始新一轮，清空本轮得分。</p><label>小组数量<select id="team-count"><option value="2">2 个小组</option><option value="3">3 个小组</option><option value="4">4 个小组</option></select></label><div id="team-fields"></div><button id="apply-teams" class="primary">应用并开始新一轮</button></dialog>
-<dialog id="help-dialog" aria-labelledby="help-title"><div class="dialog-heading"><h2 id="help-title">欢迎来到汉字奇遇岛</h2><button class="close-dialog icon-button" aria-label="关闭帮助">×</button></div><ol class="help-steps"><li>选择年级，认读屏幕上的汉字。</li><li>翻牌揭晓拼音、组词和例句。</li><li>选中小组，再点“答对了”；想巩固的字点“再练一次”。每字只结算一次。</li><li>一轮结束后，带着需要巩固的字再出发。</li></ol><p>跳过的字记为未作答；回看不会重复加分。多音字按照本题例句判断，其他读音也可能正确。</p><p>题库自动保存在此设备的此浏览器中，请定期导出备份。课堂得分、小组和进度不会在刷新后恢复。</p><p>年级是难度建议，不对应特定教材。打开面板或输入文字时，课堂快捷键会暂停。</p><p>立体显示不流畅时，可随时切换“简化显示”，本轮进度保留。</p></dialog>`;
+<dialog id="help-dialog" aria-labelledby="help-title"><div class="dialog-heading"><h2 id="help-title">欢迎来到汉字奇遇岛</h2><button class="close-dialog icon-button" aria-label="关闭帮助">×</button></div><ol class="help-steps"><li>选择年级，认读屏幕上的汉字。</li><li>翻牌揭晓拼音、组词和例句。</li><li>选中小组，再点“答对了”，就会沿踏石走到下一座小岛，自动换字；想巩固的字点“再练一次”。每字只结算一次。</li><li>一轮结束后，带着需要巩固的字再出发。</li></ol><p>跳过的字记为未作答；回看不会重复加分。多音字按照本题例句判断，其他读音也可能正确。</p><p>题库自动保存在此设备的此浏览器中，请定期导出备份。课堂得分、小组和进度不会在刷新后恢复。</p><p>年级是难度建议，不对应特定教材。打开面板或输入文字时，课堂快捷键会暂停。</p><p>立体显示不流畅时，可随时切换“简化显示”，本轮进度保留。</p></dialog>`;
 const $ = (s) => document.querySelector(s);
 $('.lesson-heading').insertAdjacentHTML('beforeend', '<nav class="game-modes" aria-label="游戏模式"><button id="mode-flip" aria-pressed="true">识字翻翻乐</button><button id="mode-workshop" aria-pressed="false">组词小工坊</button></nav>');
 $('#scene').insertAdjacentHTML('afterend', '<div id="workshop" hidden></div>');
@@ -134,6 +134,7 @@ const scene = createClassroomScene($("#scene"), $("#card-face"), (message) => {
     $("#simplify").setAttribute("aria-pressed", "true");
   }
 });
+let flipTransition = null;
 let workshopTransition = null, workshopFeedback = '';
 const workshopView = createWorkshopView($('#workshop'), tileId => {
   if(workshopTransition) return;
@@ -157,6 +158,7 @@ function syncSimpleControl() {
 }
 function switchMode(mode) {
   if (mode === gameMode) return;
+  if (gameMode === 'flip' && flipTransition) finishFlipTransition(flipTransition);
   if(gameMode === 'workshop' && workshopTransition) finishWorkshopTransition(workshopTransition);
   modeSnapshots[gameMode] = { session, grade, teamNames: [...teamNames], selectedTeam, showPinyin, selection: {...selection}, extensionOpen, workshopState };
   activeScene()?.setActive(false);
@@ -281,6 +283,7 @@ function mayRestart() {
   return !progressed() || confirm("开始新一轮会清空本轮得分和进度，继续吗？");
 }
 function newRound() {
+  flipTransition = null; scene.cancelJourney();
   workshopTransition = null; workshopFeedback = ''; workshopScene?.cancelAnimation();
   session = currentSession();
   if (gameMode === 'workshop') workshopState = createWorkshopState(session);
@@ -405,11 +408,11 @@ function render() {
   $("#reveal").disabled = !active;
   $("#correct").hidden = !revealed;
   $("#practice").hidden = !revealed;
-  $("#correct").disabled = Boolean(judgment);
-  $("#practice").disabled = Boolean(judgment);
+  $("#correct").disabled = Boolean(judgment) || Boolean(flipTransition);
+  $("#practice").disabled = Boolean(judgment) || Boolean(flipTransition);
   $("#back").disabled =
-    session.currentIndex <= 0 && session.phase !== "complete";
-  $("#next").disabled = !active;
+    Boolean(flipTransition) || (session.currentIndex <= 0 && session.phase !== "complete");
+  $("#next").disabled = !active || Boolean(flipTransition);
   $("#judgment-note").textContent = judgment
     ? judgment.outcome === "correct"
       ? `已记分 · ${session.teams.find((t) => t.id === judgment.teamId)?.name} +1 ★`
@@ -421,6 +424,7 @@ function render() {
       : active
         ? "先读一读，再揭晓答案"
         : "每一份好奇，都值得一颗星";
+  if (flipTransition && gameMode === 'flip') $('#judgment-note').textContent = flipTransition.final ? '答对了！这一轮的小岛探索完成。' : '答对了！沿着踏石，前往下一座小岛…';
   $("#extension-toggle").hidden = !revealed || gameMode === 'workshop';
   $("#extension-hint").hidden = !revealed || gameMode === 'workshop';
   $("#extension-toggle").setAttribute(
@@ -448,6 +452,7 @@ function renderTeamsOnly() {
     });
 }
 function reveal() {
+  if (flipTransition) return;
   if (session.phase !== "active" || session.revealed[session.currentIndex])
     return;
   session = revealCurrent(session);
@@ -455,6 +460,7 @@ function reveal() {
   if (gameMode === 'flip') scene.flip();
 }
 function next() {
+  if (flipTransition) return;
   if(gameMode === 'workshop' && workshopTransition) return;
   workshopFeedback = '';
   const updated = navigateNext(session);
@@ -465,6 +471,7 @@ function next() {
   }
 }
 function back() {
+  if (flipTransition) return;
   if(gameMode === 'workshop' && workshopTransition) return;
   workshopFeedback = '';
   const updated = navigateBack(session);
@@ -478,20 +485,30 @@ $("#reveal").setAttribute("aria-label", "翻牌揭晓");
 $("#reveal").onclick = reveal;
 $("#next").onclick = next;
 $("#back").onclick = back;
-$("#correct").onclick = () => {
+async function answerCorrect() {
   if (gameMode === 'workshop') { submitWord(); return; }
-  const options = {
-    outcome: "correct",
-    teamId: selectedTeam,
-  };
-  const updated = markCurrent(session,options);
-  if (updated !== session) {
-    session = updated;
-    render();
-    activeScene()?.reward();
-  }
-};
+  if (flipTransition) return;
+  const updated = markCurrent(session, {outcome:'correct', teamId:selectedTeam});
+  if (updated === session) return;
+  session = updated;
+  const transition = {final:session.currentIndex === session.questions.length - 1};
+  flipTransition = transition;
+  extensionOpen = false;
+  render();
+  await scene.travelToNextIsland(transition);
+  finishFlipTransition(transition);
+}
+function finishFlipTransition(transition) {
+  if (flipTransition !== transition) return;
+  flipTransition = null;
+  scene.cancelJourney();
+  session = navigateNext(session);
+  extensionOpen = false;
+  if (gameMode === 'flip') render();
+}
+$("#correct").onclick = answerCorrect;
 $("#practice").onclick = () => {
+  if (flipTransition) return;
   if(gameMode === 'workshop' && workshopTransition) return;
   if (gameMode === 'workshop') session = revealCurrent(session);
   session = markCurrent(session, { outcome: "practice" });

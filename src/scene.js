@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { SVGLoader } from "three/addons/loaders/SVGLoader.js";
+import { createIslandJourney } from "./island-journey.js";
 import { createClassroomModel } from "./classroom-model.js";
 
 export function createClassroomScene(host, face, onFallback) {
@@ -24,6 +25,8 @@ export function createClassroomScene(host, face, onFallback) {
   Object.assign(sun.shadow.camera, {left:-12,right:12,top:10,bottom:-10});
   sun.shadow.normalBias = .035; scene.add(sun);
   let needsRender = true, wasAnimating = false;
+  scene.add(sun.target);
+  const journey = createIslandJourney({scene, camera, model, sun, host, face, invalidate: () => { needsRender = true; }});
   let glyph = null, currentCharacter = null, glyphRequest = null;
   function clearGlyph() {
     if (!glyph) return;
@@ -33,7 +36,7 @@ export function createClassroomScene(host, face, onFallback) {
   }
   function positionModels() {
     needsRender = true;
-    if (flipStart) return;
+    if (flipStart || journey.active) return;
     const bounds = host.getBoundingClientRect(), textBounds = face.getBoundingClientRect();
     if (!bounds.height || !textBounds.height) return;
     const units = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z / bounds.height;
@@ -74,13 +77,14 @@ export function createClassroomScene(host, face, onFallback) {
         const mesh = new THREE.Mesh(geometry,model.ink); mesh.castShadow=true; mesh.receiveShadow=true;group.add(mesh);
       }
       if (!group.children.length) throw new Error('Empty character');
-      glyph=group; glyph.visible=false; card.add(glyph); positionModels();
+      glyph=group; glyph.name='reading-glyph'; glyph.visible=false; card.add(glyph); positionModels();
     } catch(error) {
       if(controller.signal.aborted || disposed) return;
       clearGlyph(); host.dataset.glyphState='fallback';
     }
   }
   function fallback(message) {
+    journey.finish();
     simple = true;
     host.dataset.mode = "simple";
     if (renderer) renderer.domElement.hidden = true;
@@ -102,7 +106,7 @@ export function createClassroomScene(host, face, onFallback) {
   }
   function draw(t) {
     if (simple || !active || disposed || document.hidden) return;
-    const animating = Boolean(flipStart) || (!reduced && t < rewardUntil);
+    const animating = journey.active || Boolean(flipStart) || (!reduced && t < rewardUntil);
     if (!needsRender && !animating && !wasAnimating) { frame = requestAnimationFrame(draw); return; }
     wasAnimating = animating; needsRender = false;
     let turn = 0;
@@ -127,6 +131,7 @@ export function createClassroomScene(host, face, onFallback) {
         s.rotation.set(p*2,i+p*3,.15);
       }
     });
+    journey.update(t);
     renderer.render(scene, camera);
     frame = requestAnimationFrame(draw);
   }
@@ -166,7 +171,18 @@ export function createClassroomScene(host, face, onFallback) {
   document.addEventListener("visibilitychange", visibility);
   return {
     setCharacter,
+    travelToNextIsland({final = false} = {}) {
+      flipStart = 0;
+      card.rotation.y = 0;
+      face.style.transform = '';
+      face.style.opacity = '1';
+      positionModels();
+      rewardUntil = performance.now() + 1000;
+      return journey.start({animated: !simple && !reduced && active && contextAvailable && !document.hidden, final});
+    },
+    cancelJourney() { journey.finish(); },
     setActive(value) {
+      journey.finish();
       active = value;
       cancelAnimationFrame(frame);
       flipStart = rewardUntil = 0;
@@ -204,6 +220,7 @@ export function createClassroomScene(host, face, onFallback) {
     },
     dispose() {
       disposed = true;
+      journey.finish();
       cancelAnimationFrame(frame);
       observer.disconnect();
       glyphRequest?.abort();

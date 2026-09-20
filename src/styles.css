@@ -1783,3 +1783,7 @@ dialog > label {
 #scene[data-mode="simple"] #card-face { background: #fff2d4; border-color: #9ead87; box-shadow: 7px 10px 0 #859971, 0 20px 35px #5e3b2526; }
 body:not(.workshop-mode) .play-area { border-color: #becfad; background: #e4edda; }
 body:not(.workshop-mode) .stage-top { color: #68573d; }
+
+/* Reading text returns after the camera arrives at the next island. */
+#scene[data-journey="walking"] #card-face { visibility: hidden; pointer-events: none; }
+#scene[data-journey="walking"] canvas { cursor: progress; }
