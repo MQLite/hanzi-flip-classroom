@@ -27,7 +27,7 @@ export function normalizeSentenceTrain(value) {
     punctuation: normalizeText(value.punctuation),
   }
   if (Array.isArray(value.alternatives)) {
-    const seen = new Set()
+    const seen = new Set(Array.isArray(normalized.tokens) ? [JSON.stringify(normalized.tokens)] : [])
     normalized.alternatives = []
     for (const alternative of value.alternatives) {
       const copy = Array.isArray(alternative) ? alternative.map(normalizeText) : alternative

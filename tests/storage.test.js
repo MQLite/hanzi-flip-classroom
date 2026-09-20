@@ -88,7 +88,11 @@ describe('bank validation', () => {
       sentenceTrain: {
         tokens: [' 老师 ', '在', '看书'],
         punctuation: '。',
-        alternatives: [['看书', '老师', '在'], ['看书', '老师', '在']],
+        alternatives: [
+          [' 老师 ', '在', '看书'],
+          ['看书', '老师', '在'],
+          ['看书', '老师', '在'],
+        ],
       },
     })
     const result = validateBank({ schemaVersion: 1, questions: [withTrain] })
