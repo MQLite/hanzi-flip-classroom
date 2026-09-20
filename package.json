@@ -1,0 +1,24 @@
+{
+  "name": "hanzi-flip-classroom",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5174 --strictPort",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 5174 --strictPort",
+    "test": "vitest run",
+    "test:ui": "playwright test",
+    "prepare:strokes": "node scripts/prepare-strokes.mjs"
+  },
+  "dependencies": {
+    "hanzi-writer": "^3.7.3",
+    "three": "^0.186.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "hanzi-writer-data": "^2.0.1",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1"
+  }
+}
