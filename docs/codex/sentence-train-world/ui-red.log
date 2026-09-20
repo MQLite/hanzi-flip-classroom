@@ -1,0 +1,75 @@
+npm notice run hanzi-flip-classroom@1.0.0 npx
+npm notice run playwright test tests/sentence-train-ui.spec.js --grep one unified|world celebration
+[WebServer] (node:51736) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] npm notice run hanzi-flip-classroom@1.0.0 npx
+[WebServer] npm notice run vite --host 127.0.0.1 --port 5193 --strictPort
+[WebServer] (node:47012) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 2 tests using 1 worker
+
+(node:51508) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  1 tests\sentence-train-ui.spec.js:122:1 › station uses one unified world canvas and keeps coordinate controls playable (5.8s)
+(node:21692) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  2 tests\sentence-train-ui.spec.js:125:1 › successful world celebration runs long enough to show rising and bursting fireworks (7.4s)
+
+
+  1) tests\sentence-train-ui.spec.js:122:1 › station uses one unified world canvas and keeps coordinate controls playable 
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('#train-scene canvas')
+    Expected: 1
+    Received: 2
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveCount" locator('#train-scene canvas') with timeout 5000ms
+      - waiting for locator('#train-scene canvas')
+        14 × locator resolved to 2 elements
+           - unexpected value "2"
+
+
+      121 | });
+      122 | test('station uses one unified world canvas and keeps coordinate controls playable',async({page})=>{
+    > 123 |  await open(page);await expect(page.locator('#train-scene canvas')).toHaveCount(1);await assertTrainMouseTargets(page);await page.locator('#train-clear').click();await page.locator('#restart').click();await assertTrainMouseTargets(page);
+          |                                                                     ^
+      124 | });
+      125 | test('successful world celebration runs long enough to show rising and bursting fireworks',async({page})=>{
+      126 |  await page.emulateMedia({reducedMotion:'no-preference'});await open(page);await choose(page,['老师','在','看书']);await page.locator('#train-check').click();await expect(score(page)).toHaveText('1');await page.waitForTimeout(1300);await expect(page.locator('#train-summary')).toBeHidden();await expect(page.locator('#next')).toBeDisabled();await page.screenshot({path:'docs/codex/sentence-train-world/success-burst-1280.png',fullPage:true});await expect(page.locator('#train-summary')).toBeVisible();await expect(score(page)).toHaveText('1');
+        at D:\Repository\hanzi-sentence-train\tests\sentence-train-ui.spec.js:123:69
+
+    Error Context: test-results\sentence-train-ui-station--3c2bf-oordinate-controls-playable\error-context.md
+
+  2) tests\sentence-train-ui.spec.js:125:1 › successful world celebration runs long enough to show rising and bursting fireworks 
+
+    Error: expect(locator).toBeHidden() failed
+
+    Locator:  locator('#train-summary')
+    Expected: hidden
+    Received: visible
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toBeHidden" locator('#train-summary') with timeout 5000ms
+      - waiting for locator('#train-summary')
+        14 × locator resolved to <section id="train-summary">…</section>
+           - unexpected value "visible"
+
+
+      124 | });
+      125 | test('successful world celebration runs long enough to show rising and bursting fireworks',async({page})=>{
+    > 126 |  await page.emulateMedia({reducedMotion:'no-preference'});await open(page);await choose(page,['老师','在','看书']);await page.locator('#train-check').click();await expect(score(page)).toHaveText('1');await page.waitForTimeout(1300);await expect(page.locator('#train-summary')).toBeHidden();await expect(page.locator('#next')).toBeDisabled();await page.screenshot({path:'docs/codex/sentence-train-world/success-burst-1280.png',fullPage:true});await expect(page.locator('#train-summary')).toBeVisible();await expect(score(page)).toHaveText('1');
+          |                                                                                                                                                                                                                                                                                 ^
+      127 | });
+      128 |
+        at D:\Repository\hanzi-sentence-train\tests\sentence-train-ui.spec.js:126:273
+
+    Error Context: test-results\sentence-train-ui-successf-90f38-sing-and-bursting-fireworks\error-context.md
+
+  2 failed
+    tests\sentence-train-ui.spec.js:122:1 › station uses one unified world canvas and keeps coordinate controls playable 
+    tests\sentence-train-ui.spec.js:125:1 › successful world celebration runs long enough to show rising and bursting fireworks 

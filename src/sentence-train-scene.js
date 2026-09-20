@@ -1,47 +1,299 @@
 import * as THREE from 'three';
-const colors=[0xd39a60,0x88ad98,0xb8aac7,0xdda184,0x96b5bb,0xc9b374,0x9ca876];
-export function createTrainScene(host,{onFallback=()=>{}}={}) {
- const trackHost=host.querySelector('.train-track-model'),yardHost=host.querySelector('.train-yard-model');
- const reduced=matchMedia('(prefers-reduced-motion: reduce)');
- const geometries=[],materials=[],textures=[],surfaces=[]; const wordMaterials=new Map();
- let resizeFrame=0,lastWidth=-1;
- let active=false,simple=false,failed=false,frame=0,departure=null,moveUntil=0,state=null,lastKey='',disposed=false;
- const material=color=>{const m=new THREE.MeshStandardMaterial({color,roughness:.88});materials.push(m);return m};
- const boxGeometry=new THREE.BoxGeometry(1,1,1);geometries.push(boxGeometry);
- const wheelGeometry=new THREE.CylinderGeometry(.22,.22,.13,16);geometries.push(wheelGeometry);
- const dark=material(0x344c47),wood=material(0xb29673),metal=material(0x6c8078),cream=material(0xfff4d8),green=material(0x4d7461),platform=material(0xb9c9a7);
- const colored=colors.map(material);
- function box(parent,mat,x,y,z,w,h,d){const mesh=new THREE.Mesh(boxGeometry,mat);mesh.position.set(x,y,z);mesh.scale.set(w,h,d);parent.add(mesh);return mesh}
- function wheels(group){for(const x of [-.55,.55])for(const z of [-.52,.52]){const wheel=new THREE.Mesh(wheelGeometry,dark);wheel.rotation.x=Math.PI/2;wheel.position.set(x,.24,z);group.add(wheel);box(group,cream,x,.24,z+(z>0?.08:-.08),.08,.08,.02)}}
- function wordMaterial(text){if(wordMaterials.has(text))return wordMaterials.get(text);const canvas=document.createElement('canvas');canvas.width=Math.ceil((carriageWidth(text)-.12)*256);canvas.height=131;const c=canvas.getContext('2d');c.fillStyle='#fff5de';c.fillRect(0,0,canvas.width,131);c.fillStyle='#304b40';c.font='700 96px "Microsoft YaHei",sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(text,canvas.width/2,69);const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;textures.push(texture);const m=new THREE.MeshBasicMaterial({map:texture});materials.push(m);wordMaterials.set(text,m);return m}
- function carriageWidth(text){return Math.max(1.7,.37*text.length+.32)}
- function carriage(text,index){const g=new THREE.Group(),w=carriageWidth(text);g.userData.width=w;box(g,colored[index%7],0,.72,0,w,.72,1);box(g,wood,0,.36,0,w+.18,.16,1.12);box(g,cream,0,1.12,0,w+.12,.13,1.1);box(g,wordMaterial(text),0,.78,.514,w-.12,.51,.025);box(g,dark,w/2+.16,.36,0,.28,.1,.14);wheels(g);return g}
- function engine(){const g=new THREE.Group();box(g,green,0,.74,0,1.9,.82,1.05);box(g,green,.48,1.28,0,.76,.75,1.02);box(g,cream,.48,1.4,.526,.45,.4,.02);box(g,dark,.45,1.72,0,1.06,.13,1.22);box(g,dark,-.56,1.3,0,.26,.66,.3);box(g,cream,-1,.82,0,.15,.25,.55);box(g,wood,-1.14,.3,0,.35,.2,1.05);wheels(g);return g}
- function surface(container){const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.setClearColor(0x000000,0);container.prepend(renderer.domElement);const scene=new THREE.Scene();scene.add(new THREE.HemisphereLight(0xffffff,0x9ca889,2.9));const sun=new THREE.DirectionalLight(0xfff4dc,2.6);sun.position.set(-3,7,6);scene.add(sun);const camera=new THREE.OrthographicCamera(-10,10,3,-3,.1,100);camera.position.set(0,6,15);camera.lookAt(0,0,0);const layer=new THREE.Group();scene.add(layer);const result={renderer,scene,camera,container,layer,cars:new Map(),buttons:new Map()};renderer.domElement.addEventListener('webglcontextlost',contextLost);surfaces.push(result);return result}
- function fallback(){failed=true;simple=true;host.dataset.mode='simple';cancelAnimation();onFallback('已切换简化车厢，课堂进度保留。')}
- function contextLost(event){event.preventDefault();fallback()}
- let track,yard;
- try{track=surface(trackHost);yard=surface(yardHost);host.dataset.mode='webgl'}catch{fallback()}
- function resizeSurface(s,width,height){s.renderer.setSize(width,height,false);const units=width/64;s.camera.left=-units/2;s.camera.right=units/2;s.camera.top=height/128;s.camera.bottom=-height/128;s.camera.updateProjectionMatrix()}
- function buttonPosition(s,button,group){const center=new THREE.Vector3(0,.77,.57).applyMatrix4(group.matrixWorld).project(s.camera);const w=s.container.clientWidth,h=s.container.clientHeight;Object.assign(button.style,{left:`${(center.x+1)*w/2}px`,top:`${(1-center.y)*h/2}px`,width:`${group.userData.width*64+5}px`,height:'72px'});}
- function layout(){if(!state||failed||simple)return;const {palette,selections}=state;const trackWidths=palette.map(t=>carriageWidth(t.text)*64+24);const width=Math.max(trackHost.parentElement.clientWidth,205+trackWidths.reduce((a,b)=>a+b,0));trackHost.style.width=`${width}px`;const trackHeight=innerWidth>=1000?142:205;trackHost.style.height=`${trackHeight}px`;resizeSurface(track,width,trackHeight);const yardWidth=yardHost.clientWidth;const maxWidth=Math.max(...trackWidths,125);const columns=Math.max(yardWidth>=270?2:1,Math.min(palette.length,Math.floor(yardWidth/maxWidth)));const rows=Math.ceil(palette.length/columns);yardHost.style.height=`${rows*96}px`;resizeSurface(yard,yardWidth,rows*96);track.layer.clear();yard.layer.clear();track.train=new THREE.Group();track.layer.add(track.train);track.cars.clear();yard.cars.clear();const origin=-width/128+1.45;track.train.add(engine());track.train.children[0].position.set(origin,-.8,0);
- box(track.layer,platform,0,-.86,-1.1,width/64,.26,1.4);
- for(let n=0;n<Math.ceil(width/28);n++)box(track.layer,wood,-width/128+n*.44,-.71,0,.2,.1,1.8);
- for(const z of [-.55,.55])box(track.layer,metal,0,-.61,z,width/64,.09,.07);
- palette.forEach((tile,index)=>{const selected=selections.indexOf(tile.id);const candidate=carriage(tile.text,index);candidate.position.set((-yardWidth/2+(index%columns+.5)*yardWidth/columns)/64,((rows-1)/2-Math.floor(index/columns))*1.5-.45,0);const scale=Math.min(1,(yardWidth/columns-16)/(candidate.userData.width*64));candidate.scale.x=scale;candidate.userData.width*=scale;candidate.visible=selected<0;yard.layer.add(candidate);yard.cars.set(tile.id,candidate);
- if(selected>=0){const car=carriage(tile.text,index);car.position.set(origin+1.4+carriageWidth(tile.text)/2+selections.slice(0,selected).reduce((sum,id)=>sum+carriageWidth(palette.find(t=>t.id===id).text)+.38,0),-.8,0);track.train.add(car);track.cars.set(tile.id,car)}
- });
- track.layer.updateMatrixWorld(true);yard.layer.updateMatrixWorld(true);
- palette.forEach(tile=>{const b=host.querySelector(`#train-palette [data-tile="${CSS.escape(tile.id)}"]`);if(b)buttonPosition(yard,b,yard.cars.get(tile.id));const t=host.querySelector(`#train-selected [data-tile="${CSS.escape(tile.id)}"]`);if(t&&track.cars.has(tile.id))buttonPosition(track,t,track.cars.get(tile.id));});
- draw();}
- function draw(){if(!active||simple||failed||document.hidden||disposed)return;for(const s of surfaces)s.renderer.render(s.scene,s.camera)}
- function tick(now){frame=0;if(disposed||!active||document.hidden)return;if(departure){const elapsed=Math.min(1,(now-departure.start)/departure.duration);track.train.position.x=-elapsed*elapsed*30;if(elapsed>=1){const done=departure.done;departure=null;draw();done();return}}else if(moveUntil>now){const shift=Math.sin((moveUntil-now)/250*Math.PI)*.14;for(const car of track.cars.values())car.position.y=-.8+shift}draw();if(departure||moveUntil>now)frame=requestAnimationFrame(tick)}
- function cancelAnimation(){cancelAnimationFrame(frame);frame=0;moveUntil=0;if(track?.train)track.train.position.x=0;if(departure){const done=departure.done;departure=null;done()}draw()}
- function queueLayout(){cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(()=>{resizeFrame=0;if(active&&!disposed)layout()})}
- const observer=new ResizeObserver(entries=>{const width=entries[0].contentRect.width;if(width!==lastWidth){lastWidth=width;queueLayout()}});observer.observe(host);
- window.addEventListener('resize',queueLayout);
- function visible(){if(document.hidden){cancelAnimationFrame(frame);frame=0;if(departure){const done=departure.done;departure=null;done()}}else if(active){layout();draw()}}
- document.addEventListener('visibilitychange',visible);
- // Rebuilt semantic buttons need projection even when the same question and empty selection recur.
- return {update(next){state=next;const key=JSON.stringify([next.key,next.controlsRevision,next.selections]);if(key!==lastKey){lastKey=key;layout();if(!reduced.matches){moveUntil=performance.now()+250;if(!frame)frame=requestAnimationFrame(tick)}}},setActive(value){active=value;if(value){layout();draw()}else cancelAnimation()},setSimple(value){simple=failed||value;host.dataset.mode=simple?'simple':'webgl';if(simple)cancelAnimation();else layout()},animateDeparture(){cancelAnimation();if(simple||failed||reduced.matches||document.hidden)return Promise.resolve();return new Promise(done=>{departure={start:performance.now(),duration:1200,done};frame=requestAnimationFrame(tick)})},cancelAnimation,dispose(){disposed=true;cancelAnimation();observer.disconnect();cancelAnimationFrame(resizeFrame);window.removeEventListener('resize',queueLayout);document.removeEventListener('visibilitychange',visible);for(const s of surfaces){s.renderer.domElement.removeEventListener('webglcontextlost',contextLost);s.renderer.dispose();s.renderer.domElement.remove()}for(const value of [...geometries,...materials,...textures])value.dispose()}};
+import { carriageWidth, createTrainModels } from './sentence-train-models.js';
+import { createTrainEffects } from './sentence-train-effects.js';
+
+const DEPARTURE_MS = 2400;
+const TRANSFER_MS = 320;
+
+export function createTrainScene(host, { onFallback = () => {} } = {}) {
+  const surface = host.querySelector('.train-world');
+  const viewport = host.querySelector('.train-track-scroll');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  const models = createTrainModels();
+  const effects = createTrainEffects();
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color('#dcece9');
+  const camera = new THREE.OrthographicCamera(-14, 14, 6, -6, 0.1, 100);
+  camera.position.set(3, 12, 26);
+  camera.lookAt(0, 1.8, 1);
+  const sunlight = new THREE.DirectionalLight('#fff1d0', 2.5);
+  sunlight.position.set(-7, 13, 10);
+  sunlight.castShadow = true;
+  sunlight.shadow.mapSize.set(1024, 1024);
+  Object.assign(sunlight.shadow.camera, { left: -18, right: 18, top: 12, bottom: -12, near: 1, far: 40 });
+  sunlight.shadow.normalBias = 0.035;
+  sunlight.shadow.bias = -0.0003;
+  scene.add(new THREE.HemisphereLight('#fff9e6', '#a5bda7', 1.6), sunlight, effects.group);
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(150, 150), new THREE.MeshStandardMaterial({ color: '#d7e7df', roughness: 1 }));
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = -1.04;
+  floor.receiveShadow = true;
+  scene.add(floor);
+  const engine = models.engine();
+  scene.add(engine);
+  const carriages = new Map();
+  const destinations = new Map();
+  const parkingPlaces = new Map();
+  const movements = new Map();
+  let renderer, terrain, state, paletteIdentity;
+  let active = false, simple = false, failed = false, disposed = false;
+  let frame = 0, resizeFrame = 0, lastWidth = -1, lastRevision = '';
+  let departure = null, engineHome = new THREE.Vector3(), scale = 35, departureDistance = 28;
+
+  function fallback(message = '已切换简化车厢，课堂进度保留。') {
+    failed = true;
+    simple = true;
+    host.dataset.mode = 'simple';
+    cancelAnimation();
+    onFallback(message);
+  }
+
+  function contextLost(event) {
+    event.preventDefault();
+    fallback();
+  }
+
+  try {
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'low-power' });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    renderer.domElement.setAttribute('aria-hidden', 'true');
+    renderer.domElement.addEventListener('webglcontextlost', contextLost);
+    surface.prepend(renderer.domElement);
+    host.dataset.mode = 'webgl';
+  } catch {
+    fallback();
+  }
+
+  function project(button, position, width, height = 1.08) {
+    if (!button) return;
+    const point = position.clone().project(camera);
+    const x = (point.x + 1) * surface.clientWidth / 2;
+    const y = (1 - point.y) * surface.clientHeight / 2;
+    Object.assign(button.style, {
+      left: `${x}px`, top: `${y}px`, width: `${width * scale}px`, height: `${height * scale}px`,
+    });
+  }
+
+  function projectControls() {
+    if (!state || simple || failed) return;
+    scene.updateMatrixWorld(true);
+    for (const tile of state.palette) {
+      const car = carriages.get(tile.id);
+      if (!car) continue;
+      const position = car.userData.plaque.getWorldPosition(new THREE.Vector3());
+      const selected = state.selections.includes(tile.id);
+      const candidate = host.querySelector(`#train-palette [data-tile="${CSS.escape(tile.id)}"]`);
+      const chosen = host.querySelector(`#train-selected [data-tile="${CSS.escape(tile.id)}"]`);
+      const slot = parkingPlaces.get(tile.id).clone().add(car.userData.plaque.position);
+      project(candidate, selected ? slot : position, car.userData.width - 0.04);
+      project(chosen, position, car.userData.width - 0.04);
+    }
+  }
+
+  function render() {
+    if (disposed || !active || simple || failed || document.hidden || !renderer) return;
+    projectControls();
+    renderer.render(scene, camera);
+  }
+
+  function scrollToLatest() {
+    if (!state?.selections.length || viewport.scrollWidth <= viewport.clientWidth) return;
+    const id = state.selections.at(-1);
+    const button = host.querySelector(`#train-selected [data-tile="${CSS.escape(id)}"]`);
+    if (!button) return;
+    const left = parseFloat(button.style.left) - button.offsetWidth / 2;
+    const right = left + button.offsetWidth;
+    if (left < viewport.scrollLeft + 12) viewport.scrollLeft = Math.max(0, left - 12);
+    else if (right > viewport.scrollLeft + viewport.clientWidth - 12) viewport.scrollLeft = right - viewport.clientWidth + 12;
+  }
+
+  function layout({ animate = false } = {}) {
+    if (!state || simple || failed || !active || !state.palette.length) return;
+    const total = state.palette.reduce((sum, tile) => sum + carriageWidth(tile.text) + 0.35, 0);
+    const worldWidth = Math.max(23, total + 6.2);
+    departureDistance = worldWidth + 4;
+    const maxCar = Math.max(...state.palette.map(tile => carriageWidth(tile.text)));
+    const columns = Math.min(state.palette.length, Math.max(3, Math.floor((worldWidth - 5) / (maxCar + 0.7))));
+    const rows = Math.ceil(state.palette.length / columns);
+    const width = innerWidth < 1000 ? Math.max(860, Math.ceil(worldWidth * 35)) : viewport.clientWidth;
+    const height = innerWidth >= 1000 ? (innerHeight <= 800 ? 340 : 400) : 440;
+    surface.style.width = `${width}px`;
+    surface.style.height = `${height}px`;
+    renderer.setSize(width, height, false);
+    const viewWidth = worldWidth * 1.06;
+    scale = width / viewWidth;
+    camera.left = -viewWidth / 2;
+    camera.right = viewWidth / 2;
+    camera.top = height / scale / 2;
+    camera.bottom = -height / scale / 2;
+    camera.updateProjectionMatrix();
+    if (terrain) scene.remove(terrain);
+    terrain = models.world(worldWidth, rows);
+    scene.add(terrain);
+    const start = -worldWidth / 2 + 3.8;
+    engineHome.set(start, 0.35, 0.32);
+    if (!departure) engine.position.copy(engineHome);
+    let trainX = start + 1.55;
+    for (const id of state.selections) {
+      const car = carriages.get(id);
+      if (!car) continue;
+      destinations.set(id, new THREE.Vector3(trainX + car.userData.width / 2, 0.35, 0.32));
+      trainX += car.userData.width + 0.35;
+    }
+    const yardWidth = worldWidth - 5.8;
+    state.palette.forEach((tile, index) => {
+      const car = carriages.get(tile.id);
+      const x = -yardWidth / 2 + (index % columns + 0.5) * yardWidth / columns;
+      const z = rows === 1 ? 3.55 : 2.9 + Math.floor(index / columns) * 3.15;
+      const place = new THREE.Vector3(x, 0.12, z);
+      parkingPlaces.set(tile.id, place);
+      models.parking(terrain, x, z, car.userData.width, index);
+      if (!state.selections.includes(tile.id)) destinations.set(tile.id, place);
+      const target = destinations.get(tile.id);
+      if (animate && !reduced.matches && car.position.distanceTo(target) > 0.02) {
+        movements.set(tile.id, { from: car.position.clone(), to: target.clone(), start: performance.now() });
+      } else {
+        car.position.copy(target);
+        movements.delete(tile.id);
+      }
+    });
+    render();
+    if (movements.size) scheduleFrame();
+    else scrollToLatest();
+  }
+
+  function engineAt(seconds) {
+    const distance = departureDistance * Math.min(1, seconds / (DEPARTURE_MS / 1000)) ** 3;
+    return engineHome.clone().add(new THREE.Vector3(-distance, 0, 0));
+  }
+
+  function scheduleFrame() {
+    if (!frame && active && !simple && !failed && !document.hidden) frame = requestAnimationFrame(tick);
+  }
+
+  function tick(now) {
+    frame = 0;
+    if (!active || disposed || document.hidden || simple || failed) return;
+    for (const [id, motion] of movements) {
+      const car = carriages.get(id);
+      const t = Math.min(1, (now - motion.start) / TRANSFER_MS);
+      const eased = t * t * (3 - 2 * t);
+      car.position.lerpVectors(motion.from, motion.to, eased);
+      car.position.y += Math.sin(t * Math.PI) * 0.16;
+      if (t === 1) movements.delete(id);
+    }
+    if (departure) {
+      const seconds = (now - departure.started) / 1000;
+      const shift = engineAt(seconds).x - engineHome.x;
+      engine.position.copy(engineAt(seconds));
+      for (const id of state.selections) {
+        const car = carriages.get(id);
+        car.position.copy(destinations.get(id));
+        car.position.x += shift;
+        car.userData.wheels.forEach(wheel => { wheel.rotation.z = seconds * 9; });
+      }
+      engine.userData.wheels.forEach(wheel => { wheel.rotation.z = seconds * 9; });
+      effects.update(seconds, engineAt);
+      if (now - departure.started >= DEPARTURE_MS) {
+        const done = departure.resolve;
+        departure = null;
+        effects.clear();
+        render();
+        done();
+        return;
+      }
+    }
+    render();
+    if (departure || movements.size) scheduleFrame();
+    else scrollToLatest();
+  }
+
+  function cancelAnimation() {
+    cancelAnimationFrame(frame);
+    frame = 0;
+    movements.clear();
+    effects.clear();
+    const pending = departure;
+    departure = null;
+    if (pending) pending.resolve();
+    engine.position.copy(engineHome);
+    for (const [id, target] of destinations) carriages.get(id)?.position.copy(target);
+    render();
+  }
+
+  function queueLayout() {
+    cancelAnimationFrame(resizeFrame);
+    resizeFrame = requestAnimationFrame(() => { resizeFrame = 0; layout(); });
+  }
+
+  const observer = new ResizeObserver(entries => {
+    const width = entries[0].contentRect.width;
+    if (width !== lastWidth) { lastWidth = width; queueLayout(); }
+  });
+  observer.observe(viewport);
+  window.addEventListener('resize', queueLayout);
+  function visibilityChanged() {
+    if (document.hidden) cancelAnimation();
+    else if (active) layout();
+  }
+  document.addEventListener('visibilitychange', visibilityChanged);
+
+  return {
+    update(next) {
+      const newPalette = paletteIdentity !== next.palette;
+      const changed = JSON.stringify([next.key, next.controlsRevision, next.selections]) !== lastRevision;
+      state = next;
+      if (newPalette) {
+        movements.clear();
+        for (const car of carriages.values()) scene.remove(car);
+        carriages.clear();
+        destinations.clear();
+        parkingPlaces.clear();
+        for (const [index, tile] of next.palette.entries()) {
+          const car = models.carriage(tile.text, index, camera.quaternion);
+          carriages.set(tile.id, car);
+          scene.add(car);
+        }
+        paletteIdentity = next.palette;
+      }
+      if (changed || newPalette) {
+        lastRevision = JSON.stringify([next.key, next.controlsRevision, next.selections]);
+        layout({ animate: !newPalette });
+      }
+    },
+    setActive(value) { active = value; if (value) layout(); else cancelAnimation(); },
+    setSimple(value) {
+      simple = failed || value;
+      host.dataset.mode = simple ? 'simple' : 'webgl';
+      cancelAnimation();
+      if (!simple) layout();
+    },
+    animateDeparture() {
+      cancelAnimation();
+      if (simple || failed || reduced.matches || document.hidden || !active) return Promise.resolve();
+      return new Promise(resolve => { departure = { started: performance.now(), resolve }; scheduleFrame(); });
+    },
+    cancelAnimation,
+    dispose() {
+      disposed = true;
+      cancelAnimation();
+      cancelAnimationFrame(resizeFrame);
+      observer.disconnect();
+      window.removeEventListener('resize', queueLayout);
+      document.removeEventListener('visibilitychange', visibilityChanged);
+      renderer?.domElement.removeEventListener('webglcontextlost', contextLost);
+      sunlight.shadow.dispose();
+      effects.dispose();
+      models.dispose();
+      floor.geometry.dispose();
+      floor.material.dispose();
+      renderer?.dispose();
+      renderer?.domElement.remove();
+      scene.clear();
+    },
+  };
 }

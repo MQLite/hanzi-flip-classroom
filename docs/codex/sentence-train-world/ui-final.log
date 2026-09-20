@@ -1,0 +1,116 @@
+npm notice run hanzi-flip-classroom@1.0.0 test:ui
+npm notice run playwright test
+[WebServer] (node:47520) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] npm notice run hanzi-flip-classroom@1.0.0 npx
+[WebServer] npm notice run vite --host 127.0.0.1 --port 5193 --strictPort
+[WebServer] (node:49092) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 88 tests using 3 workers
+
+(node:52312) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:22428) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:56252) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  2 tests\sentence-train-ui.spec.js:9:1 › third mode provides stable candidates, adjustment and disabled incomplete departure (3.5s)
+  ok  1 tests\workshop-ui.spec.js:18:1 › candidate characters include distractors and duplicate glyphs; selection order supports undo and clear (4.3s)
+  ok  3 tests\ui.spec.js:7:1 › classroom reveal, one settlement, back navigation and review (5.1s)
+  ok  4 tests\sentence-train-ui.spec.js:16:1 › incorrect check retains train; teacher acceptance locks one score and records actual sentence (3.1s)
+  ok  6 tests\ui.spec.js:31:1 › teacher settings and keyboard isolation (2.5s)
+  ok  5 tests\workshop-ui.spec.js:33:1 › incorrect fusion scatters and allows retry; correct creates collected stamp and ends one-question round (5.8s)
+  ok  7 tests\sentence-train-ui.spec.js:23:1 › revealing requires teacher scoring, and changed selection requires a fresh check (3.7s)
+  ok  8 tests\ui.spec.js:43:1 › valid edit persists and invalid draft never replaces saved record (4.8s)
+  ok  9 tests\workshop-ui.spec.js:50:1 › successful fusion automatically advances and regenerates palette while keeping collected words (4.4s)
+  ok 10 tests\sentence-train-ui.spec.js:29:1 › three modes preserve independent draft, scores, and island journey (5.3s)
+[WebServer] 7:28:17 am [vite] (client) [console.error] THREE.WebGLRenderer: THREE.WebGLRenderer: Error creating WebGL context.
+[WebServer] 7:28:17 am [vite] (client) [console.error] THREE.WebGLRenderer: THREE.WebGLRenderer: Error creating WebGL context.
+  ok 13 tests\sentence-train-ui.spec.js:33:1 › keyboard and no-WebGL fallback complete a sentence without page overflow (1.5s)
+  ok 11 tests\ui.spec.js:61:1 › import preview cancel and deliberate empty bank survive reload (5.1s)
+  ok 12 tests\workshop-ui.spec.js:63:1 › native keys select glyphs; mode switching preserves ordered draft and independent scores (5.7s)
+  ok 14 tests\sentence-train-ui.spec.js:39:1 › manual segmentation survives unrelated edits and invalid drafts do not save (3.3s)
+  ok 15 tests\ui.spec.js:80:1 › local stroke controls and user-selected simplified mode (3.3s)
+  ok 18 tests\ui.spec.js:94:1 › projector and mobile layouts keep content within viewport width (3.7s)
+  ok 17 tests\sentence-train-ui.spec.js:48:1 › seven long carriages stay locally scrollable and newly appended carriage is visible (4.6s)
+  ok 19 tests\ui.spec.js:112:1 › real WebGL context loss preserves the active classroom (2.8s)
+  ok 16 tests\workshop-ui.spec.js:88:1 › animated success locks duplicate submissions and navigation until fusion completes (7.3s)
+  ok 21 tests\ui.spec.js:134:1 › new question, metadata clear, and snapshot isolation (5.6s)
+  ok 22 tests\workshop-ui.spec.js:102:1 › switching modes during result animation cannot advance another mode (8.5s)
+  ok 23 tests\ui.spec.js:161:1 › failed import retains original bank and offers export and retry outside form (3.2s)
+  ok 20 tests\sentence-train-ui.spec.js:54:1 › real departure locks navigation, finishes on switching and ignores stale restart callbacks (12.5s)
+  ok 25 tests\ui.spec.js:182:1 › grade change cancel preserves progress and grade defaults update hints (1.9s)
+  ok 24 tests\workshop-ui.spec.js:116:1 › GPU fallback preserves selected glyphs and finishes wrong and correct fusion (3.7s)
+[WebServer] 7:28:41 am [vite] (client) [console.error] THREE.WebGLRenderer: THREE.WebGLRenderer: Error creating WebGL context.
+[WebServer] 7:28:41 am [vite] (client) [console.error] THREE.WebGLRenderer: THREE.WebGLRenderer: Error creating WebGL context.
+[WebServer] 7:28:41 am [vite] (client) [console.error] THREE.WebGLRenderer: THREE.WebGLRenderer: Error creating WebGL context.
+  ok 27 tests\ui.spec.js:196:1 › curriculum stage, lesson, cumulative selection and cancellation (2.6s)
+  ok 26 tests\sentence-train-ui.spec.js:60:1 › practice and skipped questions summarize separately and review contains only practice (2.9s)
+  ok 28 tests\workshop-ui.spec.js:128:1 › WebGL initialization failure leaves character fusion usable (1.0s)
+  ok 30 tests\sentence-train-ui.spec.js:64:1 › context loss and repeated mode changes preserve train and bounded canvas count (2.6s)
+  ok 29 tests\ui.spec.js:217:1 › upgrading an old bank appends textbooks without replacing teacher work and persists (2.9s)
+  ok 32 tests\sentence-train-ui.spec.js:69:1 › form focus and dialog isolate classroom shortcuts (1.8s)
+  ok 33 tests\ui.spec.js:243:1 › unreadable bank cannot be overwritten by appending textbooks or adding a question (2.1s)
+  ok 31 tests\workshop-ui.spec.js:136:1 › GPU loss during fusion completes once and restored context can resume the stamp collection (5.9s)
+  ok 35 tests\ui.spec.js:257:1 › four teams and revealed card fit projector view (2.0s)
+  ok 36 tests\workshop-ui.spec.js:156:1 › empty bank retains teacher management access (1.2s)
+  ok 34 tests\sentence-train-ui.spec.js:72:1 › projection screenshots show populated meshes and responsive classroom (3.3s)
+[WebServer] 7:28:49 am [vite] (client) [console.error] THREE.WebGLRenderer: THREE.WebGLRenderer: Error creating WebGL context.
+[WebServer] 7:28:49 am [vite] (client) [console.error] THREE.WebGLRenderer: THREE.WebGLRenderer: Error creating WebGL context.
+  ok 37 tests\ui.spec.js:276:1 › renderer initialization failure still supports flip and scoring (1.1s)
+  ok 38 tests\workshop-ui.spec.js:163:1 › a question without valid reference answers explains how to repair it (2.4s)
+  ok 40 tests\ui.spec.js:293:1 › corrupt data is preserved and can be downloaded before restore (1.6s)
+  ok 39 tests\sentence-train-ui.spec.js:79:1 › projector candidates and primary controls fit the actual viewport (2.1s)
+  ok 42 tests\ui.spec.js:313:1 › missing and mismatched stroke data provide textual fallback (1.8s)
+  ok 44 tests\ui.spec.js:350:1 › invalid imported records identify their fields without changing bank (1.6s)
+  ok 45 tests\ui.spec.js:378:1 › context loss keeps fallback when teacher attempts 3D again (1.2s)
+  ok 46 tests\ui.spec.js:396:1 › short projector learning text remains large after reveal (1.6s)
+  ok 47 tests\ui.spec.js:418:1 › two-team revealed classroom has no projector page overflow (1.2s)
+  ok 48 tests\ui.spec.js:426:1 › a rejected second import invalidates the previous replacement preview (1.1s)
+  ok 41 tests\workshop-ui.spec.js:171:1 › long answers and candidate controls remain reachable on projector and mobile (8.5s)
+  ok 43 tests\sentence-train-ui.spec.js:82:1 › native focus follows a selected carriage instead of dropping to the document (8.9s)
+  ok 49 tests\ui.spec.js:449:1 › late stroke data cannot append an earlier glyph to the current panel (1.5s)
+  ok 50 tests\sentence-train-ui.spec.js:89:1 › default textbook station screenshot and viewport controls (2.1s)
+  ok 51 tests\ui.spec.js:477:1 › retrying a failed deletion completes the deletion form transition (1.9s)
+  ok 52 tests\sentence-train-ui.spec.js:93:1 › long projector error and revealed feedback remain in the viewport (2.1s)
+  ok 53 tests\ui.spec.js:501:1 › switching to simplified mode at the edge of a flip keeps the face visible (1.7s)
+  ok 55 tests\ui.spec.js:518:1 › an older asynchronous file read cannot revive its import preview (1.0s)
+  ok 54 tests\sentence-train-ui.spec.js:99:1 › hidden page finishes the departing train exactly once (2.4s)
+  ok 56 tests\ui.spec.js:559:3 › accepted abandonment clears pending import recovery: invalid import (1.4s)
+  ok 57 tests\sentence-train-ui.spec.js:102:1 › changed built-in sentence loses its mapping without changing current-round snapshot (1.3s)
+  ok 58 tests\ui.spec.js:559:3 › accepted abandonment clears pending import recovery: close (1.2s)
+  ok 60 tests\ui.spec.js:559:3 › accepted abandonment clears pending import recovery: escape (1.2s)
+  ok 59 tests\sentence-train-ui.spec.js:115:1 › restarting an untouched one-question round realigns replacement mouse targets (2.1s)
+  ok 61 tests\ui.spec.js:559:3 › accepted abandonment clears pending import recovery: existing question (1.2s)
+  ok 63 tests\ui.spec.js:559:3 › accepted abandonment clears pending import recovery: new question (1.2s)
+  ok 62 tests\sentence-train-ui.spec.js:119:1 › practice of the same first question rebuilds aligned and clickable carriages (1.7s)
+  ok 64 tests\ui.spec.js:559:3 › accepted abandonment clears pending import recovery: restore cancelled (1.1s)
+  ok 65 tests\sentence-train-ui.spec.js:122:1 › station uses one unified world canvas and keeps coordinate controls playable (1.4s)
+  ok 66 tests\ui.spec.js:559:3 › accepted abandonment clears pending import recovery: cancel replacement (1.2s)
+  ok 68 tests\ui.spec.js:628:1 › declining abandonment preserves a failed import for deliberate retry (1.3s)
+  ok 69 tests\ui.spec.js:662:1 › 3D question becomes stroke writing on reveal and survives display switching (1.7s)
+  ok 70 tests\ui.spec.js:679:1 › a late 3D question glyph cannot cover stroke writing after reveal (2.3s)
+  ok 71 tests\ui.spec.js:695:1 › missing 3D glyph retains readable text and allows scoring (1.8s)
+  ok 72 tests\ui.spec.js:704:1 › late 3D glyph cannot replace a newer question (1.7s)
+  ok 67 tests\sentence-train-ui.spec.js:125:1 › successful world celebration runs long enough to show rising and bursting fireworks (12.1s)
+  ok 73 tests\ui.spec.js:719:1 › PDF bank is the default, preserves actual lessons, and works in both modes (4.0s)
+  ok 74 tests\sentence-train-ui.spec.js:129:1 › moving carriage hit targets follow the model and return to their original yard slot (4.2s)
+  ok 76 tests\sentence-train-ui.spec.js:136:1 › wrong check stays visually idle; teacher success celebrates and context loss settles once (10.5s)
+  ok 75 tests\ui.spec.js:753:1 › island journey locks duplicate scoring and advances exactly once on arrival (15.1s)
+  ok 77 tests\ui.spec.js:771:1 › switching modes during island journey settles only the reading session (4.2s)
+  ok 78 tests\ui.spec.js:782:64 › island journey handles simple without stale navigation (3.3s)
+  ok 79 tests\ui.spec.js:782:64 › island journey handles context-loss without stale navigation (3.4s)
+  ok 80 tests\ui.spec.js:782:64 › island journey handles restart without stale navigation (7.8s)
+  ok 81 tests\ui.spec.js:794:1 › last island answer completes the round with reduced motion (1.5s)
+  ok 82 tests\ui.spec.js:803:1 › stone hides question pinyin and autoplays stroke writing only after reveal (907ms)
+  ok 83 tests\ui.spec.js:821:1 › stone stroke animation is preserved when extension is toggled and cleared on mode switch (2.1s)
+  ok 84 tests\ui.spec.js:835:1 › stone keeps a readable character when stroke data is missing (1.4s)
+  ok 85 tests\ui.spec.js:846:1 › a late stone writing response cannot return after navigating away (1.5s)
+  ok 86 tests\ui.spec.js:862:1 › stone writing releases document listeners when leaving a question (1.1s)
+  ok 87 tests\ui.spec.js:876:1 › invalid local stroke geometry keeps the original character readable (1.1s)
+  ok 88 tests\ui.spec.js:886:1 › failed writer initialization does not rethrow during navigation cleanup (1.2s)
+
+  88 passed (2.3m)
+
+EXIT_CODE=0

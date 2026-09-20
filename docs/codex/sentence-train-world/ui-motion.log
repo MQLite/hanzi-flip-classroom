@@ -1,0 +1,7 @@
+
+Running 2 tests using 1 worker
+
+  ok 1 tests\sentence-train-ui.spec.js:129:1 › moving carriage hit targets follow the model and return to their original yard slot (3.2s)
+  ok 2 tests\sentence-train-ui.spec.js:136:1 › wrong check stays visually idle; teacher success celebrates and context loss settles once (7.1s)
+
+  2 passed (13.4s)

@@ -55,7 +55,7 @@ test('real departure locks navigation, finishes on switching and ignores stale r
  await page.emulateMedia({reducedMotion:'no-preference'});await open(page,{bank:[...questions,{...questions[0],id:'two',character:'朋',pinyin:'péng',words:['朋友','小朋友'],sentence:'小朋友在看书。',sentenceTrain:{tokens:['小朋友','在','看书'],punctuation:'。',alternatives:[]}}]});
  const first=await page.locator('#train-palette button').allTextContents();const who=first.includes('老师')?'老师':'小朋友';await choose(page,[who,'在','看书']);await page.getByRole('button',{name:'发车',exact:true}).click();
  await expect(page.getByRole('button',{name:'下一句',exact:true})).toBeDisabled();await page.getByRole('button',{name:'识字翻翻乐',exact:true}).click();await page.getByRole('button',{name:'句子小火车',exact:true}).click();await expect(page.locator('#progress')).toHaveText('02 / 02');await expect(score(page)).toHaveText('1');
- const second=who==='老师'?'小朋友':'老师';await choose(page,[second,'在','看书']);await page.getByRole('button',{name:'发车',exact:true}).click();page.once('dialog',d=>d.accept());await page.locator('#restart').click();await page.waitForTimeout(1400);await expect(page.locator('#progress')).toHaveText('01 / 02');await expect(score(page)).toHaveText('0');await expect(page.locator('#train-selected button')).toHaveCount(0);
+ const second=who==='老师'?'小朋友':'老师';await choose(page,[second,'在','看书']);await page.getByRole('button',{name:'发车',exact:true}).click();page.once('dialog',d=>d.accept());await page.locator('#restart').click();await page.waitForTimeout(2700);await expect(page.locator('#progress')).toHaveText('01 / 02');await expect(score(page)).toHaveText('0');await expect(page.locator('#train-selected button')).toHaveCount(0);
 });
 test('practice and skipped questions summarize separately and review contains only practice',async({page})=>{
  await open(page,{bank:[...questions,{...questions[0],id:'two',character:'朋',pinyin:'péng',words:['朋友','小朋友'],sentence:'小朋友在看书。',sentenceTrain:{tokens:['小朋友','在','看书'],punctuation:'。',alternatives:[]}}]});
@@ -71,7 +71,7 @@ test('form focus and dialog isolate classroom shortcuts',async({page})=>{
 });
 test('projection screenshots show populated meshes and responsive classroom',async({page})=>{
  await page.addInitScript(()=>{window.trainErrors=[];window.addEventListener('error',event=>window.trainErrors.push(event.message))});await open(page,{bank:[longQuestion]});await expect(page.locator('#train-palette button')).toHaveCount(7);await choose(page,longTokens.slice(0,4));
- for(const [width,height] of [[1920,1080],[1280,720],[390,844]]){await page.setViewportSize({width,height});await page.waitForTimeout(300);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:`docs/codex/sentence-train/train-${width}.png`,fullPage:true});}expect(await page.evaluate(()=>window.trainErrors)).toEqual([]);
+ for(const [width,height] of [[1920,1080],[1280,720],[390,844]]){await page.setViewportSize({width,height});await page.waitForTimeout(300);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:`docs/codex/sentence-train-world/train-${width}.png`,fullPage:false});}expect(await page.evaluate(()=>window.trainErrors)).toEqual([]);
 });
 
 
@@ -88,13 +88,13 @@ test('native focus follows a selected carriage instead of dropping to the docume
 });
 test('default textbook station screenshot and viewport controls',async({page})=>{
  await page.goto('/');await page.getByRole('button',{name:'句子小火车',exact:true}).click();for(const b of (await page.locator('#train-palette button').all()).slice(0,3))await b.click();
- for(const[width,height]of [[1920,1080],[1280,720]]){await page.setViewportSize({width,height});await page.waitForTimeout(200);await page.screenshot({path:`docs/codex/sentence-train/train-default-${width}.png`,fullPage:true});const box=await page.locator('#train-check').boundingBox();expect(box.y+box.height).toBeLessThanOrEqual(height)}
+ for(const[width,height]of [[1920,1080],[1280,720]]){await page.setViewportSize({width,height});await page.waitForTimeout(200);await page.screenshot({path:`docs/codex/sentence-train-world/train-default-${width}.png`,fullPage:false});const box=await page.locator('#train-check').boundingBox();expect(box.y+box.height).toBeLessThanOrEqual(height)}
 });
 test('long projector error and revealed feedback remain in the viewport',async({page})=>{
  await page.setViewportSize({width:1280,height:720});await open(page,{bank:[longQuestion]});await choose(page,[...longTokens].reverse());await page.locator('#train-check').click();
  for(const selector of ['#train-feedback','#train-accept','#train-check']){const b=await page.locator(selector).boundingBox();expect(b.y+b.height).toBeLessThanOrEqual(720)}
  await page.locator('#train-reveal').click();await page.locator('#train-check').click();for(const selector of ['#train-feedback','#train-reference','#train-accept']){const b=await page.locator(selector).boundingBox();expect(b.y+b.height).toBeLessThanOrEqual(720)}
- await page.screenshot({path:'docs/codex/sentence-train/train-error-revealed-1280.png',fullPage:true});
+ await page.screenshot({path:'docs/codex/sentence-train-world/train-error-revealed-1280.png',fullPage:false});
 });
 test('hidden page finishes the departing train exactly once',async({page})=>{
  await page.emulateMedia({reducedMotion:'no-preference'});await open(page);await choose(page,['老师','在','看书']);await page.locator('#train-check').click();await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'))});await expect(page.locator('#train-summary')).toBeVisible();await expect(score(page)).toHaveText('1');await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:false});document.dispatchEvent(new Event('visibilitychange'))});await expect(score(page)).toHaveText('1');
@@ -118,4 +118,22 @@ test('restarting an untouched one-question round realigns replacement mouse targ
 });
 test('practice of the same first question rebuilds aligned and clickable carriages',async({page})=>{
  await open(page);for(let attempt=0;attempt<2;attempt++){await page.locator('#practice').click();await page.locator('#next').click();await page.getByRole('button',{name:'开始复习',exact:true}).click();await assertTrainMouseTargets(page);await page.locator('#train-clear').click();}
+});
+test('station uses one unified world canvas and keeps coordinate controls playable',async({page})=>{
+ await open(page);await expect(page.locator('#train-scene canvas')).toHaveCount(1);await assertTrainMouseTargets(page);await page.locator('#train-clear').click();await page.locator('#restart').click();await assertTrainMouseTargets(page);
+});
+test('successful world celebration runs long enough to show rising and bursting fireworks',async({page})=>{
+ await page.setViewportSize({width:1280,height:720});await page.emulateMedia({reducedMotion:'no-preference'});await page.clock.install({time:new Date('2026-01-01T00:00:00Z')});await open(page);await page.clock.pauseAt(new Date('2026-01-01T00:01:00Z'));await choose(page,['老师','在','看书']);await page.locator('#train-check').evaluate(button=>button.click());await expect(score(page)).toHaveText('1');await page.clock.runFor(1100);await expect(page.locator('#train-summary')).toBeHidden();await expect(page.locator('#next')).toBeDisabled();await page.screenshot({path:'docs/codex/sentence-train-world/success-burst-1280.png',fullPage:false});await page.clock.runFor(1600);await expect(page.locator('#train-summary')).toBeVisible();await expect(score(page)).toHaveText('1');
+});
+
+test('moving carriage hit targets follow the model and return to their original yard slot',async({page})=>{
+ await page.emulateMedia({reducedMotion:'no-preference'});await page.clock.install();await open(page);await page.clock.pauseAt(new Date(Date.now()+60000));
+ const candidate=page.locator('#train-palette button').filter({hasText:'老师'}),home=await candidate.boundingBox();
+ await candidate.evaluate(button=>button.click());const selected=page.locator('#train-selected button');const start=await selected.boundingBox();await page.clock.runFor(160);const moving=await selected.boundingBox();expect(Math.abs(moving.y-start.y)).toBeGreaterThan(5);
+ await page.mouse.click(moving.x+moving.width/2,moving.y+moving.height/2);await expect(selected).toHaveCount(0);await page.clock.runFor(400);const returned=await candidate.boundingBox();expect(returned.x).toBeCloseTo(home.x,0);expect(returned.y).toBeCloseTo(home.y,0);await page.mouse.click(returned.x+returned.width/2,returned.y+returned.height/2);await expect(selected).toHaveCount(1);
+});
+
+test('wrong check stays visually idle; teacher success celebrates and context loss settles once',async({page})=>{
+ await page.setViewportSize({width:1280,height:720});await page.emulateMedia({reducedMotion:'no-preference'});await page.clock.install();await open(page);await page.clock.pauseAt(new Date(Date.now()+60000));await choose(page,['看书','在','老师']);await page.clock.runFor(400);await page.locator('#train-check').evaluate(button=>button.click());await expect(score(page)).toHaveText('0');const canvas=page.locator('#train-scene canvas');const idle=await canvas.screenshot();await page.clock.runFor(600);expect((await canvas.screenshot()).equals(idle)).toBe(true);
+ await page.locator('#train-accept').evaluate(button=>button.click());await page.clock.runFor(1200);await expect(score(page)).toHaveText('1');await expect(page.locator('#next')).toBeDisabled();expect((await canvas.screenshot()).equals(idle)).toBe(false);await page.screenshot({path:'docs/codex/sentence-train-world/teacher-success-1280.png'});await canvas.evaluate(e=>e.dispatchEvent(new Event('webglcontextlost',{cancelable:true})));await expect(page.locator('#train-summary')).toBeVisible();await page.clock.runFor(3000);await expect(score(page)).toHaveText('1');
 });

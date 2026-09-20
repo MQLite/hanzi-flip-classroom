@@ -1,0 +1,21 @@
+npm notice run hanzi-flip-classroom@1.0.0 npx
+npm notice run playwright test tests/sentence-train-ui.spec.js --grep one unified|world celebration|projection screenshots
+[WebServer] (node:48604) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] npm notice run hanzi-flip-classroom@1.0.0 npx
+[WebServer] npm notice run vite --host 127.0.0.1 --port 5193 --strictPort
+[WebServer] (node:54660) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 3 tests using 1 worker
+
+(node:53592) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] 7:19:58 am [vite] (client) [console.warn] THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.
+  ok 1 tests\sentence-train-ui.spec.js:72:1 › projection screenshots show populated meshes and responsive classroom (3.0s)
+[WebServer] 7:20:01 am [vite] (client) [console.warn] THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.
+  ok 2 tests\sentence-train-ui.spec.js:122:1 › station uses one unified world canvas and keeps coordinate controls playable (1.2s)
+[WebServer] 7:20:03 am [vite] (client) [console.warn] THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.
+  ok 3 tests\sentence-train-ui.spec.js:125:1 › successful world celebration runs long enough to show rising and bursting fireworks (4.6s)
+
+  3 passed (12.0s)

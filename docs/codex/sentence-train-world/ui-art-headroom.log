@@ -1,0 +1,9 @@
+
+Running 4 tests using 1 worker
+
+  ok 1 tests\sentence-train-ui.spec.js:72:1 › projection screenshots show populated meshes and responsive classroom (2.8s)
+  ok 2 tests\sentence-train-ui.spec.js:79:1 › projector candidates and primary controls fit the actual viewport (1.4s)
+  ok 3 tests\sentence-train-ui.spec.js:93:1 › long projector error and revealed feedback remain in the viewport (1.7s)
+  ok 4 tests\sentence-train-ui.spec.js:125:1 › successful world celebration runs long enough to show rising and bursting fireworks (9.6s)
+
+  4 passed (18.6s)

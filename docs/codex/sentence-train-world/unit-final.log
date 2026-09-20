@@ -1,0 +1,13 @@
+npm notice run hanzi-flip-classroom@1.0.0 test
+npm notice run vitest run
+
+ RUN  v5.0.1 D:/Repository/hanzi-sentence-train
+
+
+ Test Files  8 passed (8)
+      Tests  82 passed (82)
+   Start at  07:27:56
+   Duration  802ms (transform 54%, tests 22%, import 21%, worker 4%)
+
+
+EXIT_CODE=0
