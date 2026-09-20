@@ -1,4 +1,5 @@
 import { curriculumCourse } from './curriculum.js'
+import { normalizeSentenceTrain, validateSentenceTrain } from './sentence-train-data.js'
 
 export const SCHEMA_VERSION = 1
 export const STORAGE_KEY = 'hanzi-flip.question-bank'
@@ -31,6 +32,9 @@ function normalizeQuestion(question) {
   }
   for (const field of OPTIONAL_TEXT_FIELDS) {
     if (typeof normalized[field] === 'string') normalized[field] = normalizedText(normalized[field])
+  }
+  if (normalized.sentenceTrain !== undefined) {
+    normalized.sentenceTrain = normalizeSentenceTrain(normalized.sentenceTrain)
   }
   return normalized
 }
@@ -98,6 +102,13 @@ export function validateBank(input) {
     for (const field of OPTIONAL_TEXT_FIELDS) {
       if (question[field] !== undefined && typeof question[field] !== 'string') {
         errors.push(issue(`${base}.${field}`, 'invalid-text', `${field} 必须是文本。`))
+      }
+    }
+    if (question.sentenceTrain !== undefined) {
+      const trainValidation = validateSentenceTrain(question.sentenceTrain, question.sentence)
+      for (const error of trainValidation.errors) {
+        const suffix = error.path === '$' ? '' : `.${error.path}`
+        errors.push(issue(`${base}.sentenceTrain${suffix}`, error.code, error.message))
       }
     }
 

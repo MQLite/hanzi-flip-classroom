@@ -79,6 +79,43 @@ describe('bank validation', () => {
       bank: { schemaVersion: 1, questions: [] },
     })
   })
+
+  it('keeps old questions valid and round-trips normalized sentence-train fields', () => {
+    expect(validateBank({ schemaVersion: 1, questions: [question()] }).ok).toBe(true)
+
+    const withTrain = question({
+      sentence: '老师在看书。',
+      sentenceTrain: {
+        tokens: [' 老师 ', '在', '看书'],
+        punctuation: '。',
+        alternatives: [['看书', '老师', '在'], ['看书', '老师', '在']],
+      },
+    })
+    const result = validateBank({ schemaVersion: 1, questions: [withTrain] })
+
+    expect(result.ok).toBe(true)
+    expect(result.bank.questions[0].sentenceTrain).toEqual({
+      tokens: ['老师', '在', '看书'],
+      punctuation: '。',
+      alternatives: [['看书', '老师', '在']],
+    })
+    expect(JSON.parse(exportBank(result.bank))).toEqual(result.bank)
+  })
+
+  it('rejects invalid optional sentence-train fields with nested field paths', () => {
+    const result = validateBank({
+      schemaVersion: 1,
+      questions: [question({
+        sentenceTrain: { tokens: ['我', '有'], punctuation: '.', alternatives: [] },
+      })],
+    })
+
+    expect(result.ok).toBe(false)
+    expect(result.errors.map(({ path }) => path)).toEqual(expect.arrayContaining([
+      'questions[0].sentenceTrain.tokens',
+      'questions[0].sentenceTrain.punctuation',
+    ]))
+  })
 })
 
 describe('import and export', () => {
