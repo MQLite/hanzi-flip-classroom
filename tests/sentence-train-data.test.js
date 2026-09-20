@@ -1,40 +1,116 @@
+import { createHash } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
 
+import { COURSES, TEXTBOOK_QUESTIONS } from '../src/curriculum.js'
+import { DEFAULT_QUESTIONS } from '../src/data.js'
 import { PARADISE_COURSES, PARADISE_QUESTIONS } from '../src/paradise.js'
 import { SENTENCE_TRAIN_CONTENT } from '../src/sentence-train-content.js'
 import { resolveTrainQuestion, validateSentenceTrain } from '../src/sentence-train-data.js'
 
+const BUILT_IN_QUESTIONS = [...PARADISE_QUESTIONS, ...TEXTBOOK_QUESTIONS, ...DEFAULT_QUESTIONS]
+const SIMPLE_SENTENCE = /^\p{Script=Han}+[。？！]$/u
+
+function isTrainEligible(question) {
+  return SIMPLE_SENTENCE.test(question.sentence) && [...question.sentence.slice(0, -1)].length <= 28
+}
+
+function courseKey(textbook, book, lesson) {
+  return `${textbook}/${book}/${lesson}`
+}
+
 describe('sentence train built-in content', () => {
-  it('links two valid, exact source sentences to every Hanyu Paradise lesson', () => {
-    const questions = new Map(PARADISE_QUESTIONS.map((question) => [question.id, question]))
-    const coverage = new Map()
+  it('curates every eligible built-in question exactly once with its exact source sentence', () => {
+    const questions = new Map(BUILT_IN_QUESTIONS.map((question) => [question.id, question]))
+    const expectedIds = BUILT_IN_QUESTIONS.filter(isTrainEligible).map(({ id }) => id).sort()
+    const actualIds = SENTENCE_TRAIN_CONTENT.map(({ questionId }) => questionId)
 
     for (const record of SENTENCE_TRAIN_CONTENT) {
       const question = questions.get(record.questionId)
       expect(question, record.questionId).toBeDefined()
       expect(record.sentence).toBe(question.sentence)
       expect(validateSentenceTrain(record.train, record.sentence)).toEqual({ ok: true, errors: [] })
-      const key = `${question.book}/${question.lesson}`
-      coverage.set(key, (coverage.get(key) ?? 0) + 1)
     }
 
-    expect(PARADISE_COURSES).toHaveLength(36)
-    for (const course of PARADISE_COURSES) {
-      expect(coverage.get(`${course.book}/${course.lesson}`)).toBeGreaterThanOrEqual(2)
+    expect(new Set(actualIds).size).toBe(actualIds.length)
+    expect([...actualIds].sort()).toEqual(expectedIds)
+  })
+
+  it('preserves the original 72 exact question, sentence, and segmentation records', () => {
+    const legacyDigest = createHash('sha256')
+      .update(JSON.stringify(SENTENCE_TRAIN_CONTENT.slice(0, 72)))
+      .digest('hex')
+
+    expect(legacyDigest).toBe('19f255b2ca1392e13220b2f62430da228e7caa30ec882390924b0c06a6c7cdd5')
+  })
+
+  it('provides every eligible distinct sentence in each of the 72 textbook lessons', () => {
+    const questions = new Map(BUILT_IN_QUESTIONS.map((question) => [question.id, question]))
+    const actualByCourse = new Map()
+
+    for (const record of SENTENCE_TRAIN_CONTENT) {
+      const question = questions.get(record.questionId)
+      if (!question?.textbook) continue
+      const key = courseKey(question.textbook, question.book, question.lesson)
+      if (!actualByCourse.has(key)) actualByCourse.set(key, new Set())
+      actualByCourse.get(key).add(record.sentence)
+    }
+
+    const textbookBanks = [
+      [PARADISE_COURSES, PARADISE_QUESTIONS],
+      [COURSES, TEXTBOOK_QUESTIONS],
+    ]
+    for (const [courses, sourceQuestions] of textbookBanks) {
+      expect(courses).toHaveLength(36)
+      for (const course of courses) {
+        const eligible = sourceQuestions.filter((question) =>
+          question.book === course.book && question.lesson === course.lesson && isTrainEligible(question),
+        )
+        const expectedSentences = [...new Set(eligible.map(({ sentence }) => sentence))].sort()
+        const key = courseKey(eligible[0]?.textbook, course.book, course.lesson)
+        expect(expectedSentences.length, key).toBeGreaterThanOrEqual(2)
+        expect([...(actualByCourse.get(key) ?? [])].sort(), key).toEqual(expectedSentences)
+      }
     }
   })
 
-  it('provides at least eight different usable sentences in every stage', () => {
-    const questions = new Map(PARADISE_QUESTIONS.map((question) => [question.id, question]))
-    const byStage = new Map()
+  it('matches the eligible distinct-sentence coverage by bank and stage', () => {
+    const questions = new Map(BUILT_IN_QUESTIONS.map((question) => [question.id, question]))
+    const courseStages = new Map([
+      ...PARADISE_COURSES.map((course) => [
+        courseKey(PARADISE_QUESTIONS[0].textbook, course.book, course.lesson),
+        course.stage,
+      ]),
+      ...COURSES.map((course) => [
+        courseKey(TEXTBOOK_QUESTIONS[0].textbook, course.book, course.lesson),
+        course.stage,
+      ]),
+    ])
+    const coverageKey = (question) => question.textbook
+      ? `${question.textbook}/${courseStages.get(courseKey(question.textbook, question.book, question.lesson))}`
+      : 'general'
+    const expected = new Map()
+    const actual = new Map()
+
+    for (const question of BUILT_IN_QUESTIONS.filter(isTrainEligible)) {
+      const key = coverageKey(question)
+      if (!expected.has(key)) expected.set(key, new Set())
+      expected.get(key).add(question.sentence)
+    }
     for (const record of SENTENCE_TRAIN_CONTENT) {
-      const stage = questions.get(record.questionId).id.split('-')[1]
-      if (!byStage.has(stage)) byStage.set(stage, new Set())
-      byStage.get(stage).add(record.sentence)
+      const question = questions.get(record.questionId)
+      const key = coverageKey(question)
+      if (!actual.has(key)) actual.set(key, new Set())
+      actual.get(key).add(record.sentence)
     }
 
-    expect([...byStage.keys()].sort()).toEqual(['1A', '1B', '2A', '2B', '3A', '3B'])
-    expect([...byStage.values()].every((sentences) => sentences.size >= 8)).toBe(true)
+    expect([...actual.keys()].sort()).toEqual([...expected.keys()].sort())
+    for (const [key, expectedSentences] of expected) {
+      expect([...(actual.get(key) ?? [])].sort(), key).toEqual([...expectedSentences].sort())
+    }
+
+    const expectedDistinct = new Set(BUILT_IN_QUESTIONS.filter(isTrainEligible).map(({ sentence }) => sentence))
+    const actualDistinct = new Set(SENTENCE_TRAIN_CONTENT.map(({ sentence }) => sentence))
+    expect([...actualDistinct].sort()).toEqual([...expectedDistinct].sort())
   })
 })
 

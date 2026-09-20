@@ -1,3 +1,9 @@
+import { TEXTBOOK_QUESTIONS } from './curriculum.js'
+import { DEFAULT_QUESTIONS } from './data.js'
+import { PARADISE_QUESTIONS } from './paradise.js'
+import { OTHER_TRAIN_SEGMENTATIONS } from './sentence-train-other-content.js'
+import { PARADISE_TRAIN_SEGMENTATIONS } from './sentence-train-paradise-content.js'
+
 function train(questionId, sentence, tokens, alternatives = []) {
   return {
     questionId,
@@ -12,7 +18,7 @@ function train(questionId, sentence, tokens, alternatives = []) {
 
 // Teacher-aid examples linked to their exact built-in question and sentence.
 // The segmentations are intentionally explicit: runtime code never guesses word boundaries.
-export const SENTENCE_TRAIN_CONTENT = [
+const LEGACY_SENTENCE_TRAIN_CONTENT = [
   train('hypy-1A-1-好', '这个包子真好吃。', ['这个', '包子', '真', '好吃']),
   train('hypy-1A-1-老', '老师在看书。', ['老师', '在', '看书']),
   train('hypy-1A-2-欢', '欢迎你来我家。', ['欢迎', '你', '来', '我家']),
@@ -91,3 +97,26 @@ export const SENTENCE_TRAIN_CONTENT = [
   train('hypy-3B-12-年', '我们一起迎接新年。', ['我们', '一起', '迎接', '新年']),
   train('hypy-3B-12-快', '新年快到了。', ['新年', '快', '到了']),
 ]
+
+function appendCuratedRecords(records, questionIds, questions, segmentations) {
+  for (const question of questions) {
+    if (questionIds.has(question.id)) continue
+    const definition = segmentations[question.sentence]
+    if (!definition) continue
+    records.push(train(
+      question.id,
+      question.sentence,
+      [...definition.tokens],
+      definition.alternatives.map((alternative) => [...alternative]),
+    ))
+    questionIds.add(question.id)
+  }
+}
+
+const expandedContent = [...LEGACY_SENTENCE_TRAIN_CONTENT]
+const questionIds = new Set(expandedContent.map(({ questionId }) => questionId))
+appendCuratedRecords(expandedContent, questionIds, PARADISE_QUESTIONS, PARADISE_TRAIN_SEGMENTATIONS)
+appendCuratedRecords(expandedContent, questionIds, TEXTBOOK_QUESTIONS, OTHER_TRAIN_SEGMENTATIONS)
+appendCuratedRecords(expandedContent, questionIds, DEFAULT_QUESTIONS, OTHER_TRAIN_SEGMENTATIONS)
+
+export const SENTENCE_TRAIN_CONTENT = expandedContent
