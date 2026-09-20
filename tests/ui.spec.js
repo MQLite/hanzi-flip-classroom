@@ -723,9 +723,9 @@ test('PDF bank is the default, preserves actual lessons, and works in both modes
   const first = PARADISE_QUESTIONS.filter(q => q.book === 1 && q.lesson === 1);
   expect(first.map(q => q.character)).toContain(await page.locator('.hanzi').textContent());
   await page.getByRole('button', {name:'组词小工坊', exact:true}).click();
-  await expect(page.locator('#workshop-target')).toBeVisible();
-  const target = await page.locator('#workshop-target').textContent();
-  const answer = first.find(q => q.character === target).words[0];
+  await page.locator('#workshop-references summary').click();
+  const answer = await page.locator('#workshop-references .workshop-reference').first().getAttribute('data-word');
+  expect(first.flatMap(q => q.words)).toContain(answer);
   for (const character of answer) {
     await page.locator('#workshop-tiles button:not([aria-pressed="true"])').filter({hasText:new RegExp(`^${character}$`)}).first().click();
   }
@@ -772,7 +772,7 @@ test('switching modes during island journey settles only the reading session', a
   await prepareIslandWalk(page);
   await page.locator('#mode-workshop').evaluate(button=>button.click());
   await page.clock.runFor(2600);
-  await expect(page.locator('#progress')).toHaveText('01 / 08');
+  await expect(page.locator('#progress')).toHaveText(/0\s*\/\s*0?4/);
   await expect(page.locator('[data-score="team-1"]')).toHaveText('0');
   await page.locator('#mode-flip').evaluate(button=>button.click());
   await expect(page.locator('#progress')).toHaveText('02 / 08');
@@ -827,7 +827,7 @@ test('stone stroke animation is preserved when extension is toggled and cleared 
   await expect(page.locator('#stroke-target svg')).toBeVisible();
   await page.locator('#mode-workshop').click();
   await expect(page.locator('#card-strokes')).toHaveCount(0);
-  await expect(page.locator('#pinyin').locator('..')).toBeVisible();
+  await expect(page.locator('#pinyin').locator('..')).toBeHidden();
   await page.locator('#mode-flip').click();
   await expect(page.locator('#card-stroke-target svg')).toBeVisible();
 });

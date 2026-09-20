@@ -8,7 +8,7 @@ export function createWorkshopScene(host,onFallback){
   const camera=new THREE.PerspectiveCamera(36,1,.1,100);
   const target=new THREE.Vector3(0,.35,.20),direction=new THREE.Vector3(2.5,16.8,20).normalize();
   let renderer,frame,active=false,simple=false,available=true,disposed=false;
-  let blocks=[],finished=[],paletteKey='',recordKey='',targetKey='',selection=[],effect=null,terminalFused=null;
+  let blocks=[],finished=[],paletteKey='',recordKey='',targetKey='',roundKey,selection=[],effect=null,terminalFused=null;
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   const geometries=new Set(),materials=new Set(),textures=new Set();
   const rounded=new RoundedBoxGeometry(1,1,1,3,.08);geometries.add(rounded);
@@ -43,7 +43,6 @@ export function createWorkshopScene(host,onFallback){
   box(5.5,.21,6.15,-5.6,.14,.45,walnut);
   for(const x of[-8.4,-2.80])box(.15,.48,6.30,x,.30,.45,oak);
   for(const z of[-2.7,3.6])box(5.75,.48,.18,-5.6,.30,z,oak);
-  for(const x of[-7.21,-6.13,-5.05,-3.97])box(.06,.18,5.65,x,.27,.3,walnut);
   const rackDividers=[];
   box(6.25,.15,2.1,.6,.16,-1.20,walnut);
   for(const z of[-2.28,-.11])box(6.55,.39,.16,.6,.34,z,oak);
@@ -77,8 +76,8 @@ export function createWorkshopScene(host,onFallback){
     const material=mat(0xffffff,{map:woodTexture(color,word,Math.max(256,Math.round(256*(w-.12)/(d-.12)))),roughness:.91});
     const face=new THREE.Mesh(geo,material);face.rotation.x=-Math.PI/2;face.position.y=.351;return face;
   }
-  function glyphBlock(word,width=1.02,depth=1.02){
-    const group=new THREE.Group();box(width,.70,depth,0,0,0,woodMats[word.codePointAt(0)%3],group);group.add(topFace(word,width,depth));scene.add(group);return group;
+  function glyphBlock(word,width=1.02,depth=1.02,source='reference'){
+    const group=new THREE.Group();box(width,.70,depth,0,0,0,source==='teacher'?green:woodMats[word.codePointAt(0)%3],group);group.add(topFace(word,width,depth,source==='teacher'?'#66aaa0':'#d9af76'));scene.add(group);return group;
   }
   function discard(group){
     scene.remove(group);group.traverse(child=>{
@@ -92,8 +91,8 @@ export function createWorkshopScene(host,onFallback){
       const corners=[[-.51,-.51],[.51,-.51],[.51,.51],[-.51,.51]].map(([x,z])=>project(center.clone().add(new THREE.Vector3(x*b.mesh.scale.x,0,z*b.mesh.scale.z))));
       const left=Math.min(...corners.map(p=>p.x)),top=Math.min(...corners.map(p=>p.y));
       const width=Math.max(...corners.map(p=>p.x))-left,height=Math.max(...corners.map(p=>p.y))-top;
-      const polygon=corners.map(point=>`${(point.x-left)/width*100}% ${(point.y-top)/height*100}%`).join(',');
-      Object.assign(b.button.style,{left:`${left}px`,top:`${top}px`,width:`${width}px`,height:`${height}px`,transform:'none',clipPath:`polygon(${polygon})`});
+      const hitWidth=Math.max(28,width),hitHeight=Math.max(28,height);
+      Object.assign(b.button.style,{left:`${left-(hitWidth-width)/2}px`,top:`${top-(hitHeight-height)/2}px`,width:`${hitWidth}px`,height:`${hitHeight}px`,transform:'none',clipPath:'none'});
       b.button.style.zIndex=String(Math.round(p.y));
     });
     const positions=[['.printshop-rack-label',new THREE.Vector3(-5,.6,3.95)],['.printshop-shelf-label',new THREE.Vector3(6,1.55,-3.6)]];
@@ -119,7 +118,7 @@ export function createWorkshopScene(host,onFallback){
     if(!effect)return;const current=effect;effect=null;clearTimeout(current.timer);
     blocks.forEach(b=>{
       b.start=0;b.mesh.rotation.set(0,0,0);
-      if(current.chosen.includes(b)&&current.outcome==='incorrect'){b.to.copy(b.home);b.mesh.position.copy(b.home);b.mesh.scale.setScalar(1);b.mesh.visible=true;}
+      if(current.chosen.includes(b)&&(current.outcome==='incorrect'||current.returnTiles)){b.to.copy(b.home);b.mesh.position.copy(b.home);b.mesh.scale.setScalar(b.baseScale);b.mesh.visible=true;}
       else if(current.chosen.includes(b)&&current.outcome==='correct')b.mesh.visible=false;
       else{b.mesh.visible=true;b.mesh.position.copy(b.to);}
     });
@@ -135,7 +134,8 @@ export function createWorkshopScene(host,onFallback){
       if(effect.outcome==='correct'){
         if(p<.35){effect.chosen.forEach((b,i)=>{b.mesh.position.lerpVectors(effect.starts[i],new THREE.Vector3(.6+(i-(effect.chosen.length-1)/2)*.48,.85,-1.2),p/.35);b.mesh.position.y+=Math.sin(p/.35*Math.PI)*.3;});}
         else{
-          effect.chosen.forEach(b=>b.mesh.visible=false);effect.fused.visible=true;const q=Math.min((p-.35)/.65,1),ease=q*q*(3-2*q);
+          const q=Math.min((p-.35)/.65,1),ease=q*q*(3-2*q);
+          effect.chosen.forEach((b,i)=>{b.mesh.visible=Boolean(effect.returnTiles);if(effect.returnTiles){b.mesh.position.lerpVectors(new THREE.Vector3(.6+(i-(effect.chosen.length-1)/2)*.48,.85,-1.2),b.home,ease);b.mesh.position.y+=Math.sin(q*Math.PI)*.9;b.mesh.scale.setScalar(b.baseScale);}});effect.fused.visible=true;
           effect.fused.position.lerpVectors(new THREE.Vector3(.6,.88,-1.2),new THREE.Vector3(6,.85,-2.86+effect.recordIndex*.78),ease);effect.fused.position.y+=Math.sin(q*Math.PI)*1.8;
           sparks.forEach((s,i)=>{s.visible=q<.7;s.position.set(.6+Math.cos(i*2.4)*q*3,1+Math.sin(i)*q+q*2,-1.2+Math.sin(i*2.4)*q*2);s.scale.setScalar(1-q);});
         }
@@ -161,31 +161,41 @@ export function createWorkshopScene(host,onFallback){
   }catch{available=false;fallback('当前设备使用简化排字台，融合与课堂得分照常可用。');}
   const observer=new ResizeObserver(()=>{resize();schedule();});observer.observe(host);document.addEventListener('visibilitychange',visibility);resize();
   return{
-    update({palette=[],selections=[],records=[],character='',key}){
+    update({palette=[],selections=[],records=[],totalSlots=palette.length,character='',key}){
       if(effect)return;
-      const next=JSON.stringify([key,palette]);
+      const next=JSON.stringify([key,palette,totalSlots]);
       if(next!==paletteKey){
+        const fresh=key!==roundKey;roundKey=key;
         paletteKey=next;blocks.forEach(b=>discard(b.mesh));blocks=[];
         const buttons=[...host.querySelectorAll('#workshop-tiles button')];
         rackDividers.forEach(mesh=>scene.remove(mesh));rackDividers.length=0;
-        const smallPalette=palette.length<=10;
-        for(const z of(smallPalette?[-.48,1.05]:[-1.13,.25,1.63]))rackDividers.push(box(5.4,.18,.07,-5.6,.27,z,walnut));
-        palette.forEach((tile,i)=>{const mesh=glyphBlock(tile.character),x=-7.75+(i%5)*1.08,z=smallPalette?.25+Math.floor(i/5)*1.60:-1.82+Math.floor(i/5)*1.38;const home=new THREE.Vector3(x,.66,z);mesh.position.copy(home);blocks.push({...tile,button:buttons[i],mesh,home,from:home.clone(),to:home.clone(),start:0});});
+        const cols=totalSlots>20?6:5,rows=Math.max(2,Math.ceil(totalSlots/cols));
+        const dx=5.4/cols,dz=5.6/rows,baseScale=Math.min(1,dx/1.12,dz/1.15);
+        for(let c=1;c<cols;c++)rackDividers.push(box(.05,.18,5.65,-8.3+c*dx,.27,.35,walnut));
+        for(let r=1;r<rows;r++)rackDividers.push(box(5.4,.18,.06,-5.6,.27,-2.45+r*dz,walnut));
+        palette.forEach((tile,i)=>{
+          const mesh=glyphBlock(tile.character),slot=tile.slot??i;
+          const home=new THREE.Vector3(-8.3+(slot%cols+.5)*dx,.31+.35*baseScale,-2.45+(Math.floor(slot/cols)+.5)*dz);
+          mesh.scale.setScalar(baseScale);mesh.position.copy(home);
+          const drop=fresh&&!reduced&&!simple&&host.clientWidth>720;
+          if(drop)mesh.position.y+=.65+(slot%4)*.13;
+          blocks.push({...tile,button:buttons[i],mesh,home,baseScale,from:mesh.position.clone(),to:home.clone(),start:drop?performance.now():0});
+        });
       }
       selection=selections;
-      blocks.forEach(b=>{const index=selections.indexOf(b.id),spacing=Math.min(1.15,5.5/Math.max(selections.length,1)),scale=index>=0?Math.min(1,spacing/1.14):1;b.mesh.scale.setScalar(scale);const to=index>=0?new THREE.Vector3(.6+(index-(selections.length-1)/2)*spacing,.42+.35*scale,-1.2):b.home.clone();if(!to.equals(b.to)){b.from.copy(b.mesh.position);b.to.copy(to);if(!reduced&&active&&!simple)b.start=performance.now();else{b.mesh.position.copy(to);b.start=0;}}});
+      blocks.forEach(b=>{const index=selections.indexOf(b.id),spacing=Math.min(1.15,5.5/Math.max(selections.length,1)),scale=index>=0?Math.min(1,spacing/1.14):b.baseScale;b.mesh.scale.setScalar(scale);const to=index>=0?new THREE.Vector3(.6+(index-(selections.length-1)/2)*spacing,.42+.35*scale,-1.2):b.home.clone();if(!to.equals(b.to)){b.from.copy(b.mesh.position);b.to.copy(to);if(!reduced&&active&&!simple)b.start=performance.now();else{b.mesh.position.copy(to);b.start=0;}}});
       const nextRecords=JSON.stringify(records);
-      if(nextRecords!==recordKey){recordKey=nextRecords;finished.forEach(discard);finished=records.slice(-8).map((r,i)=>{const mesh=glyphBlock(r.word,2.86,.64);mesh.position.set(6,.85,-2.86+i*.78);mesh.scale.y=.7;return mesh;});}
+      if(nextRecords!==recordKey){recordKey=nextRecords;finished.forEach(discard);finished=records.slice(-8).map((r,i)=>{const mesh=glyphBlock(r.word,2.86,.64,r.source);mesh.position.set(6,.85,-2.86+i*.78);mesh.scale.y=.7;return mesh;});}
       if(terminalFused){discard(terminalFused);terminalFused=null;}
       if(character!==targetKey){targetKey=character;if(targetFace){targetSign.remove(targetFace);const m=targetFace.material;textures.delete(m.map);m.map.dispose();materials.delete(m);m.dispose();geometries.delete(targetFace.geometry);targetFace.geometry.dispose();}if(character){const geo=new THREE.PlaneGeometry(1.82,1.64);geometries.add(geo);targetFace=new THREE.Mesh(geo,mat(0xffffff,{map:woodTexture('#cf9a5b',character,256)}));targetFace.position.z=.16;targetSign.add(targetFace);}}
       labels();schedule();
     },
-    animateResult({outcome,word,recordIndex=0}){
+    animateResult({outcome,word,source='reference',returnTiles=false,recordIndex=0}){
       finishEffect();return new Promise(resolve=>{
         const chosen=selection.map(id=>blocks.find(b=>b.id===id)).filter(Boolean);
         chosen.forEach(b=>{b.start=0;b.mesh.position.copy(b.to);});
-        const fused=outcome==='correct'?glyphBlock(word,2.86,.86):null;if(fused)fused.visible=false;
-        effect={outcome,chosen,starts:chosen.map(b=>b.mesh.position.clone()),fused,recordIndex:Math.min(7,recordIndex),start:performance.now(),duration:outcome==='correct'?1350:1050,resolve};
+        const fused=outcome==='correct'?glyphBlock(word,2.86,.64,source):null;if(fused)fused.visible=false;
+        effect={outcome,returnTiles,chosen,starts:chosen.map(b=>b.mesh.position.clone()),fused,recordIndex:Math.min(7,recordIndex),start:performance.now(),duration:outcome==='correct'?1350:1050,resolve};
         // Bounded completion also covers hidden tabs, lost contexts, and mobile fallback.
         effect.timer=setTimeout(finishEffect,reduced||simple||!active||host.clientWidth<721?220:1600);
         if(!reduced&&!simple&&active)schedule();

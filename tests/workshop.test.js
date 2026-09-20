@@ -1,18 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
+import { createSession } from '../src/core.js'
 import {
-  createSession,
-  getScores,
-  markCurrent,
-  navigateNext,
-  revealCurrent,
-} from '../src/core.js'
-import {
-  buildCharacterPalette,
   buildWordAnswers,
   clearWorkshopSelection,
   collectedWords,
   createWorkshopState,
+  getWorkshopScores,
+  resolveWorkshopWord,
   submitWorkshopWord,
   toggleWorkshopTile,
   undoWorkshopTile,
@@ -29,239 +24,330 @@ const question = (id, character, words) => ({
 })
 
 const sessionFor = (...questions) =>
-  createSession({ questions, grade: 1, random: () => 0.999 })
+  createSession({ questions, grade: 1, limit: questions.length, random: () => 0.999 })
 
 function selectCharacters(state, session, characters) {
   let nextState = state
-  const used = new Set()
   for (const character of characters) {
-    const tile = nextState.palettes[session.currentIndex].find(
-      (candidate) => candidate.character === character && !used.has(candidate.id),
+    const tile = nextState.palette.find(
+      (candidate) =>
+        candidate.character === character && !nextState.selections.includes(candidate.id),
     )
     if (!tile) throw new Error(`Missing tile for ${character}`)
-    used.add(tile.id)
     nextState = toggleWorkshopTile(nextState, session, tile.id)
   }
   return nextState
 }
 
 describe('workshop word validation', () => {
-  it('normalizes boundary whitespace and counts non-BMP Han as one character', () => {
+  it('normalizes whitespace, counts non-BMP Han correctly, and enforces the 2–8 boundary', () => {
     expect(validateWord(' 𠀀木 ', '木')).toEqual({ ok: true, value: '𠀀木', error: '' })
+    expect(validateWord('木', '木')).toMatchObject({ ok: false })
+    expect(validateWord('一二三四五六七八', '一')).toMatchObject({ ok: true })
+    expect(validateWord('一二三四五六七八九', '一')).toMatchObject({ ok: false })
   })
 
-  it.each([
-    ['木', '木', '2'],
-    ['一二三四五六七八九', '一', '8'],
-    ['树 林', '林', '汉字'],
-    ['树林。', '林', '汉字'],
-    ['大海', '木', '目标字'],
-  ])('rejects invalid word %j with a useful error', (value, character, errorPart) => {
-    const result = validateWord(value, character)
-
-    expect(result).toMatchObject({ ok: false, value: value.trim() })
-    expect(result.error).toContain(errorPart)
-  })
-})
-
-describe('character palettes', () => {
-  it('exposes unique normalized valid answers for answerability checks', () => {
+  it('returns unique normalized valid references from a question', () => {
     expect(buildWordAnswers(question('sky', '天', [' 今天 ', '今天', '白天', '海洋', '天。']))).toEqual([
       '今天',
       '白天',
     ])
   })
-
-  it('provides the maximum character multiplicity required by every valid answer', () => {
-    const palette = buildCharacterPalette(
-      question('dad', '爸', ['爸爸', '老爸', '爸爸', '爸 爸', '父亲']),
-      () => 0.999,
-    )
-
-    expect(palette.filter((tile) => tile.character === '爸')).toHaveLength(2)
-    expect(palette.filter((tile) => tile.character === '老')).toHaveLength(1)
-    expect(new Set(palette.map((tile) => tile.id)).size).toBe(palette.length)
-  })
-
-  it('adds at least three unique distractors absent from all valid answers', () => {
-    const palette = buildCharacterPalette(question('sky', '天', ['今天', '白天']), () => 0.999)
-    const answerCharacters = new Set(['今', '白', '天'])
-    const distractors = palette.filter((tile) => !answerCharacters.has(tile.character))
-
-    expect(palette.length).toBeGreaterThanOrEqual(8)
-    expect(palette.length).toBeLessThanOrEqual(12)
-    expect(new Set(distractors.map((tile) => tile.character)).size).toBeGreaterThanOrEqual(3)
-  })
-
-  it('grows rather than truncating characters needed by long alternative answers', () => {
-    const palette = buildCharacterPalette(
-      question('sky', '天', ['天一二三四五六七', '天八九十地人山水']),
-      () => 0.999,
-    )
-
-    for (const character of '天一二三四五六七八九十地人山水') {
-      expect(palette.some((tile) => tile.character === character)).toBe(true)
-    }
-    expect(palette.length).toBeGreaterThan(12)
-    expect(palette.length).toBeLessThanOrEqual(19)
-  })
-
-  it('shuffles the finished physical tiles', () => {
-    const unshuffled = buildCharacterPalette(question('sky', '天', ['今天']), () => 0.999)
-    const shuffled = buildCharacterPalette(question('sky', '天', ['今天']), () => 0)
-
-    expect(shuffled.map((tile) => tile.id).sort()).toEqual(unshuffled.map((tile) => tile.id).sort())
-    expect(shuffled.map((tile) => tile.id)).not.toEqual(unshuffled.map((tile) => tile.id))
-  })
 })
 
-describe('workshop character selection state', () => {
-  it('creates drafts, palettes, ordered selections, and records for every question', () => {
+describe('workshop batch creation', () => {
+  it('selects unique references up to the requested limit and sums every glyph occurrence', () => {
     const session = sessionFor(
-      question('sky', '天', ['今天', '白天']),
-      question('tree', '木', ['木头']),
+      question('sky', '天', ['今天', '白天', '今天']),
+      question('tree', '木', ['木头', '木木']),
     )
-    const state = createWorkshopState(session, () => 0.999)
 
-    expect(state.drafts).toEqual(['', ''])
-    expect(state.selections).toEqual([[], []])
-    expect(state.records).toEqual([])
-    expect(state.palettes).toHaveLength(2)
-    expect(state.palettes[0]).toEqual(buildCharacterPalette(session.questions[0], () => 0.999))
+    const state = createWorkshopState(session, { wordCount: 3, random: () => 0.999 })
+
+    expect(state).toMatchObject({
+      phase: 'active',
+      references: ['今天', '白天', '木头'],
+      totalSlots: 6,
+      selections: [],
+      draft: '',
+      records: [],
+      pending: null,
+      wordCount: 3,
+    })
+    expect(state.palette.map(({ character }) => character)).toEqual([...'今天白天木头'])
+    expect(state.palette.map(({ slot }) => slot)).toEqual([0, 1, 2, 3, 4, 5])
+    expect(new Set(state.palette.map(({ id }) => id)).size).toBe(6)
   })
 
-  it('toggles physical tiles once and keeps the draft in selection order', () => {
-    const session = sessionFor(question('sky', '天', ['今天']))
-    const initial = createWorkshopState(session, () => 0.999)
-    const today = selectCharacters(initial, session, '今天')
-    const firstId = today.selections[0][0]
-    const toggledOff = toggleWorkshopTile(today, session, firstId)
+  it('shuffles both the reference batch and its physical tiles without changing membership', () => {
+    const session = sessionFor(question('sky', '天', ['今天', '白天', '天上']))
+    const stable = createWorkshopState(session, { wordCount: 2, random: () => 0.999 })
+    const shuffled = createWorkshopState(session, { wordCount: 2, random: () => 0 })
 
-    expect(today.drafts).toEqual(['今天'])
-    expect(today.selections[0]).toHaveLength(2)
-    expect(initial.drafts).toEqual([''])
-    expect(toggledOff.drafts).toEqual(['天'])
-    expect(toggledOff.selections).toEqual([[today.selections[0][1]]])
+    expect(shuffled.references).not.toEqual(stable.references)
+    expect(shuffled.references).toHaveLength(2)
+    expect(shuffled.palette.map((tile) => tile.character).sort()).toEqual(
+      [...shuffled.references.join('')].sort(),
+    )
+    expect(shuffled.palette.map((tile) => tile.slot)).toEqual([0, 1, 2, 3])
   })
 
-  it('undoes the last tile and clears the current selection immutably', () => {
-    const session = sessionFor(question('sky', '天', ['今天']))
-    const initial = createWorkshopState(session, () => 0.999)
-    const selected = selectCharacters(initial, session, '今天')
-    const undone = undoWorkshopTile(selected, session)
-    const cleared = clearWorkshopSelection(undone, session)
+  it('uses the actual available reference count and exposes an empty repairable state', () => {
+    const short = createWorkshopState(sessionFor(question('sky', '天', ['今天'])))
+    expect(short.references).toEqual(['今天'])
+    expect(short.wordCount).toBe(4)
+    expect(short.phase).toBe('active')
 
-    expect(undone.drafts).toEqual(['今'])
-    expect(undone.selections[0]).toEqual([selected.selections[0][0]])
-    expect(cleared.drafts).toEqual([''])
-    expect(cleared.selections).toEqual([[]])
-    expect(selected.drafts).toEqual(['今天'])
-  })
-
-  it('ignores selection changes unless the current question is active and unsettled', () => {
-    let session = sessionFor(question('sky', '天', ['今天']))
-    const state = createWorkshopState(session, () => 0.999)
-    const tileId = state.palettes[0][0].id
-    session = markCurrent(revealCurrent(session), { outcome: 'practice' })
-
-    expect(toggleWorkshopTile(state, session, tileId)).toBe(state)
-    expect(undoWorkshopTile(state, session)).toBe(state)
-    expect(clearWorkshopSelection(state, session)).toBe(state)
-  })
-
-  it('caps the assembly at eight tiles but permits a replacement after undo', () => {
-    const session = sessionFor(question('sky', '天', ['天一二三四五六七']))
-    const initial = createWorkshopState(session, () => 0.999)
-    const selected = selectCharacters(initial, session, '天一二三四五六七')
-    const ninth = initial.palettes[0].find((tile) => !selected.selections[0].includes(tile.id))
-
-    expect(toggleWorkshopTile(selected, session, ninth.id)).toBe(selected)
-
-    const undone = undoWorkshopTile(selected, session)
-    const replaced = toggleWorkshopTile(undone, session, ninth.id)
-    expect(replaced.selections[0]).toHaveLength(8)
-    expect(replaced.drafts[0]).toBe(`天一二三四五六${ninth.character}`)
+    const empty = createWorkshopState(sessionFor(question('sky', '天', ['海洋', '天。'])))
+    expect(empty).toEqual({
+      phase: 'empty',
+      references: [],
+      palette: [],
+      totalSlots: 0,
+      selections: [],
+      draft: '',
+      records: [],
+      pending: null,
+      wordCount: 4,
+    })
   })
 })
 
-describe('workshop character fusion submission', () => {
-  it('scores an exact normalized reference word, records it, and regenerates the palette', () => {
-    const session = sessionFor(question('sky', '天', [' 今天 ', '白天']))
-    const initial = createWorkshopState(session, () => 0.999)
-    const selected = selectCharacters(initial, session, '今天')
+describe('workshop shared tray selection', () => {
+  it('selects physical tiles in order, undoes, and clears without mutating prior state', () => {
+    const session = sessionFor(question('dad', '爸', ['爸爸', '爸妈']))
+    const initial = createWorkshopState(session, { wordCount: 2, random: () => 0.999 })
+    const selected = selectCharacters(initial, session, '爸妈')
+    const undone = undoWorkshopTile(selected, session)
+    const cleared = clearWorkshopSelection(selected, session)
 
-    const result = submitWorkshopWord(session, selected, { teamId: 'team-2' }, () => 0)
-
-    expect(result.outcome).toBe('correct')
-    expect(result.word).toBe('今天')
-    expect(result.session.revealed).toEqual([true])
-    expect(result.session.judgments).toEqual([{ outcome: 'correct', teamId: 'team-2' }])
-    expect(getScores(result.session)).toEqual({ 'team-1': 0, 'team-2': 1 })
-    expect(result.state.drafts).toEqual([''])
-    expect(result.state.selections).toEqual([[]])
-    expect(result.state.palettes[0]).not.toBe(selected.palettes[0])
-    expect(result.state.records).toEqual([
-      { word: '今天', teamId: 'team-2', questionId: 'sky' },
-    ])
-    expect(selected.records).toEqual([])
+    expect(selected.draft).toBe('爸妈')
+    expect(selected.selections).toHaveLength(2)
+    expect(undone.draft).toBe('爸')
+    expect(undone.selections).toEqual([selected.selections[0]])
+    expect(cleared).toMatchObject({ draft: '', selections: [] })
+    expect(initial).toMatchObject({ draft: '', selections: [] })
   })
 
-  it('returns incorrect and clears for retry without settling or rebuilding the palette', () => {
-    const session = sessionFor(question('sky', '天', ['今天', '白天']))
-    const initial = createWorkshopState(session, () => 0.999)
-    const selected = selectCharacters(initial, session, '天白')
+  it('caps assembly at eight characters while preserving stable palette slots', () => {
+    const session = sessionFor(question('long', '一', ['一二三四五六七八', '一九']))
+    const initial = createWorkshopState(session, { wordCount: 2, random: () => 0.999 })
+    const selected = selectCharacters(initial, session, '一二三四五六七八')
+    const ninth = initial.palette.find((tile) => !selected.selections.includes(tile.id))
 
-    const result = submitWorkshopWord(session, selected, {})
+    expect(selected.draft).toBe('一二三四五六七八')
+    expect(toggleWorkshopTile(selected, session, ninth.id)).toBe(selected)
+    expect(selected.palette.map((tile) => tile.slot)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+  })
+})
 
-    expect(result).toMatchObject({ session, outcome: 'incorrect', word: '天白' })
-    expect(result.state.drafts).toEqual([''])
-    expect(result.state.selections).toEqual([[]])
-    expect(result.state.palettes[0]).toBe(selected.palettes[0])
-    expect(result.state.records).toEqual([])
-    expect(result.session.judgments).toEqual([null])
+describe('workshop reference collection', () => {
+  it('consumes exactly the submitted physical tiles, leaves slot holes, and completes independently', () => {
+    const session = sessionFor(question('dad', '爸', ['爸爸', '爸妈']))
+    const initial = createWorkshopState(session, { wordCount: 2, random: () => 0.999 })
+    const firstSelection = selectCharacters(initial, session, '爸爸')
+    const consumedIds = firstSelection.selections
+
+    const first = submitWorkshopWord(session, firstSelection, { teamId: 'team-1' })
+
+    expect(first).toMatchObject({
+      session,
+      outcome: 'correct',
+      word: '爸爸',
+      source: 'reference',
+      returnTiles: false,
+    })
+    expect(first.session).toBe(session)
+    expect(first.state).toMatchObject({
+      phase: 'active',
+      totalSlots: 4,
+      selections: [],
+      draft: '',
+      pending: null,
+      records: [{ word: '爸爸', source: 'reference', teamId: 'team-1' }],
+    })
+    expect(first.state.palette.map((tile) => tile.slot)).toEqual([2, 3])
+    expect(first.state.palette.some((tile) => consumedIds.includes(tile.id))).toBe(false)
+    expect(firstSelection.palette).toHaveLength(4)
+
+    const remaining = selectCharacters(first.state, session, '爸妈')
+    const second = submitWorkshopWord(session, remaining, { teamId: 'team-2' })
+
+    expect(second.state.phase).toBe('complete')
+    expect(second.state.palette).toEqual([])
+    expect(second.state.references).toEqual(['爸爸', '爸妈'])
+    expect(getWorkshopScores(session, second.state)).toEqual({ 'team-1': 1, 'team-2': 1 })
+    expect(session.phase).toBe('active')
+    expect(session.judgments).toEqual([null])
   })
 
-  it('ignores short, inactive, and already-settled submissions without changing references', () => {
-    const session = sessionFor(question('sky', '天', ['今天']))
-    const initial = createWorkshopState(session, () => 0.999)
-    const short = selectCharacters(initial, session, '天')
-    expect(submitWorkshopWord(session, short, { teamId: 'team-1' })).toEqual({
+  it('returns a repeated collected word without scoring or consuming it again', () => {
+    const session = sessionFor(question('dad', '爸', ['爸爸', '爸爸爸']))
+    const initial = createWorkshopState(session, { wordCount: 2, random: () => 0.999 })
+    const collected = submitWorkshopWord(
+      session,
+      selectCharacters(initial, session, '爸爸'),
+      { teamId: 'team-1' },
+    )
+    const duplicateSelection = selectCharacters(collected.state, session, '爸爸')
+    const duplicate = submitWorkshopWord(session, duplicateSelection, { teamId: 'team-2' })
+
+    expect(duplicate).toMatchObject({
+      session,
+      outcome: 'duplicate',
+      word: '爸爸',
+      returnTiles: true,
+    })
+    expect(duplicate.state.palette).toBe(collected.state.palette)
+    expect(duplicate.state.records).toEqual(collected.state.records)
+    expect(duplicate.state).toMatchObject({ draft: '', selections: [], phase: 'active' })
+    expect(getWorkshopScores(session, duplicate.state)).toEqual({ 'team-1': 1, 'team-2': 0 })
+  })
+})
+
+describe('workshop teacher decisions', () => {
+  it('keeps unmatched tiles selected, locks the tray, and attributes acceptance to the submitting team', () => {
+    const session = sessionFor(question('dad', '爸', ['爸爸', '爸妈']))
+    const initial = createWorkshopState(session, { wordCount: 2, random: () => 0.999 })
+    const selected = selectCharacters(initial, session, '妈爸')
+    const submission = submitWorkshopWord(session, selected, { teamId: 'team-1' })
+
+    expect(submission).toMatchObject({ session, outcome: 'pending', word: '妈爸' })
+    expect(submission.session).toBe(session)
+    expect(submission.state.palette).toBe(selected.palette)
+    expect(submission.state.selections).toEqual(selected.selections)
+    expect(submission.state.pending).toEqual({
+      word: '妈爸',
+      tileIds: selected.selections,
+      teamId: 'team-1',
+    })
+    expect(toggleWorkshopTile(submission.state, session, selected.selections[0])).toBe(
+      submission.state,
+    )
+    expect(undoWorkshopTile(submission.state, session)).toBe(submission.state)
+    expect(clearWorkshopSelection(submission.state, session)).toBe(submission.state)
+    expect(submitWorkshopWord(session, submission.state, { teamId: 'team-2' })).toEqual({
+      session,
+      state: submission.state,
+      outcome: 'ignored',
+      word: '妈爸',
+    })
+
+    const accepted = resolveWorkshopWord(session, submission.state, {
+      accepted: true,
+      pending: submission.state.pending,
+    })
+
+    expect(accepted).toMatchObject({
+      session,
+      outcome: 'correct',
+      word: '妈爸',
+      source: 'teacher',
+      returnTiles: true,
+    })
+    expect(accepted.session).toBe(session)
+    expect(accepted.state.palette).toBe(selected.palette)
+    expect(accepted.state.references).toEqual(initial.references)
+    expect(accepted.state).toMatchObject({
+      phase: 'active',
+      draft: '',
+      selections: [],
+      pending: null,
+      records: [{ word: '妈爸', source: 'teacher', teamId: 'team-1' }],
+    })
+    expect(getWorkshopScores(session, accepted.state)).toEqual({ 'team-1': 1, 'team-2': 0 })
+    expect(collectedWords(session, accepted.state)).toBe(accepted.state.records)
+  })
+
+  it('ignores stale decision tokens and rejects the exact pending word without changing inventory', () => {
+    const session = sessionFor(question('dad', '爸', ['爸爸', '爸妈']))
+    const initial = createWorkshopState(session, { wordCount: 2, random: () => 0.999 })
+    const submission = submitWorkshopWord(
+      session,
+      selectCharacters(initial, session, '妈爸'),
+      { teamId: 'team-2' },
+    )
+    const stale = resolveWorkshopWord(session, submission.state, {
+      accepted: true,
+      pending: { ...submission.state.pending },
+    })
+
+    expect(stale).toEqual({
+      session,
+      state: submission.state,
+      outcome: 'ignored',
+      word: '妈爸',
+    })
+
+    const rejected = resolveWorkshopWord(session, submission.state, {
+      accepted: false,
+      pending: submission.state.pending,
+    })
+
+    expect(rejected).toMatchObject({
+      session,
+      outcome: 'incorrect',
+      word: '妈爸',
+      returnTiles: true,
+    })
+    expect(rejected.state.palette).toBe(initial.palette)
+    expect(rejected.state).toMatchObject({
+      phase: 'active',
+      draft: '',
+      selections: [],
+      records: [],
+      pending: null,
+    })
+  })
+
+  it('prevents an accepted teacher word from being collected twice', () => {
+    const session = sessionFor(question('dad', '爸', ['爸爸', '爸妈']))
+    const initial = createWorkshopState(session, { wordCount: 2, random: () => 0.999 })
+    const firstPending = submitWorkshopWord(
+      session,
+      selectCharacters(initial, session, '妈爸'),
+      { teamId: 'team-1' },
+    )
+    const accepted = resolveWorkshopWord(session, firstPending.state, {
+      accepted: true,
+      pending: firstPending.state.pending,
+    })
+    const duplicate = submitWorkshopWord(
+      session,
+      selectCharacters(accepted.state, session, '妈爸'),
+      { teamId: 'team-2' },
+    )
+
+    expect(duplicate.outcome).toBe('duplicate')
+    expect(duplicate.state.records).toEqual(accepted.state.records)
+    expect(getWorkshopScores(session, duplicate.state)).toEqual({ 'team-1': 1, 'team-2': 0 })
+  })
+})
+
+describe('workshop ignored submissions', () => {
+  it('ignores short and non-active submissions and validates teams only for actionable words', () => {
+    const session = sessionFor(question('dad', '爸', ['爸爸']))
+    const initial = createWorkshopState(session, { random: () => 0.999 })
+    const short = selectCharacters(initial, session, '爸')
+
+    expect(submitWorkshopWord(session, short, { teamId: 'missing' })).toEqual({
       session,
       state: short,
       outcome: 'ignored',
-      word: '天',
+      word: '爸',
     })
+    expect(() =>
+      submitWorkshopWord(session, selectCharacters(initial, session, '爸爸'), {
+        teamId: 'missing',
+      }),
+    ).toThrow(/teamId/)
 
-    const selected = selectCharacters(initial, session, '今天')
-    const inactiveSession = navigateNext(session)
-    expect(submitWorkshopWord(inactiveSession, selected, { teamId: 'team-1' })).toEqual({
-      session: inactiveSession,
-      state: selected,
+    const empty = createWorkshopState(sessionFor(question('sky', '天', ['海洋'])))
+    expect(submitWorkshopWord(session, empty, { teamId: 'team-1' })).toEqual({
+      session,
+      state: empty,
       outcome: 'ignored',
-      word: '今天',
+      word: '',
     })
-
-    const correct = submitWorkshopWord(session, selected, { teamId: 'team-1' })
-    const staleSelection = { ...correct.state, drafts: ['今天'], selections: [selected.selections[0]] }
-    const repeated = submitWorkshopWord(correct.session, staleSelection, { teamId: 'team-2' })
-
-    expect(repeated).toEqual({
-      session: correct.session,
-      state: staleSelection,
-      outcome: 'ignored',
-      word: '今天',
-    })
-    expect(getScores(repeated.session)).toEqual({ 'team-1': 1, 'team-2': 0 })
-    expect(collectedWords(repeated.session, repeated.state)).toEqual(correct.state.records)
-  })
-
-  it('requires a valid team only when a correct candidate is ready to score', () => {
-    const session = sessionFor(question('sky', '天', ['今天']))
-    const initial = createWorkshopState(session, () => 0.999)
-    const correct = selectCharacters(initial, session, '今天')
-    const incorrect = selectCharacters(initial, session, '天今')
-
-    expect(() => submitWorkshopWord(session, correct, { teamId: 'missing' })).toThrow(/teamId/)
-    expect(submitWorkshopWord(session, incorrect, { teamId: 'missing' }).outcome).toBe('incorrect')
   })
 })
