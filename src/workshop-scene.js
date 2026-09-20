@@ -3,133 +3,162 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 
 export function createWorkshopScene(host, onFallback) {
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 70);
-  camera.position.set(5.4, 7.8, 11.8);
-  camera.lookAt(0, 0.35, 0);
+  const camera = new THREE.OrthographicCamera(-9, 9, 4.5, -4.5, 0.1, 60);
+  camera.position.set(0, -5.2, 24); camera.lookAt(0, 0, 0);
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let renderer, frame, active = false, simple = false, available = true, disposed = false;
-  let wordLength = 0, collected = 0, revision, addStart = 0, rewardStart = 0;
-  const geometries = new Set(), materials = new Set();
-  const material = color => { const m = new THREE.MeshStandardMaterial({ color, roughness: 0.75 }); materials.add(m); return m; };
-  const wood = material(0xc69565), edge = material(0x93643f), pale = material(0xf7dfb0);
-  const green = material(0x507966), dark = material(0x315246), gold = material(0xedb95b), metal = material(0x9eaea3);
-  const boxGeometry = new RoundedBoxGeometry(1, 1, 1, 2, 0.065);
-  geometries.add(boxGeometry);
+  let blocks = [], optionKey = '', revision, selected = '', rewardStart = 0;
+  const geometries = new Set(), materials = new Set(), textures = new Set();
+  const material = color => { const m = new THREE.MeshStandardMaterial({color, roughness:0.74}); materials.add(m); return m; };
+  const wood = material(0xdcb17c), edge = material(0xa76d43), cream = material(0xfff2d3), green = material(0x36756a), mint = material(0xc0d7c4), coral = material(0xe39371), gold = material(0xf2c16d);
+  const geometry = new RoundedBoxGeometry(1, 1, 1, 3, 0.10); geometries.add(geometry);
   function box(w, h, d, x, y, z, mat, parent = scene) {
-    const mesh = new THREE.Mesh(boxGeometry, mat);
-    mesh.scale.set(w, h, d); mesh.position.set(x, y, z);
+    const mesh = new THREE.Mesh(geometry, mat); mesh.scale.set(w,h,d); mesh.position.set(x,y,z);
     mesh.castShadow = true; mesh.receiveShadow = true; parent.add(mesh); return mesh;
   }
-  box(7.7, 0.28, 3.6, 0, 0, 0, wood);
-  box(7.8, 0.1, 3.7, 0, 0.13, 0, pale);
-  // Visible joinery, desk legs and plank seams make the tabletop readable as wood.
-  for (const x of [-3.25, 3.25]) for (const z of [-1.25, 1.25]) box(0.24, 1.3, 0.25, x, -0.75, z, edge);
-  box(6.7, 0.16, 0.16, 0, -1.04, -1.25, wood);
-  for (const z of [-1.05, -0.35, 0.35, 1.05]) box(7.35, 0.008, 0.012, 0, 0.185, z, wood);
-  // Collection shelf with two levels, side uprights and backing.
-  box(3.1, 1.85, 0.12, -1.25, 1.11, -1.42, wood);
-  for (const x of [-2.82, 0.32]) box(0.12, 1.95, 0.62, x, 1.16, -1.22, edge);
-  for (const y of [0.38, 1.17, 2.08]) box(3.26, 0.12, 0.7, -1.25, y, -1.15, pale);
-  const finished = Array.from({ length: 8 }, (_, i) => box(0.53, 0.42, 0.35, -2.36 + (i % 4) * 0.73, i < 4 ? 0.66 : 1.45, -1.05, i % 2 ? pale : gold));
-  // Recessed slots and thick movable tiles.
-  const draftGroup = new THREE.Group(); scene.add(draftGroup);
-  const blocks = [];
-  for (let i = 0; i < 8; i++) {
-    const x = -2.62 + i * 0.65;
-    box(0.57, 0.04, 0.65, x, 0.205, 0.43, edge);
-    blocks.push(box(0.52, 0.25, 0.58, x, 0.37, 0.43, i % 2 ? pale : gold, draftGroup));
+  box(17.65,8.95,0.5,0,0,-0.35,edge);
+  const tabletop=box(17.5,8.8,0.28,0,0,-0.05,wood);
+  // Fine grain is a single reusable texture, never a frame-by-frame canvas.
+  const grain = document.createElement('canvas'); grain.width=1024; grain.height=512;
+  const ctx = grain.getContext('2d'); ctx.fillStyle='#deb889'; ctx.fillRect(0,0,1024,512);
+  for(let i=0;i<110;i++) {
+    const y=i*4.9; ctx.strokeStyle=i%3 ? '#a9754320' : '#fff4ce35'; ctx.lineWidth=i%4 ? 0.7 : 1.5;
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.bezierCurveTo(310,y+Math.sin(i)*9,700,y-Math.cos(i)*12,1024,y+3); ctx.stroke();
   }
-  // Short roller conveyor leading from the assembly slots toward the stamp.
-  box(4.8, 0.18, 0.98, 0.15, -0.01, 2.1, dark);
-  for (const z of [1.6, 2.6]) box(5, 0.24, 0.09, 0.15, 0.12, z, green);
-  const rollerGeometry = new THREE.CylinderGeometry(0.1, 0.1, 0.9, 12);
-  geometries.add(rollerGeometry);
-  const rollers = [];
-  for (let i = 0; i < 15; i++) {
-    const roller = new THREE.Mesh(rollerGeometry, i % 2 ? metal : pale);
-    roller.rotation.x = Math.PI / 2; roller.position.set(-2.12 + i * 0.32, 0.13, 2.1);
-    roller.castShadow = true; scene.add(roller); rollers.push(roller);
-  }
-  for (const x of [-1.85, 2.15]) box(0.15, 1.12, 0.16, x, -0.55, 2.1, green);
-  // Press: base, back column, overhanging arm, shaft and rubber stamp head.
-  box(1.02, 0.18, 1.1, 2.6, 0.3, -0.62, green);
-  box(0.28, 1.65, 0.25, 2.92, 1.07, -1, dark);
-  box(0.94, 0.24, 0.65, 2.62, 1.85, -0.83, green);
-  const stamp = new THREE.Group(); scene.add(stamp);
-  box(0.13, 0.72, 0.13, 2.43, 1.39, -0.55, metal, stamp);
-  box(0.69, 0.18, 0.6, 2.43, 1.05, -0.55, wood, stamp);
-  box(0.68, 0.08, 0.59, 2.43, 0.92, -0.55, dark, stamp);
-  box(0.65, 0.15, 0.2, 3.17, 1.72, -0.8, gold);
-  const parcel = box(0.92, 0.29, 0.58, -1.7, 0.38, 2.1, gold);
-  const starGeometry = new THREE.OctahedronGeometry(0.09); geometries.add(starGeometry);
-  const stars = Array.from({length: 9}, () => { const s = new THREE.Mesh(starGeometry, gold); scene.add(s); return s; });
-  const floorGeometry = new THREE.PlaneGeometry(24, 18); geometries.add(floorGeometry);
-  const floorMaterial = new THREE.ShadowMaterial({opacity:0.14}); materials.add(floorMaterial);
-  const floor = new THREE.Mesh(floorGeometry, floorMaterial); floor.rotation.x = -Math.PI / 2; floor.position.y = -1.42; floor.receiveShadow = true; scene.add(floor);
-  scene.add(new THREE.HemisphereLight(0xfff9e9, 0xc0d2c4, 3));
-  const sun = new THREE.DirectionalLight(0xfff3d5, 3.4); sun.position.set(-3, 8, 5); sun.castShadow = true;
-  sun.shadow.mapSize.set(1024,1024); sun.shadow.camera.left=-7; sun.shadow.camera.right=7; sun.shadow.camera.top=6; sun.shadow.camera.bottom=-6; scene.add(sun);
+  const texture=new THREE.CanvasTexture(grain); texture.colorSpace=THREE.SRGBColorSpace; textures.add(texture);
+  const grainMat=new THREE.MeshStandardMaterial({map:texture,roughness:0.88}); materials.add(grainMat);
+  tabletop.material=grainMat;
+  // The tray is recessed into its raised green lip.
+  box(5.15,3.7,0.16,-0.8,0.9,0.18,green);
+  box(4.83,3.36,0.08,-0.8,0.92,0.27,mint);
+  box(4.42,1.50,0.065,-0.8,1.15,0.32,material(0xa7c7b5));
+  box(2.35,2.48,0.12,-5.55,1.36,0.23,cream);
+  box(0.7,0.32,0.18,-5.55,2.65,0.34,coral).rotation.z=-0.06;
+  box(3.64,5.95,0.20,5.15,0.02,0.23,green);
+  box(3.42,5.73,0.15,5.2,0.04,0.40,cream);
+  const metal=material(0xaeb8a7);
+  for(let i=0;i<8;i++) box(0.15,0.10,0.14,3.52,2.35-i*0.64,0.57,metal);
+  const pencil=new THREE.Group(); pencil.position.set(7.6,-0.3,0.31); pencil.rotation.z=-0.12; scene.add(pencil);
+  box(0.16,3.0,0.16,0,0,0,gold,pencil); box(0.18,0.4,0.18,0,1.6,0,coral,pencil);
+  const tipGeo=new THREE.ConeGeometry(0.10,0.36,6); geometries.add(tipGeo);
+  const tip=new THREE.Mesh(tipGeo,edge); tip.position.y=-1.67; tip.rotation.z=Math.PI; pencil.add(tip);
+  box(0.85,0.45,0.28,-6.5,-3.24,0.29,coral).rotation.z=-0.16;
+  box(0.38,0.46,0.29,-6.57,-3.23,0.3,cream).rotation.z=-0.16;
+  const sparkGeo=new THREE.OctahedronGeometry(0.11); geometries.add(sparkGeo);
+  const sparks=Array.from({length:12},()=>{const m=new THREE.Mesh(sparkGeo,gold);m.visible=false;scene.add(m);return m;});
+  scene.add(new THREE.HemisphereLight(0xfff9ed,0x9b8f71,2.9));
+  const sun=new THREE.DirectionalLight(0xfff0d1,3.0);sun.position.set(-5,7,12);sun.castShadow=true;
+  sun.shadow.mapSize.set(1024,1024); sun.shadow.camera.left=-11;sun.shadow.camera.right=11;sun.shadow.camera.top=7;sun.shadow.camera.bottom=-7;
+  sun.shadow.normalBias=0.035; sun.shadow.bias=-0.0003; scene.add(sun);
 
-  function settle() {
-    addStart = rewardStart = 0; stamp.position.y = 0; parcel.visible = false;
-    blocks.forEach((block, i) => { block.visible = i < wordLength; block.position.y = 0.37; });
-    finished.forEach((block,i) => { block.visible = i < collected; });
-    stars.forEach(star => { star.visible = false; });
+  function project(position) {
+    const p=position.clone().project(camera);return {x:(p.x+1)*host.clientWidth/2,y:(1-p.y)*host.clientHeight/2};
+  }
+  function placeLabels() {
+    const mobile=host.clientWidth<=720, scale=host.clientWidth/18;
+    // Project the desk typography as well as the buttons: tall and short
+    // projectors see the same physical arrangement, without percentage drift.
+    const overlays=['.desk-intro','.desk-kicker','.workshop-target-card','.desk-intro p','.desk-tray-caption','.desk-submit','.desk-palette-caption','#desk-notebook'];
+    if(mobile) overlays.forEach(selector=>host.querySelector(selector).removeAttribute('style'));
+    else {
+      const intro=host.querySelector('.desk-intro');Object.assign(intro.style,{left:'0',top:'0',width:'100%',height:'100%'});
+      function anchor(selector,x,y,width,center=true){
+        const element=host.querySelector(selector),p=project(new THREE.Vector3(x,y,.5));
+        Object.assign(element.style,{position:'absolute',left:`${p.x}px`,top:`${p.y}px`,width:`${width*scale}px`,transform:center?'translate(-50%, -50%)':'none',margin:'0'});
+        return element;
+      }
+      anchor('.desk-kicker',-5.55,3.20,2.8);
+      const target=anchor('.workshop-target-card',-5.55,1.38,2.2);target.style.height=`${2.2*scale}px`;
+      host.querySelector('#workshop-target').style.fontSize=`${Math.min(94,scale*1.1)}px`;
+      anchor('.desk-intro p',-5.55,-.53,3.2);
+      anchor('.desk-tray-caption',-.8,2.00,4.6);
+      const submit=anchor('.desk-submit',-.8,.36,4.6);submit.style.transform='translateX(-50%)';
+      anchor('.desk-palette-caption',-5.68,-1.17,7,false);
+      const paper=anchor('#desk-notebook',3.83,2.55,2.78,false);
+      const bottom=project(new THREE.Vector3(3.83,-2.54,.5));
+      paper.style.bottom='auto';paper.style.right='auto';paper.style.height=`${bottom.y-parseFloat(paper.style.top)}px`;
+    }
+    if(mobile)host.querySelector('#workshop-target').style.removeProperty('font-size');
+    blocks.forEach(block=>{
+      const p=project(block.mesh.position.clone().add(new THREE.Vector3(0,0,0.22)));
+      const w=host.clientWidth / (camera.right-camera.left) * block.width;
+      block.button.style.left=`${p.x}px`;block.button.style.top=`${p.y}px`;
+      block.button.style.width=`${w}px`;block.button.style.height=`${Math.max(42,host.clientHeight/(camera.top-camera.bottom)*0.95)}px`;
+      block.button.style.fontSize=`${Math.max(13,Math.min(34,(w-26)/(Math.max(2,[...block.word].length)+0.8)))}px`;
+      block.button.style.zIndex=block.word===selected?'6':'4';
+    });
   }
   function resize() {
-    if (!renderer || disposed) return;
-    const {width, height} = host.getBoundingClientRect();
-    if (!width || !height) return;
-    camera.aspect = width / height;
-    const zoom = width > 600 && height >= 250 ? 0.85 : 1;
-    camera.position.set(5.4,7.8,11.8).multiplyScalar((camera.aspect < 1.6 ? 1.6 / camera.aspect : 1) * zoom);
-    camera.lookAt(0,0.35,0);
-    camera.updateProjectionMatrix(); renderer.setSize(width,height,false);
+    if(disposed || !host.clientWidth || !host.clientHeight)return;
+    const ratio=host.clientWidth/host.clientHeight;
+    camera.left=-9;camera.right=9;camera.top=9/ratio;camera.bottom=-9/ratio;
+    camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+    renderer?.setSize(host.clientWidth,host.clientHeight,false);placeLabels();
+    if(renderer && !simple && available) renderer.render(scene,camera);
+  }
+  function settle() {
+    blocks.forEach(b=>{b.mesh.position.copy(b.to);b.start=0;});
+    rewardStart=0;sparks.forEach(s=>{s.visible=false;});placeLabels();
   }
   function draw(t) {
-    frame = undefined;
-    if (!active || simple || disposed || document.hidden) return;
-    if (addStart) {
-      const p = Math.min((t-addStart)/300,1);
-      if (wordLength) blocks[wordLength-1].position.y = 0.37 + (1-p) * 0.8;
-      if (p === 1) addStart = 0;
+    frame=undefined;
+    if(!active||simple||disposed||document.hidden||!available)return;
+    blocks.forEach(b=>{
+      if(!b.start)return;
+      const p=Math.min((t-b.start)/580,1), eased=1-Math.pow(1-p,3);
+      b.mesh.position.lerpVectors(b.from,b.to,eased); b.mesh.position.z+=Math.sin(p*Math.PI)*0.8;
+      if(p===1)b.start=0;
+    });
+    if(rewardStart){
+      const p=Math.min((t-rewardStart)/850,1);
+      sparks.forEach((s,i)=>{s.visible=p<1;s.position.set(-0.8+Math.cos(i*2.4)*p*2.1,1.15+Math.sin(i*2.4)*p*1.5,0.8+p);s.scale.setScalar(1-p);});
+      if(p===1)rewardStart=0;
     }
-    if (rewardStart) {
-      const p = Math.min((t-rewardStart)/950,1);
-      stamp.position.y = -Math.sin(Math.min(p/0.35,1)*Math.PI)*0.42;
-      parcel.visible = p < 1;
-      if (p < 0.65) parcel.position.set(-1.7 + p/0.65*3.5,0.38,2.1);
-      else parcel.position.set(1.8-(p-0.65)/0.35*3,0.38+(p-0.65)/0.35*1.2,2.1-(p-0.65)/0.35*3.15);
-      rollers.forEach(roller => { roller.rotation.y = p*5; });
-      stars.forEach((star,i) => { star.visible = p < 1; star.position.set(-1+Math.cos(i)*p*2,1.3+Math.sin(i)*p+ p,0); star.scale.setScalar(1-p); });
-      if (p === 1) settle();
-    }
-    renderer.render(scene,camera);
-    frame = requestAnimationFrame(draw);
+    placeLabels(); renderer.render(scene,camera);
+    if(blocks.some(b=>b.start)||rewardStart)frame=requestAnimationFrame(draw);
   }
-  function schedule() { cancelAnimationFrame(frame); if (active && !simple && !document.hidden && !disposed) frame=requestAnimationFrame(draw); }
-  function fallback(message) { simple=true; settle(); host.dataset.mode='simple'; if(renderer) renderer.domElement.hidden=true; cancelAnimationFrame(frame); if(message) onFallback(message); }
-  function contextLost(event) { event.preventDefault(); available=false; fallback('立体显示暂不可用，已切换简化显示，组词和得分已保留。'); }
-  function contextRestored() { available=true; }
-  function visibility() { if(document.hidden) settle(); schedule(); }
-  try {
-    renderer = new THREE.WebGLRenderer({alpha:true,antialias:true}); renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));
-    renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFShadowMap;
-    renderer.domElement.setAttribute('aria-label','木质工作台、拼词字块、滚轴传送带、盖章器和收集架');
-    host.prepend(renderer.domElement); host.dataset.mode='webgl'; renderer.domElement.addEventListener('webglcontextlost',contextLost); renderer.domElement.addEventListener('webglcontextrestored',contextRestored); resize();
-  } catch { available=false; fallback('当前设备使用简化显示，课堂可以照常进行。'); }
-  const observer = new ResizeObserver(resize); observer.observe(host);
-  document.addEventListener('visibilitychange',visibility); settle();
+  function schedule(){cancelAnimationFrame(frame);if(active&&!simple&&!disposed&&!document.hidden&&available)frame=requestAnimationFrame(draw);}
+  function fallback(message){simple=true;host.dataset.mode='simple';if(renderer)renderer.domElement.hidden=true;cancelAnimationFrame(frame);settle();if(message)onFallback(message);}
+  function contextLost(event){event.preventDefault();available=false;fallback('立体显示暂不可用，已切换简化桌面，词语和得分已保留。');}
+  function contextRestored(){available=true;}
+  function visibility(){if(document.hidden)settle();schedule();}
+  try{
+    renderer=new THREE.WebGLRenderer({alpha:true,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));
+    renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
+    renderer.domElement.setAttribute('aria-label','木质组词桌面，立体词语方块、中央选词托盘和词语记录本');
+    host.prepend(renderer.domElement);host.dataset.mode='webgl';
+    renderer.domElement.addEventListener('webglcontextlost',contextLost);renderer.domElement.addEventListener('webglcontextrestored',contextRestored);
+  }catch{available=false;fallback('当前设备使用简化桌面，课堂可以照常进行。');}
+  const observer=new ResizeObserver(()=>{resize();schedule();});observer.observe(host);
+  document.addEventListener('visibilitychange',visibility);resize();
   return {
-    update({length, count, key}) {
-      const added = revision === key && length > wordLength;
-      if (revision !== key) settle();
-      wordLength = Math.min(length,8); collected = Math.min(count,8); revision=key;
-      settle(); if(added && !reduced && active && !simple) addStart=performance.now();
+    update({options=[],value='',key}){
+      const changed=key!==revision;revision=key;
+      const nextKey=JSON.stringify([key,options]);
+      if(nextKey!==optionKey){
+        blocks.forEach(b=>scene.remove(b.mesh));blocks=[];optionKey=nextKey;
+        const buttons=[...host.querySelectorAll('#workshop-tiles button')];
+        const columns=Math.min(3,Math.max(1,options.length)),rows=Math.ceil(options.length/columns);
+        options.forEach((word,i)=>{
+          const width=2.65, x=-4.35+(i%columns)*3.08, y=rows===1?-2.00:-1.72-Math.floor(i/columns)*1.35;
+          const home=new THREE.Vector3(x,y,0.44),mesh=box(width,1.1,0.43,x,y,0.44,i%3===0?cream:i%3===1?gold:coral);
+          blocks.push({word,button:buttons[i],mesh,width,home,from:home.clone(),to:home.clone(),start:0});
+        });
+      }
+      const selectionChanged=selected!==value;selected=value;
+      blocks.forEach(b=>{
+        const to=b.word===value?new THREE.Vector3(-0.8,1.15,0.66):b.home.clone();
+        if(!b.to.equals(to)){
+          b.from.copy(b.mesh.position);b.to.copy(to);
+          if(!reduced&&active&&!simple&&!changed)b.start=performance.now();else{b.mesh.position.copy(to);b.start=0;}
+        }
+      });
+      if(changed)settle();
+      placeLabels();if(selectionChanged||changed)schedule();
     },
-    reward() { if(!reduced && active && !simple) rewardStart=performance.now(); },
-    setActive(value) { active=value; settle(); if(value) resize(); schedule(); },
-    setSimple(value) { if(value) fallback(); else if(renderer && available) { simple=false; host.dataset.mode='webgl'; renderer.domElement.hidden=false; resize(); schedule(); } else onFallback('此设备暂不支持立体显示，请继续使用简化显示。'); },
-    dispose() { disposed=true; cancelAnimationFrame(frame); observer.disconnect(); document.removeEventListener('visibilitychange',visibility); renderer?.domElement.removeEventListener('webglcontextlost',contextLost); renderer?.domElement.removeEventListener('webglcontextrestored',contextRestored); geometries.forEach(g=>g.dispose()); materials.forEach(m=>m.dispose()); sun.shadow.dispose(); renderer?.dispose(); renderer?.domElement.remove(); },
+    reward(){if(!reduced&&active&&!simple){rewardStart=performance.now();schedule();}},
+    setActive(value){active=value;settle();if(value)resize();schedule();},
+    setSimple(value){if(value)fallback();else if(renderer&&available){simple=false;host.dataset.mode='webgl';renderer.domElement.hidden=false;resize();schedule();}else onFallback('此设备暂不支持立体显示，请继续使用简化桌面。');},
+    dispose(){disposed=true;cancelAnimationFrame(frame);observer.disconnect();document.removeEventListener('visibilitychange',visibility);renderer?.domElement.removeEventListener('webglcontextlost',contextLost);renderer?.domElement.removeEventListener('webglcontextrestored',contextRestored);geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());sun.shadow.dispose();renderer?.dispose();renderer?.domElement.remove();},
   };
 }

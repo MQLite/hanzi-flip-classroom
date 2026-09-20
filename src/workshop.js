@@ -1,55 +1,44 @@
-import { validateWord } from './workshop-core.js';
-
-// Keep the form and its event targets alive throughout a round, including IME input.
-export function createWorkshopView(host, onDraft) {
-  host.innerHTML = `<div id="workshop-active"><div class="workshop-topline"><div class="workshop-target-card"><span id="workshop-pinyin"></span><strong id="workshop-target"></strong></div><div><span class="eyebrow">小小组词师</span><h3>用这个字，组一个词</h3><p>点选字块，也可以输入自己的词语。</p></div></div><div class="workshop-bench"><div id="workshop-scene" aria-label="组词工作台"><div class="workshop-simple-art" aria-hidden="true"><span>▣ ▣ ▣</span><i></i><small>我的组词工作台</small></div></div><div class="workshop-word-wrap"><span>我的词语</span><div id="workshop-word" aria-live="polite"></div></div></div><div class="workshop-edit"><div class="workshop-palette-row"><div id="workshop-tiles" aria-label="可选字块"></div><div class="workshop-edit-actions"><button id="workshop-undo">撤回一字</button><button id="workshop-clear">清空</button></div></div><p id="workshop-palette-note">搭配字可能超出本课，可由老师带读。</p><div class="workshop-input-row"><label for="workshop-input">输入其他词语</label><input id="workshop-input" autocomplete="off" placeholder="2–8 个汉字，包含目标字" aria-describedby="workshop-validation"><span id="workshop-validation" role="status"></span></div><div id="workshop-reference" hidden><div id="workshop-reference-words"></div><p id="workshop-reference-sentence"></p><small>其他合理组词也可以，由老师判断。</small></div></div></div><div id="workshop-status" hidden></div>`;
+// Native word buttons stay alive while their 3D blocks move across the desk.
+export function createWorkshopView(host, onSelect, onSubmit) {
+  host.innerHTML = `<div id="workshop-active"><div id="workshop-scene" aria-label="立体组词桌面"><div class="workshop-simple-art" aria-hidden="true"></div><div class="desk-intro"><span class="desk-kicker">今天的汉字</span><div class="workshop-target-card"><span id="workshop-pinyin"></span><strong id="workshop-target"></strong></div><p>选一个词语方块<br>放到桌面中央</p></div><div class="desk-tray-caption"><span>我的词语</span><div id="workshop-word" aria-live="polite"></div></div><div id="workshop-tiles" aria-label="可选词语方块"></div><div class="desk-submit"><button id="workshop-submit" class="primary">提交词语 <span aria-hidden="true">↗</span></button><p id="workshop-selection-note" role="status">点选方块，开始今天的发现</p></div><div class="desk-palette-caption">词语方块 <span>轻点选择 · 一次一个</span></div><div id="desk-notebook"><span class="notebook-tab">我的发现</span><div id="desk-ledger-slot"></div><p class="notebook-foot">一个词语，一份新发现。</p></div></div></div><div id="workshop-status" hidden></div>`;
   const find = id => host.querySelector(`#${id}`);
-  const input = find('workshop-input');
-  let draft = '', locked = false, composing = false, paletteKey = '';
-  const change = value => { if (!locked) onDraft(value); };
-  input.addEventListener('compositionstart', () => { composing = true; });
-  input.addEventListener('compositionend', () => { composing = false; change(input.value); });
-  input.addEventListener('input', () => { if (!composing) change(input.value); });
-  input.addEventListener('blur', () => { if (!composing && !locked && input.value !== input.value.trim()) change(input.value.trim()); });
-  find('workshop-undo').onclick = () => change([...draft.trim()].slice(0, -1).join(''));
-  find('workshop-clear').onclick = () => change('');
+  let paletteKey = '';
+  find('workshop-submit').onclick = onSubmit;
   return {
-    update({ question, value, tiles, revealed, judgment, showPinyin, statusNodes }) {
+    update({ question, value, options, showPinyin, statusNodes, recorded, locked, phase }) {
       const active = Boolean(question);
       find('workshop-active').hidden = !active;
       find('workshop-status').hidden = active;
-      if (!active) { find('workshop-status').replaceChildren(...statusNodes); return; }
-      draft = value;
-      locked = Boolean(judgment);
+      // Reuse the same ledger on the summary; records stay visible at round end.
+      const ledger = find('workshop-collection-panel');
+      if (ledger) find('desk-ledger-slot').append(ledger);
+      if (!active) {
+        find('workshop-status').replaceChildren(...statusNodes);
+        if (phase === 'complete' && ledger) find('workshop-status').append(ledger);
+        return;
+      }
       find('workshop-target').textContent = question.character;
       find('workshop-pinyin').textContent = showPinyin ? question.pinyin : '';
-      find('workshop-word').textContent = value.trim();
-      find('workshop-word').dataset.empty = String(!value.trim());
-      if (!composing && input.value !== value) input.value = value;
-      input.disabled = locked;
-      const validation = validateWord(value, question.character);
-      find('workshop-validation').textContent = locked ? '本题已记录' : validation.ok ? '格式符合要求，词义由老师判断' : validation.error;
-      input.setAttribute('aria-invalid', String(Boolean(value) && !validation.ok));
-      find('workshop-validation').classList.toggle('invalid', Boolean(value) && !validation.ok);
-      const key = JSON.stringify([question.id, tiles]);
+      find('workshop-word').textContent = value;
+      find('workshop-word').dataset.empty = String(!value);
+      find('workshop-scene').dataset.selected = String(Boolean(value));
+      find('workshop-submit').disabled = !value || recorded || locked;
+      find('workshop-selection-note').textContent = locked ? '本题已结束，点击下一字继续' : recorded ? '这个词已记在本子里，试试其他词吧' : value ? '大声读一读，再提交到词语本' : options.length ? '点选方块，开始今天的发现' : '本题暂无可选词语，请在题库管理中补充';
+      const key = JSON.stringify([question.id, options]);
       if (key !== paletteKey) {
         paletteKey = key;
-        find('workshop-tiles').replaceChildren(...tiles.map(character => {
+        find('workshop-tiles').replaceChildren(...options.map(word => {
           const button = document.createElement('button');
-          button.textContent = character;
-          button.className = character === question.character ? 'target-tile' : '';
-          button.onclick = () => { if ([...draft.trim()].length < 8) change(draft.trim() + character); };
+          button.textContent = word; button.setAttribute('aria-label', word); button.dataset.word = word;
+          button.style.setProperty('--word-length', Math.max(2,[...word].length));
+          button.onclick = () => onSelect(word);
           return button;
         }));
       }
-      find('workshop-tiles').querySelectorAll('button').forEach(button => { button.disabled = locked || [...value.trim()].length >= 8; });
-      find('workshop-undo').disabled = locked || !value;
-      find('workshop-clear').disabled = locked || !value;
-      find('workshop-palette-note').textContent = question.words.some(word => validateWord(word, question.character).ok)
-        ? '搭配字可能超出本课，可由老师带读。' : '请老师输入组词；也可重复点选目标字。';
-      find('workshop-reference').hidden = !revealed;
-      find('workshop-reference-words').textContent = `参考词：${question.words.join(' · ')}`;
-      find('workshop-reference-sentence').textContent = `题库例句：${question.sentence}`;
+      find('workshop-tiles').querySelectorAll('button').forEach(button => {
+        button.setAttribute('aria-pressed', String(button.dataset.word === value));
+        button.disabled = Boolean(locked);
+      });
     },
   };
 }

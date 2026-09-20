@@ -1,4 +1,4 @@
-import { getCurrentQuestion, markCurrent } from './core.js'
+import { getCurrentQuestion, markCurrent, revealCurrent } from './core.js'
 
 const HAN_WORD = /^\p{Script=Han}+$/u
 const MIN_WORD_LENGTH = 2
@@ -69,11 +69,87 @@ export function buildTiles(question, random = Math.random) {
   return shuffle([character, ...otherCharacters], random)
 }
 
+export function buildWordOptions(question) {
+  const options = []
+  const seen = new Set()
+  const words = Array.isArray(question?.words) ? question.words : []
+
+  for (const word of words) {
+    const validation = validateWord(word, question?.character)
+    if (!validation.ok || seen.has(validation.value)) continue
+    seen.add(validation.value)
+    options.push(validation.value)
+  }
+
+  return options
+}
+
 export function createWorkshopState(session, random = Math.random) {
   const questions = Array.isArray(session?.questions) ? session.questions : []
   return {
     drafts: questions.map(() => ''),
+    options: questions.map(buildWordOptions),
+    records: [],
     tiles: questions.map((question) => buildTiles(question, random)),
+  }
+}
+
+function canChooseWord(session) {
+  const index = session?.currentIndex
+  const judgment = session?.judgments?.[index]
+  return (
+    session?.phase === 'active' &&
+    Number.isInteger(index) &&
+    index >= 0 &&
+    (judgment === null || judgment?.outcome === 'correct')
+  )
+}
+
+export function selectWorkshopWord(state, session, word) {
+  if (!canChooseWord(session)) return state
+
+  const index = session.currentIndex
+  const options = state?.options?.[index]
+  if (word !== '' && (!Array.isArray(options) || !options.includes(word))) return state
+  if (state?.drafts?.[index] === word) return state
+
+  const drafts = [...state.drafts]
+  drafts[index] = word
+  return { ...state, drafts }
+}
+
+export function submitWorkshopWord(session, state, { teamId } = {}) {
+  if (!canChooseWord(session)) return { session, state }
+
+  const index = session.currentIndex
+  const word = state?.drafts?.[index]
+  const options = state?.options?.[index]
+  if (!word || !Array.isArray(options) || !options.includes(word)) return { session, state }
+
+  const questionId = session.questions?.[index]?.id
+  const records = Array.isArray(state?.records) ? state.records : []
+  if (records.some((record) => record.questionId === questionId && record.word === word)) {
+    return { session, state }
+  }
+  if (!session.teams?.some((team) => team.id === teamId)) {
+    throw new TypeError('A valid teamId is required for a correct answer')
+  }
+
+  let nextSession = session
+  if (!session.judgments[index]) {
+    nextSession = revealCurrent(nextSession)
+    nextSession = markCurrent(nextSession, { outcome: 'correct', teamId })
+  }
+
+  const drafts = [...state.drafts]
+  drafts[index] = ''
+  return {
+    session: nextSession,
+    state: {
+      ...state,
+      drafts,
+      records: [...records, { word, teamId, questionId }],
+    },
   }
 }
 
@@ -107,6 +183,8 @@ export function markWorkshopCurrent(session, state, options = {}) {
 }
 
 export function collectedWords(session, state) {
+  if (Array.isArray(state?.records) && state.records.length > 0) return state.records
+
   const collected = []
 
   for (let index = 0; index < session.questions.length; index += 1) {

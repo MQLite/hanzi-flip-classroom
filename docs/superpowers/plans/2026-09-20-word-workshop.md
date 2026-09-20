@@ -1,5 +1,18 @@
 # Word Workshop Implementation Plan
 
+## Revision 2: immersive word desk (current)
+
+User supersedes the earlier character assembly flow: use complete-word blocks, single selection moves to the center with a 3D effect, submission returns the block and records the word. Complete-word interpretation explicitly confirmed. The workbench fills the play surface; the old miniature scene and separate text-entry form are replaced.
+
+- [x] Pure state: normalized reference-word options, single selection, immutable submission records, reset selection after submission, duplicate protection. First submission scores once per target; additional distinct reference words are recorded without extra score. Keep existing session navigation and mode isolation.
+- [x] UI: large tactile Three.js desktop, labelled solid word blocks, central selection animation, submit action, desktop notebook of submitted words, accessible buttons and usable WebGL fallback. Preserve teacher bank/settings and original flip game.
+- [x] Verify real selection/submission/reset, multiple records and one score, mode/navigation retention, keyboard, GPU recovery, empty/invalid options, projector/mobile bounds, and inspect actual animated rendered desk.
+- [x] Fresh independent review, fixes, full unit/browser/build checks, documentation, commit on existing feature branch.
+
+Route v2.3, offset 0: pure rules requested Sol Medium; mixed UI/rendering/integration requested Astra High; final independent feature review requested Astra High per Superpowers. Native agents receive minimal context; actual model/effort execution metadata remains UNVERIFIED. Root owns browser tests, visual verification and docs, with no overlapping file writers. No push/deploy.
+
+Historical sections below describe revision 1 and its completed validation, not current revision 2 acceptance.
+
 > **For agentic workers:** Use superpowers:executing-plans with task-local Route v2.3 model dispatch. User approved the spec and autonomous Route execution; further stage approvals are waived by that explicit instruction.
 
 **Goal:** Add a usable classroom word-building mode with generic Three.js workshop models.
@@ -118,3 +131,13 @@ Files: `tests/workshop-ui.spec.js`, `playwright.config.js` to include both UI su
 - UI layout iterations removed tray/model and target/progress overlaps, then kept before/after-reveal primary buttons within both projector sizes.
 - Final source is retained on `feat/word-workshop` in the isolated worktree. No push, publication or deployment performed.
 - Route v2.3 native minimal-context dispatch requested Sol Medium for rules and Astra High for UI/review. Tools exposed requested target support but no actual model/effort execution metadata; ActualRoute remains UNVERIFIED. Review independence is confirmed by `fork_turns: none`.
+
+## Revision 2 final verification
+
+- User-confirmed whole-word AC implemented: dominant 3D desktop, actual beveled blocks and projected native labels moving into the central tray, submission returns them and records distinct words, one score per target.
+- Pure state TDD: 8 expected failures before implementation; root full `npm test` PASS 53/53 in 5 files.
+- Browser TDD: root first observed missing submit control. Original 34 flip tests remain unchanged and pass. Full integration run found one long-word text overflow after other 46 tests passed; adjusted label font to reserve padding. Final `npx playwright test tests/workshop-ui.spec.js` PASS 13/13 (19.2 seconds), including exact text bounds, real animated movement/return, practice lock, visible summary records, GPU recovery, fallback, restart and mode isolation. All 47 current browser tests have passed their final relevant checks.
+- `npm run build` PASS; Three.js chunk 533.49 kB /132.76 kB gzip retains the existing 500 kB size advisory. No new dependency or warning-threshold changes.
+- Actual in-app browser screenshots at1280×720 and1920×1080 checked: desk dominates, word mesh+label move together, target/tray/notebook text align to projected model anchors, submitted word appears in notebook. Mobile390×844 uses a tactile accessible layout. Reduced-motion and fallback covered by browser tests.
+- Fresh native independent review found two P2 issues: settled non-correct controls were enabled but inert, and summary hid records. Both fixed and independently reproduced as corrected. Practice regression was first observed failing; summary visibility assertion now passes. No remaining important findings.
+- Route v2.3 offset0: native minimal-context Sol Medium rules, Astra High UI and fresh independent reviewer; actual model/effort metadata not returned, ActualRoute UNVERIFIED. Same local Windows worktree and branch retained; no push/deploy.

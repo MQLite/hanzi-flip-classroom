@@ -17,7 +17,7 @@ import { createClassroomScene } from "./scene.js";
 import { createEditor, downloadText } from "./editor.js";
 import { mountStrokes } from "./strokes.js";
 import './workshop.css';
-import { createWorkshopState, setWorkshopDraft, markWorkshopCurrent, collectedWords, validateWord } from './workshop-core.js';
+import { createWorkshopState, selectWorkshopWord, submitWorkshopWord, markWorkshopCurrent, collectedWords } from './workshop-core.js';
 import { createWorkshopView } from './workshop.js';
 import { createWorkshopScene } from './workshop-scene.js';
 
@@ -37,7 +37,7 @@ const $ = (s) => document.querySelector(s);
 $('.lesson-heading').insertAdjacentHTML('beforeend', '<nav class="game-modes" aria-label="游戏模式"><button id="mode-flip" aria-pressed="true">识字翻翻乐</button><button id="mode-workshop" aria-pressed="false">组词小工坊</button></nav>');
 $('#scene').insertAdjacentHTML('afterend', '<div id="workshop" hidden></div>');
 $('.practice-box').insertAdjacentHTML('beforebegin', '<div id="workshop-collection-panel" hidden><h4>收集到的词语 <span>✦</span></h4><div id="workshop-collection" aria-live="polite"></div></div>');
-$('#help-dialog').insertAdjacentHTML('beforeend', '<p>组词小工坊：点字块或输入 2–8 个汉字，必须包含目标字。揭晓参考词后由老师判断词义，其他合理组词也可以得分。两种模式分别保留进度、组名与草稿；刷新后课堂进度重置。</p>');
+$('#help-dialog').insertAdjacentHTML('beforeend', '<p>组词桌面：点选一个完整词语方块，它会移到中央。读一读，再点“提交词语”，方块回到原位，词语记入右侧的词语本。每个字首次提交计 1 星；其他词语可继续收集，每题同词只记一次。“再练一次”可加入复习。两种模式分别保留进度、小组和选择；刷新后课堂进度重置。</p>');
 const allDefaults = [...DEFAULT_QUESTIONS, ...TEXTBOOK_QUESTIONS];
 $('.teacher-badge').textContent = '中文乐园 · 课本1–3';
 $('.lesson-toolbar').insertAdjacentHTML('afterbegin', `<label class="curriculum-field">题库<select id="bank-source" aria-label="题库来源"><option value="textbook">中文乐园（新版）</option><option value="personal">个人 / 通用题库</option></select></label><label class="curriculum-field textbook-field">阶段<select id="stage" aria-label="学习阶段">${STAGES.map(s=>`<option>${s}</option>`).join('')}</select></label><label class="curriculum-field textbook-field">范围<select id="scope" aria-label="练习范围"><option value="stage">整个阶段</option><option value="lesson">本课</option><option value="cumulative">截至本课累计</option></select></label><label class="curriculum-field textbook-field">课次<select id="lesson" aria-label="选择课次"></select></label>`);
@@ -133,9 +133,10 @@ const scene = createClassroomScene($("#scene"), $("#card-face"), (message) => {
   }
 });
 const workshopView = createWorkshopView($('#workshop'), value => {
-  workshopState = setWorkshopDraft(workshopState, session, value);
+  workshopState = selectWorkshopWord(workshopState, session, value);
   renderWorkshop();
-});
+}, submitWord);
+$('#desk-ledger-slot').append($('#workshop-collection-panel'));
 let workshopScene;
 function activeScene() { return gameMode === 'workshop' ? workshopScene : scene; }
 function syncSimpleControl() {
@@ -158,12 +159,12 @@ function switchMode(mode) {
   $('#mode-flip').setAttribute('aria-pressed',String(mode === 'flip'));
   $('#mode-workshop').setAttribute('aria-pressed',String(mode === 'workshop'));
   $('.lesson-heading h2').textContent = mode === 'workshop' ? '组词小工坊' : '识字翻翻乐';
-  $('.lesson-heading > p').textContent = mode === 'workshop' ? '搭一搭 · 说一说 · 收集好词语' : '看一看 · 读一读 · 说一说';
+  $('.lesson-heading > p').textContent = mode === 'workshop' ? '选一个词 · 读一读 · 记下新发现' : '看一看 · 读一读 · 说一说';
   $('#reveal').textContent = mode === 'workshop' ? '揭晓参考词' : '翻牌揭晓';
   $('#reveal').setAttribute('aria-label',mode === 'workshop' ? '揭晓参考词' : '翻牌揭晓');
   const shortcutLabel = $('footer > span');
   shortcutLabel.replaceChildren();
-  shortcutLabel.append(el('kbd','空格'), document.createTextNode(mode === 'workshop' ? ' 揭晓参考词　/　' : ' 翻牌　/　'), el('kbd','←'), document.createTextNode(' '), el('kbd','→'), document.createTextNode(' 切换汉字'));
+  shortcutLabel.append(el('kbd','空格'), document.createTextNode(mode === 'workshop' ? ' 提交词语　/　' : ' 翻牌　/　'), el('kbd','←'), document.createTextNode(' '), el('kbd','→'), document.createTextNode(' 切换汉字'));
   $('#grade').value = grade; $('#pinyin').checked = showPinyin;
   if (mode === 'workshop') {
     $('.classroom').append($('.game-controls'));
@@ -180,14 +181,25 @@ function renderWorkshop() {
   const value = workshopState.drafts[session.currentIndex] ?? '';
   const judgment = session.judgments[session.currentIndex];
   const words = collectedWords(session,workshopState);
-  workshopView.update({ question: active ? question : null, value, tiles: workshopState.tiles[session.currentIndex] ?? [], revealed: active && session.revealed[session.currentIndex], judgment, showPinyin, statusNodes: [...$('#card-face').childNodes] });
-  $('#correct').disabled = Boolean(judgment) || !active || !validateWord(value,question?.character).ok;
+  const options = workshopState.options[session.currentIndex] ?? [];
+  workshopView.update({ question: active ? question : null, phase: session.phase, value, options, showPinyin, locked: Boolean(judgment && judgment.outcome !== 'correct'), recorded: words.some(item=>item.questionId === question?.id && item.word === value), statusNodes: [...$('#card-face').childNodes] });
+  $('#correct').hidden = true;
+  $('#reveal').hidden = true;
+  $('#practice').hidden = !active;
+  $('#practice').disabled = Boolean(judgment) || !active;
   $('#workshop-collection').replaceChildren(...(words.length ? words.map(item => {
     const chip = el('span',item.word,'collected-word');
     chip.title = session.teams.find(team=>team.id === item.teamId)?.name ?? '';
     return chip;
-  }) : [el('small','答对一个词，就把它放上收集架。')]));
-  workshopScene?.update({length: active ? [...value.trim()].length : 0, count: words.length, key: `${session.mode}:${session.currentIndex}:${question?.id}:${session.phase}`});
+  }) : [el('small','提交一个词，把发现记在这里。')]));
+  workshopScene?.update({options: active ? options : [], value: active ? value : '', key: `${session.mode}:${session.currentIndex}:${question?.id}:${session.phase}`});
+}
+function submitWord() {
+  if (gameMode !== 'workshop') return;
+  const result = submitWorkshopWord(session,workshopState,{teamId:selectedTeam});
+  if (result.state === workshopState && result.session === session) return;
+  session = result.session; workshopState = result.state;
+  render(); workshopScene?.reward();
 }
 function storageAlert(result) {
   const box = $("#storage-alert");
@@ -392,7 +404,7 @@ function render() {
   if (extensionOpen && revealed && gameMode === 'flip')
     strokeCleanup = mountStrokes($("#extension"), q);
   if(gameMode === 'workshop') {
-    if(!judgment) $('#judgment-note').textContent = revealed ? '其他合理组词也可以，由老师判断' : active ? '先搭一个词，再揭晓参考词' : '每一份好奇，都值得一颗星';
+    if(!judgment) $('#judgment-note').textContent = active ? '选一个完整词语，提交后记入词语本 · 每字首次提交得 1 星' : '每一份好奇，都值得一颗星';
     renderWorkshop();
   }
 }
@@ -433,12 +445,12 @@ $("#reveal").onclick = reveal;
 $("#next").onclick = next;
 $("#back").onclick = back;
 $("#correct").onclick = () => {
-  if (gameMode === 'workshop' && !validateWord(workshopState.drafts[session.currentIndex],getCurrentQuestion(session)?.character).ok) return;
+  if (gameMode === 'workshop') { submitWord(); return; }
   const options = {
     outcome: "correct",
     teamId: selectedTeam,
   };
-  const updated = gameMode === 'workshop' ? markWorkshopCurrent(session,workshopState,options) : markCurrent(session,options);
+  const updated = markCurrent(session,options);
   if (updated !== session) {
     session = updated;
     render();
@@ -446,6 +458,7 @@ $("#correct").onclick = () => {
   }
 };
 $("#practice").onclick = () => {
+  if (gameMode === 'workshop') session = revealCurrent(session);
   session = gameMode === 'workshop' ? markWorkshopCurrent(session,workshopState,{outcome:'practice'}) : markCurrent(session, { outcome: "practice" });
   render();
 };
@@ -551,7 +564,7 @@ document.addEventListener("keydown", (event) => {
   if (event.code === "Space") {
     if (event.target.closest('button,a')) return;
     event.preventDefault();
-    reveal();
+    if (gameMode === 'workshop') submitWord(); else reveal();
   }
   if (event.code === "ArrowRight") {
     event.preventDefault();

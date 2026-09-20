@@ -1,12 +1,21 @@
 import { describe, expect, it } from 'vitest'
 
-import { createSession, getScores, navigateNext, revealCurrent } from '../src/core.js'
 import {
+  createSession,
+  getScores,
+  navigateBack,
+  navigateNext,
+  revealCurrent,
+} from '../src/core.js'
+import {
+  buildWordOptions,
   buildTiles,
   collectedWords,
   createWorkshopState,
   markWorkshopCurrent,
+  selectWorkshopWord,
   setWorkshopDraft,
+  submitWorkshopWord,
   validateWord,
 } from '../src/workshop-core.js'
 
@@ -92,7 +101,7 @@ describe('workshop tile palettes', () => {
 })
 
 describe('workshop state', () => {
-  it('creates one draft and stable palette per question', () => {
+  it('creates one draft, option list, stable palette, and empty record list', () => {
     const session = sessionFor(
       question('tree', '木', ['木林', '树木']),
       question('field', '田', ['田地', '水田']),
@@ -100,6 +109,11 @@ describe('workshop state', () => {
 
     expect(createWorkshopState(session, () => 0.999)).toEqual({
       drafts: ['', ''],
+      options: [
+        ['木林', '树木'],
+        ['田地', '水田'],
+      ],
+      records: [],
       tiles: [
         ['木', '林', '树'],
         ['田', '地', '水'],
@@ -123,6 +137,127 @@ describe('workshop state', () => {
 
     session = navigateNext(session)
     expect(setWorkshopDraft(updated, session, '木林')).toBe(updated)
+  })
+
+  it('builds unique normalized valid whole-word options in source order', () => {
+    expect(
+      buildWordOptions(
+        question('sky', '天', [' 今天 ', '白天', '今天', '天气。', '天空', '海洋', null]),
+      ),
+    ).toEqual(['今天', '白天', '天空'])
+  })
+
+  it('selects only offered whole words and can clear the active selection', () => {
+    const session = sessionFor(question('sky', '天', ['今天', '白天']))
+    const state = createWorkshopState(session)
+    const selected = selectWorkshopWord(state, session, '今天')
+
+    expect(selected).not.toBe(state)
+    expect(selected.drafts).toEqual(['今天'])
+    expect(state.drafts).toEqual([''])
+    expect(selectWorkshopWord(selected, session, '天空')).toBe(selected)
+    expect(selectWorkshopWord(selected, session, '')).toEqual({
+      ...selected,
+      drafts: [''],
+    })
+  })
+
+  it('allows another selection after a correct answer but blocks practice and unanswered cards', () => {
+    const initialSession = sessionFor(
+      question('sky', '天', ['今天', '白天']),
+      question('tree', '木', ['木头']),
+    )
+    const initialState = createWorkshopState(initialSession)
+    const first = submitWorkshopWord(
+      initialSession,
+      selectWorkshopWord(initialState, initialSession, '今天'),
+      { teamId: 'team-1' },
+    )
+
+    expect(selectWorkshopWord(first.state, first.session, '白天').drafts[0]).toBe('白天')
+
+    const backOnUnanswered = navigateBack(navigateNext(initialSession))
+    expect(selectWorkshopWord(initialState, backOnUnanswered, '今天')).toBe(initialState)
+
+    let practiceSession = revealCurrent(initialSession)
+    practiceSession = markWorkshopCurrent(practiceSession, initialState, { outcome: 'practice' })
+    expect(selectWorkshopWord(initialState, practiceSession, '今天')).toBe(initialState)
+  })
+})
+
+describe('workshop whole-word submission', () => {
+  it('reveals and scores the first submission, records it, and clears the selection', () => {
+    const session = sessionFor(question('sky', '天', ['今天', '白天']))
+    const state = selectWorkshopWord(createWorkshopState(session), session, '今天')
+
+    const result = submitWorkshopWord(session, state, { teamId: 'team-2' })
+
+    expect(result.session.revealed).toEqual([true])
+    expect(result.session.judgments).toEqual([{ outcome: 'correct', teamId: 'team-2' }])
+    expect(getScores(result.session)).toEqual({ 'team-1': 0, 'team-2': 1 })
+    expect(result.state.drafts).toEqual([''])
+    expect(result.state.records).toEqual([
+      { word: '今天', teamId: 'team-2', questionId: 'sky' },
+    ])
+    expect(state.records).toEqual([])
+    expect(collectedWords(result.session, result.state)).toEqual(result.state.records)
+  })
+
+  it('records a different offered word on the same correct question without another score', () => {
+    const session = sessionFor(question('sky', '天', ['今天', '白天']))
+    const state = createWorkshopState(session)
+    const first = submitWorkshopWord(
+      session,
+      selectWorkshopWord(state, session, '今天'),
+      { teamId: 'team-1' },
+    )
+    const second = submitWorkshopWord(
+      first.session,
+      selectWorkshopWord(first.state, first.session, '白天'),
+      { teamId: 'team-2' },
+    )
+
+    expect(getScores(second.session)).toEqual({ 'team-1': 1, 'team-2': 0 })
+    expect(second.state.records).toEqual([
+      { word: '今天', teamId: 'team-1', questionId: 'sky' },
+      { word: '白天', teamId: 'team-2', questionId: 'sky' },
+    ])
+    expect(first.state.records).toEqual([
+      { word: '今天', teamId: 'team-1', questionId: 'sky' },
+    ])
+    expect(second.state.drafts).toEqual([''])
+  })
+
+  it('does nothing for absent selections, duplicate question words, or settled non-correct cards', () => {
+    const session = sessionFor(question('sky', '天', ['今天', '白天']))
+    const state = createWorkshopState(session)
+    expect(submitWorkshopWord(session, state, { teamId: 'team-1' })).toEqual({ session, state })
+
+    const first = submitWorkshopWord(
+      session,
+      selectWorkshopWord(state, session, '今天'),
+      { teamId: 'team-1' },
+    )
+    const duplicateState = { ...first.state, drafts: ['今天'] }
+    expect(submitWorkshopWord(first.session, duplicateState, { teamId: 'team-2' })).toEqual({
+      session: first.session,
+      state: duplicateState,
+    })
+
+    let practiceSession = revealCurrent(session)
+    practiceSession = markWorkshopCurrent(practiceSession, state, { outcome: 'practice' })
+    const selectedPractice = { ...state, drafts: ['今天'] }
+    expect(submitWorkshopWord(practiceSession, selectedPractice, { teamId: 'team-1' })).toEqual({
+      session: practiceSession,
+      state: selectedPractice,
+    })
+  })
+
+  it('requires a valid team for a valid selected word', () => {
+    const session = sessionFor(question('sky', '天', ['今天']))
+    const state = selectWorkshopWord(createWorkshopState(session), session, '今天')
+
+    expect(() => submitWorkshopWord(session, state, { teamId: 'missing' })).toThrow(/teamId/)
   })
 })
 
