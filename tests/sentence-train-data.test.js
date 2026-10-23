@@ -3,11 +3,12 @@ import { describe, expect, it } from 'vitest'
 
 import { COURSES, TEXTBOOK_QUESTIONS } from '../src/curriculum.js'
 import { DEFAULT_QUESTIONS } from '../src/data.js'
-import { PARADISE_COURSES, PARADISE_QUESTIONS } from '../src/paradise.js'
+import { PARADISE_QUESTIONS } from '../src/paradise.js'
 import { SENTENCE_TRAIN_CONTENT } from '../src/sentence-train-content.js'
-import { resolveTrainQuestion, validateSentenceTrain } from '../src/sentence-train-data.js'
+import { mergeTrainQuestionPools, resolveTrainQuestion, validateSentenceTrain } from '../src/sentence-train-data.js'
+import { createTrainSession } from '../src/sentence-train-core.js'
 
-const BUILT_IN_QUESTIONS = [...PARADISE_QUESTIONS, ...TEXTBOOK_QUESTIONS, ...DEFAULT_QUESTIONS]
+const BUILT_IN_QUESTIONS = [...TEXTBOOK_QUESTIONS, ...DEFAULT_QUESTIONS]
 const SIMPLE_SENTENCE = /^\p{Script=Han}+[。？！]$/u
 
 function isTrainEligible(question) {
@@ -35,15 +36,15 @@ describe('sentence train built-in content', () => {
     expect([...actualIds].sort()).toEqual(expectedIds)
   })
 
-  it('preserves the original 72 exact question, sentence, and segmentation records', () => {
+  it('preserves the other textbook and general sentence mappings exactly', () => {
     const legacyDigest = createHash('sha256')
-      .update(JSON.stringify(SENTENCE_TRAIN_CONTENT.slice(0, 72)))
+      .update(JSON.stringify(SENTENCE_TRAIN_CONTENT))
       .digest('hex')
 
-    expect(legacyDigest).toBe('19f255b2ca1392e13220b2f62430da228e7caa30ec882390924b0c06a6c7cdd5')
+    expect(legacyDigest).toBe('23491e02e401123440b03734da3f997e0235d874942e2ee575e25ab3ac66089f')
   })
 
-  it('provides every eligible distinct sentence in each of the 72 textbook lessons', () => {
+  it('provides every eligible distinct sentence in each of the 36 modern textbook lessons', () => {
     const questions = new Map(BUILT_IN_QUESTIONS.map((question) => [question.id, question]))
     const actualByCourse = new Map()
 
@@ -56,7 +57,6 @@ describe('sentence train built-in content', () => {
     }
 
     const textbookBanks = [
-      [PARADISE_COURSES, PARADISE_QUESTIONS],
       [COURSES, TEXTBOOK_QUESTIONS],
     ]
     for (const [courses, sourceQuestions] of textbookBanks) {
@@ -76,10 +76,6 @@ describe('sentence train built-in content', () => {
   it('matches the eligible distinct-sentence coverage by bank and stage', () => {
     const questions = new Map(BUILT_IN_QUESTIONS.map((question) => [question.id, question]))
     const courseStages = new Map([
-      ...PARADISE_COURSES.map((course) => [
-        courseKey(PARADISE_QUESTIONS[0].textbook, course.book, course.lesson),
-        course.stage,
-      ]),
       ...COURSES.map((course) => [
         courseKey(TEXTBOOK_QUESTIONS[0].textbook, course.book, course.lesson),
         course.stage,
@@ -118,6 +114,24 @@ describe('sentence train validation and resolution', () => {
   const sentence = '老师在看书。'
   const valid = { tokens: ['老师', '在', '看书'], punctuation: '。', alternatives: [] }
 
+  it('does not use Hanyu Paradise character-card aid sentences as default train content', () => {
+    expect(PARADISE_QUESTIONS.map(resolveTrainQuestion).filter(Boolean)).toHaveLength(0)
+  })
+
+  it('prefers teacher segmentation for the same sentence and retains only a matching course source', () => {
+    const manual = {...PARADISE_QUESTIONS.find(q=>q.id==='hypy-1A-4-岁'),sentence:'我十一岁。',sentenceTrain:{tokens:['我','十一岁'],punctuation:'。',alternatives:[]}}
+    const curated = {...manual,id:'textbook-source',sentenceTrain:{tokens:['我','十一','岁'],punctuation:'。',alternatives:[]},trainSource:{stage:'1A',title:'我十一岁',printedPage:20,pdfPage:23}}
+    const before = JSON.stringify([manual,curated])
+    const session = createTrainSession({questions:mergeTrainQuestionPools([curated],[manual])})
+    expect(session.questions).toHaveLength(1)
+    expect(session.questions[0].id).toBe(manual.id)
+    expect(session.questions[0].train.tokens).toEqual(['我','十一岁'])
+    expect(session.questions[0].trainSource).toEqual(curated.trainSource)
+    const otherCourse = {...manual,book:2,lesson:4}
+    expect(mergeTrainQuestionPools([curated],[otherCourse])[0].trainSource).toBeUndefined()
+    expect(JSON.stringify([manual,curated])).toBe(before)
+  })
+
   it('accepts a valid 2–7-carriage definition that reconstructs the exact sentence', () => {
     expect(validateSentenceTrain(valid, sentence)).toEqual({ ok: true, errors: [] })
     expect(validateSentenceTrain({tokens: ['十一月', '小'], punctuation: '。', alternatives: []}, '十一月小。')).toEqual({ok: true, errors: []})
@@ -140,7 +154,7 @@ describe('sentence train validation and resolution', () => {
     expect(result.errors.every((error) => error.path && error.message)).toBe(true)
   })
 
-  it('uses a valid manual definition before built-in content and returns isolated copies', () => {
+  it('retains valid teacher definitions for retired Paradise examples and returns isolated copies', () => {
     const question = {
       ...PARADISE_QUESTIONS.find(({ id }) => id === 'hypy-1A-1-老'),
       sentenceTrain: {
@@ -161,15 +175,15 @@ describe('sentence train validation and resolution', () => {
   })
 
   it('requires both the built-in question ID and exact normalized sentence to match', () => {
-    const source = PARADISE_QUESTIONS.find(({ id }) => id === 'hypy-1A-1-老')
+    const source = TEXTBOOK_QUESTIONS.find(({ id }) => id === 'cp2023-1-1-一')
 
-    expect(resolveTrainQuestion(source)?.train.tokens).toEqual(['老师', '在', '看书'])
+    expect(resolveTrainQuestion(source)?.train.tokens).toEqual(['我', '有', '一个', '苹果'])
     expect(resolveTrainQuestion({ ...source, sentence: '老师在写字。' })).toBeNull()
     expect(resolveTrainQuestion({ ...source, id: 'personal-copy' })).toBeNull()
   })
 
   it('rejects an invalid manual definition instead of silently falling back to built-in content', () => {
-    const source = PARADISE_QUESTIONS.find(({ id }) => id === 'hypy-1A-1-老')
-    expect(resolveTrainQuestion({ ...source, sentenceTrain: { ...valid, punctuation: '！' } })).toBeNull()
+    const source = TEXTBOOK_QUESTIONS.find(({ id }) => id === 'cp2023-1-1-一')
+    expect(resolveTrainQuestion({ ...source, sentenceTrain: { tokens:['我','有','一个','苹果'], punctuation:'！', alternatives:[] } })).toBeNull()
   })
 })

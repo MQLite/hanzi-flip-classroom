@@ -46,7 +46,7 @@ export function createTrainView(host, dispatch, onFallback) {
     return button;
   }
 
-  function update(session) {
+  function update(session, {emptyMessage, emptyAction} = {}) {
     const index = session.currentIndex;
     const question = session.questions[index];
     const active = session.phase === 'active';
@@ -123,9 +123,9 @@ export function createTrainView(host, dispatch, onFallback) {
       summary.append(element('span', session.phase === 'empty' ? '◇' : '★', 'train-summary-symbol'));
       summary.append(element('h3', session.phase === 'empty' ? '当前范围没有可用句子' : '这一轮，顺利到站！'));
       if (session.phase === 'empty') {
-        summary.append(element('p', '当前筛选没有有效车厢切分。请在题库管理中为例句设置 2–7 节词语。'));
-        const button = element('button', '设置句子题', 'primary');
-        button.onclick = () => dispatch('editor');
+        summary.append(element('p', emptyMessage ?? '当前筛选没有有效车厢切分。请在题库管理中为例句设置 2–7 节词语。'));
+        const button = element('button', emptyAction?.label ?? '设置句子题', 'primary');
+        button.onclick = emptyAction?.run ?? (() => dispatch('editor'));
         summary.append(button);
       } else {
         const count = outcome => session.judgments.filter(item => item?.outcome === outcome).length;

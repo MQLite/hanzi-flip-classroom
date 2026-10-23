@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {PARADISE_TRAIN_CONTENT} from '../src/paradise-train-content.js';
 const questions=[{id:'train-one',grade:1,character:'师',pinyin:'shī',words:['老师','教师'],sentence:'老师在看书。',sentenceTrain:{tokens:['老师','在','看书'],punctuation:'。',alternatives:[]}}];
 async function open(page,{bank=questions,webgl=true}={}){
  await page.addInitScript(({bank,webgl})=>{localStorage.setItem('hanzi-flip.question-bank',JSON.stringify({schemaVersion:1,questions:bank}));if(!webgl){const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return /webgl/.test(type)?null:original.call(this,type,...args)}}},{bank,webgl});
@@ -6,6 +7,47 @@ async function open(page,{bank=questions,webgl=true}={}){
 }
 async function choose(page,tokens){for(const word of tokens)await page.locator('#train-palette button:not([aria-pressed="true"])').filter({hasText:word}).first().click();}
 const score=page=>page.locator('[data-score="team-1"]');
+
+for (const stage of ['1A','1B','2A','2B','3A','3B']) test(`Hanyu Paradise ${stage} uses textbook sentences and retains an old saved bank`, async ({page}) => {
+ test.setTimeout(60000);
+ const old = {id:'hypy-1A-1-老',grade:1,character:'老',pinyin:'lǎo',words:['老师','老人'],sentence:'老师在看书。',textbook:'hanyu-paradise-ab',book:1,lesson:1};
+ await open(page,{bank:[old],webgl:false});
+ const saved = await page.evaluate(()=>localStorage.getItem('hanzi-flip.question-bank'));
+ await page.locator('#stage').selectOption(stage);
+ await page.locator('#scope').selectOption('lesson');
+ const first = stage.endsWith('A') ? 1 : 7;
+ for (let lesson=first;lesson<first+6;lesson++) {
+   await page.locator('#lesson').selectOption(String(lesson));
+   if (stage==='1A'&&lesson===3) {
+     await expect(page.locator('#train-summary')).toContainText('本课以数字认读为主');
+     await expect(page.getByRole('button',{name:'设置句子题',exact:true})).toHaveCount(0);
+     await page.getByRole('button',{name:'选择其他课',exact:true}).click();
+     await expect(page.locator('#lesson')).toBeFocused();
+   } else {
+     await expect(page.locator('#train-summary')).toBeHidden();
+     await expect(page.locator('#mode-label')).toContainText(`汉语乐园 · ${stage} · 第${lesson}课`);
+     await expect(page.locator('#train-source')).toContainText(/(?:对话|歌曲|故事).*教材第\d+页/);
+     const tokens = await page.locator('#train-palette button').allTextContents();
+     const signature = tokens=>[...tokens].sort().join('/');
+     expect(PARADISE_TRAIN_CONTENT.some(q=>q.stage===stage&&q.lesson===lesson&&signature(q.tokens)===signature(tokens))).toBe(true);
+   }
+ }
+ expect(await page.evaluate(()=>localStorage.getItem('hanzi-flip.question-bank'))).toBe(saved);
+});
+
+test('a teacher cut takes precedence for an identical textbook sentence while retaining its source', async ({page}) => {
+ const manual = {id:'hypy-1A-4-岁',grade:1,character:'岁',pinyin:'suì',words:['十一岁','几岁'],sentence:'我十一岁。',textbook:'hanyu-paradise-ab',book:1,lesson:4,sentenceTrain:{tokens:['我','十一岁'],punctuation:'。',alternatives:[]}};
+ await page.addInitScript(()=>{Math.random=()=>0.999999;});
+ await open(page,{bank:[manual],webgl:false});
+ await page.locator('#scope').selectOption('lesson');
+ await page.locator('#lesson').selectOption('4');
+ await expect(page.locator('#train-palette button')).toHaveCount(2);
+ await expect(page.locator('#train-source')).toContainText('对话《我十一岁》 · 教材第20页');
+ await choose(page,['我','十一岁']);
+ await page.locator('#train-check').click();
+ await expect(score(page)).toHaveText('1');
+ expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('hanzi-flip.question-bank')).questions[0].sentenceTrain.tokens)).toEqual(['我','十一岁']);
+});
 test('third mode provides stable candidates, adjustment and disabled incomplete departure',async({page})=>{
  await open(page);await expect(page.getByRole('button',{name:'发车',exact:true})).toBeDisabled();
  const order=await page.locator('#train-palette button').allTextContents();await choose(page,['老师','在']);
@@ -152,8 +194,8 @@ test('hidden page finishes the departing train exactly once',async({page})=>{
  await page.emulateMedia({reducedMotion:'no-preference'});await open(page);await choose(page,['老师','在','看书']);await page.locator('#train-check').click();await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'))});await expect(page.locator('#train-summary')).toBeVisible();await expect(score(page)).toHaveText('1');await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:false});document.dispatchEvent(new Event('visibilitychange'))});await expect(score(page)).toHaveText('1');
 });
 test('changed built-in sentence loses its mapping without changing current-round snapshot',async({page})=>{
- const bank=[{id:'hypy-1A-1-老',grade:1,character:'老',pinyin:'lǎo',words:['老师','老人'],sentence:'老师在看书。'}];await open(page,{bank});await expect(page.locator('#train-palette button')).toHaveCount(3);
- await page.getByRole('button',{name:'题库管理',exact:true}).click();await page.locator('.question-row').click();await page.getByText('句子小火车设置',{exact:true}).click();await expect(page.locator('#train-editor-preview')).toContainText('内置切分');await page.locator('[name="sentence"]').fill('老师在写字。');await expect(page.locator('#train-editor-preview')).toContainText('尚未设置有效');await page.getByRole('button',{name:'关闭题库',exact:true}).click();await expect(page.locator('#train-palette button')).toHaveCount(3);await page.locator('#restart').click();await expect(page.getByText('当前范围没有可用句子',{exact:true})).toBeVisible();
+ const bank=[{id:'cp2023-1-1-一',grade:1,character:'一',pinyin:'yī',words:['一个','一支'],sentence:'我有一个苹果。'}];await open(page,{bank});await expect(page.locator('#train-palette button')).toHaveCount(4);
+ await page.getByRole('button',{name:'题库管理',exact:true}).click();await page.locator('.question-row').click();await page.getByText('句子小火车设置',{exact:true}).click();await expect(page.locator('#train-editor-preview')).toContainText('内置切分');await page.locator('[name="sentence"]').fill('我有一支铅笔。');await expect(page.locator('#train-editor-preview')).toContainText('尚未设置有效');await page.getByRole('button',{name:'关闭题库',exact:true}).click();await expect(page.locator('#train-palette button')).toHaveCount(4);await page.locator('#restart').click();await expect(page.getByText('当前范围没有可用句子',{exact:true})).toBeVisible();
 });
 async function assertTrainMouseTargets(page){
  const buttons=page.locator('#train-palette button');

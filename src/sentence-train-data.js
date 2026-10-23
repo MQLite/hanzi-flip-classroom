@@ -115,6 +115,17 @@ function cloneQuestion(question) {
   return copy
 }
 
+export function mergeTrainQuestionPools(curated, editable) {
+  const key = question => JSON.stringify([question.textbook, question.book, question.lesson, normalizeText(question.sentence)])
+  const sources = new Map(curated.filter(question=>question.trainSource).map(question=>[key(question),question.trainSource]))
+  const preferred = editable.map(question=>{
+    const source = sources.get(key(question))
+    return source ? {...question,trainSource:{...source}} : question
+  })
+  // Session de-duplication keeps the first definition: respect the teacher's cuts.
+  return [...preferred,...curated]
+}
+
 export function resolveTrainQuestion(question) {
   if (!question || typeof question !== 'object' || Array.isArray(question)) return null
 

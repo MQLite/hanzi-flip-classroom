@@ -1,12 +1,13 @@
 import "./styles.css";
 import './sentence-train.css';
 import {createTrainView} from './sentence-train.js';
-import {resolveTrainQuestion} from './sentence-train-data.js';
+import {mergeTrainQuestionPools,resolveTrainQuestion} from './sentence-train-data.js';
 import {createTrainSession,toggleTrainTile,undoTrainTile,clearTrainSelection,checkTrainAnswer,acceptTrainAnswer,revealTrainAnswer,markTrainPractice,nextTrainQuestion,previousTrainQuestion,startTrainPractice,finishTrainDeparture,getTrainScores} from './sentence-train-core.js';
 import { DEFAULT_QUESTIONS } from "./data.js";
 import { coursesForTextbook, TEXTBOOK_ID, PARADISE_ID, PARADISE_QUESTIONS, STAGES, TEXTBOOK_QUESTIONS, ZHONGWEN_ID, ZHONGWEN_NAME, ZHONGWEN_QUESTIONS, ZHONGWEN_BOOK_LABELS, stagesForTextbook, textbookForSource, filterCurriculum, curriculumLabel, mergeAllTextbookQuestions as mergeTextbookQuestions } from './curriculum.js';
 import { renderZhongwenVocabulary } from './zhongwen-vocabulary.js';
 import { getZhongwenTrainQuestions, zhongwenTrainLabel } from './zhongwen-train.js';
+import { getParadiseTrainQuestions, paradiseTrainLabel } from './paradise-train.js';
 import {
   createSession,
   getCurrentQuestion,
@@ -45,7 +46,7 @@ $('#scene').insertAdjacentHTML('afterend', '<div id="workshop" hidden></div><div
 $('.practice-box').insertAdjacentHTML('beforebegin', '<div id="workshop-collection-panel" hidden><h4>收集到的词语 <span>✦</span></h4><div id="workshop-collection" aria-live="polite"></div></div>');
 $('#help-dialog').insertAdjacentHTML('beforeend', '<p>活字组词工坊：每盘随机选择 2–4 个参考词，默认 4 个，拆成一盘共享活字。按顺序点选 2–8 字，点击“融合印版”。匹配参考词时收走对应活字、记 1 星；其他词请老师判断。教师判对收集青绿色印版并归还活字，返回重试则归还活字且不记分。每个词只能得星一次。教师判断记给提交时的小组，切换模式保留待判词和进度；新一轮或刷新会清空。</p>');
 $('.practice-box').insertAdjacentHTML('beforebegin', '<div class="train-ledger-panel" hidden><h4>旅程记录</h4><div id="train-ledger" aria-live="polite"></div></div>');
-$('#help-dialog').insertAdjacentHTML('beforeend', '<p>句子小火车：点击词语车厢，从左到右排列句子。全部接齐后发车；未命中可调整或由老师判对。看过参考句后须由老师判对才计分。再练一次只加入明确标记的句子；跳过的句子不算错。三种游戏独立保存本页进度，刷新重置。题库中的“句子小火车设置”可用 / 分隔词语。每句支持2–7节车厢；《中文》第一、二册选用课文及阅读重点句，显示栏目、篇名和教材页码，部分短句摘自分句并统一句尾标点。汉语乐园 1A–3B 使用各课配编句。</p>');
+$('#help-dialog').insertAdjacentHTML('beforeend', '<p>句子小火车：点击词语车厢，从左到右排列句子。全部接齐后发车；未命中可调整或由老师判对。看过参考句后须由老师判对才计分。再练一次只加入明确标记的句子；跳过的句子不算错。三种游戏独立保存本页进度，刷新重置。题库中的“句子小火车设置”可用 / 分隔词语。每句支持2–7节车厢；《中文》第一、二册选用课文及阅读重点句，显示栏目、篇名和教材页码，部分短句摘自分句并统一句尾标点。《汉语乐园》1A–3B选用课本对话、歌曲和故事原句，老师手工切分句仍可练习；1A第3课仅作数字认读。</p>');
 const allDefaults = [...DEFAULT_QUESTIONS, ...TEXTBOOK_QUESTIONS, ...PARADISE_QUESTIONS, ...ZHONGWEN_QUESTIONS];
 $('.teacher-badge').textContent = '汉语乐园 · 1A–3B';
 $('.lesson-toolbar').insertAdjacentHTML('afterbegin', `<label class="curriculum-field">题库<select id="bank-source" aria-label="题库来源"><option value="paradise">汉语乐园（1A–3B）</option><option value="textbook">中文乐园（新版）</option><option value="zhongwen">${ZHONGWEN_NAME}</option><option value="personal">个人 / 通用题库</option></select></label><label class="curriculum-field textbook-field"><span id="stage-label">阶段</span><select id="stage" aria-label="学习阶段">${STAGES.map(s=>`<option>${s}</option>`).join('')}</select></label><label class="curriculum-field textbook-field">范围<select id="scope" aria-label="练习范围"><option value="stage">整个阶段</option><option value="lesson">本课</option><option value="cumulative">截至本课累计</option></select></label><label class="curriculum-field textbook-field">课次<select id="lesson" aria-label="选择课次"></select></label>`);
@@ -99,9 +100,9 @@ function currentSession() {
     ? filterCurriculum(bank.questions, {...selection, textbook: textbookForSource(selection.source)})
     : bank.questions.filter(q=>!q.textbook);
   if(gameMode === 'train') {
-    const curated = selection.source === 'zhongwen' ? getZhongwenTrainQuestions(selection) : [];
+    const curated = selection.source === 'zhongwen' ? getZhongwenTrainQuestions(selection) : selection.source === 'paradise' ? getParadiseTrainQuestions(selection) : [];
     const editable = questions.filter(q=>selection.source!=='personal'||q.grade===grade).map(resolveTrainQuestion).filter(Boolean);
-    return createTrainSession({questions: [...curated, ...editable],teamNames});
+    return createTrainSession({questions: mergeTrainQuestionPools(curated, editable),teamNames});
   }
   if(gameMode === 'workshop') {
     const scoped=questions.filter(q=>selection.source!=='personal'||q.grade===grade);
@@ -145,7 +146,7 @@ function syncSelection() {
     ? zhongwen
       ? `《中文》（暨南大学华文学院 · 第三版）${ZHONGWEN_BOOK_LABELS[selection.stage]} · ${selection.scope === 'cumulative' ? `第一册第1课至${ZHONGWEN_BOOK_LABELS[selection.stage]}第${selection.lesson}课` : selection.scope === 'lesson' ? `第${selection.lesson}课` : '全册'} · ${gameMode === 'train' ? '课文与阅读重点句' : '全部生字与教材词语 · 卡片例句为配编'}`
       : selection.source === 'paradise'
-      ? `《汉语乐园》${selection.stage} · 原书分册及课次 · ${selection.scope === 'cumulative' ? `1A第1课至${selection.stage}第${selection.lesson}课` : selection.scope === 'lesson' ? `第${selection.lesson}课` : '全册'} · 核心词汇识字与学写字 · 例句为配编`
+      ? `《汉语乐园》${selection.stage} · 原书分册及课次 · ${selection.scope === 'cumulative' ? `1A第1课至${selection.stage}第${selection.lesson}课` : selection.scope === 'lesson' ? `第${selection.lesson}课` : '全册'} · ${gameMode === 'train' ? '课本对话、歌曲与故事重点句' : '核心词汇识字与学写字 · 例句为配编'}`
       : `《中文乐园》课本1–3 · A/B为游戏分组（A：第1–6课，B：第7–12课） · ${selection.scope === 'cumulative' ? `课本1第1课至课本${selection.stage[0]}第${selection.lesson}课` : selection.scope === 'lesson' ? `${selection.stage} 第${selection.lesson}课` : `${selection.stage} 全阶段`} · 例词例句为配编`
     : '个人 / 通用题库 · 年级为难度建议';
   if (selection.source === 'paradise' && selection.stage.startsWith('1')) {
@@ -427,7 +428,7 @@ function render() {
     judgment = active && session.judgments[session.currentIndex];
   document.body.classList.toggle('workshop-revealed', gameMode === 'workshop' && Boolean(revealed));
   $("#mode-label").textContent =
-    session.mode === "practice" ? "再一次，小小的进步" : q?.trainSource ? zhongwenTrainLabel(q) : q?.textbook ? curriculumLabel(q) : "今日探索";
+    session.mode === "practice" ? "再一次，小小的进步" : q?.trainSource ? (q.textbook === PARADISE_ID ? paradiseTrainLabel(q) : zhongwenTrainLabel(q)) : q?.textbook ? curriculumLabel(q) : "今日探索";
   $("#progress").textContent =
     session.phase === "empty"
       ? "00 / 00"
@@ -485,7 +486,11 @@ function render() {
     $('#judgment-note').textContent=session.departure?'列车出发，前往下一站…':'先选作答小组 · 每句只记一颗星';
     const records=session.judgments.flatMap((j,index)=>j?.outcome==='correct'?[{...j,index}]:[]);
     $('#train-ledger').replaceChildren(...(records.length?records.map(j=>{const p=el('p',j.sentence);p.append(el('small',`${j.source==='teacher'?'教师接受':'参考匹配'} · ${session.teams.find(t=>t.id===j.teamId)?.name??''}`));return p}):[el('small','完成的句子，会在这里留下足迹。')]));
-    trainView.update(session);return;
+    const numberOnly = selection.source === 'paradise' && selection.stage === '1A' && selection.scope === 'lesson' && selection.lesson === 3;
+    trainView.update(session, numberOnly ? {
+      emptyMessage:'本课以数字认读为主，教材没有可供排句的完整句。可切换“识字翻翻乐”练习数字，或选择其他课。',
+      emptyAction:{label:'选择其他课',run:()=>$('#lesson').focus()},
+    } : undefined);return;
   }
   const face = $("#card-face");
   $('#pinyin').closest('label').hidden = gameMode !== 'train';
