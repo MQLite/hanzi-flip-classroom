@@ -47,8 +47,8 @@ export function validateSentenceTrain(value, sentence) {
   }
 
   const tokens = value.tokens
-  if (!Array.isArray(tokens) || tokens.length < 3 || tokens.length > 7) {
-    errors.push(issue('tokens', 'invalid-token-count', '车厢必须包含 3 至 7 个词语。'))
+  if (!Array.isArray(tokens) || tokens.length < 2 || tokens.length > 7) {
+    errors.push(issue('tokens', 'invalid-token-count', '车厢必须包含 2 至 7 个词语。'))
   }
   if (Array.isArray(tokens)) {
     tokens.forEach((token, index) => {

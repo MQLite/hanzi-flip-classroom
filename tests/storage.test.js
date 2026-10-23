@@ -110,7 +110,7 @@ describe('bank validation', () => {
     const result = validateBank({
       schemaVersion: 1,
       questions: [question({
-        sentenceTrain: { tokens: ['我', '有'], punctuation: '.', alternatives: [] },
+        sentenceTrain: { tokens: ['我有'], punctuation: '.', alternatives: [] },
       })],
     })
 

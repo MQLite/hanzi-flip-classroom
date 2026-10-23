@@ -118,13 +118,14 @@ describe('sentence train validation and resolution', () => {
   const sentence = '老师在看书。'
   const valid = { tokens: ['老师', '在', '看书'], punctuation: '。', alternatives: [] }
 
-  it('accepts a valid 3–7-carriage definition that reconstructs the exact sentence', () => {
+  it('accepts a valid 2–7-carriage definition that reconstructs the exact sentence', () => {
     expect(validateSentenceTrain(valid, sentence)).toEqual({ ok: true, errors: [] })
+    expect(validateSentenceTrain({tokens: ['十一月', '小'], punctuation: '。', alternatives: []}, '十一月小。')).toEqual({ok: true, errors: []})
     expect(validateSentenceTrain({ ...valid, tokens: ['我', '和', '爸爸', '一起', '去', '公园', '玩'] }, '我和爸爸一起去公园玩。').ok).toBe(true)
   })
 
   it.each([
-    [{ ...valid, tokens: ['老师', '看书'] }, sentence, 'invalid-token-count'],
+    [{ ...valid, tokens: ['老师在看书'] }, sentence, 'invalid-token-count'],
     [{ ...valid, tokens: ['老师', '在', '认真地', '安安静静地慢慢', '看书'] }, '老师在认真地安安静静地慢慢看书。', 'invalid-token-length'],
     [{ ...valid, tokens: ['老师', '在 ', '看书'] }, sentence, 'invalid-token'],
     [{ ...valid, punctuation: ',' }, sentence, 'invalid-punctuation'],

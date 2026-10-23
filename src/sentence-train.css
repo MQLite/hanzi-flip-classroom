@@ -10,6 +10,7 @@
 .train-title { margin-right: auto; }
 .train-title .eyebrow { font-size: 9px; letter-spacing: 2.5px; color: #8a957c; }
 .train-title h3 { margin: 3px 0; font-size: 23px; letter-spacing: 1px; color: #355b50; }
+#train-source { margin: 3px 0 0; color: #60755f; font-size: 11px; line-height: 16px; }
 .train-actions, .train-secondary { display: flex; align-items: center; gap: 7px; }
 .train-actions button { min-width: 59px; min-height: 35px; font-size: 13px; padding: 7px 11px; }
 .train-actions .primary { min-width: 94px; background: #3e6d5d; }

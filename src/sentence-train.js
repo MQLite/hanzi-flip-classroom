@@ -10,7 +10,7 @@ function element(tag, text, className) {
 export function createTrainView(host, dispatch, onFallback) {
   host.innerHTML = `
     <div class="train-intro">
-      <div class="train-title"><span class="eyebrow">THE SENTENCE EXPRESS</span><h3>把词语排成一句话</h3></div>
+      <div class="train-title"><span class="eyebrow">THE SENTENCE EXPRESS</span><h3>把词语排成一句话</h3><p id="train-source" hidden></p></div>
       <div class="train-actions"><button id="train-undo">撤回</button><button id="train-clear">清空</button><button id="train-check" class="primary">发车</button></div>
       <div class="train-secondary"><button id="train-reveal" class="text-button">看看参考句</button><button id="train-accept" class="secondary" hidden>老师判对</button></div>
     </div>
@@ -56,6 +56,10 @@ export function createTrainView(host, dispatch, onFallback) {
     const locked = !active || Boolean(judgment) || Boolean(session.departure);
     const check = session.checks[index];
     const revealed = session.revealed[index];
+    const source = question?.trainSource;
+    $('#train-source').hidden = !active || !source;
+    $('#train-source').textContent = source ? `${source.section}《${source.title}》 · 教材第${source.printedPage}页${source.notes ? ' · 节选' : ''}` : '';
+    $('#train-source').title = source?.notes ?? '';
     const nextKey = `${session.roundId ?? session.mode}:${question?.id}:${index}:${session.phase}`;
     const focused = document.activeElement?.dataset.tile;
 
@@ -119,7 +123,7 @@ export function createTrainView(host, dispatch, onFallback) {
       summary.append(element('span', session.phase === 'empty' ? '◇' : '★', 'train-summary-symbol'));
       summary.append(element('h3', session.phase === 'empty' ? '当前范围没有可用句子' : '这一轮，顺利到站！'));
       if (session.phase === 'empty') {
-        summary.append(element('p', '当前筛选没有有效车厢切分。请在题库管理中为例句设置 3–7 节词语。'));
+        summary.append(element('p', '当前筛选没有有效车厢切分。请在题库管理中为例句设置 2–7 节词语。'));
         const button = element('button', '设置句子题', 'primary');
         button.onclick = () => dispatch('editor');
         summary.append(button);

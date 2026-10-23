@@ -43,6 +43,58 @@ test('manual segmentation survives unrelated edits and invalid drafts do not sav
  const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('hanzi-flip.question-bank')).questions[0]);expect(stored.sentenceTrain.tokens).toEqual(['老师','在','看书']);expect(stored.radical).toBe('巾');
  await page.getByRole('button',{name:'清除手动切分',exact:true}).click();await expect(page.locator('#save-status')).toContainText('已保存');
 });
+
+for (const book of [1, 2]) test(`Zhongwen book ${book} has textbook trains in all twelve lessons without replacing the saved bank`, async ({page}) => {
+ test.setTimeout(60000);
+ await open(page, {bank: questions});
+ const saved = await page.evaluate(() => localStorage.getItem('hanzi-flip.question-bank'));
+ await page.locator('#bank-source').selectOption('zhongwen');
+ await page.locator('#stage').selectOption(String(book));
+ await page.locator('#scope').selectOption('lesson');
+ for (let lesson = 1; lesson <= 12; lesson++) {
+   await page.locator('#lesson').selectOption(String(lesson));
+   await expect(page.locator('#train-summary')).toBeHidden();
+   await expect(page.locator('#mode-label')).toContainText(`第${lesson}课`);
+   await expect(page.locator('#train-source')).toContainText(/(?:课文|阅读).*教材第\d+页/);
+   expect(await page.locator('#train-palette button').count()).toBeGreaterThanOrEqual(2);
+ }
+ expect(await page.evaluate(() => localStorage.getItem('hanzi-flip.question-bank'))).toBe(saved);
+ await page.locator('#bank-source').selectOption('personal');
+ await expect(page.locator('#train-palette button')).toHaveCount(3);
+ await expect(page.locator('#train-source')).toBeHidden();
+ await choose(page, ['老师', '在', '看书']);
+ await page.locator('#train-check').click();
+ await expect(score(page)).toHaveText('1');
+});
+
+test('two natural word blocks form a short sentence without splitting a textbook word', async ({page}) => {
+ await open(page, {bank: [{...questions[0], sentence: '小鸟飞。', sentenceTrain: {tokens: ['小鸟', '飞'], punctuation: '。', alternatives: []}}]});
+ await expect(page.locator('#train-palette button')).toHaveCount(2);
+ await choose(page, ['小鸟', '飞']);
+ await page.locator('#train-check').click();
+ await expect(score(page)).toHaveText('1');
+});
+
+for (const legacy of [false, true]) test(`Zhongwen train source and feedback fit a projector with ${legacy ? 'a legacy bank notice' : 'the default bank'}`, async ({page}) => {
+ await page.setViewportSize({width:1280,height:720});
+ if (legacy) await page.addInitScript(bank=>localStorage.setItem('hanzi-flip.question-bank',JSON.stringify({schemaVersion:1,questions:bank})), questions);
+ await page.goto('/');
+ await page.locator('#bank-source').selectOption('zhongwen');
+ await page.locator('#stage').selectOption('2');
+ await page.locator('#scope').selectOption('lesson');
+ await page.locator('#mode-train').click();
+ await expect(page.locator('#train-source')).toBeVisible();
+ const feedback = await page.locator('#train-feedback').boundingBox();
+ expect(feedback.y + feedback.height).toBeLessThanOrEqual(720);
+ for (const button of await page.locator('#train-palette button').all()) {
+   const box = await button.boundingBox();
+   expect(box.y + box.height + 16).toBeLessThanOrEqual(720);
+ }
+ await page.setViewportSize({width:390,height:844});
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.locator('#mode-flip').click();
+ await expect(page.locator('#zhongwen-vocabulary')).toBeVisible();
+});
 const longTokens=['我们学校老师','今天','在','美丽的公园','和','小朋友们','一起开心看书'];
 const longQuestion={...questions[0],id:'long',sentence:longTokens.join('')+'。',sentenceTrain:{tokens:longTokens,punctuation:'。',alternatives:[]}};
 test('seven long carriages stay locally scrollable and newly appended carriage is visible',async({page})=>{
