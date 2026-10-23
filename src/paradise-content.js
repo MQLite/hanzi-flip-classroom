@@ -920,6 +920,12 @@ export const PARADISE_CONTENT = [
         "word": "坐",
         "pinyin": "zuò",
         "pdfPage": 39
+      },
+      {
+        "word": "看",
+        "pinyin": "kàn",
+        "pdfPage": 19,
+        "section": "正文图词（复习词）"
       }
     ],
     "writingCharacters": "坐",

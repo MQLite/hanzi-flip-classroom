@@ -1,8 +1,41 @@
-import { PARADISE_QUESTIONS, ZHONGWEN_QUESTIONS } from '../src/curriculum.js';
+import { PARADISE_COURSES, PARADISE_QUESTIONS, ZHONGWEN_QUESTIONS } from '../src/curriculum.js';
 const DEFAULT_BANK_SIZE = 156 + PARADISE_QUESTIONS.length + ZHONGWEN_QUESTIONS.length;
 import { test, expect } from "@playwright/test";
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
+});
+
+test('Hanyu Paradise 1A and 1B show the verified textbook words without mixing illustrative examples', async ({page}) => {
+  await page.getByLabel('练习范围').selectOption('lesson');
+  await page.getByRole('button',{name:'查看教材词语',exact:true}).click();
+  const dialog=page.getByRole('dialog',{name:'汉语乐园教材词语',exact:true});
+  await expect(dialog).toContainText('1A · 第1课 你好');
+  await expect(dialog).toContainText('老师');
+  await expect(dialog).not.toContainText('老人');
+  await dialog.getByRole('heading',{name:'汉语乐园教材词语',exact:true}).click();
+  await page.keyboard.press('Space');
+  await expect(dialog).toBeVisible();
+  await expect(page.locator('#card-strokes')).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await page.getByLabel('学习阶段',{exact:true}).selectOption('1B');
+  await page.getByLabel('选择课次').selectOption('9');
+  await page.getByRole('button',{name:'查看教材词语',exact:true}).click();
+  await expect(dialog).toContainText('正文图词（复习词）');
+  await expect(dialog).toContainText('PDF第19页');
+  await expect(dialog.locator('.zhongwen-word-list strong')).toHaveText(['安静','对不起','进','举手','没关系','请','坐','看']);
+  await page.screenshot({path:'docs/codex/paradise-1ab/desktop-vocabulary.png',fullPage:true});
+  await page.setViewportSize({width:390,height:844});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.screenshot({path:'docs/codex/paradise-1ab/mobile-vocabulary.png',fullPage:true});
+  await page.setViewportSize({width:1440,height:900});
+  await page.getByRole('button',{name:'关闭教材词语',exact:true}).click();
+  await expect(dialog).toBeHidden();
+  await page.getByLabel('学习阶段',{exact:true}).selectOption('1A');
+  await page.getByLabel('选择课次').selectOption('3');
+  await page.getByRole('button',{name:'组词小工坊',exact:true}).click();
+  await expect(page.locator('#workshop')).toContainText('本课是单字认读');
+  await page.getByRole('button',{name:'去识字翻翻乐',exact:true}).click();
+  await expect(page.locator('.hanzi')).toBeVisible();
 });
 
 test('Zhongwen complete-book selection exposes the full lesson vocabulary and supports workshop phrases', async ({ page }) => {
@@ -779,7 +812,7 @@ test('PDF bank is the default, preserves actual lessons, and works in both modes
   await page.getByRole('button', {name:'组词小工坊', exact:true}).click();
   await page.locator('#workshop-references summary').click();
   const answer = await page.locator('#workshop-references .workshop-reference').first().getAttribute('data-word');
-  expect(first.flatMap(q => q.words)).toContain(answer);
+  expect(PARADISE_COURSES.find(c=>c.book===1&&c.lesson===1).vocabulary.map(v=>v.word)).toContain(answer);
   for (const character of answer) {
     await page.locator('#workshop-tiles button:not([aria-pressed="true"])').filter({hasText:new RegExp(`^${character}$`)}).first().click();
   }

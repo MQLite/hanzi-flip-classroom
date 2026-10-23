@@ -50,6 +50,8 @@ $('.teacher-badge').textContent = '汉语乐园 · 1A–3B';
 $('.lesson-toolbar').insertAdjacentHTML('afterbegin', `<label class="curriculum-field">题库<select id="bank-source" aria-label="题库来源"><option value="paradise">汉语乐园（1A–3B）</option><option value="textbook">中文乐园（新版）</option><option value="zhongwen">中文（小学）第一、二册</option><option value="personal">个人 / 通用题库</option></select></label><label class="curriculum-field textbook-field"><span id="stage-label">阶段</span><select id="stage" aria-label="学习阶段">${STAGES.map(s=>`<option>${s}</option>`).join('')}</select></label><label class="curriculum-field textbook-field">范围<select id="scope" aria-label="练习范围"><option value="stage">整个阶段</option><option value="lesson">本课</option><option value="cumulative">截至本课累计</option></select></label><label class="curriculum-field textbook-field">课次<select id="lesson" aria-label="选择课次"></select></label>`);
 $('.lesson-toolbar').insertAdjacentHTML('afterend', '<p id="curriculum-note" class="curriculum-note"></p><div id="textbook-notice" class="notice" hidden><span></span><button id="add-textbook">补充教材题库</button></div>');
 $('#textbook-notice').insertAdjacentHTML('afterend', '<details id="zhongwen-vocabulary" class="zhongwen-vocabulary" hidden><summary>教材生字与词语</summary><p class="muted">按教材栏目和原顺序列出。组词工坊使用完整词表中的2–8字词语与短语；单字在识字翻翻乐练习。</p><div id="zhongwen-vocabulary-content"></div></details>');
+document.body.insertAdjacentHTML('beforeend', '<dialog id="paradise-vocabulary-dialog" class="textbook-vocabulary-dialog" aria-labelledby="paradise-vocabulary-title"><div class="dialog-heading"><h2 id="paradise-vocabulary-title">汉语乐园教材词语</h2><button id="close-paradise-vocabulary" class="icon-button" aria-label="关闭教材词语">×</button></div><p class="muted">1A、1B按课本New Words词表收录，另标出正文核心复习词。辅助例词不混入教材词库；单字保留供识字翻牌，2–8字教材词语进入组词工坊。</p><div id="paradise-vocabulary-content"></div></dialog>');
+$('#close-paradise-vocabulary').onclick = () => $('#paradise-vocabulary-dialog').close();
 $('#help-dialog').insertAdjacentHTML('beforeend', '<p>《中文》（小学，暨南大学华文学院第三版）第一、二册：按整册及原课次选择，收录每课全部生字、词语和“读一读”，展开“教材生字与词语”可核对原序及教材页码。识字卡的两个例词和简单例句是辅助教学内容；组词工坊使用独立保存的完整教材词表。旧题库可点击“补充教材题库”，只追加缺失题目，保留已有题目及个人修改。</p>');
 $('#help-dialog .help-steps li').textContent = '选择教材阶段和练习范围，或切换到个人 / 通用题库按年级练习。';
 $('#help-dialog').insertAdjacentHTML('beforeend', '<p>《汉语乐园》按原书1A–3B分册：A为第1–6课，B为第7–12课。题目覆盖核心词汇中的汉字及学写字栏目；参考词优先采用本课教材词，补充例词和例句为配编。与新版题库分开选择。</p><p>新版《中文乐园》课本1–3：A为第1–6课，B为第7–12课。A/B是游戏学习阶段，不是出版社分册。教材字表按官方教学大纲；组词、读音语境和例句由本项目配编，可由老师修改。</p>');
@@ -141,6 +143,17 @@ function syncSelection() {
       ? `《汉语乐园》${selection.stage} · 原书分册及课次 · ${selection.scope === 'cumulative' ? `1A第1课至${selection.stage}第${selection.lesson}课` : selection.scope === 'lesson' ? `第${selection.lesson}课` : '全册'} · 核心词汇识字与学写字 · 例句为配编`
       : `《中文乐园》课本1–3 · A/B为游戏分组（A：第1–6课，B：第7–12课） · ${selection.scope === 'cumulative' ? `课本1第1课至课本${selection.stage[0]}第${selection.lesson}课` : selection.scope === 'lesson' ? `${selection.stage} 第${selection.lesson}课` : `${selection.stage} 全阶段`} · 例词例句为配编`
     : '个人 / 通用题库 · 年级为难度建议';
+  if (selection.source === 'paradise' && selection.stage.startsWith('1')) {
+    const viewWords = el('button','查看教材词语','text-button');
+    viewWords.id = 'open-paradise-vocabulary';
+    viewWords.onclick = () => {
+      const keys = new Set(filterCurriculum(PARADISE_QUESTIONS, {...selection, textbook: PARADISE_ID}).map(q => `${q.book}/${q.lesson}`));
+      const courses = coursesForTextbook(PARADISE_ID).filter(c => keys.has(`${c.book}/${c.lesson}`));
+      renderZhongwenVocabulary($('#paradise-vocabulary-content'), courses, {paradise:true});
+      $('#paradise-vocabulary-dialog').showModal();
+    };
+    $('#curriculum-note').append(viewWords);
+  }
   $('.teacher-badge').textContent = zhongwen ? `中文 · ${ZHONGWEN_BOOK_LABELS[selection.stage]}` : selection.source === 'paradise' ? '汉语乐园 · 1A–3B' : selection.source === 'textbook' ? '中文乐园（新版）' : '教师课堂 · 个人题库';
   $('#zhongwen-vocabulary').hidden = !zhongwen;
   if (zhongwen) {
@@ -253,12 +266,13 @@ function renderWorkshop() {
   const palette=workshopTransition?.palette??workshopState.palette;
   const selections=workshopTransition?.selections??workshopState.selections;
   const statusNodes=[];
+  const textbookWords = selection.source === 'zhongwen' || (selection.source === 'paradise' && selection.stage.startsWith('1'));
   if(phase==='empty') {
-    if (selection.source === 'zhongwen' && session.questions.length) {
+    if (textbookWords && session.questions.length) {
       statusNodes.push(el('h2','本课是单字认读'),el('p','本课教材词项均为单字，请用识字翻翻乐认读，或选择其他课次练习组词。'));
       const reading=el('button','去识字翻翻乐','primary');reading.onclick=()=>switchMode('flip');statusNodes.push(reading);
     } else {
-      statusNodes.push(el('h2','当前范围暂无有效参考词'),el('p',selection.source === 'zhongwen' ? '请先点击上方“补充教材题库”，再开始新一轮。' : '在题库中添加 2–8 字的参考词，再开始新一轮。'));
+      statusNodes.push(el('h2','当前范围暂无有效参考词'),el('p',textbookWords ? '请先点击上方“补充教材题库”，再开始新一轮。' : '在题库中添加 2–8 字的参考词，再开始新一轮。'));
       const edit=el('button','修改题库','primary');edit.onclick=()=>editor.open();statusNodes.push(edit);
     }
   } else if(phase==='complete') {

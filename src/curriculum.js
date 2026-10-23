@@ -99,3 +99,8 @@ export function stagesForTextbook(textbook) {
 export function textbookForSource(source) {
   return source === 'zhongwen' ? ZHONGWEN_ID : source === 'paradise' ? PARADISE_ID : TEXTBOOK_ID
 }
+
+export function usesTextbookVocabulary(question) {
+  return question?.textbook === ZHONGWEN_ID ||
+    (question?.textbook === PARADISE_ID && question.book === 1)
+}
