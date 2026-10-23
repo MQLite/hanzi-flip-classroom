@@ -1,6 +1,6 @@
 import {resolveTrainQuestion,validateSentenceTrain} from './sentence-train-data.js';
 import { validateBank, previewImport, exportBank } from "./storage.js";
-import { STAGES, PARADISE_ID, TEXTBOOK_ID, curriculumCourse, curriculumLabel, mergeAllTextbookQuestions as mergeTextbookQuestions } from './curriculum.js';
+import { STAGES, PARADISE_ID, TEXTBOOK_ID, ZHONGWEN_ID, ZHONGWEN_BOOK_LABELS, curriculumCourse, curriculumLabel, mergeAllTextbookQuestions as mergeTextbookQuestions } from './curriculum.js';
 
 export function downloadText(
   text,
@@ -28,7 +28,7 @@ export function createEditor({ store, getBank, onBank, defaults, notify, canEdit
   const $ = (s) => dialog.querySelector(s),
     form = $("#question-form");
   $('.bank-toolbar').insertAdjacentHTML('beforeend', '<button id="append-textbook">补充缺失教材题</button>');
-  $('.bank-filters').insertAdjacentHTML('beforeend', `<select id="bank-stage" aria-label="筛选学习阶段"><option value="">全部来源</option><option value="personal">个人 / 通用</option>${STAGES.map(s=>`<option value="paradise:${s}">汉语乐园 ${s}</option>`).join('')}${STAGES.map(s=>`<option value="${s}">中文乐园（新版）${s}</option>`).join('')}</select>`);
+  $('.bank-filters').insertAdjacentHTML('beforeend', `<select id="bank-stage" aria-label="筛选学习阶段"><option value="">全部来源</option><option value="personal">个人 / 通用</option>${STAGES.map(s=>`<option value="paradise:${s}">汉语乐园 ${s}</option>`).join('')}${STAGES.map(s=>`<option value="${s}">中文乐园（新版）${s}</option>`).join('')}${Object.entries(ZHONGWEN_BOOK_LABELS).map(([book,label])=>`<option value="zhongwen:${book}">中文 ${label}</option>`).join('')}</select>`);
   form.insertAdjacentHTML('beforeend', `<details class="train-editor-settings"><summary>句子小火车设置</summary><p class="muted">每题 3–7 节，每节 1–6 个汉字，正文最多 28 字。/ 仅用于编辑时分隔车厢，不属于句子。</p><label><input type="checkbox" name="trainEnabled">启用手动切分</label><label>词语车厢<textarea name="trainTokens" rows="2" placeholder="老师 / 在 / 看书"></textarea></label><label>句尾标点<select name="trainPunctuation"><option>。</option><option>？</option><option>！</option></select></label><label>其他参考顺序（每行一条，最多五条）<textarea name="trainAlternatives" rows="3" placeholder="词语 / 顺序 / 示例"></textarea></label><p id="train-editor-preview" class="train-editor-preview" aria-live="polite"></p><button type="button" id="train-clear-manual">清除手动切分</button></details>`);
   form.insertAdjacentHTML('afterbegin', '<p id="question-origin" class="muted"></p>');
   let selected = null,
@@ -64,7 +64,7 @@ export function createEditor({ store, getBank, onBank, defaults, notify, canEdit
     const items = getBank().questions.filter(
       (q) =>
         (!grade || q.grade === Number(grade)) &&
-        (!stage || (stage === 'personal' ? !q.textbook : (q.textbook === (stage.startsWith('paradise:') ? PARADISE_ID : TEXTBOOK_ID) && curriculumCourse(q)?.stage === stage.replace('paradise:', '')))) &&
+        (!stage || (stage === 'personal' ? !q.textbook : stage.startsWith('zhongwen:') ? q.textbook === ZHONGWEN_ID && q.book === Number(stage.split(':')[1]) : (q.textbook === (stage.startsWith('paradise:') ? PARADISE_ID : TEXTBOOK_ID) && curriculumCourse(q)?.stage === stage.replace('paradise:', '')))) &&
         [q.character, q.pinyin, ...q.words]
           .join(" ")
           .toLowerCase()

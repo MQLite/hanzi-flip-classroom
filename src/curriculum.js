@@ -1,6 +1,8 @@
 import { CHARACTER_EXAMPLES } from './curriculum-examples.js'
 import { PARADISE_ID, PARADISE_COURSES, PARADISE_QUESTIONS } from './paradise.js'
+import { ZHONGWEN_ID, ZHONGWEN_COURSES, ZHONGWEN_QUESTIONS, ZHONGWEN_BOOK_LABELS } from './zhongwen.js'
 export { PARADISE_ID, PARADISE_COURSES, PARADISE_QUESTIONS }
+export { ZHONGWEN_ID, ZHONGWEN_COURSES, ZHONGWEN_QUESTIONS, ZHONGWEN_BOOK_LABELS }
 
 // Chinese Characters columns, publisher's public syllabi. See docs/curriculum-sources.md.
 export const TEXTBOOK_ID = 'chinese-paradise-2023'
@@ -45,6 +47,7 @@ export function curriculumCourse(question) {
 }
 
 export function coursesForTextbook(textbook) {
+  if (textbook === ZHONGWEN_ID) return ZHONGWEN_COURSES
   if (textbook === PARADISE_ID) return PARADISE_COURSES
   if (textbook === TEXTBOOK_ID) return COURSES
   return []
@@ -52,12 +55,13 @@ export function coursesForTextbook(textbook) {
 
 export function curriculumLabel(question) {
   const course = curriculumCourse(question)
+  if (course && question.textbook === ZHONGWEN_ID) return `中文 · ${ZHONGWEN_BOOK_LABELS[course.stage]} · 第${course.lesson}课 ${course.title}`
   const name = question?.textbook === PARADISE_ID ? '汉语乐园' : '中文乐园（新版）'
   return course ? `${name} · ${course.stage} · 第${course.lesson}课 ${course.title}` : '个人 / 通用题库'
 }
 
 export function filterCurriculum(questions, {stage, lesson, scope, textbook = TEXTBOOK_ID}) {
-  if (!STAGES.includes(stage) || !['stage','lesson','cumulative'].includes(scope)) return []
+  if (!stagesForTextbook(textbook).includes(stage) || !['stage','lesson','cumulative'].includes(scope)) return []
   const book = Number(stage[0])
   const selected = coursesForTextbook(textbook).find(c => c.stage === stage && c.lesson === lesson)
   if (scope !== 'stage' && !selected) return []
@@ -85,5 +89,13 @@ export function mergeTextbookQuestions(questions, additionsFrom = TEXTBOOK_QUEST
 }
 
 export function mergeAllTextbookQuestions(questions) {
-  return mergeTextbookQuestions(questions, [...PARADISE_QUESTIONS, ...TEXTBOOK_QUESTIONS])
+  return mergeTextbookQuestions(questions, [...PARADISE_QUESTIONS, ...TEXTBOOK_QUESTIONS, ...ZHONGWEN_QUESTIONS])
+}
+
+export function stagesForTextbook(textbook) {
+  return textbook === ZHONGWEN_ID ? ['1', '2'] : STAGES
+}
+
+export function textbookForSource(source) {
+  return source === 'zhongwen' ? ZHONGWEN_ID : source === 'paradise' ? PARADISE_ID : TEXTBOOK_ID
 }

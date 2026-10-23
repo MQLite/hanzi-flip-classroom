@@ -51,7 +51,7 @@ describe('Hanyu Paradise PDF bank', () => {
     const modern = {...curriculum.TEXTBOOK_QUESTIONS[0], sentence:'新版题目修改。'}
     const original = [edited, modern]
     const merged = curriculum.mergeAllTextbookQuestions(original)
-    expect(merged).toHaveLength(curriculum.PARADISE_QUESTIONS.length + 108)
+    expect(merged).toHaveLength(curriculum.PARADISE_QUESTIONS.length + 108 + curriculum.ZHONGWEN_QUESTIONS.length)
     expect(merged.slice(0,2)).toEqual(original)
     expect(curriculum.mergeAllTextbookQuestions(merged)).toEqual(merged)
     expect(original).toHaveLength(2)

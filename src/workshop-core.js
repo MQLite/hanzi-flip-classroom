@@ -1,3 +1,5 @@
+import { curriculumCourse, ZHONGWEN_ID } from './curriculum.js'
+
 const HAN_WORD = /^\p{Script=Han}+$/u
 const MIN_WORD_LENGTH = 2
 const MAX_WORD_LENGTH = 8
@@ -87,7 +89,14 @@ function buildReferencePool(session) {
   const seen = new Set()
 
   for (const question of Array.isArray(session?.questions) ? session.questions : []) {
-    for (const word of buildWordAnswers(question)) {
+    // Zhongwen has a separate, complete vocabulary list, including phrases
+    // whose characters were introduced in earlier lessons. Do not reduce it
+    // to the two illustrative words on each character card.
+    const words = question.textbook === ZHONGWEN_ID
+      ? (curriculumCourse(question)?.vocabulary ?? []).map(item => item.word.replace(/^《(.+)》$/u, '$1'))
+        .filter(word => HAN_WORD.test(word) && [...word].length >= MIN_WORD_LENGTH && [...word].length <= MAX_WORD_LENGTH)
+      : buildWordAnswers(question)
+    for (const word of words) {
       if (seen.has(word)) continue
       seen.add(word)
       references.push(word)

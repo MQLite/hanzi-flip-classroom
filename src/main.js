@@ -4,7 +4,8 @@ import {createTrainView} from './sentence-train.js';
 import {resolveTrainQuestion} from './sentence-train-data.js';
 import {createTrainSession,toggleTrainTile,undoTrainTile,clearTrainSelection,checkTrainAnswer,acceptTrainAnswer,revealTrainAnswer,markTrainPractice,nextTrainQuestion,previousTrainQuestion,startTrainPractice,finishTrainDeparture,getTrainScores} from './sentence-train-core.js';
 import { DEFAULT_QUESTIONS } from "./data.js";
-import { coursesForTextbook, TEXTBOOK_ID, PARADISE_ID, PARADISE_QUESTIONS, STAGES, TEXTBOOK_QUESTIONS, filterCurriculum, curriculumLabel, mergeAllTextbookQuestions as mergeTextbookQuestions } from './curriculum.js';
+import { coursesForTextbook, TEXTBOOK_ID, PARADISE_ID, PARADISE_QUESTIONS, STAGES, TEXTBOOK_QUESTIONS, ZHONGWEN_ID, ZHONGWEN_QUESTIONS, ZHONGWEN_BOOK_LABELS, stagesForTextbook, textbookForSource, filterCurriculum, curriculumLabel, mergeAllTextbookQuestions as mergeTextbookQuestions } from './curriculum.js';
+import { renderZhongwenVocabulary } from './zhongwen-vocabulary.js';
 import {
   createSession,
   getCurrentQuestion,
@@ -44,10 +45,12 @@ $('.practice-box').insertAdjacentHTML('beforebegin', '<div id="workshop-collecti
 $('#help-dialog').insertAdjacentHTML('beforeend', '<p>活字组词工坊：每盘随机选择 2–4 个参考词，默认 4 个，拆成一盘共享活字。按顺序点选 2–8 字，点击“融合印版”。匹配参考词时收走对应活字、记 1 星；其他词请老师判断。教师判对收集青绿色印版并归还活字，返回重试则归还活字且不记分。每个词只能得星一次。教师判断记给提交时的小组，切换模式保留待判词和进度；新一轮或刷新会清空。</p>');
 $('.practice-box').insertAdjacentHTML('beforebegin', '<div class="train-ledger-panel" hidden><h4>旅程记录</h4><div id="train-ledger" aria-live="polite"></div></div>');
 $('#help-dialog').insertAdjacentHTML('beforeend', '<p>句子小火车：点击词语车厢，从左到右排列句子。全部接齐后发车；未命中可调整或由老师判对。看过参考句后须由老师判对才计分。再练一次只加入明确标记的句子；跳过的句子不算错。三种游戏独立保存本页进度，刷新重置。题库中的“句子小火车设置”可用 / 分隔词语，内置涵盖汉语乐园 1A–3B 各课配编句。</p>');
-const allDefaults = [...DEFAULT_QUESTIONS, ...TEXTBOOK_QUESTIONS, ...PARADISE_QUESTIONS];
+const allDefaults = [...DEFAULT_QUESTIONS, ...TEXTBOOK_QUESTIONS, ...PARADISE_QUESTIONS, ...ZHONGWEN_QUESTIONS];
 $('.teacher-badge').textContent = '汉语乐园 · 1A–3B';
-$('.lesson-toolbar').insertAdjacentHTML('afterbegin', `<label class="curriculum-field">题库<select id="bank-source" aria-label="题库来源"><option value="paradise">汉语乐园（1A–3B）</option><option value="textbook">中文乐园（新版）</option><option value="personal">个人 / 通用题库</option></select></label><label class="curriculum-field textbook-field">阶段<select id="stage" aria-label="学习阶段">${STAGES.map(s=>`<option>${s}</option>`).join('')}</select></label><label class="curriculum-field textbook-field">范围<select id="scope" aria-label="练习范围"><option value="stage">整个阶段</option><option value="lesson">本课</option><option value="cumulative">截至本课累计</option></select></label><label class="curriculum-field textbook-field">课次<select id="lesson" aria-label="选择课次"></select></label>`);
+$('.lesson-toolbar').insertAdjacentHTML('afterbegin', `<label class="curriculum-field">题库<select id="bank-source" aria-label="题库来源"><option value="paradise">汉语乐园（1A–3B）</option><option value="textbook">中文乐园（新版）</option><option value="zhongwen">中文（小学）第一、二册</option><option value="personal">个人 / 通用题库</option></select></label><label class="curriculum-field textbook-field"><span id="stage-label">阶段</span><select id="stage" aria-label="学习阶段">${STAGES.map(s=>`<option>${s}</option>`).join('')}</select></label><label class="curriculum-field textbook-field">范围<select id="scope" aria-label="练习范围"><option value="stage">整个阶段</option><option value="lesson">本课</option><option value="cumulative">截至本课累计</option></select></label><label class="curriculum-field textbook-field">课次<select id="lesson" aria-label="选择课次"></select></label>`);
 $('.lesson-toolbar').insertAdjacentHTML('afterend', '<p id="curriculum-note" class="curriculum-note"></p><div id="textbook-notice" class="notice" hidden><span></span><button id="add-textbook">补充教材题库</button></div>');
+$('#textbook-notice').insertAdjacentHTML('afterend', '<details id="zhongwen-vocabulary" class="zhongwen-vocabulary" hidden><summary>教材生字与词语</summary><p class="muted">按教材栏目和原顺序列出。组词工坊使用完整词表中的2–8字词语与短语；单字在识字翻翻乐练习。</p><div id="zhongwen-vocabulary-content"></div></details>');
+$('#help-dialog').insertAdjacentHTML('beforeend', '<p>《中文》（小学，暨南大学华文学院第三版）第一、二册：按整册及原课次选择，收录每课全部生字、词语和“读一读”，展开“教材生字与词语”可核对原序及教材页码。识字卡的两个例词和简单例句是辅助教学内容；组词工坊使用独立保存的完整教材词表。旧题库可点击“补充教材题库”，只追加缺失题目，保留已有题目及个人修改。</p>');
 $('#help-dialog .help-steps li').textContent = '选择教材阶段和练习范围，或切换到个人 / 通用题库按年级练习。';
 $('#help-dialog').insertAdjacentHTML('beforeend', '<p>《汉语乐园》按原书1A–3B分册：A为第1–6课，B为第7–12课。题目覆盖核心词汇中的汉字及学写字栏目；参考词优先采用本课教材词，补充例词和例句为配编。与新版题库分开选择。</p><p>新版《中文乐园》课本1–3：A为第1–6课，B为第7–12课。A/B是游戏学习阶段，不是出版社分册。教材字表按官方教学大纲；组词、读音语境和例句由本项目配编，可由老师修改。</p>');
 let toastTimer;
@@ -84,12 +87,13 @@ let load = store.load(),
   extensionOpen = false,
   strokeCleanup = null;
 let cardStrokeKey = null, cardStrokeView = null, cardStrokeCleanup = null;
-let selection = {source: bank.questions.some(q=>q.textbook === PARADISE_ID) ? 'paradise' : bank.questions.some(q=>q.textbook === TEXTBOOK_ID) ? 'textbook' : 'personal', stage:'1A', scope:'stage', lesson:1};
+let selection = {source: bank.questions.some(q=>q.textbook === PARADISE_ID) ? 'paradise' : bank.questions.some(q=>q.textbook === TEXTBOOK_ID) ? 'textbook' : bank.questions.some(q=>q.textbook === ZHONGWEN_ID) ? 'zhongwen' : 'personal', stage:'1A', scope:'stage', lesson:1};
+if (selection.source === 'zhongwen') selection.stage = '1';
 let gameMode = 'flip', workshopState = null, workshopCount = 4, workshopRound = 0;
 $('.lesson-toolbar').insertAdjacentHTML('beforeend', '<label id="workshop-count-label" hidden>每盘词数<select id="workshop-count" aria-label="每盘词数"><option value="2">2 个词</option><option value="3">3 个词</option><option value="4" selected>4 个词</option></select></label>');
 function currentSession() {
   const questions = selection.source !== 'personal'
-    ? filterCurriculum(bank.questions, {...selection, textbook: selection.source === 'paradise' ? PARADISE_ID : TEXTBOOK_ID})
+    ? filterCurriculum(bank.questions, {...selection, textbook: textbookForSource(selection.source)})
     : bank.questions.filter(q=>!q.textbook);
   if(gameMode === 'train') return createTrainSession({questions: questions.filter(q=>selection.source!=='personal'||q.grade===grade).map(resolveTrainQuestion).filter(Boolean),teamNames});
   if(gameMode === 'workshop') {
@@ -103,13 +107,24 @@ function currentSession() {
 function refreshTextbookNotice() {
   const missing = mergeTextbookQuestions(bank.questions).length - bank.questions.length;
   $('#textbook-notice').hidden = !bankLoaded || missing === 0;
-  $('#textbook-notice span').textContent = `可补充 ${missing} 道教材题（含《汉语乐园》1A–3B），保留已有题目和修改。`;
+  $('#textbook-notice span').textContent = `可补充 ${missing} 道教材题（含《中文》第一、二册及《汉语乐园》1A–3B），保留已有题目和修改。`;
 }
 function syncSelection() {
   $('#bank-source').value = selection.source;
+  const textbook = textbookForSource(selection.source);
+  const zhongwen = selection.source === 'zhongwen';
+  $('#stage').replaceChildren(...stagesForTextbook(textbook).map(stage => {
+    const option = document.createElement('option');
+    option.value = stage;
+    option.textContent = zhongwen ? ZHONGWEN_BOOK_LABELS[stage] : stage;
+    return option;
+  }));
+  $('#stage-label').textContent = zhongwen ? '册数' : '阶段';
+  $('#stage').setAttribute('aria-label', zhongwen ? '选择册数' : '学习阶段');
+  $('#scope option[value="stage"]').textContent = zhongwen ? '全册' : '整个阶段';
   $('#stage').value = selection.stage;
   $('#scope').value = selection.scope;
-  $('#lesson').replaceChildren(...coursesForTextbook(selection.source === 'paradise' ? PARADISE_ID : TEXTBOOK_ID).filter(c=>c.stage===selection.stage).map(c=>{
+  $('#lesson').replaceChildren(...coursesForTextbook(textbook).filter(c=>c.stage===selection.stage).map(c=>{
     const option = document.createElement('option');
     option.value = c.lesson;
     option.textContent = `第${c.lesson}课 ${c.title}`;
@@ -120,10 +135,20 @@ function syncSelection() {
   $('.grade-label').hidden = selection.source !== 'personal';
   document.querySelectorAll('.textbook-field').forEach(e=>e.hidden=selection.source === 'personal');
   $('#curriculum-note').textContent = selection.source !== 'personal'
-    ? selection.source === 'paradise'
+    ? zhongwen
+      ? `《中文》（暨南大学华文学院 · 第三版）${ZHONGWEN_BOOK_LABELS[selection.stage]} · ${selection.scope === 'cumulative' ? `第一册第1课至${ZHONGWEN_BOOK_LABELS[selection.stage]}第${selection.lesson}课` : selection.scope === 'lesson' ? `第${selection.lesson}课` : '全册'} · 全部生字与教材词语 · 卡片例句为配编`
+      : selection.source === 'paradise'
       ? `《汉语乐园》${selection.stage} · 原书分册及课次 · ${selection.scope === 'cumulative' ? `1A第1课至${selection.stage}第${selection.lesson}课` : selection.scope === 'lesson' ? `第${selection.lesson}课` : '全册'} · 核心词汇识字与学写字 · 例句为配编`
       : `《中文乐园》课本1–3 · A/B为游戏分组（A：第1–6课，B：第7–12课） · ${selection.scope === 'cumulative' ? `课本1第1课至课本${selection.stage[0]}第${selection.lesson}课` : selection.scope === 'lesson' ? `${selection.stage} 第${selection.lesson}课` : `${selection.stage} 全阶段`} · 例词例句为配编`
     : '个人 / 通用题库 · 年级为难度建议';
+  $('.teacher-badge').textContent = zhongwen ? `中文 · ${ZHONGWEN_BOOK_LABELS[selection.stage]}` : selection.source === 'paradise' ? '汉语乐园 · 1A–3B' : selection.source === 'textbook' ? '中文乐园（新版）' : '教师课堂 · 个人题库';
+  $('#zhongwen-vocabulary').hidden = !zhongwen;
+  if (zhongwen) {
+    const keys = new Set(filterCurriculum(ZHONGWEN_QUESTIONS, {...selection, textbook: ZHONGWEN_ID}).map(q => `${q.book}/${q.lesson}`));
+    const courses = coursesForTextbook(ZHONGWEN_ID).filter(c => keys.has(`${c.book}/${c.lesson}`));
+    $('#zhongwen-vocabulary summary').textContent = `教材生字与词语 · ${courses.length}课`;
+    renderZhongwenVocabulary($('#zhongwen-vocabulary-content'), courses);
+  }
   refreshTextbookNotice();
 }
 let session = currentSession();
@@ -229,8 +254,13 @@ function renderWorkshop() {
   const selections=workshopTransition?.selections??workshopState.selections;
   const statusNodes=[];
   if(phase==='empty') {
-    statusNodes.push(el('h2','当前范围暂无有效参考词'),el('p','在题库中添加 2–8 字的参考词，再开始新一轮。'));
-    const edit=el('button','修改题库','primary');edit.onclick=()=>editor.open();statusNodes.push(edit);
+    if (selection.source === 'zhongwen' && session.questions.length) {
+      statusNodes.push(el('h2','本课是单字认读'),el('p','本课教材词项均为单字，请用识字翻翻乐认读，或选择其他课次练习组词。'));
+      const reading=el('button','去识字翻翻乐','primary');reading.onclick=()=>switchMode('flip');statusNodes.push(reading);
+    } else {
+      statusNodes.push(el('h2','当前范围暂无有效参考词'),el('p',selection.source === 'zhongwen' ? '请先点击上方“补充教材题库”，再开始新一轮。' : '在题库中添加 2–8 字的参考词，再开始新一轮。'));
+      const edit=el('button','修改题库','primary');edit.onclick=()=>editor.open();statusNodes.push(edit);
+    }
   } else if(phase==='complete') {
     statusNodes.push(el('h2','这一盘，全部完成！'),el('p',`本盘完成 ${references.length} 个参考词，累计收集 ${words.length} 个词，其中 ${teacherTotal} 个由教师认可。`));
     if(remaining.length) {
@@ -632,7 +662,11 @@ for (const [id, key] of [['bank-source','source'],['stage','stage'],['scope','sc
   $(`#${id}`).onchange = event => {
     if (!mayRestart()) { syncSelection(); return; }
     selection = {...selection, [key]:key === 'lesson' ? Number(event.target.value) : event.target.value};
-    if (key === 'stage') selection.lesson = selection.stage.endsWith('A') ? 1 : 7;
+    if (key === 'source') {
+      selection.stage = stagesForTextbook(textbookForSource(selection.source))[0];
+      selection.lesson = 1;
+    }
+    if (key === 'stage') selection.lesson = selection.source === 'zhongwen' || selection.stage.endsWith('A') ? 1 : 7;
     if (key === 'stage' || key === 'source') {
       showPinyin = (selection.source !== 'personal' ? Number(selection.stage[0]) : grade) <= 2;
       $('#pinyin').checked = showPinyin;
@@ -644,7 +678,7 @@ for (const [id, key] of [['bank-source','source'],['stage','stage'],['scope','sc
 $('#add-textbook').onclick = () => {
   if (!mayRestart()) return;
   editor.addTextbook(() => {
-    selection.source = 'paradise';
+    if (selection.source === 'personal') selection = {...selection, source: 'paradise', stage: '1A', lesson: 1};
     syncSelection();
     newRound();
   });

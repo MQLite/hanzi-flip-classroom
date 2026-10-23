@@ -1,8 +1,59 @@
-import { PARADISE_QUESTIONS } from '../src/curriculum.js';
-const DEFAULT_BANK_SIZE = 156 + PARADISE_QUESTIONS.length;
+import { PARADISE_QUESTIONS, ZHONGWEN_QUESTIONS } from '../src/curriculum.js';
+const DEFAULT_BANK_SIZE = 156 + PARADISE_QUESTIONS.length + ZHONGWEN_QUESTIONS.length;
 import { test, expect } from "@playwright/test";
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
+});
+
+test('Zhongwen complete-book selection exposes the full lesson vocabulary and supports workshop phrases', async ({ page }) => {
+  await page.getByLabel('题库来源').selectOption('zhongwen');
+  await page.getByLabel('选择册数').selectOption('2');
+  await page.getByLabel('练习范围').selectOption('lesson');
+  await expect(page.getByLabel('选择课次').locator('option')).toHaveCount(12);
+  await expect(page.locator('#curriculum-note')).toContainText('第二册');
+  await expect(page.locator('#progress')).toHaveText('01 / 07');
+  await page.screenshot({path:'docs/codex/zhongwen/desktop-classroom.png',fullPage:true});
+  await page.locator('#zhongwen-vocabulary summary').click();
+  await expect(page.locator('#zhongwen-vocabulary')).toContainText('教学生');
+  await expect(page.locator('#zhongwen-vocabulary')).toContainText('法语');
+  await expect(page.locator('#zhongwen-vocabulary')).toContainText('生字（7）：在教汉语写歌画');
+  await page.screenshot({path:'docs/codex/zhongwen/desktop-vocabulary.png',fullPage:true});
+  await page.setViewportSize({width:390,height:844});
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({path:'docs/codex/zhongwen/mobile-vocabulary.png',fullPage:true});
+  await page.setViewportSize({width:1440,height:900});
+  await page.getByRole('button', {name:'组词小工坊',exact:true}).click();
+  await expect(page.locator('#workshop')).toBeVisible();
+  await expect(page.locator('#workshop')).not.toContainText('没有可用');
+  await page.getByLabel('练习范围').selectOption('cumulative');
+  await expect(page.locator('#curriculum-note')).toContainText('第一册第1课至第二册第1课');
+  await page.getByRole('button', {name:'题库管理',exact:true}).click();
+  await page.getByLabel('筛选学习阶段').selectOption('zhongwen:2');
+  await expect(page.locator('.question-row')).toHaveCount(141);
+});
+
+test('Zhongwen single-character lesson guides the teacher back to reading instead of suggesting ineffective word edits', async ({ page }) => {
+  await page.getByLabel('题库来源').selectOption('zhongwen');
+  await page.getByLabel('练习范围').selectOption('lesson');
+  await page.getByRole('button', {name:'组词小工坊',exact:true}).click();
+  await expect(page.locator('#workshop')).toContainText('本课是单字认读');
+  await page.getByRole('button', {name:'去识字翻翻乐',exact:true}).click();
+  await expect(page.locator('.hanzi')).toBeVisible();
+  await expect(page.getByLabel('题库来源')).toHaveValue('zhongwen');
+});
+
+test('upgrading a legacy bank adds Zhongwen while preserving an edited old textbook and personal question', async ({ page }) => {
+  const old = {...PARADISE_QUESTIONS[0], sentence:'老师改过的旧教材例句。'};
+  const personal = {id:'teacher-zhongwen-test',grade:1,character:'木',pinyin:'mù',words:['木头','树木'],sentence:'这是老师的个人题。'};
+  await page.evaluate(({old, personal}) => localStorage.setItem('hanzi-flip.question-bank', JSON.stringify({schemaVersion:1,questions:[old,personal]})), {old,personal});
+  await page.reload();
+  await page.getByRole('button', {name:'补充教材题库',exact:true}).click();
+  await page.reload();
+  const questions = await page.evaluate(() => JSON.parse(localStorage.getItem('hanzi-flip.question-bank')).questions);
+  expect(questions.find(q => q.id === old.id)).toEqual(old);
+  expect(questions.find(q => q.id === personal.id)).toEqual(personal);
+  expect(questions.filter(q => q.textbook === 'zhongwen-primary-2023')).toHaveLength(285);
+  await expect(page.getByRole('button', {name:'补充教材题库',exact:true})).toBeHidden();
 });
 test("classroom reveal, one settlement, back navigation and review", async ({
   page,
@@ -226,7 +277,7 @@ test('upgrading an old bank appends textbooks without replacing teacher work and
   await expect(page.getByLabel('题库来源')).toHaveValue('paradise');
   await page.reload();
   const bank = await page.evaluate(()=>JSON.parse(localStorage.getItem('hanzi-flip.question-bank')));
-  expect(bank.questions).toHaveLength(109 + PARADISE_QUESTIONS.length);
+  expect(bank.questions).toHaveLength(109 + PARADISE_QUESTIONS.length + ZHONGWEN_QUESTIONS.length);
   expect(bank.questions.find(q=>q.id==='teacher-one').sentence).toBe('老师自己的例句。');
   await page.getByRole('button', {name:'题库管理',exact:true}).click();
   await page.getByLabel('筛选学习阶段').selectOption('1A');
@@ -449,6 +500,10 @@ test("a rejected second import invalidates the previous replacement preview", as
 test("late stroke data cannot append an earlier glyph to the current panel", async ({
   page,
 }) => {
+  // The card now has its own writer. Finish that request before delaying
+  // the separate extension writer whose cleanup this test exercises.
+  await page.locator("#reveal").click();
+  await expect(page.locator("#card-stroke-target svg")).toHaveCount(1);
   let releaseFirst, firstDone;
   const finished = new Promise((resolve) => (firstDone = resolve));
   let requestCount = 0;
@@ -460,7 +515,6 @@ test("late stroke data cannot append an earlier glyph to the current panel", asy
       firstDone();
     } else await route.fulfill({ response });
   });
-  await page.locator("#reveal").click();
   await page.locator("#extension-toggle").click();
   await expect.poll(() => requestCount).toBe(1);
   await page.locator("#next").click();
