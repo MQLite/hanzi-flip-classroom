@@ -1,6 +1,7 @@
 import { ZHONGWEN_CONTENT } from './zhongwen-content.js'
 
 export const ZHONGWEN_ID = 'zhongwen-primary-2023'
+export const ZHONGWEN_NAME = '中文（暨南大学版）'
 export const ZHONGWEN_BOOK_LABELS = { '1': '第一册', '2': '第二册' }
 export const ZHONGWEN_COURSES = ZHONGWEN_CONTENT.map(course => ({
   ...course,

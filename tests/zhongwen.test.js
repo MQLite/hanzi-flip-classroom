@@ -29,7 +29,7 @@ describe('Zhongwen primary textbooks', () => {
     const cumulative = selected(all, '2', 1, 'cumulative')
     expect(cumulative.some(q => q.book === 1 && q.lesson === 12)).toBe(true)
     expect(cumulative.every(q => q.textbook === textbook && (q.book === 1 || q.lesson === 1))).toBe(true)
-    expect(curriculum.curriculumLabel(first[0])).toBe('中文 · 第二册 · 第1课 在中文学校')
+    expect(curriculum.curriculumLabel(first[0])).toBe('中文（暨南大学版） · 第二册 · 第1课 在中文学校')
   })
 
   it('appends missing books without overwriting personal questions or edited textbook questions', () => {

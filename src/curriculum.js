@@ -1,8 +1,8 @@
 import { CHARACTER_EXAMPLES } from './curriculum-examples.js'
 import { PARADISE_ID, PARADISE_COURSES, PARADISE_QUESTIONS } from './paradise.js'
-import { ZHONGWEN_ID, ZHONGWEN_COURSES, ZHONGWEN_QUESTIONS, ZHONGWEN_BOOK_LABELS } from './zhongwen.js'
+import { ZHONGWEN_ID, ZHONGWEN_NAME, ZHONGWEN_COURSES, ZHONGWEN_QUESTIONS, ZHONGWEN_BOOK_LABELS } from './zhongwen.js'
 export { PARADISE_ID, PARADISE_COURSES, PARADISE_QUESTIONS }
-export { ZHONGWEN_ID, ZHONGWEN_COURSES, ZHONGWEN_QUESTIONS, ZHONGWEN_BOOK_LABELS }
+export { ZHONGWEN_ID, ZHONGWEN_NAME, ZHONGWEN_COURSES, ZHONGWEN_QUESTIONS, ZHONGWEN_BOOK_LABELS }
 
 // Chinese Characters columns, publisher's public syllabi. See docs/curriculum-sources.md.
 export const TEXTBOOK_ID = 'chinese-paradise-2023'
@@ -55,7 +55,7 @@ export function coursesForTextbook(textbook) {
 
 export function curriculumLabel(question) {
   const course = curriculumCourse(question)
-  if (course && question.textbook === ZHONGWEN_ID) return `中文 · ${ZHONGWEN_BOOK_LABELS[course.stage]} · 第${course.lesson}课 ${course.title}`
+  if (course && question.textbook === ZHONGWEN_ID) return `${ZHONGWEN_NAME} · ${ZHONGWEN_BOOK_LABELS[course.stage]} · 第${course.lesson}课 ${course.title}`
   const name = question?.textbook === PARADISE_ID ? '汉语乐园' : '中文乐园（新版）'
   return course ? `${name} · ${course.stage} · 第${course.lesson}课 ${course.title}` : '个人 / 通用题库'
 }
