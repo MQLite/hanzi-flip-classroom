@@ -486,9 +486,12 @@ test("short projector learning text remains large after reveal", async ({
   await page.getByRole("button", { name: "翻牌揭晓", exact: true }).click();
   expect(
     await page
-      .locator(".sentence")
+      .locator("#card-face .pinyin")
       .evaluate((e) => parseFloat(getComputedStyle(e).fontSize)),
   ).toBeGreaterThanOrEqual(18);
+  await expect(page.locator('#card-face .sentence')).toHaveCount(0);
+  await expect(page.locator('#card-face .hanzi')).toBeVisible();
+  await expect(page.locator('#card-face .words span')).toHaveCount(2);
   expect(
     await page
       .locator(".words span")
