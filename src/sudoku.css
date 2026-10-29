@@ -9,3 +9,45 @@
 @media(max-height:800px) and (min-width:1000px){.sudoku-mode .stage-top{display:none}.sudoku-mode main{padding-top:3px;padding-bottom:3px}.sudoku-mode .play-area{padding-top:6px;padding-bottom:6px}.sudoku-mode #sudoku{display:grid;grid-template-columns:1fr 1fr;gap:5px 12px}.sudoku-mode .sudoku-intro,.sudoku-mode .sudoku-layout,.sudoku-mode .sudoku-preparation{grid-column:1/-1;width:100%}.sudoku-mode .sudoku-intro{margin:0}.sudoku-mode .sudoku-actions{margin:0;justify-content:flex-end}.sudoku-mode .sudoku-feedback{margin:0;text-align:left;align-self:center}.sudoku-mode .sudoku-cell strong[data-length="5"],.sudoku-mode .sudoku-cell strong[data-length="6"],.sudoku-mode .sudoku-cell strong[data-length="7"],.sudoku-mode .sudoku-cell strong[data-length="8"]{font-size:11px}}
 .sudoku-cell .sudoku-pinyin{font-size:11px;line-height:1.15}
 .sudoku-cell[data-form="picture"] .sudoku-word{height:100%}
+
+/* Leave breathing room around clues, including the smaller projector cells. */
+#sudoku .sudoku-cell { padding: 4px; }
+#sudoku .sudoku-cell[data-form="picture"] { padding: 2px; }
+#sudoku .sudoku-cell strong {
+  min-width: 0;
+  max-width: 100%;
+  font-size: calc(var(--sudoku-cell) * .42);
+  line-height: 1.2;
+  text-align: center;
+}
+#sudoku .sudoku-cell strong[data-length="2"] {
+  font-size: calc(var(--sudoku-cell) * .32);
+  white-space: nowrap;
+}
+#sudoku .sudoku-cell strong[data-length="3"],
+#sudoku .sudoku-cell strong[data-length="4"] {
+  max-width: 2em;
+  font-size: calc(var(--sudoku-cell) * .26);
+}
+#sudoku .sudoku-cell strong[data-length="5"],
+#sudoku .sudoku-cell strong[data-length="6"],
+#sudoku .sudoku-cell strong[data-length="7"],
+#sudoku .sudoku-cell strong[data-length="8"] {
+  font-size: calc(var(--sudoku-cell) * .21);
+  line-height: 1.15;
+}
+#sudoku .sudoku-cell strong[data-length="9"],
+#sudoku .sudoku-cell strong[data-length="10"],
+#sudoku .sudoku-cell strong[data-length="11"],
+#sudoku .sudoku-cell strong[data-length="12"] {
+  font-size: calc(var(--sudoku-cell) * .16);
+  line-height: 1.15;
+}
+#sudoku .sudoku-cell .sudoku-pinyin {
+  max-width: 100%;
+  font-size: calc(var(--sudoku-cell) * .2);
+  line-height: 1.25;
+}
+@media (max-height: 800px) and (min-width: 1000px) {
+  .sudoku-mode #sudoku { --sudoku-cell: 44px; }
+}
