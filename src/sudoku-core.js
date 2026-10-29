@@ -39,7 +39,8 @@ export function createSudokuState({words,teamNames=['向日葵组','小树苗组
   const puzzle=createSudokuPuzzle({random,blankCount}),presentations=Array(81).fill('word')
   for(let word=0;word<9;word++) {
     const item=snapshot[word],forms=['word']
-    if(snapshot.filter(other=>pinyinKey(other.pinyin)===pinyinKey(item.pinyin)).length===1)forms.push('pinyin')
+    // Long phrase pinyin stays on the complete card; it cannot fit a small clue.
+    if(item.word.length<=4&&item.pinyin.length<=14&&snapshot.filter(other=>pinyinKey(other.pinyin)===pinyinKey(item.pinyin)).length===1)forms.push('pinyin')
     if(item.picture&&snapshot.filter(other=>other.picture?.key===item.picture.key).length===1)forms.push('picture')
     const cells=shuffle(puzzle.givens.flatMap((value,cell)=>value===word?[cell]:[]),random)
     cells.forEach((cell,index)=>{presentations[cell]=forms[index<forms.length?index:Math.floor(sample(random)*forms.length)]})

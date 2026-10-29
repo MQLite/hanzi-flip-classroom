@@ -27,6 +27,10 @@ import './workshop.css';
 import { createWorkshopState, continueWorkshopBatch, remainingWorkshopWords, toggleWorkshopTile, undoWorkshopTile, clearWorkshopSelection, submitWorkshopWord, resolveWorkshopWord, collectedWords, getWorkshopScores } from './workshop-core.js';
 import { createWorkshopView } from './workshop.js';
 import { createWorkshopScene } from './workshop-scene.js';
+import './sudoku.css';
+import {createSudokuView} from './sudoku.js';
+import {getSudokuCandidates} from './sudoku-vocabulary.js';
+import {createSudokuState,collectSudokuWord,placeSudokuWord,clearSudokuCell,undoSudoku,getSudokuProgress} from './sudoku-core.js';
 
 const app = document.querySelector("#app");
 app.innerHTML = `<header class="site-header"><a class="brand" href="./" aria-label="汉字奇遇岛首页"><span class="brand-mark">字<span></span></span><div><h1>汉字奇遇岛</h1><p>每一个汉字，都是一次小小的发现。</p></div></a><nav aria-label="教师工具"><span class="teacher-badge">教师课堂 · 1–4 年级</span><button id="open-bank">题库管理</button><button id="open-help">使用帮助</button><button id="fullscreen" class="icon-button" aria-label="全屏显示">⛶</button></nav></header>
@@ -41,8 +45,8 @@ app.innerHTML = `<header class="site-header"><a class="brand" href="./" aria-lab
 <dialog id="settings-dialog" aria-labelledby="settings-title"><div class="dialog-heading"><div><span class="eyebrow">OUR LITTLE TEAMS</span><h2 id="settings-title">为小组起个名字</h2></div><button class="close-dialog icon-button" aria-label="关闭小组设置">×</button></div><p>应用设置会开始新一轮，清空本轮得分。</p><label>小组数量<select id="team-count"><option value="2">2 个小组</option><option value="3">3 个小组</option><option value="4">4 个小组</option></select></label><div id="team-fields"></div><button id="apply-teams" class="primary">应用并开始新一轮</button></dialog>
 <dialog id="help-dialog" aria-labelledby="help-title"><div class="dialog-heading"><h2 id="help-title">欢迎来到汉字奇遇岛</h2><button class="close-dialog icon-button" aria-label="关闭帮助">×</button></div><ol class="help-steps"><li>选择年级，认读屏幕上的汉字。</li><li>翻牌揭晓汉字、拼音和词语；句子练习请使用“句子小火车”。</li><li>选中小组，再点“答对了”，就会沿踏石走到下一座小岛，自动换字；想巩固的字点“再练一次”。每字只结算一次。</li><li>一轮结束后，带着需要巩固的字再出发。</li></ol><p>跳过的字记为未作答；回看不会重复加分。多音字以本题拼音为参考，老师可结合词语判断其他读音。</p><p>题库自动保存在此设备的此浏览器中，请定期导出备份。课堂得分、小组和进度不会在刷新后恢复。</p><p>年级是难度建议，不对应特定教材。打开面板或输入文字时，课堂快捷键会暂停。</p><p>立体显示不流畅时，可随时切换“简化显示”，本轮进度保留。</p></dialog>`;
 const $ = (s) => document.querySelector(s);
-$('.lesson-heading').insertAdjacentHTML('beforeend', '<nav class="game-modes" aria-label="游戏模式"><button id="mode-flip" aria-pressed="true">识字翻翻乐</button><button id="mode-workshop" aria-pressed="false">组词小工坊</button><button id="mode-train" aria-pressed="false">句子小火车</button></nav>');
-$('#scene').insertAdjacentHTML('afterend', '<div id="workshop" hidden></div><div id="sentence-train" hidden></div>');
+$('.lesson-heading').insertAdjacentHTML('beforeend', '<nav class="game-modes" aria-label="游戏模式"><button id="mode-flip" aria-pressed="true">识字翻翻乐</button><button id="mode-workshop" aria-pressed="false">组词小工坊</button><button id="mode-train" aria-pressed="false">句子小火车</button><button id="mode-sudoku" aria-pressed="false">汉字数独</button></nav>');
+$('#scene').insertAdjacentHTML('afterend', '<div id="workshop" hidden></div><div id="sentence-train" hidden></div><div id="sudoku" hidden></div>');
 $('.practice-box').insertAdjacentHTML('beforebegin', '<div id="workshop-collection-panel" hidden><h4>收集到的词语 <span>✦</span></h4><div id="workshop-collection" aria-live="polite"></div></div>');
 $('#help-dialog').insertAdjacentHTML('beforeend', '<p>活字组词工坊：每盘随机选择 2–4 个参考词，默认 4 个，拆成一盘共享活字。按顺序点选 2–8 字，点击“融合印版”。匹配参考词时收走对应活字、记 1 星；其他词请老师判断。教师判对收集青绿色印版并归还活字，返回重试则归还活字且不记分。每个词只能得星一次。教师判断记给提交时的小组，切换模式保留待判词和进度；新一轮或刷新会清空。</p>');
 $('.practice-box').insertAdjacentHTML('beforebegin', '<div class="train-ledger-panel" hidden><h4>旅程记录</h4><div id="train-ledger" aria-live="polite"></div></div>');
@@ -94,8 +98,18 @@ let cardStrokeKey = null, cardStrokeView = null, cardStrokeCleanup = null;
 let selection = {source: bank.questions.some(q=>q.textbook === PARADISE_ID) ? 'paradise' : bank.questions.some(q=>q.textbook === TEXTBOOK_ID) ? 'textbook' : bank.questions.some(q=>q.textbook === ZHONGWEN_ID) ? 'zhongwen' : 'personal', stage:'1A', scope:'stage', lesson:1};
 if (selection.source === 'zhongwen') selection.stage = '1';
 let gameMode = 'flip', workshopState = null, workshopCount = 4, workshopRound = 0;
+let sudokuState=null,sudokuPool=null,sudokuSelectedIds=[];
+$('#help-dialog').insertAdjacentHTML('beforeend','<p>汉字数独：选本课9个不同词，先从9×9棋盘拖出任一种形式，或点棋盘再点右侧整理，系统补全汉字、拼音及合适配图。集齐9词后，从右侧拖入空格，或先点词卡再点空格。每行、每列、每个3×3宫各有9词，简单关每处留1–2空。原有线索始终保留，词卡可重复使用。每格只得1星，撤回和重填不重复得分。方向键移动棋盘焦点，回车选择，Delete清空选中格。四个游戏独立保留本页进度，刷新重置。</p>');
+function prepareSudoku(){
+  sudokuView.cancelDrag();
+  if(selection.source!=='personal')selection.scope='lesson';
+  sudokuPool=getSudokuCandidates({...selection,grade},bank.questions);
+  sudokuSelectedIds=sudokuPool.words.slice(0,9).map(word=>word.id);
+  sudokuState=null;
+}
 $('.lesson-toolbar').insertAdjacentHTML('beforeend', '<label id="workshop-count-label" hidden>每盘词数<select id="workshop-count" aria-label="每盘词数"><option value="2">2 个词</option><option value="3">3 个词</option><option value="4" selected>4 个词</option></select></label>');
 function currentSession() {
+  if(gameMode==='sudoku')return createSession({questions:[],teamNames});
   const questions = selection.source !== 'personal'
     ? filterCurriculum(bank.questions, {...selection, textbook: textbookForSource(selection.source)})
     : bank.questions.filter(q=>!q.textbook);
@@ -142,6 +156,7 @@ function syncSelection() {
   $('#lesson').disabled = selection.scope === 'stage';
   $('.grade-label').hidden = selection.source !== 'personal';
   document.querySelectorAll('.textbook-field').forEach(e=>e.hidden=selection.source === 'personal');
+  if(gameMode==='sudoku')$('#scope').closest('label').hidden=true;
   $('#curriculum-note').textContent = selection.source !== 'personal'
     ? zhongwen
       ? `《中文》（暨南大学华文学院 · 第三版）${ZHONGWEN_BOOK_LABELS[selection.stage]} · ${selection.scope === 'cumulative' ? `第一册第1课至${ZHONGWEN_BOOK_LABELS[selection.stage]}第${selection.lesson}课` : selection.scope === 'lesson' ? `第${selection.lesson}课` : '全册'} · ${gameMode === 'train' ? '课文与阅读重点句' : '全部生字与教材词语'}`
@@ -161,7 +176,7 @@ function syncSelection() {
     $('#curriculum-note').append(viewWords);
   }
   $('.teacher-badge').textContent = zhongwen ? `${ZHONGWEN_NAME} · ${ZHONGWEN_BOOK_LABELS[selection.stage]}` : selection.source === 'paradise' ? '汉语乐园 · 1A–3B' : selection.source === 'textbook' ? '中文乐园（新版）' : '教师课堂 · 个人题库';
-  $('#zhongwen-vocabulary').hidden = !zhongwen || gameMode === 'train';
+  $('#zhongwen-vocabulary').hidden = !zhongwen || gameMode === 'train' || gameMode === 'sudoku';
   if (zhongwen) {
     const keys = new Set(filterCurriculum(ZHONGWEN_QUESTIONS, {...selection, textbook: ZHONGWEN_ID}).map(q => `${q.book}/${q.lesson}`));
     const courses = coursesForTextbook(ZHONGWEN_ID).filter(c => keys.has(`${c.book}/${c.lesson}`));
@@ -210,8 +225,34 @@ const workshopView = createWorkshopView($('#workshop'), tileId => {
 $('#desk-ledger-slot').append($('#workshop-collection-panel'));
 let workshopScene;
 const trainView = createTrainView($('#sentence-train'), trainIntent, message=>{notify(message);if(gameMode==='train')syncSimpleControl()});
-function activeScene() { return gameMode === 'train' ? trainView.scene : gameMode === 'workshop' ? workshopScene : scene; }
+const sudokuView=createSudokuView($('#sudoku'),sudokuIntent);
+function sudokuIntent(intent,value){
+  if(gameMode!=='sudoku')return;
+  if(intent==='choose-word'){
+    if(sudokuSelectedIds.includes(value))sudokuSelectedIds=sudokuSelectedIds.filter(id=>id!==value);
+    else if(sudokuSelectedIds.length<9)sudokuSelectedIds=[...sudokuSelectedIds,value];
+    else {notify('已选9词，请先取消一个再替换。');return;}
+  }else if(intent==='start'){
+    if(sudokuSelectedIds.length!==9)return;
+    sudokuState=createSudokuState({words:sudokuSelectedIds.map(id=>sudokuPool.words.find(word=>word.id===id)),teamNames});
+  }else if(intent==='lesson'){
+    if(!mayRestart())return;
+    selection={...selection,lesson:value,scope:'lesson'};prepareSudoku();syncSelection();
+  }else if(intent==='prepare'){
+    if(!mayRestart())return;
+    sudokuView.cancelDrag();sudokuState=null;
+  }else if(sudokuState){
+    if(intent==='collect')sudokuState=collectSudokuWord(sudokuState,value);
+    else if(intent==='place')sudokuState=placeSudokuWord(sudokuState,{...value,teamId:selectedTeam});
+    else if(intent==='clear')sudokuState=clearSudokuCell(sudokuState,value);
+    else if(intent==='undo')sudokuState=undoSudoku(sudokuState);
+  }
+  render();
+}
+function activeScene() { return gameMode==='sudoku'?null:gameMode === 'train' ? trainView.scene : gameMode === 'workshop' ? workshopScene : scene; }
 function syncSimpleControl() {
+  $('#simplify').hidden=gameMode==='sudoku';
+  if(gameMode==='sudoku')return;
   const simple = $(gameMode === 'train' ? '#train-scene' : gameMode === 'workshop' ? '#workshop-scene' : '#scene').dataset.mode === 'simple';
   $('#simplify').textContent = simple ? '立体显示' : '简化显示';
   $('#simplify').setAttribute('aria-pressed', String(simple));
@@ -221,15 +262,20 @@ function switchMode(mode) {
   if (gameMode === 'train' && session.departure) finishDeparture(session.departure);
   if (gameMode === 'flip' && flipTransition) finishFlipTransition(flipTransition);
   if(gameMode === 'workshop' && workshopTransition) finishWorkshopTransition(workshopTransition);
-  modeSnapshots[gameMode] = { session, grade, teamNames: [...teamNames], selectedTeam, showPinyin, selection: {...selection}, extensionOpen, workshopState };
+  sudokuView.cancelDrag();
+  modeSnapshots[gameMode] = { session, grade, teamNames: [...teamNames], selectedTeam, showPinyin, selection: {...selection}, extensionOpen, workshopState, sudokuState,sudokuPool,sudokuSelectedIds:[...sudokuSelectedIds] };
   activeScene()?.setActive(false);
   const saved = modeSnapshots[mode];
   gameMode = mode;
-  if (saved) ({ session, grade, teamNames, selectedTeam, showPinyin, selection, extensionOpen, workshopState } = saved);
+  if (saved) ({ session, grade, teamNames, selectedTeam, showPinyin, selection, extensionOpen, workshopState,sudokuState,sudokuPool,sudokuSelectedIds } = saved);
   else { session = currentSession(); selectedTeam = 'team-1'; extensionOpen = false; workshopState = mode === 'workshop' ? createWorkshopState(session,{wordCount:workshopCount}) : null; if(mode==='workshop')workshopRound++; }
+  if(mode==='sudoku'&&!saved)prepareSudoku();
   gameMode = mode;
   document.body.classList.toggle('workshop-mode', mode === 'workshop');
   document.body.classList.toggle('train-mode',mode === 'train');
+  document.body.classList.toggle('sudoku-mode',mode === 'sudoku');
+  $('#sudoku').hidden=mode!=='sudoku';
+  $('#mode-sudoku').setAttribute('aria-pressed',String(mode==='sudoku'));
   $('#sentence-train').hidden=mode!=='train';
   $('.train-ledger-panel').hidden=mode!=='train';
   $('#mode-train').setAttribute('aria-pressed',String(mode==='train'));
@@ -240,11 +286,11 @@ function switchMode(mode) {
   $('#workshop').hidden = mode !== 'workshop';
   $('#workshop-collection-panel').hidden = mode !== 'workshop';
   $('#workshop-count-label').hidden = mode !== 'workshop';
-  $('.game-controls').hidden = mode === 'workshop';
+  $('.game-controls').hidden = mode === 'workshop' || mode === 'sudoku';
   $('#mode-flip').setAttribute('aria-pressed',String(mode === 'flip'));
   $('#mode-workshop').setAttribute('aria-pressed',String(mode === 'workshop'));
-  $('.lesson-heading h2').textContent = mode === 'train' ? '句子小火车' : mode === 'workshop' ? '组词小工坊' : '识字翻翻乐';
-  $('.lesson-heading > p').textContent = mode === 'train' ? '接车厢 · 排句子 · 快乐出发' : mode === 'workshop' ? '挑活字 · 排词语 · 融合木质印版' : '看一看 · 读一读 · 说一说';
+  $('.lesson-heading h2').textContent = mode==='sudoku'?'汉字数独':mode === 'train' ? '句子小火车' : mode === 'workshop' ? '组词小工坊' : '识字翻翻乐';
+  $('.lesson-heading > p').textContent = mode==='sudoku'?'认词整理 · 九宫格填空':mode === 'train' ? '接车厢 · 排句子 · 快乐出发' : mode === 'workshop' ? '挑活字 · 排词语 · 融合木质印版' : '看一看 · 读一读 · 说一说';
   $('#reveal').textContent = mode === 'workshop' ? '揭晓参考词' : '翻牌揭晓';
   $('#reveal').setAttribute('aria-label',mode === 'workshop' ? '揭晓参考词' : '翻牌揭晓');
   const shortcutLabel = $('footer > span');
@@ -260,6 +306,7 @@ function switchMode(mode) {
 $('#mode-flip').onclick = () => switchMode('flip');
 $('#mode-workshop').onclick = () => switchMode('workshop');
 $('#mode-train').onclick = () => switchMode('train');
+$('#mode-sudoku').onclick = () => switchMode('sudoku');
 
 function renderWorkshop() {
   if (gameMode !== 'workshop') return;
@@ -395,6 +442,7 @@ function storageAlert(result) {
 if (!load.ok) storageAlert(load);
 function progressed() {
   return (
+    (gameMode==='sudoku'&&Boolean(sudokuState?.collected.length)) ||
     (gameMode === 'train' && (session.selections.some(a=>a.length)||session.judgments.some(Boolean))) ||
     (gameMode === 'workshop' && (workshopState?.draft.length || workshopState?.records.length || workshopState?.pending)) ||
     session.currentIndex > 0 ||
@@ -410,6 +458,7 @@ function newRound() {
   flipTransition = null; scene.cancelJourney();
   workshopTransition = null; workshopFeedback = ''; workshopScene?.cancelAnimation();
   session = currentSession();
+  if(gameMode==='sudoku'){prepareSudoku();syncSelection();}
   if (gameMode === 'workshop') { workshopState = createWorkshopState(session,{wordCount:workshopCount}); workshopRound++; }
   selectedTeam = "team-1";
   extensionOpen = false;
@@ -442,7 +491,7 @@ function render() {
       el("i", "", i <= session.currentIndex ? "filled" : ""),
     ),
   );
-  const scores = gameMode==='train'?getTrainScores(session):gameMode==='workshop'?getWorkshopScores(session,workshopState):getScores(session);
+  const scores = gameMode==='sudoku'?(sudokuState?.scores??{}):gameMode==='train'?getTrainScores(session):gameMode==='workshop'?getWorkshopScores(session,workshopState):getScores(session);
   $("#teams").replaceChildren(
     ...session.teams.map((team, i) => {
       const b = el(
@@ -464,6 +513,17 @@ function render() {
     }),
   );
   $('#pinyin').closest('label').hidden = gameMode !== 'train';
+  if(gameMode==='sudoku'){
+    strokeCleanup?.();strokeCleanup=null;
+    cardStrokeCleanup?.();cardStrokeCleanup=null;cardStrokeKey=null;cardStrokeView=null;
+    $('#card-face').replaceChildren();
+    for(const id of ['#extension-toggle','#extension-hint','#extension'])$(id).hidden=true;
+    $('#mode-label').textContent=sudokuPool.label;
+    $('#progress').textContent=sudokuState?`${getSudokuProgress(sudokuState).filled} / ${getSudokuProgress(sudokuState).totalBlanks}`:'准备';
+    $('#round-caption').textContent='简单关 · 9词 · 9×9';
+    sudokuView.update({state:sudokuState,candidates:sudokuPool.words,selectedIds:sudokuSelectedIds,label:sudokuPool.label,note:sudokuPool.note,availableLessons:sudokuPool.availableLessons});
+    return;
+  }
   if(gameMode==='workshop') {
     strokeCleanup?.();strokeCleanup=null;
     cardStrokeCleanup?.();cardStrokeCleanup=null;cardStrokeKey=null;cardStrokeView=null;
@@ -776,6 +836,7 @@ $("#apply-teams").onclick = () => {
   newRound();
 };
 document.addEventListener("keydown", (event) => {
+  if(gameMode==='sudoku')return;
   if (
     event.repeat || event.isComposing || event.keyCode === 229 ||
     document.querySelector("dialog[open]") ||

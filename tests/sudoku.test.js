@@ -117,6 +117,13 @@ describe('vocabulary collection and Sudoku filling',()=>{
     expect(state.scores).toEqual({'team-1':0,'team-2':0})
   })
 
+  it('uses readable word or picture clues for long phrases instead of clipping isolated pinyin',()=>{
+    const input=words();input[0]={id:'long',word:'玩儿电子游戏',pinyin:'wánr diànzǐ yóuxì',picture:{key:'game',glyph:'🎮'}};
+    const state=fresh({words:input});
+    expect(state.presentations.filter((_,cell)=>state.givens[cell]===0)).not.toContain('pinyin');
+    expect(state.words[0].pinyin).toBe(input[0].pinyin);
+  })
+
   it('rejects early filling, unknown words, invalid teams, indices and original-clue edits',()=>{
     const initial=fresh(),cell=initial.givens.indexOf(null)
     expect(placeSudokuWord(initial,{cell,wordId:initial.words[initial.solution[cell]].id,teamId:'team-1'}).values).toEqual(initial.values)
