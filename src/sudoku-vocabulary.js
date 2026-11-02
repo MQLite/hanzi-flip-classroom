@@ -9,14 +9,17 @@ const validWord=word=>/^\p{Script=Han}{1,12}$/u.test(word)
 function lessonWords(course,textbook) {
   const key=`${textbook}/${course.book}/${course.lesson}`,extra=reviewed.get(key)
   const reading=course.vocabulary.filter(item=>item.section?.includes('读一读'))
-  const entries=[...reading,...(extra?.readingVocabulary??[]),...course.vocabulary]
+  const classroom=(extra?.classroomVocabulary??[]).map(item=>({...item,classroom:true}))
+  const entries=[...reading,...(extra?.readingVocabulary??[]),...course.vocabulary,...classroom]
   const unique=new Map()
   for(const item of entries) {
     const word=clean(item.word),pinyin=typeof item.pinyin==='string'?item.pinyin.normalize('NFC').trim():''
     if(!validWord(word)||!pinyin||unique.has(word))continue
-    unique.set(word,{id:`${key}/${word}`,word,pinyin,picture:pictureForWord(word),
-      source:{textbook,book:course.book,lesson:course.lesson,section:item.section??'核心词语',pdfPage:item.pdfPage,
-        printedPage:item.printedPage??item.pdfPage-(textbook===PARADISE_ID?3:15)}})
+    const source=item.classroom
+      ?{textbook,book:course.book,lesson:course.lesson,section:'课堂补充',note:item.sourceNote}
+      :{textbook,book:course.book,lesson:course.lesson,section:item.section??'核心词语',pdfPage:item.pdfPage,
+        printedPage:item.printedPage??item.pdfPage-(textbook===PARADISE_ID?3:15)}
+    unique.set(word,{id:`${key}/${word}`,word,pinyin,picture:pictureForWord(word),source})
   }
   const preferred=(extra?.preferredWords??[]).map(clean)
   return [...preferred.flatMap(word=>unique.has(word)?[unique.get(word)]:[]),...[...unique.values()].filter(item=>!preferred.includes(item.word))]

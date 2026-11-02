@@ -39,6 +39,26 @@ test('preparation reports real shortages and selects nine words from the same le
   await page.locator('#sudoku-start').click();
   await expect(page.locator('[data-sudoku-cell]:not([data-word-id])')).toHaveCount(12);
 });
+
+test('Paradise 2A lesson 1 starts a round with all nine countries, including classroom additions',async({page})=>{
+  const countries=['中国','美国','澳大利亚','加拿大','英国','法国','新西兰','汤加','哥伦比亚'];
+  await page.getByLabel('题库来源').selectOption('paradise');
+  await page.getByLabel('学习阶段',{exact:true}).selectOption('2A');
+  await page.locator('#mode-sudoku').click();
+  const selected=page.locator('[data-sudoku-choice][aria-pressed="true"]');
+  await expect(selected).toHaveCount(9);
+  expect(await selected.evaluateAll(nodes=>nodes.map(n=>n.dataset.sudokuChoice.split('/').at(-1)))).toEqual(countries);
+  await expect(page.locator('#sudoku-start')).toBeEnabled();
+  await page.locator('#sudoku-start').click();
+  await expect(page.locator('[data-sudoku-cell]')).toHaveCount(81);
+  const clueWords=await page.locator('[data-sudoku-cell][data-word-id]').evaluateAll(nodes=>[...new Set(nodes.map(n=>n.dataset.wordId.split('/').at(-1)))]);
+  expect(clueWords.sort()).toEqual([...countries].sort());
+  await collectAll(page);
+  for(const word of countries)await expect(page.locator('#sudoku-bank')).toContainText(word);
+  await expect(page.locator('#sudoku-bank')).toContainText('Xīnxīlán');
+  await expect(page.locator('#sudoku-bank')).toContainText('Tāngjiā');
+  await expect(page.locator('#sudoku-bank')).toContainText('Gēlúnbǐyà');
+});
 test('clues copy into complete reusable cards; filling, undo and clear never award a second point',async({page})=>{
   await startNumbers(page);
   const {values,solution}=await solutionFromClues(page);

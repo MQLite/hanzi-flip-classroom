@@ -6,6 +6,25 @@ import {PARADISE_COURSES,ZHONGWEN_COURSES,ZHONGWEN_ID,PARADISE_ID} from '../src/
 import {DEFAULT_QUESTIONS} from '../src/data.js'
 
 describe('same-lesson Sudoku vocabulary',()=>{
+  it('defaults Paradise 2A lesson 1 to the nine classroom countries without losing its reading choices',()=>{
+    const before=JSON.stringify(PARADISE_COURSES)
+    const result=getSudokuCandidates({source:'paradise',stage:'2A',lesson:1},[])
+    expect(result.words.slice(0,9).map(word=>word.word)).toEqual(['中国','美国','澳大利亚','加拿大','英国','法国','新西兰','汤加','哥伦比亚'])
+    expect(result.words.map(word=>word.word)).toContain('地图')
+    expect(result.words.map(word=>word.word)).toContain('眼前')
+    expect(JSON.stringify(PARADISE_COURSES)).toBe(before)
+    for(const [word,pinyin] of [['新西兰','Xīnxīlán'],['汤加','Tāngjiā'],['哥伦比亚','Gēlúnbǐyà']]) {
+      const item=result.words.find(item=>item.word===word)
+      expect(item?.pinyin).toBe(pinyin)
+      expect(item.source).toMatchObject({textbook:PARADISE_ID,book:2,lesson:1,section:'课堂补充'})
+      expect(item.source.pdfPage).toBeUndefined()
+      expect(item.source.printedPage).toBeUndefined()
+      expect(item.source.note).toContain('课堂')
+    }
+    const nextLesson=getSudokuCandidates({source:'paradise',stage:'2A',lesson:2},[])
+    expect(nextLesson.words.some(item=>['新西兰','汤加','哥伦比亚'].includes(item.word))).toBe(false)
+  })
+
   it('prefers the reviewed daily-use choices, including whole reading phrases and single-character words',()=>{
     const result=getSudokuCandidates({source:'zhongwen',stage:'2',lesson:9},[])
     expect(result.words.slice(0,9).map(word=>word.word)).toEqual(['医院','医生','着急','生病','吃药','听见','说话','放学','睡觉'])
@@ -32,7 +51,7 @@ describe('same-lesson Sudoku vocabulary',()=>{
     expect(JSON.stringify(PARADISE_COURSES)).toBe(before)
   })
 
-  it('covers all reviewed courses using only their own core and reading entries, preserving pinyin and source',()=>{
+  it('covers reviewed courses and explicit classroom additions with honest source metadata',()=>{
     expect(SUDOKU_VOCABULARY_CONTENT).toHaveLength(60)
     for(const entry of SUDOKU_VOCABULARY_CONTENT) {
       const source=entry.textbook===ZHONGWEN_ID?'zhongwen':'paradise'
@@ -41,14 +60,20 @@ describe('same-lesson Sudoku vocabulary',()=>{
       expect(result.words.slice(0,entry.preferredWords.length).map(word=>word.word),`${stage}/${entry.lesson}`).toEqual(entry.preferredWords)
       expect(new Set(result.words.map(word=>word.word)).size).toBe(result.words.length)
       const course=(source==='zhongwen'?ZHONGWEN_COURSES:PARADISE_COURSES).find(course=>course.stage===stage&&course.lesson===entry.lesson)
-      const allowed=new Set([...course.vocabulary,...entry.readingVocabulary].map(word=>word.word.replace(/^《(.+)》$/u,'$1')))
+      const classroom=entry.classroomVocabulary??[]
+      const allowed=new Set([...course.vocabulary,...entry.readingVocabulary,...classroom].map(word=>word.word.replace(/^《(.+)》$/u,'$1')))
       for(const word of result.words) {
         expect(allowed.has(word.word)).toBe(true)
         expect(word.pinyin).toBeTruthy()
         expect(word.source.textbook).toBe(entry.textbook)
         expect(word.source.book).toBe(entry.book)
         expect(word.source.lesson).toBe(entry.lesson)
-        expect(word.source.pdfPage-word.source.printedPage).toBe(source==='zhongwen'?15:3)
+        if(classroom.some(item=>item.word===word.word)) {
+          expect(word.source.section).toBe('课堂补充')
+          expect(word.source.note).toBeTruthy()
+          expect(word.source.pdfPage).toBeUndefined()
+          expect(word.source.printedPage).toBeUndefined()
+        } else expect(word.source.pdfPage-word.source.printedPage).toBe(source==='zhongwen'?15:3)
       }
     }
   })
