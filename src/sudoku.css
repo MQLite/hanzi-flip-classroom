@@ -13,6 +13,8 @@
 /* Leave breathing room around clues, including the smaller projector cells. */
 #sudoku .sudoku-cell { padding: 4px; }
 #sudoku .sudoku-cell[data-form="picture"] { padding: 2px; }
+.sudoku-picture.sudoku-flag { width: 28px; height: 21px; max-width: 100%; object-fit: contain; }
+#sudoku .sudoku-cell .sudoku-flag { width: 32px; height: 24px; flex-shrink: 1; }
 #sudoku .sudoku-cell strong {
   min-width: 0;
   max-width: 100%;

@@ -1,7 +1,13 @@
 import {getSudokuProgress} from './sudoku-core.js';
+import {countryFlagForWord} from './sudoku-country-flags.js';
 
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 function pictureView(picture){
+  if(picture.url){
+    const img=node('img',undefined,'sudoku-picture sudoku-flag');
+    img.src=picture.url;img.alt=picture.label;img.draggable=false;
+    return img;
+  }
   const wrap=node('span',undefined,'sudoku-picture');wrap.setAttribute('role','img');wrap.setAttribute('aria-label',picture.label);
   if(picture.count){wrap.classList.add('sudoku-dots');for(let i=0;i<picture.count;i++)wrap.append(node('i'));}
   else if(picture.month){wrap.classList.add('sudoku-calendar');wrap.append(node('b',String(picture.month)),node('small','月'));}
@@ -10,11 +16,12 @@ function pictureView(picture){
 }
 function wordView(word,complete=false,form='word'){
   const wrap=node('span',undefined,'sudoku-word');
+  const picture=countryFlagForWord(word)??word.picture;
   if(complete||form==='word'){
     const han=node('strong',word.word);han.dataset.length=word.word.length;wrap.append(han);
   }
   if(complete||form==='pinyin')wrap.append(node('small',word.pinyin,'sudoku-pinyin'));
-  if((complete||form==='picture')&&word.picture)wrap.append(pictureView(word.picture));
+  if((complete||form==='picture')&&picture)wrap.append(pictureView(picture));
   return wrap;
 }
 function provenance(word){
@@ -104,7 +111,9 @@ export function createSudokuView(host,dispatch){
       const value=state.values[index],given=state.givens[index]!==null;
       button.classList.toggle('sudoku-given',given);button.classList.toggle('sudoku-filled',!given&&value!==null);
       button.classList.toggle('sudoku-conflict',state.feedback.conflicts.includes(index)||state.feedback.kind==='error'&&state.feedback.cell===index);
-      const form=given?state.presentations[index]:'word';
+      const word=value===null?null:state.words[value],flag=countryFlagForWord(word);
+      let form=given?state.presentations[index]:'word';
+      if(flag&&form==='word')form='picture';
       const renderKey=value===null?'empty':`${value}/${form}`;
       if(button.dataset.renderKey!==renderKey){
         button.replaceChildren();button.dataset.renderKey=renderKey;
@@ -112,7 +121,7 @@ export function createSudokuView(host,dispatch){
         else{delete button.dataset.wordId;button.append(node('span','＋','sudoku-empty'));}
       }
       button.dataset.form=value===null?'empty':form;
-      const clue=value===null?'空格':form==='word'?state.words[value].word:form==='pinyin'?state.words[value].pinyin:state.words[value].picture.label;
+      const clue=value===null?'空格':form==='word'?word.word:form==='pinyin'?word.pinyin:(flag??word.picture).label;
       button.setAttribute('aria-label',`第${Math.floor(index/9)+1}行第${index%9+1}列，${clue}${given?'，原有线索':''}`);
     });
     const key=state.collected.join('|')+`/${state.phase==='collect'}`;
