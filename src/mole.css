@@ -5,4 +5,11 @@
 @media(max-width:720px){.mole-mode main{padding:8px 11px}.mole-mode .site-header{padding:10px 12px}.mole-mode .brand h1{font-size:20px}.mole-mode .lesson-heading h2{font-size:25px}.mole-mode .lesson-toolbar{padding:10px;gap:9px}.mole-mode #mole-content-label{margin-left:0;flex:1 1 50%;font-size:12px;display:flex;align-items:center;gap:7px}.mole-mode #mole-content{min-width:0;flex:1;width:auto;font-size:12px}.mole-mode .switch-label{margin-left:0;font-size:11px}.mole-mode .play-area{padding:11px 8px 7px}.mole-mode .stage-top{font-size:10px;margin-bottom:8px}.mole-mode .stage-top #mode-label{max-width:75%;white-space:normal;line-height:1.7}.mole-mode .stage-top #progress{font-size:13px}.mole-mode .game-modes button{font-size:12px}#mole{padding:13px 6px 6px}.mole-intro{display:block;padding:0 6px}.mole-intro strong{font-size:20px}.mole-intro span{display:block;font-size:10px;margin-top:4px}.mole-note{padding:0 6px;font-size:9px}.mole-grid{gap:0 3px}.mole-slot{height:128px}.mole-plaque{left:1%;right:1%;min-height:43%;padding:3px}.mole-word{font-size:min(var(--word-size),26px);line-height:1.2}.mole-pinyin{font-size:9px}.mole-hammer{width:58px;height:78px}.mole-status{font-size:11px}.mole-celebration{padding:19px}.mole-celebration p{font-size:13px}.mole-mode .team strong{font-size:22px}.mole-mode footer{display:none}}
 #mole button{-webkit-tap-highlight-color:transparent}
 @media(max-width:900px){.mole-mode .score-panel{flex-direction:row;width:100%}.mole-mode .score-panel #teams{flex:1}.mole-mode .team{width:auto;flex:1 1 115px;min-height:40px}}
+/* Keep every face above the word card, even when a larger word needs more room. */
+.mole-grid{grid-auto-rows:1fr}
+.mole-slot{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:60px minmax(72px,1fr);align-items:stretch;height:auto;min-height:145px;padding-bottom:7px}
+.mole-clip{top:0;bottom:auto;height:84px}
+.mole-body{bottom:0}
+.mole-hole{top:50px;bottom:auto;height:36px}
+.mole-plaque{position:relative;grid-row:2;left:auto;right:auto;bottom:auto;min-height:72px;margin:0 3%;align-self:stretch}
 @media(prefers-reduced-motion:reduce){#mole *,#mole *::before,#mole *::after{animation:none!important;transition:none!important}.mole-confetti i{top:calc(8% + mod(var(--i)*13,85)*1%);opacity:.6}}
