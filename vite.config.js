@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
   base: process.env.VITE_BASE_PATH || '/',
@@ -7,6 +8,10 @@ export default defineConfig({
   test: { include: ['tests/**/*.test.js'], environment: 'node' },
   build: {
     rollupOptions: {
+      input: {
+        main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        quest: fileURLToPath(new URL('./quest.html', import.meta.url)),
+      },
       output: {
         manualChunks(id) {
           const path = id.replaceAll('\\', '/');

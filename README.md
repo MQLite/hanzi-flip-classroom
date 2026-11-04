@@ -4,6 +4,18 @@
 
 在线课堂：[打开识字翻翻乐](https://mqlite.github.io/hanzi-flip-classroom/)。
 
+## 诗词解谜 旧屋里的两封信
+
+[进入古诗书房](https://mqlite.github.io/hanzi-flip-classroom/quest.html)。首页“诗词解谜”入口也可打开。
+
+以《游子吟》《回乡偶书》为学习内容的原创虚构故事。点击衣柜、书桌、旧镜、门口和信箱，组合字形、联系诗意、辨认人物视角，找回两封信并完成投递。针线与家书、旧镜与归乡是两条可先后探索的分支，共五段记忆。
+
+“带提示探索”默认显示词义和学习词的读音；“独立挑战”增加诗句依据选择。可随时查看两步提示、翻开诗集，不设倒计时或扣分。适合约10-15分钟独立阅读与推理，也可由6名学生分两组合作讨论。结尾可再读古诗或自愿背诵，不使用自动语音评分。
+
+游戏单独保存在当前浏览器的 `hanzi-flip.poetry-quest.v1` 中，支持继续探索。重新开始需确认；存储受限时本次仍能游玩。题库与原有四种课堂模式的数据不变。该游戏是独立页面，返回主页会重新加载原课堂页面。手机支持点选，所有物件与选择均可用键盘按钮操作；场景为原创SVG，无需WebGL或额外运行依赖。
+
+相关验证：`npm test`、`npx playwright test tests/poetry-quest-ui.spec.js`、`npm run build`。GitHub Pages构建同时输出首页与`quest.html`，沿用原项目基础路径。
+
 ## 在线部署
 
 代码仓库：[MQLite/hanzi-flip-classroom](https://github.com/MQLite/hanzi-flip-classroom)。推送到 `main` 后，GitHub Actions 自动测试、构建并部署到 GitHub Pages；也可以在 Actions 中手动运行部署流程。

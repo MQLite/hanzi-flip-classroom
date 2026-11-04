@@ -1811,3 +1811,6 @@ body:not(.workshop-mode) #restart { margin-left: auto; }
 #open-paradise-vocabulary { padding: 0 6px; margin-left: 8px; font: inherit; line-height: inherit; text-decoration: underline; }
 .textbook-vocabulary-dialog { width: min(900px, calc(100vw - 32px)); max-height: 85vh; overflow: auto; }
 .textbook-vocabulary-dialog section + section { margin-top: 22px; padding-top: 12px; border-top: 1px solid #d5decf; }
+/* A separate poetry story, without changing the four classroom game modes. */
+.quest-entry{display:inline-flex;align-items:center;justify-content:center;padding:10px 17px;border:1px solid #b8c7b6;border-radius:9px;background:#edf3e8;color:#345b43;text-decoration:none;font-size:13px;font-weight:700;white-space:nowrap;min-height:42px}
+.quest-entry:hover{background:#dce9d5}.quest-entry:focus-visible{outline:3px solid #9ba96a;outline-offset:3px}
