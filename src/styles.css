@@ -1811,6 +1811,24 @@ body:not(.workshop-mode) #restart { margin-left: auto; }
 #open-paradise-vocabulary { padding: 0 6px; margin-left: 8px; font: inherit; line-height: inherit; text-decoration: underline; }
 .textbook-vocabulary-dialog { width: min(900px, calc(100vw - 32px)); max-height: 85vh; overflow: auto; }
 .textbook-vocabulary-dialog section + section { margin-top: 22px; padding-top: 12px; border-top: 1px solid #d5decf; }
-/* A separate poetry story, without changing the four classroom game modes. */
-.quest-entry{display:inline-flex;align-items:center;justify-content:center;padding:10px 17px;border:1px solid #b8c7b6;border-radius:9px;background:#edf3e8;color:#345b43;text-decoration:none;font-size:13px;font-weight:700;white-space:nowrap;min-height:42px}
-.quest-entry:hover{background:#dce9d5}.quest-entry:focus-visible{outline:3px solid #9ba96a;outline-offset:3px}
+/* Lesson-scoped scenarios sit beside the four classroom practice modes. */
+.game-modes{flex-wrap:wrap}
+.explore-mode .lesson-toolbar{justify-content:flex-start}
+.exploration-card{display:grid;grid-template-columns:minmax(210px,.8fr) 1.2fr;min-height:330px;border:1px solid #b7c5ab;border-radius:20px;overflow:hidden;background:#f9f6e9;margin:22px 0 32px;box-shadow:0 12px 30px #344a3610}
+.exploration-card>div:last-child{padding:38px 42px}
+.exploration-card h3{font-family:"SimSun",serif;font-size:32px;line-height:1.4;margin:13px 0 19px;color:#2c4938}
+.exploration-card p{line-height:1.9;color:#536651;font-size:14px}
+.exploration-card .exploration-meta{font-size:12px;color:#7a754f}
+.exploration-card .exploration-tags{font-size:12px;margin:22px 0}
+.exploration-enter{display:inline-flex;align-items:center;min-height:44px;justify-content:center;padding:12px 26px;text-decoration:none;border-radius:9px;font-weight:700;background:#314a3b;color:#fff6e3}
+.exploration-enter:hover{background:#49654b}
+.exploration-enter:focus-visible{outline:3px solid #9ba96a;outline-offset:4px}
+.exploration-cover{position:relative;overflow:hidden;background:radial-gradient(ellipse at 34% 40%,#9d85512b,transparent 53%),linear-gradient(120deg,#1f352c,#43513b);min-height:280px}
+.exploration-cover:before{content:"";position:absolute;inset:12% 16% 20%;border:1px solid #c4b37d55;background:repeating-linear-gradient(90deg,transparent 0 47px,#d6c58b18 48px 49px);box-shadow:0 0 0 8px #192c2266}
+.exploration-lamp{position:absolute;left:26%;top:26%;width:58px;height:47px;background:#d4b575;clip-path:polygon(22% 0,78% 0,100% 100%,0 100%);filter:drop-shadow(0 0 24px #eac978)}
+.exploration-envelope{position:absolute;left:43%;top:44%;width:119px;height:80px;border:1px solid #c0b084;background:linear-gradient(145deg,#ede0bc,#b5a174);box-shadow:5px 9px 14px #11261d55;transform:rotate(-12deg)}
+.exploration-envelope:after{content:"信";position:absolute;inset:9px;text-align:center;padding-top:11px;border:1px solid #998a63;font:25px "SimSun",serif;color:#765a41}
+.exploration-cover-caption{position:absolute;bottom:10%;width:100%;text-align:center;color:#d6c99f;font:14px "SimSun",serif;letter-spacing:.1em;padding:0 12px}
+.exploration-empty{padding:55px 25px;margin:24px 0;text-align:center;border:1px dashed #aeba9f;border-radius:18px;background:#f5f3e8}
+.exploration-empty h3{font-size:24px;color:#37563d}.exploration-empty p{line-height:1.9;color:#6c775e}
+@media(max-width:720px){.exploration-card{grid-template-columns:1fr;margin:15px 0}.exploration-cover{min-height:215px}.exploration-card>div:last-child{padding:24px}.exploration-card h3{font-size:27px}.exploration-meta{overflow-wrap:anywhere}.game-modes button{min-height:44px}.exploration-empty{padding:30px 20px}}

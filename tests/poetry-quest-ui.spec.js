@@ -15,13 +15,87 @@ async function fourMemories(page){
   await solve(page,'desk',{feeling:'worry',evidence:'late'});
 }
 
-test('homepage opens the standalone quest and existing classroom modes remain available',async({page})=>{
+test('fifth classroom mode routes only the matching textbook lesson to its scenario',async({page})=>{
   await page.goto('/');
   await expect(page.locator('#mode-flip')).toBeVisible();
   await expect(page.locator('#mode-sudoku')).toBeVisible();
-  await page.getByRole('link',{name:'诗词解谜',exact:true}).click();
+  const originalCharacter=await page.locator('.hanzi').innerText();
+  await page.getByRole('button',{name:'情景探索',exact:true}).click();
+  await expect(page.locator('#mode-explore')).toHaveAttribute('aria-pressed','true');
+  await expect(page.getByLabel('题库来源')).toHaveValue('zhongwen');
+  await expect(page.getByLabel('选择册数',{exact:true})).toHaveValue('5');
+  await expect(page.getByLabel('选择课次',{exact:true})).toHaveValue('9');
+  await expect(page.locator('#exploration-catalog')).toContainText('古诗二首');
+  await page.getByLabel('选择册数',{exact:true}).selectOption('1');
+  await expect(page.locator('#exploration-catalog')).toContainText('待补充');
+  await expect(page.getByRole('link',{name:'进入情景',exact:true})).toHaveCount(0);
+  await page.getByLabel('选择册数',{exact:true}).selectOption('5');
+  await page.locator('#mode-flip').click();
+  await expect(page.locator('.hanzi')).toHaveText(originalCharacter);
+  await expect(page.getByLabel('学习阶段',{exact:true}).locator('option[value="5"]')).toHaveCount(0);
+  await page.locator('#mode-explore').click();
+  await expect(page.getByLabel('选择册数',{exact:true})).toHaveValue('5');
+  await page.getByRole('link',{name:'进入情景',exact:true}).click();
   await expect(page.getByRole('heading',{name:'旧屋里的两封信',exact:true})).toBeVisible();
   await expect(page.getByRole('button',{name:'带提示探索',exact:true})).toBeVisible();
+  await page.getByRole('link',{name:/返回情景探索/}).click();
+  await expect(page.locator('#mode-explore')).toHaveAttribute('aria-pressed','true');
+  await expect(page.getByRole('link',{name:'进入情景',exact:true})).toBeVisible();
+});
+
+test('exploration catalog stays scoped on other textbooks and fits mobile screens',async({page})=>{
+  await page.setViewportSize({width:390,height:844});
+  await page.goto('/?mode=explore');
+  await expect(page.getByRole('link',{name:'进入情景',exact:true})).toBeVisible();
+  await page.getByLabel('题库来源').selectOption('paradise');
+  await expect(page.locator('#exploration-catalog')).toContainText('待补充');
+  await expect(page.getByRole('link',{name:'进入情景',exact:true})).toHaveCount(0);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.getByLabel('题库来源').selectOption('zhongwen');
+  await page.getByLabel('选择册数',{exact:true}).selectOption('5');
+  await expect(page.getByRole('link',{name:'进入情景',exact:true})).toBeVisible();
+  await page.screenshot({path:'test-results/exploration-catalog-mobile.png',fullPage:true});
+});
+
+test('unvisited practice modes choose a supported book after fifth-book exploration',async({page})=>{
+  for(const mode of ['train','workshop','sudoku']){
+    await page.goto('/?mode=explore');
+    await page.locator(`#mode-${mode}`).click();
+    await expect(page.getByLabel('选择册数',{exact:true})).toHaveValue('1');
+    await expect(page.getByLabel('选择课次',{exact:true})).toHaveValue('1');
+    await expect(page.locator(`#${mode==='train'?'sentence-train':mode}`)).toBeVisible();
+    await page.locator('#mode-explore').click();
+    await expect(page.getByLabel('选择册数',{exact:true})).toHaveValue('5');
+    await expect(page.getByRole('link',{name:'进入情景',exact:true})).toBeVisible();
+  }
+});
+
+test('ambient soundtrack is opt-in and can be muted without affecting puzzle progress',async({page})=>{
+  const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  const audio=await page.context().newCDPSession(page);
+  let contextState=null,oscillators=0;
+  audio.on('WebAudio.contextCreated',({context})=>{contextState=context.contextState;});
+  audio.on('WebAudio.contextChanged',({context})=>{contextState=context.contextState;});
+  audio.on('WebAudio.audioNodeCreated',({node})=>{if(node.nodeType.includes('Oscillator'))oscillators++;});
+  await audio.send('WebAudio.enable');
+  await page.goto('/quest.html');
+  const music=page.getByRole('button',{name:'探索配乐',exact:true});
+  await expect(music).toHaveAttribute('aria-pressed','false');
+  expect(contextState).toBe(null);
+  await music.click();
+  await expect(music).toHaveAttribute('aria-pressed','true');
+  await expect.poll(()=>contextState).toBe('running');
+  await expect.poll(()=>oscillators).toBeGreaterThan(0);
+  await page.getByRole('button',{name:'带提示探索',exact:true}).click();
+  await solve(page,'wardrobe',{left:'纟',right:'逢',reading:'féng'});
+  await expect(music).toHaveAttribute('aria-pressed','true');
+  await music.click();
+  await expect(music).toHaveAttribute('aria-pressed','false');
+  await expect.poll(()=>contextState).toBe('suspended');
+  await expect(page.locator('[data-object="wardrobe"]')).toHaveAttribute('data-solved','true');
+  await page.setViewportSize({width:390,height:844});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  expect(errors).toEqual([]);
 });
 
 test('challenge quest supports both branches, evidence, hints and two correctly delivered letters',async({page})=>{

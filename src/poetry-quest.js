@@ -2,6 +2,7 @@ import './poetry-quest.css';
 import {createQuest,inspectObject,solvePuzzle,deliverLetter,requestHint,restoreQuest,getProgress,isUnlocked,QUEST_STORAGE_KEY} from './poetry-quest-core.js';
 import {PUZZLES,POEMS,WORDS,ITEMS} from './poetry-quest-content.js';
 import {roomArt,itemIcon} from './poetry-quest-art.js';
+import {createExplorationMusic} from './exploration-music.js';
 
 const root=document.querySelector('#quest-app');
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -9,6 +10,11 @@ let saved=null,state=null,active=null,selectedLetter=null,itemView=null;
 let support=true,saveNote='',feedback=null;
 let drafts={};
 let renderedPanelKey=null,lastObject='wardrobe';
+const music=createExplorationMusic(message=>{
+  const button=document.getElementById('quest-music');
+  if(button){button.setAttribute('aria-pressed',String(music.enabled));button.textContent=`配乐${music.enabled?'开':'关'}`;}
+  const status=document.getElementById('quest-music-status');if(status)status.textContent=message??'';
+});
 try{
   const raw=window.localStorage.getItem(QUEST_STORAGE_KEY);
   if(raw){saved=restoreQuest(raw);if(!saved)saveNote='上次记录未能恢复，可以重新探索。';}
@@ -20,8 +26,9 @@ function persist(){
   catch{saveNote='此浏览器暂时不能保存进度，本次仍可继续。离开页面后需重新开始。';}
 }
 function header(playing){return `<header class="quest-header">
-  <a class="quest-home" href="./"><span class="quest-brand">字</span><span>汉字奇遇岛 <small> / 古诗解谜档案</small></span></a>
+  <a class="quest-home" href="./?mode=explore" aria-label="返回情景探索"><span class="quest-brand">字</span><span>汉字奇遇岛 <small> / 情景探索</small></span></a>
   <nav class="quest-header-tools" aria-label="探索工具">
+    <button class="q-btn q-btn--plain" id="quest-music" data-action="music" aria-label="探索配乐" aria-pressed="${music.enabled}" title="原创探索配乐，低音量播放，可随时关闭">配乐${music.enabled?'开':'关'}</button><span id="quest-music-status" class="quest-sr-only" role="status"></span>
     ${playing?`<span class="quest-saved-tag">${state.mode==='challenge'?'独立挑战':'带提示探索'}</span><button class="q-btn q-btn--plain" id="quest-support" data-action="support" aria-pressed="${support}">词语提示${support?'开':'关'}</button><button class="q-btn" id="quest-book" data-action="book">诗集</button>`:''}
     <button class="q-btn q-btn--plain" data-action="help">玩法</button>
     ${playing?'<button class="q-btn q-btn--plain" id="quest-reset" data-action="reset">重来</button>':''}
@@ -29,7 +36,7 @@ function header(playing){return `<header class="quest-header">
 
 function landing(){return `${header(false)}<main class="quest-intro">
   <div class="quest-intro-art">${roomArt()}</div><div class="quest-intro-content">
-    <span class="quest-kicker">THE LETTERS LEFT BEHIND</span><h1 class="quest-title">旧屋里的两封信</h1>
+    <span class="quest-kicker">情景探索 · 中文（暨南大学版）· 第五册第9课</span><h1 class="quest-title">旧屋里的两封信</h1>
     <p class="quest-intro-story">一件没缝完的旧衣，一面映着岁月的镜子。<br>屋里有两封未寄出的信。<br>读懂留下的字句，找回记忆，把心意送到。</p>
     <p class="quest-intro-rule">观察物件 · 收集线索 · 组合与推理<br>约10-15分钟，可随时暂停。没有倒计时。</p>
     <div class="quest-start-options"><button class="quest-start-option" data-action="start" data-mode="guided" aria-label="带提示探索" aria-describedby="guided-description"><strong>带提示探索</strong><span id="guided-description">词义与读音提示陪你找线索<br>适合合作讨论</span></button><button class="quest-start-option" data-action="start" data-mode="challenge" aria-label="独立挑战" aria-describedby="challenge-description"><strong>独立挑战</strong><span id="challenge-description">为判断找到诗句依据<br>适合想多想一步的你</span></button></div>
@@ -133,6 +140,7 @@ function returnToRoom(){active=null;itemView=null;feedback=null;render();if(wind
 
 root.addEventListener('click',event=>{
   const b=event.target.closest('button');if(!b||b.disabled)return;
+  if(b.dataset.action==='music'){void music.toggle();return;}
   if(b.dataset.action==='start'){
     if(saved&&(getProgress(saved).done>0||saved.visited.length>0||Object.keys(saved.hints).length>0)&&!window.confirm('开始新探索会替换这次游戏已保存的进度，确定开始吗？'))return;
     state=createQuest({mode:b.dataset.mode});support=state.mode==='guided';active=null;drafts={};feedback=null;selectedLetter=null;itemView=null;persist();render();return;

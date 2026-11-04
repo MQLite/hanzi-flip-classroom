@@ -30,6 +30,7 @@ import { createWorkshopScene } from './workshop-scene.js';
 import './sudoku.css';
 import {createSudokuView} from './sudoku.js';
 import {getSudokuCandidates} from './sudoku-vocabulary.js';
+import {explorationStages,explorationCourses,renderExplorations} from './exploration.js';
 import {createSudokuState,collectSudokuWord,placeSudokuWord,clearSudokuCell,undoSudoku,getSudokuProgress} from './sudoku-core.js';
 
 const app = document.querySelector("#app");
@@ -45,20 +46,15 @@ app.innerHTML = `<header class="site-header"><a class="brand" href="./" aria-lab
 <dialog id="settings-dialog" aria-labelledby="settings-title"><div class="dialog-heading"><div><span class="eyebrow">OUR LITTLE TEAMS</span><h2 id="settings-title">为小组起个名字</h2></div><button class="close-dialog icon-button" aria-label="关闭小组设置">×</button></div><p>应用设置会开始新一轮，清空本轮得分。</p><label>小组数量<select id="team-count"><option value="2">2 个小组</option><option value="3">3 个小组</option><option value="4">4 个小组</option></select></label><div id="team-fields"></div><button id="apply-teams" class="primary">应用并开始新一轮</button></dialog>
 <dialog id="help-dialog" aria-labelledby="help-title"><div class="dialog-heading"><h2 id="help-title">欢迎来到汉字奇遇岛</h2><button class="close-dialog icon-button" aria-label="关闭帮助">×</button></div><ol class="help-steps"><li>选择年级，认读屏幕上的汉字。</li><li>翻牌揭晓汉字、拼音和词语；句子练习请使用“句子小火车”。</li><li>选中小组，再点“答对了”，就会沿踏石走到下一座小岛，自动换字；想巩固的字点“再练一次”。每字只结算一次。</li><li>一轮结束后，带着需要巩固的字再出发。</li></ol><p>跳过的字记为未作答；回看不会重复加分。多音字以本题拼音为参考，老师可结合词语判断其他读音。</p><p>题库自动保存在此设备的此浏览器中，请定期导出备份。课堂得分、小组和进度不会在刷新后恢复。</p><p>年级是难度建议，不对应特定教材。打开面板或输入文字时，课堂快捷键会暂停。</p><p>立体显示不流畅时，可随时切换“简化显示”，本轮进度保留。</p></dialog>`;
 const $ = (s) => document.querySelector(s);
-// Standalone story page keeps the existing classroom sessions independent.
-const questLink = document.createElement('a');
-questLink.href = './quest.html';
-questLink.className = 'quest-entry';
-questLink.textContent = '诗词解谜';
-questLink.setAttribute('aria-label', '诗词解谜');
-$('.lesson-heading').append(questLink);
-$('.lesson-heading').insertAdjacentHTML('beforeend', '<nav class="game-modes" aria-label="游戏模式"><button id="mode-flip" aria-pressed="true">识字翻翻乐</button><button id="mode-workshop" aria-pressed="false">组词小工坊</button><button id="mode-train" aria-pressed="false">句子小火车</button><button id="mode-sudoku" aria-pressed="false">汉字数独</button></nav>');
+$('.lesson-heading').insertAdjacentHTML('beforeend', '<nav class="game-modes" aria-label="游戏模式"><button id="mode-flip" aria-pressed="true">识字翻翻乐</button><button id="mode-workshop" aria-pressed="false">组词小工坊</button><button id="mode-train" aria-pressed="false">句子小火车</button><button id="mode-sudoku" aria-pressed="false">汉字数独</button><button id="mode-explore" aria-pressed="false">情景探索</button></nav>');
+$('.classroom').insertAdjacentHTML('afterend','<section id="exploration-catalog" aria-label="本课情景探索" hidden></section>');
 $('#scene').insertAdjacentHTML('afterend', '<div id="workshop" hidden></div><div id="sentence-train" hidden></div><div id="sudoku" hidden></div>');
 $('.practice-box').insertAdjacentHTML('beforebegin', '<div id="workshop-collection-panel" hidden><h4>收集到的词语 <span>✦</span></h4><div id="workshop-collection" aria-live="polite"></div></div>');
 $('#help-dialog').insertAdjacentHTML('beforeend', '<p>活字组词工坊：每盘随机选择 2–4 个参考词，默认 4 个，拆成一盘共享活字。按顺序点选 2–8 字，点击“融合印版”。匹配参考词时收走对应活字、记 1 星；其他词请老师判断。教师判对收集青绿色印版并归还活字，返回重试则归还活字且不记分。每个词只能得星一次。教师判断记给提交时的小组，切换模式保留待判词和进度；新一轮或刷新会清空。</p>');
 $('.practice-box').insertAdjacentHTML('beforebegin', '<div class="train-ledger-panel" hidden><h4>旅程记录</h4><div id="train-ledger" aria-live="polite"></div></div>');
 $('#help-dialog').insertAdjacentHTML('beforeend', '<p>句子小火车：点击词语车厢，从左到右排列句子。全部接齐后发车；未命中可调整或由老师判对。看过参考句后须由老师判对才计分。再练一次只加入明确标记的句子；跳过的句子不算错。三种游戏独立保存本页进度，刷新重置。题库中的“句子小火车设置”可用 / 分隔词语。每句支持2–7节车厢；《中文》第一、二册选用课文及阅读重点句，显示栏目、篇名和教材页码，部分短句摘自分句并统一句尾标点。《汉语乐园》1A–3B选用课本对话、歌曲和故事原句，老师手工切分句仍可练习；1A第3课仅作数字认读。</p>');
 const allDefaults = [...DEFAULT_QUESTIONS, ...TEXTBOOK_QUESTIONS, ...PARADISE_QUESTIONS, ...ZHONGWEN_QUESTIONS];
+$('#help-dialog').insertAdjacentHTML('beforeend','<p>情景探索：按教材、册数、课次选择故事。目前提供“中文（暨南大学版）· 第五册 · 第9课 古诗二首”，其他课次待补充。点击“进入情景”，观察物件、找线索、读诗句，完成五关探索。故事有独立的自动存档，可带提示合作，也可独立挑战。右上角可开启或关闭探索配乐，默认关闭。</p>');
 $('.teacher-badge').textContent = '汉语乐园 · 1A–3B';
 $('.lesson-toolbar').insertAdjacentHTML('afterbegin', `<label class="curriculum-field">题库<select id="bank-source" aria-label="题库来源"><option value="paradise">汉语乐园（1A–3B）</option><option value="textbook">中文乐园（新版）</option><option value="zhongwen">${ZHONGWEN_NAME}</option><option value="personal">个人 / 通用题库</option></select></label><label class="curriculum-field textbook-field"><span id="stage-label">阶段</span><select id="stage" aria-label="学习阶段">${STAGES.map(s=>`<option>${s}</option>`).join('')}</select></label><label class="curriculum-field textbook-field">范围<select id="scope" aria-label="练习范围"><option value="stage">整个阶段</option><option value="lesson">本课</option><option value="cumulative">截至本课累计</option></select></label><label class="curriculum-field textbook-field">课次<select id="lesson" aria-label="选择课次"></select></label>`);
 $('.lesson-toolbar').insertAdjacentHTML('afterend', '<p id="curriculum-note" class="curriculum-note"></p><div id="textbook-notice" class="notice" hidden><span></span><button id="add-textbook">补充教材题库</button></div>');
@@ -116,7 +112,7 @@ function prepareSudoku(){
 }
 $('.lesson-toolbar').insertAdjacentHTML('beforeend', '<label id="workshop-count-label" hidden>每盘词数<select id="workshop-count" aria-label="每盘词数"><option value="2">2 个词</option><option value="3">3 个词</option><option value="4" selected>4 个词</option></select></label>');
 function currentSession() {
-  if(gameMode==='sudoku')return createSession({questions:[],teamNames});
+  if(gameMode==='sudoku'||gameMode==='explore')return createSession({questions:[],teamNames});
   const questions = selection.source !== 'personal'
     ? filterCurriculum(bank.questions, {...selection, textbook: textbookForSource(selection.source)})
     : bank.questions.filter(q=>!q.textbook);
@@ -142,7 +138,8 @@ function syncSelection() {
   $('#bank-source').value = selection.source;
   const textbook = textbookForSource(selection.source);
   const zhongwen = selection.source === 'zhongwen';
-  $('#stage').replaceChildren(...stagesForTextbook(textbook).map(stage => {
+  const explore=gameMode==='explore';
+  $('#stage').replaceChildren(...(explore?explorationStages(textbook):stagesForTextbook(textbook)).map(stage => {
     const option = document.createElement('option');
     option.value = stage;
     option.textContent = zhongwen ? ZHONGWEN_BOOK_LABELS[stage] : stage;
@@ -153,17 +150,17 @@ function syncSelection() {
   $('#scope option[value="stage"]').textContent = zhongwen ? '全册' : '整个阶段';
   $('#stage').value = selection.stage;
   $('#scope').value = selection.scope;
-  $('#lesson').replaceChildren(...coursesForTextbook(textbook).filter(c=>c.stage===selection.stage).map(c=>{
+  $('#lesson').replaceChildren(...(explore?explorationCourses(textbook):coursesForTextbook(textbook)).filter(c=>c.stage===selection.stage).map(c=>{
     const option = document.createElement('option');
     option.value = c.lesson;
     option.textContent = `第${c.lesson}课 ${c.title}`;
     return option;
   }));
   $('#lesson').value = selection.lesson;
-  $('#lesson').disabled = selection.scope === 'stage';
-  $('.grade-label').hidden = selection.source !== 'personal';
+  $('#lesson').disabled = !explore && selection.scope === 'stage';
+  $('.grade-label').hidden = explore || selection.source !== 'personal';
   document.querySelectorAll('.textbook-field').forEach(e=>e.hidden=selection.source === 'personal');
-  if(gameMode==='sudoku')$('#scope').closest('label').hidden=true;
+  if(gameMode==='sudoku'||explore)$('#scope').closest('label').hidden=true;
   $('#curriculum-note').textContent = selection.source !== 'personal'
     ? zhongwen
       ? `《中文》（暨南大学华文学院 · 第三版）${ZHONGWEN_BOOK_LABELS[selection.stage]} · ${selection.scope === 'cumulative' ? `第一册第1课至${ZHONGWEN_BOOK_LABELS[selection.stage]}第${selection.lesson}课` : selection.scope === 'lesson' ? `第${selection.lesson}课` : '全册'} · ${gameMode === 'train' ? '课文与阅读重点句' : '全部生字与教材词语'}`
@@ -183,14 +180,18 @@ function syncSelection() {
     $('#curriculum-note').append(viewWords);
   }
   $('.teacher-badge').textContent = zhongwen ? `${ZHONGWEN_NAME} · ${ZHONGWEN_BOOK_LABELS[selection.stage]}` : selection.source === 'paradise' ? '汉语乐园 · 1A–3B' : selection.source === 'textbook' ? '中文乐园（新版）' : '教师课堂 · 个人题库';
-  $('#zhongwen-vocabulary').hidden = !zhongwen || gameMode === 'train' || gameMode === 'sudoku';
-  if (zhongwen) {
+  $('#zhongwen-vocabulary').hidden = !zhongwen || explore || gameMode === 'train' || gameMode === 'sudoku';
+  if (zhongwen&&!explore) {
     const keys = new Set(filterCurriculum(ZHONGWEN_QUESTIONS, {...selection, textbook: ZHONGWEN_ID}).map(q => `${q.book}/${q.lesson}`));
     const courses = coursesForTextbook(ZHONGWEN_ID).filter(c => keys.has(`${c.book}/${c.lesson}`));
     $('#zhongwen-vocabulary summary').textContent = `教材生字与词语 · ${courses.length}课`;
     renderZhongwenVocabulary($('#zhongwen-vocabulary-content'), courses);
   }
   refreshTextbookNotice();
+  if(explore){
+    $('#textbook-notice').hidden=true;
+    $('#curriculum-note').textContent=zhongwen?`${ZHONGWEN_NAME} · ${ZHONGWEN_BOOK_LABELS[selection.stage]} · 第${selection.lesson}课 · 情景探索`:'按教材与课次选择情景；其他内容将逐步补充。';
+  }
 }
 let session = currentSession();
 const modeSnapshots = {};
@@ -256,10 +257,10 @@ function sudokuIntent(intent,value){
   }
   render();
 }
-function activeScene() { return gameMode==='sudoku'?null:gameMode === 'train' ? trainView.scene : gameMode === 'workshop' ? workshopScene : scene; }
+function activeScene() { return gameMode==='sudoku'||gameMode==='explore'?null:gameMode === 'train' ? trainView.scene : gameMode === 'workshop' ? workshopScene : scene; }
 function syncSimpleControl() {
-  $('#simplify').hidden=gameMode==='sudoku';
-  if(gameMode==='sudoku')return;
+  $('#simplify').hidden=gameMode==='sudoku'||gameMode==='explore';
+  if(gameMode==='sudoku'||gameMode==='explore')return;
   const simple = $(gameMode === 'train' ? '#train-scene' : gameMode === 'workshop' ? '#workshop-scene' : '#scene').dataset.mode === 'simple';
   $('#simplify').textContent = simple ? '立体显示' : '简化显示';
   $('#simplify').setAttribute('aria-pressed', String(simple));
@@ -275,12 +276,30 @@ function switchMode(mode) {
   const saved = modeSnapshots[mode];
   gameMode = mode;
   if (saved) ({ session, grade, teamNames, selectedTeam, showPinyin, selection, extensionOpen, workshopState,sudokuState,sudokuPool,sudokuSelectedIds } = saved);
-  else { session = currentSession(); selectedTeam = 'team-1'; extensionOpen = false; workshopState = mode === 'workshop' ? createWorkshopState(session,{wordCount:workshopCount}) : null; if(mode==='workshop')workshopRound++; }
+  else {
+    if(mode==='explore')selection={source:'zhongwen',stage:'5',scope:'lesson',lesson:9};
+    else {
+      const textbook=textbookForSource(selection.source),stages=stagesForTextbook(textbook);
+      if(!stages.includes(selection.stage)){
+        const stage=stages[0],lesson=coursesForTextbook(textbook).find(c=>c.stage===stage)?.lesson??1;
+        selection={...selection,stage,lesson,scope:'lesson'};
+        showPinyin=Number(stage[0])<=2;
+      }
+    }
+    session=currentSession();selectedTeam='team-1';extensionOpen=false;
+    workshopState=mode==='workshop'?createWorkshopState(session,{wordCount:workshopCount}):null;
+    if(mode==='workshop')workshopRound++;
+  }
   if(mode==='sudoku'&&!saved)prepareSudoku();
   gameMode = mode;
   document.body.classList.toggle('workshop-mode', mode === 'workshop');
   document.body.classList.toggle('train-mode',mode === 'train');
   document.body.classList.toggle('sudoku-mode',mode === 'sudoku');
+  document.body.classList.toggle('explore-mode',mode === 'explore');
+  $('.classroom').hidden=mode==='explore';
+  $('#exploration-catalog').hidden=mode!=='explore';
+  $('#restart').hidden=mode==='explore';
+  $('#mode-explore').setAttribute('aria-pressed',String(mode==='explore'));
   $('#sudoku').hidden=mode!=='sudoku';
   $('#mode-sudoku').setAttribute('aria-pressed',String(mode==='sudoku'));
   $('#sentence-train').hidden=mode!=='train';
@@ -293,11 +312,11 @@ function switchMode(mode) {
   $('#workshop').hidden = mode !== 'workshop';
   $('#workshop-collection-panel').hidden = mode !== 'workshop';
   $('#workshop-count-label').hidden = mode !== 'workshop';
-  $('.game-controls').hidden = mode === 'workshop' || mode === 'sudoku';
+  $('.game-controls').hidden = mode === 'workshop' || mode === 'sudoku' || mode === 'explore';
   $('#mode-flip').setAttribute('aria-pressed',String(mode === 'flip'));
   $('#mode-workshop').setAttribute('aria-pressed',String(mode === 'workshop'));
-  $('.lesson-heading h2').textContent = mode==='sudoku'?'汉字数独':mode === 'train' ? '句子小火车' : mode === 'workshop' ? '组词小工坊' : '识字翻翻乐';
-  $('.lesson-heading > p').textContent = mode==='sudoku'?'认词整理 · 九宫格填空':mode === 'train' ? '接车厢 · 排句子 · 快乐出发' : mode === 'workshop' ? '挑活字 · 排词语 · 融合木质印版' : '看一看 · 读一读 · 说一说';
+  $('.lesson-heading h2').textContent = mode==='explore'?'情景探索':mode==='sudoku'?'汉字数独':mode === 'train' ? '句子小火车' : mode === 'workshop' ? '组词小工坊' : '识字翻翻乐';
+  $('.lesson-heading > p').textContent = mode==='explore'?'观察情景 · 寻找线索 · 读懂中文':mode==='sudoku'?'认词整理 · 九宫格填空':mode === 'train' ? '接车厢 · 排句子 · 快乐出发' : mode === 'workshop' ? '挑活字 · 排词语 · 融合木质印版' : '看一看 · 读一读 · 说一说';
   $('#reveal').textContent = mode === 'workshop' ? '揭晓参考词' : '翻牌揭晓';
   $('#reveal').setAttribute('aria-label',mode === 'workshop' ? '揭晓参考词' : '翻牌揭晓');
   const shortcutLabel = $('footer > span');
@@ -314,6 +333,7 @@ $('#mode-flip').onclick = () => switchMode('flip');
 $('#mode-workshop').onclick = () => switchMode('workshop');
 $('#mode-train').onclick = () => switchMode('train');
 $('#mode-sudoku').onclick = () => switchMode('sudoku');
+$('#mode-explore').onclick = () => switchMode('explore');
 
 function renderWorkshop() {
   if (gameMode !== 'workshop') return;
@@ -478,6 +498,15 @@ function el(tag, text, className) {
   return e;
 }
 function render() {
+  $('#pinyin').closest('label').hidden=gameMode!=='train';
+  if(gameMode==='explore'){
+    strokeCleanup?.();strokeCleanup=null;
+    cardStrokeCleanup?.();cardStrokeCleanup=null;cardStrokeKey=null;cardStrokeView=null;
+    for(const id of ['#extension-toggle','#extension-hint','#extension'])$(id).hidden=true;
+    $('#round-caption').textContent='观察 · 阅读 · 推理';
+    $('footer > span').textContent='情景进度自动保存在当前浏览器，可随时继续。';
+    renderExplorations($('#exploration-catalog'),selection);return;
+  }
   const q = getCurrentQuestion(session),
     active = session.phase === "active",
     revealed = active && session.revealed[session.currentIndex],
@@ -754,10 +783,10 @@ for (const [id, key] of [['bank-source','source'],['stage','stage'],['scope','sc
     if (!mayRestart()) { syncSelection(); return; }
     selection = {...selection, [key]:key === 'lesson' ? Number(event.target.value) : event.target.value};
     if (key === 'source') {
-      selection.stage = stagesForTextbook(textbookForSource(selection.source))[0];
+      selection.stage = (gameMode==='explore'?explorationStages:stagesForTextbook)(textbookForSource(selection.source))[0];
       selection.lesson = 1;
     }
-    if (key === 'stage') selection.lesson = selection.source === 'zhongwen' || selection.stage.endsWith('A') ? 1 : 7;
+    if (key === 'stage') selection.lesson = (gameMode==='explore'?explorationCourses:coursesForTextbook)(textbookForSource(selection.source)).find(c=>c.stage===selection.stage)?.lesson??1;
     if (key === 'stage' || key === 'source') {
       showPinyin = (selection.source !== 'personal' ? Number(selection.stage[0]) : grade) <= 2;
       $('#pinyin').checked = showPinyin;
@@ -843,7 +872,7 @@ $("#apply-teams").onclick = () => {
   newRound();
 };
 document.addEventListener("keydown", (event) => {
-  if(gameMode==='sudoku')return;
+  if(gameMode==='sudoku'||gameMode==='explore')return;
   if (
     event.repeat || event.isComposing || event.keyCode === 229 ||
     document.querySelector("dialog[open]") ||
@@ -864,4 +893,4 @@ document.addEventListener("keydown", (event) => {
     back();
   }
 });
-render();
+if(new URLSearchParams(window.location.search).get('mode')==='explore')switchMode('explore');else render();
