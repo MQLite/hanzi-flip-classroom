@@ -14,8 +14,9 @@ function annotate(element, ...words) {
   element.replaceChildren(...words.map(([hanzi, pinyin]) => ruby(hanzi, pinyin)));
 }
 
-function label(button, hanzi, pinyin) {
+function label(button, hanzi, pinyin, english) {
   annotate(button, [hanzi, pinyin]);
+  if (english) button.append(gloss(english));
   button.setAttribute('aria-label', hanzi);
 }
 
@@ -101,7 +102,7 @@ function openLevel() {
   for (const id of ['guess', 'answer', 'next-scene']) byId(id).hidden = true;
   for (const button of choices.children) button.disabled = false;
   annotate(byId('scene-title'), ['第', 'Dì'], [String(level + 1)], ['关', 'guān']);
-  label(showClue, '打开第一条线索', 'Dǎkāi dì yī tiáo xiànsuǒ');
+  label(showClue, '打开第一条线索', 'Dǎkāi dì yī tiáo xiànsuǒ', 'Open the first clue');
   showClue.hidden = false;
   renderTracker();
   renderProgress();
@@ -140,7 +141,7 @@ showClue.onclick = () => {
     byId('guess').hidden = false;
     choices.firstElementChild.focus();
   } else {
-    label(showClue, '打开下一条线索', 'Dǎkāi xià yì tiáo xiànsuǒ');
+    label(showClue, '打开下一条线索', 'Dǎkāi xià yì tiáo xiànsuǒ', 'Open the next clue');
   }
 };
 
