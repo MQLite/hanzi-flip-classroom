@@ -11,6 +11,7 @@ export default defineConfig({
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         quest: fileURLToPath(new URL('./quest.html', import.meta.url)),
+        city: fileURLToPath(new URL('./city.html', import.meta.url)),
       },
       output: {
         manualChunks(id) {

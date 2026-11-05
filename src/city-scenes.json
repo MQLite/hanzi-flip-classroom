@@ -1,0 +1,620 @@
+[
+  {
+    "id": "beijing",
+    "city": "北京",
+    "pinyin": "Běijīng",
+    "english": "Beijing",
+    "country": "中国",
+    "countryPinyin": "Zhōngguó",
+    "countryEnglish": "China",
+    "lines": [
+      [
+        [
+          "这里",
+          "Zhèlǐ"
+        ],
+        [
+          "是",
+          "shì"
+        ],
+        [
+          "中国",
+          "Zhōngguó"
+        ],
+        [
+          "的",
+          "de"
+        ],
+        [
+          "首都",
+          "shǒudū",
+          "capital",
+          "🏛️"
+        ],
+        [
+          "。",
+          ""
+        ]
+      ],
+      [
+        [
+          "这里",
+          "Zhèlǐ"
+        ],
+        [
+          "有",
+          "yǒu"
+        ],
+        [
+          "长城",
+          "Chángchéng",
+          "Great Wall",
+          "🧱"
+        ],
+        [
+          "，",
+          ""
+        ],
+        [
+          "也有",
+          "yě yǒu"
+        ],
+        [
+          "烤鸭",
+          "kǎoyā",
+          "roast duck",
+          "🦆"
+        ],
+        [
+          "。",
+          ""
+        ]
+      ],
+      [
+        [
+          "烤鸭",
+          "Kǎoyā",
+          "roast duck",
+          "🦆"
+        ],
+        [
+          "很好吃",
+          "hěn hǎochī"
+        ],
+        [
+          "。",
+          ""
+        ]
+      ]
+    ],
+    "sources": [
+      "https://english.visitbeijing.com.cn/article/47ONj2F7WAj",
+      "https://english.visitbeijing.com.cn/article/4HPlpDR08tw"
+    ]
+  },
+  {
+    "id": "auckland",
+    "city": "奥克兰",
+    "pinyin": "Àokèlán",
+    "english": "Auckland",
+    "country": "新西兰",
+    "countryPinyin": "Xīnxīlán",
+    "countryEnglish": "New Zealand",
+    "lines": [
+      [
+        [
+          "这里",
+          "Zhèlǐ"
+        ],
+        [
+          "在",
+          "zài"
+        ],
+        [
+          "新西兰",
+          "Xīnxīlán"
+        ],
+        [
+          "。",
+          ""
+        ]
+      ],
+      [
+        [
+          "这里",
+          "Zhèlǐ"
+        ],
+        [
+          "有",
+          "yǒu"
+        ],
+        [
+          "天空塔",
+          "Tiānkōng Tǎ",
+          "Sky Tower",
+          "🗼"
+        ],
+        [
+          "，",
+          ""
+        ],
+        [
+          "也有",
+          "yě yǒu"
+        ],
+        [
+          "帆船",
+          "fānchuán",
+          "sailboats",
+          "⛵"
+        ],
+        [
+          "。",
+          ""
+        ]
+      ],
+      [
+        [
+          "这里",
+          "Zhèlǐ"
+        ],
+        [
+          "可以吃到",
+          "kěyǐ chī dào"
+        ],
+        [
+          "炸鱼薯条",
+          "zháyú shǔtiáo",
+          "fish and chips",
+          "🍟"
+        ],
+        [
+          "。",
+          ""
+        ]
+      ]
+    ],
+    "sources": [
+      "https://www.aucklandnz.com/explore/sky-tower-skycity-auckland",
+      "https://www.aucklandnz.com/events/all-events/ted-ashby-sailings",
+      "https://www.aucklandnz.com/explore/harbourside-ocean-bar-grill"
+    ]
+  },
+  {
+    "id": "london",
+    "city": "伦敦",
+    "pinyin": "Lúndūn",
+    "english": "London",
+    "country": "英国",
+    "countryPinyin": "Yīngguó",
+    "countryEnglish": "the UK",
+    "lines": [
+      [
+        [
+          "这里",
+          "Zhèlǐ"
+        ],
+        [
+          "在",
+          "zài"
+        ],
+        [
+          "英国",
+          "Yīngguó"
+        ],
+        [
+          "。",
+          ""
+        ]
+      ],
+      [
+        [
+          "这里",
+          "Zhèlǐ"
+        ],
+        [
+          "有",
+          "yǒu"
+        ],
+        [
+          "大本钟",
+          "Dàběnzhōng",
+          "Big Ben",
+          "🕰️"
+        ],
+        [
+          "，",
+          ""
+        ],
+        [
+          "也有",
+          "yě yǒu"
+        ],
+        [
+          "红色巴士",
+          "hóngsè bāshì",
+          "red buses",
+          "🚌"
+        ],
+        [
+          "。",
+          ""
+        ]
+      ],
+      [
+        [
+          "这里",
+          "Zhèlǐ"
+        ],
+        [
+          "可以吃到",
+          "kěyǐ chī dào"
+        ],
+        [
+          "炸鱼薯条",
+          "zháyú shǔtiáo",
+          "fish and chips",
+          "🍟"
+        ],
+        [
+          "。",
+          ""
+        ]
+      ]
+    ],
+    "sources": [
+      "https://www.visitlondon.com/things-to-do/sightseeing/london-attraction/big-ben",
+      "https://www.visitlondon.com/traveller-information/getting-around-london/london-bus",
+      "https://www.visitlondon.com/things-to-do/food-and-drink/restaurant/british/fish-and-chips"
+    ]
+  },
+  {
+    "id": "new-york",
+    "city": "纽约",
+    "pinyin": "Niǔyuē",
+    "english": "New York",
+    "country": "美国",
+    "countryPinyin": "Měiguó",
+    "countryEnglish": "the USA",
+    "lines": [
+      [
+        [
+          "这里",
+          "Zhèlǐ"
+        ],
+        [
+          "在",
+          "zài"
+        ],
+        [
+          "美国",
+          "Měiguó"
+        ],
+        [
+          "。",
+          ""
+        ]
+      ],
+      [
+        [
+          "这里",
+          "Zhèlǐ"
+        ],
+        [
+          "有",
+          "yǒu"
+        ],
+        [
+          "自由女神像",
+          "Zìyóu Nǚshénxiàng",
+          "Statue of Liberty",
+          "🗽"
+        ],
+        [
+          "，",
+          ""
+        ],
+        [
+          "也有",
+          "yě yǒu"
+        ],
+        [
+          "高楼",
+          "gāolóu",
+          "tall buildings",
+          "🏙️"
+        ],
+        [
+          "。",
+          ""
+        ]
+      ],
+      [
+        [
+          "这里",
+          "Zhèlǐ"
+        ],
+        [
+          "可以吃到",
+          "kěyǐ chī dào"
+        ],
+        [
+          "披萨",
+          "pīsà",
+          "pizza",
+          "🍕"
+        ],
+        [
+          "。",
+          ""
+        ]
+      ]
+    ],
+    "sources": [
+      "https://www.nyctourism.com/NYCTourismOVM-090924.pdf"
+    ]
+  },
+  {
+    "id": "vancouver",
+    "city": "温哥华",
+    "pinyin": "Wēngēhuá",
+    "english": "Vancouver",
+    "country": "加拿大",
+    "countryPinyin": "Jiānádà",
+    "countryEnglish": "Canada",
+    "lines": [
+      [
+        [
+          "这里",
+          "Zhèlǐ"
+        ],
+        [
+          "在",
+          "zài"
+        ],
+        [
+          "加拿大",
+          "Jiānádà"
+        ],
+        [
+          "。",
+          ""
+        ]
+      ],
+      [
+        [
+          "这里",
+          "Zhèlǐ"
+        ],
+        [
+          "有",
+          "yǒu"
+        ],
+        [
+          "斯坦利公园",
+          "Sītǎnlì Gōngyuán",
+          "Stanley Park",
+          "🌲"
+        ],
+        [
+          "。",
+          ""
+        ]
+      ],
+      [
+        [
+          "公园旁边",
+          "Gōngyuán pángbiān"
+        ],
+        [
+          "有",
+          "yǒu"
+        ],
+        [
+          "海",
+          "hǎi"
+        ],
+        [
+          "。",
+          ""
+        ]
+      ],
+      [
+        [
+          "这里",
+          "Zhèlǐ"
+        ],
+        [
+          "可以吃到",
+          "kěyǐ chī dào"
+        ],
+        [
+          "三文鱼",
+          "sānwényú",
+          "salmon",
+          "🐟"
+        ],
+        [
+          "。",
+          ""
+        ]
+      ]
+    ],
+    "sources": [
+      "https://www.destinationvancouver.com/things-to-do/listings/stanley-park"
+    ]
+  },
+  {
+    "id": "sydney",
+    "city": "悉尼",
+    "pinyin": "Xīní",
+    "english": "Sydney",
+    "country": "澳大利亚",
+    "countryPinyin": "Àodàlìyà",
+    "countryEnglish": "Australia",
+    "lines": [
+      [
+        [
+          "这里",
+          "Zhèlǐ"
+        ],
+        [
+          "在",
+          "zài"
+        ],
+        [
+          "澳大利亚",
+          "Àodàlìyà"
+        ],
+        [
+          "。",
+          ""
+        ]
+      ],
+      [
+        [
+          "这里",
+          "Zhèlǐ"
+        ],
+        [
+          "有",
+          "yǒu"
+        ],
+        [
+          "歌剧院",
+          "gējùyuàn",
+          "opera house",
+          "🎭"
+        ],
+        [
+          "，",
+          ""
+        ],
+        [
+          "也有",
+          "yě yǒu"
+        ],
+        [
+          "海港大桥",
+          "Hǎigǎng Dàqiáo",
+          "Harbour Bridge",
+          "🌉"
+        ],
+        [
+          "。",
+          ""
+        ]
+      ],
+      [
+        [
+          "这里",
+          "Zhèlǐ"
+        ],
+        [
+          "可以吃到",
+          "kěyǐ chī dào"
+        ],
+        [
+          "肉派",
+          "ròupài",
+          "meat pie",
+          "🥧"
+        ],
+        [
+          "。",
+          ""
+        ]
+      ]
+    ],
+    "sources": [
+      "https://www.sydney.com/destinations/sydney/sydney-city/sydney-harbour/sydney-opera-house",
+      "https://www.sydney.com/destinations/sydney/sydney-west/campbelltown/food-and-drink/harrys-cafe-de-wheels-woodbine"
+    ]
+  },
+  {
+    "id": "paris",
+    "city": "巴黎",
+    "pinyin": "Bālí",
+    "english": "Paris",
+    "country": "法国",
+    "countryPinyin": "Fǎguó",
+    "countryEnglish": "France",
+    "lines": [
+      [
+        [
+          "这里",
+          "Zhèlǐ"
+        ],
+        [
+          "在",
+          "zài"
+        ],
+        [
+          "法国",
+          "Fǎguó"
+        ],
+        [
+          "。",
+          ""
+        ]
+      ],
+      [
+        [
+          "这里",
+          "Zhèlǐ"
+        ],
+        [
+          "有",
+          "yǒu"
+        ],
+        [
+          "埃菲尔铁塔",
+          "Āifēi’ěr Tiětǎ",
+          "Eiffel Tower",
+          "🗼"
+        ],
+        [
+          "，",
+          ""
+        ],
+        [
+          "也有",
+          "yě yǒu"
+        ],
+        [
+          "塞纳河",
+          "Sàinà Hé",
+          "River Seine",
+          "🌊"
+        ],
+        [
+          "。",
+          ""
+        ]
+      ],
+      [
+        [
+          "这里",
+          "Zhèlǐ"
+        ],
+        [
+          "可以吃到",
+          "kěyǐ chī dào"
+        ],
+        [
+          "可颂",
+          "kěsòng",
+          "croissant",
+          "🥐"
+        ],
+        [
+          "。",
+          ""
+        ]
+      ]
+    ],
+    "sources": [
+      "https://parisjetaime.com/eng/article/explore-the-eiffel-tower-a1068"
+    ]
+  }
+]
