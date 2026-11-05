@@ -1826,6 +1826,7 @@ body:not(.workshop-mode) #restart { margin-left: auto; }
 .exploration-card p{line-height:1.9;color:#536651;font-size:14px}
 .exploration-card .exploration-meta{font-size:12px;color:#7a754f}
 .exploration-card .exploration-tags{font-size:12px;margin:22px 0}
+.exploration-card small[lang="en"]{display:block;font-family:system-ui,sans-serif;font-size:.875rem;font-weight:500;line-height:1.35}
 .exploration-enter{display:inline-flex;align-items:center;min-height:44px;justify-content:center;padding:12px 26px;text-decoration:none;border-radius:9px;font-weight:700;background:#314a3b;color:#fff6e3}
 .exploration-enter:hover{background:#49654b}
 .exploration-enter:focus-visible{outline:3px solid #9ba96a;outline-offset:4px}

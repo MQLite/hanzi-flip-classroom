@@ -1,5 +1,5 @@
 import scenes from './city-scenes.json';
-import {ruby} from './ruby.js';
+import {ruby, gloss} from './ruby.js';
 import './city-exploration.css';
 
 const byId = id => document.getElementById(id);
@@ -14,17 +14,14 @@ function annotate(element, ...words) {
   element.replaceChildren(...words.map(([hanzi, pinyin]) => ruby(hanzi, pinyin)));
 }
 
-function label(button, hanzi, pinyin, english) {
-  annotate(button, [hanzi, pinyin]);
-  if (english) button.append(gloss(english));
-  button.setAttribute('aria-label', hanzi);
+function guide(element, english, ...words) {
+  annotate(element, ...words);
+  element.append(gloss(english));
 }
 
-function gloss(english) {
-  const node = document.createElement('small');
-  node.lang = 'en';
-  node.textContent = english;
-  return node;
+function label(button, hanzi, pinyin, english) {
+  guide(button, english, [hanzi, pinyin]);
+  button.setAttribute('aria-label', hanzi);
 }
 
 function renderLine(words) {
@@ -63,7 +60,7 @@ function renderTracker() {
 }
 
 function renderProgress() {
-  annotate(byId('scene-progress'), [`${revealed} / ${scenes[level].lines.length} `], ['条线索', 'tiáo xiànsuǒ']);
+  guide(byId('scene-progress'), 'Clues opened', [`${revealed} / ${scenes[level].lines.length} `], ['条线索', 'tiáo xiànsuǒ']);
 }
 
 function showAnswer() {
@@ -85,11 +82,11 @@ function showAnswer() {
     ending.lang = 'en';
     ending.textContent = `Case closed! We found the thief in ${scene.english}.`;
     answer.prepend(ending);
-    label(next, '再玩一次', 'Zài wán yí cì');
+    label(next, '再玩一次', 'Zài wán yí cì', 'Play again');
   } else {
-    label(next, '下一关 →', 'Xià yì guān');
+    label(next, '下一关 →', 'Xià yì guān', 'Next level');
   }
-  annotate(byId('feedback'), ['猜对了！', 'Cāi duì le!'], ['一起说一句。', 'Yìqǐ shuō yí jù.']);
+  guide(byId('feedback'), 'Correct! Say the sentence together.', ['猜对了！', 'Cāi duì le!'], ['一起说一句。', 'Yìqǐ shuō yí jù.']);
   for (const button of choices.children) button.disabled = true;
   next.hidden = false;
   next.focus();
@@ -101,7 +98,7 @@ function openLevel() {
   for (const id of ['clues', 'objects', 'feedback', 'answer']) byId(id).replaceChildren();
   for (const id of ['guess', 'answer', 'next-scene']) byId(id).hidden = true;
   for (const button of choices.children) button.disabled = false;
-  annotate(byId('scene-title'), ['第', 'Dì'], [String(level + 1)], ['关', 'guān']);
+  guide(byId('scene-title'), `Level ${level + 1}`, ['第', 'Dì'], [String(level + 1)], ['关', 'guān']);
   label(showClue, '打开第一条线索', 'Dǎkāi dì yī tiáo xiànsuǒ', 'Open the first clue');
   showClue.hidden = false;
   renderTracker();
@@ -118,7 +115,7 @@ for (const city of alphabeticalCities) {
   button.onclick = () => {
     if (byId('guess').hidden || solved) return;
     if (city.id === scenes[level].id) showAnswer();
-    else annotate(byId('feedback'), ['再看看线索，', 'Zài kànkan xiànsuǒ,'], ['试一试。', 'shì yi shì.']);
+    else guide(byId('feedback'), 'Check the clues and try again.', ['再看看线索，', 'Zài kànkan xiànsuǒ,'], ['试一试。', 'shì yi shì.']);
   };
   choices.append(button);
 }
