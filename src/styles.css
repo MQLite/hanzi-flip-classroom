@@ -1832,6 +1832,8 @@ body:not(.workshop-mode) #restart { margin-left: auto; }
 .exploration-enter:focus-visible{outline:3px solid #9ba96a;outline-offset:4px}
 .exploration-cover{position:relative;overflow:hidden;background:radial-gradient(ellipse at 34% 40%,#9d85512b,transparent 53%),linear-gradient(120deg,#1f352c,#43513b);min-height:280px}
 .exploration-cover:before{content:"";position:absolute;inset:12% 16% 20%;border:1px solid #c4b37d55;background:repeating-linear-gradient(90deg,transparent 0 47px,#d6c58b18 48px 49px);box-shadow:0 0 0 8px #192c2266}
+.exploration-cover.room-exploration-cover{display:grid;place-items:center;background:radial-gradient(ellipse at 52% 44%,#647d62,#294c43 74%)}
+.room-exploration-cover svg{width:min(77%,225px);height:auto;filter:drop-shadow(0 10px 18px #162a25a0)}
 .exploration-lamp{position:absolute;left:26%;top:26%;width:58px;height:47px;background:#d4b575;clip-path:polygon(22% 0,78% 0,100% 100%,0 100%);filter:drop-shadow(0 0 24px #eac978)}
 .exploration-envelope{position:absolute;left:43%;top:44%;width:119px;height:80px;border:1px solid #c0b084;background:linear-gradient(145deg,#ede0bc,#b5a174);box-shadow:5px 9px 14px #11261d55;transform:rotate(-12deg)}
 .exploration-envelope:after{content:"信";position:absolute;inset:9px;text-align:center;padding-top:11px;border:1px solid #998a63;font:25px "SimSun",serif;color:#765a41}
