@@ -1,100 +1,157 @@
 import scenes from './city-scenes.json';
+import {ruby} from './ruby.js';
 import './city-exploration.css';
 
 const byId = id => document.getElementById(id);
-const requested = Number(new URLSearchParams(location.search).get('scene'));
-const index = Number.isInteger(requested) && requested >= 1 && requested <= scenes.length ? requested - 1 : 0;
-const scene = scenes[index];
-const title = `城市情景 ${index + 1}`;
+const choices = byId('choices');
 const showClue = byId('show-clue');
 const next = byId('next-scene');
+let level = 0;
 let revealed = 0;
+let solved = false;
 
-function ruby(text, pinyin) {
-  if (!pinyin) return document.createTextNode(text);
-  const element = document.createElement('ruby');
-  const reading = document.createElement('rt');
-  reading.textContent = pinyin;
-  element.append(text, reading);
-  return element;
+function annotate(element, ...words) {
+  element.replaceChildren(...words.map(([hanzi, pinyin]) => ruby(hanzi, pinyin)));
 }
 
-function showLine(words) {
+function label(button, hanzi, pinyin) {
+  annotate(button, [hanzi, pinyin]);
+  button.setAttribute('aria-label', hanzi);
+}
+
+function gloss(english) {
+  const node = document.createElement('small');
+  node.lang = 'en';
+  node.textContent = english;
+  return node;
+}
+
+function renderLine(words) {
   const line = document.createElement('p');
+  const objects = byId('objects');
   for (const [text, pinyin, english, icon] of words) {
+    const previousReading = line.lastElementChild?.querySelector('rt');
+    if (!pinyin && previousReading) {
+      previousReading.before(text);
+      continue;
+    }
     const word = document.createElement('span');
     word.className = english ? 'clue-word new-word' : 'clue-word';
     word.append(ruby(text, pinyin));
-    if (english) {
-      const gloss = document.createElement('small');
-      gloss.lang = 'en';
-      gloss.textContent = english;
-      word.append(gloss);
-    }
-    if (icon && !Array.from(byId('objects').children).some(object => object.textContent === icon)) {
+    if (english) word.append(gloss(english));
+    if (icon && !Array.from(objects.children).some(object => object.textContent === icon)) {
       const object = document.createElement('span');
       object.textContent = icon;
-      byId('objects').append(object);
+      objects.append(object);
     }
     line.append(word);
   }
   byId('clues').append(line);
 }
 
+function renderTracker() {
+  byId('scenes').replaceChildren(...scenes.map((_, index) => {
+    const item = document.createElement('li');
+    const complete = index < level || (index === level && solved);
+    item.textContent = complete ? '✓' : String(index + 1);
+    item.setAttribute('aria-label', `Level ${index + 1}: ${complete ? 'solved' : index === level ? 'open' : 'locked'}`);
+    if (complete) item.className = 'solved';
+    if (index === level) item.setAttribute('aria-current', 'step');
+    return item;
+  }));
+}
+
+function renderProgress() {
+  annotate(byId('scene-progress'), [`${revealed} / ${scenes[level].lines.length} `], ['条线索', 'tiáo xiànsuǒ']);
+}
+
 function showAnswer() {
-  const answer = byId('answer');
+  solved = true;
+  renderTracker();
+  const scene = scenes[level];
+  const city = [scene.city, scene.pinyin];
   const name = document.createElement('p');
-  name.append(ruby(`这是${scene.city}。`, `Zhè shì ${scene.pinyin}.`));
+  annotate(name, ['这', 'Zhè'], ['是', 'shì'], city, ['。']);
   const model = document.createElement('p');
-  model.append(ruby(`我从${scene.city}来。`, `Wǒ cóng ${scene.pinyin} lái.`));
+  annotate(model, ['我', 'Wǒ'], ['从', 'cóng'], city, ['来', 'lái'], ['。']);
+  const answer = byId('answer');
   answer.replaceChildren(name, model);
   answer.hidden = false;
-  byId('feedback').textContent = '猜对了！一起说一句。';
-  byId('choices').querySelectorAll('button').forEach(button => { button.disabled = true; });
-  byId('restart-scene').hidden = false;
-  next.href = index + 1 < scenes.length ? `?scene=${index + 2}` : './?mode=explore&source=paradise&stage=2A&lesson=2';
-  next.textContent = index + 1 < scenes.length ? '下一个情景 →' : '回到情景地图';
+
+  if (level === scenes.length - 1) {
+    const ending = document.createElement('p');
+    ending.className = 'mission-complete';
+    ending.lang = 'en';
+    ending.textContent = `Case closed! We found the thief in ${scene.english}.`;
+    answer.prepend(ending);
+    label(next, '再玩一次', 'Zài wán yí cì');
+  } else {
+    label(next, '下一关 →', 'Xià yì guān');
+  }
+  annotate(byId('feedback'), ['猜对了！', 'Cāi duì le!'], ['一起说一句。', 'Yìqǐ shuō yí jù.']);
+  for (const button of choices.children) button.disabled = true;
   next.hidden = false;
   next.focus();
 }
 
-function reset() {
+function openLevel() {
   revealed = 0;
+  solved = false;
   for (const id of ['clues', 'objects', 'feedback', 'answer']) byId(id).replaceChildren();
-  for (const id of ['guess', 'answer', 'restart-scene', 'next-scene']) byId(id).hidden = true;
-  byId('choices').querySelectorAll('button').forEach(button => { button.disabled = false; });
-  showClue.textContent = '打开第一条线索';
+  for (const id of ['guess', 'answer', 'next-scene']) byId(id).hidden = true;
+  for (const button of choices.children) button.disabled = false;
+  annotate(byId('scene-title'), ['第', 'Dì'], [String(level + 1)], ['关', 'guān']);
+  label(showClue, '打开第一条线索', 'Dǎkāi dì yī tiáo xiànsuǒ');
   showClue.hidden = false;
-  byId('scene-progress').textContent = `0 / ${scene.lines.length} 条线索`;
+  renderTracker();
+  renderProgress();
+  byId('scene-title').focus();
 }
 
-byId('scene-title').textContent = title;
-scenes.forEach((city, i) => {
-  const link = document.createElement('a');
-  link.href = `?scene=${i + 1}`;
-  link.textContent = String(i + 1);
-  link.setAttribute('aria-label', `城市情景 ${i + 1}`);
-  if (i === index) link.setAttribute('aria-current', 'page');
-  byId('scenes').append(link);
-
+const alphabeticalCities = [...scenes].sort((a, b) => a.english.localeCompare(b.english, 'en'));
+for (const city of alphabeticalCities) {
   const button = document.createElement('button');
   button.type = 'button';
-  button.append(ruby(city.city, city.pinyin));
+  button.setAttribute('aria-label', city.city);
+  button.append(ruby(city.city, city.pinyin), gloss(city.english));
   button.onclick = () => {
-    if (city.id === scene.id) showAnswer();
-    else byId('feedback').textContent = '再看看景物和美食线索，试一试。';
+    if (byId('guess').hidden || solved) return;
+    if (city.id === scenes[level].id) showAnswer();
+    else annotate(byId('feedback'), ['再看看线索，', 'Zài kànkan xiànsuǒ,'], ['试一试。', 'shì yi shì.']);
   };
-  byId('choices').append(button);
-});
+  choices.append(button);
+}
+
+byId('start-mission').onclick = () => {
+  level = 0;
+  byId('briefing').hidden = true;
+  byId('game').hidden = false;
+  openLevel();
+};
+
 showClue.onclick = () => {
-  showLine(scene.lines[revealed]);
+  const {lines} = scenes[level];
+  if (revealed >= lines.length) return;
+  renderLine(lines[revealed]);
   revealed += 1;
-  byId('scene-progress').textContent = `${revealed} / ${scene.lines.length} 条线索`;
-  if (revealed === scene.lines.length) {
+  renderProgress();
+  if (revealed === lines.length) {
     showClue.hidden = true;
     byId('guess').hidden = false;
-    byId('choices').querySelector('button').focus();
-  } else showClue.textContent = '打开下一条线索';
+    choices.firstElementChild.focus();
+  } else {
+    label(showClue, '打开下一条线索', 'Dǎkāi xià yì tiáo xiànsuǒ');
+  }
 };
-byId('restart-scene').onclick = () => { reset(); showClue.focus(); };
-reset();
+
+next.onclick = () => {
+  if (!solved) return;
+  if (level === scenes.length - 1) {
+    byId('game').hidden = true;
+    byId('briefing').hidden = false;
+    byId('start-mission').focus();
+    return;
+  }
+  level += 1;
+  openLevel();
+};
