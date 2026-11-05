@@ -1,5 +1,5 @@
 import {ZHONGWEN_ID,PARADISE_ID,coursesForTextbook,stagesForTextbook} from './curriculum.js';
-import {ruby} from './ruby.js';
+import {ruby,gloss} from './ruby.js';
 
 // Scenario content is separate from character and vocabulary question banks.
 export const EXPLORATIONS=[{
@@ -44,10 +44,10 @@ export function renderExplorations(root,selection){
       art.classList.add('city-exploration-cover');
       art.textContent='🗺️';
       meta.replaceChildren(ruby('汉语乐园','Hànyǔ Lèyuán'),' · 2A · ',ruby('第','Dì'),'2',ruby('课','kè'));
-      title.replaceChildren(ruby(scenario.title,'Qī chéng zhuīzōng'));
-      description.replaceChildren(ruby('读一读线索，','Dú yi dú xiànsuǒ,'),ruby('猜一猜城市。','cāi yi cāi chéngshì.'));
-      tags.replaceChildren('7 ',ruby('关','guān'));
-      link.replaceChildren(ruby('进入情景','Jìnrù qíngjǐng'));
+      title.replaceChildren(ruby(scenario.title,'Qī chéng zhuīzōng'),gloss('Seven-City Chase'));
+      description.replaceChildren(ruby('读一读线索，','Dú yi dú xiànsuǒ,'),ruby('猜一猜城市。','cāi yi cāi chéngshì.'),gloss('Read the clues and guess the city.'));
+      tags.replaceChildren('7 ',ruby('关','guān'),gloss('7 levels'));
+      link.replaceChildren(ruby('进入情景','Jìnrù qíngjǐng'),gloss('Open the game'));
       link.setAttribute('aria-label','进入情景');
     }else{
       meta.textContent='中文（暨南大学版）· 第五册 · 第9课 古诗二首';

@@ -6,3 +6,10 @@ export function ruby(text, pinyin) {
   element.append(text, reading);
   return element;
 }
+
+export function gloss(english) {
+  const node = document.createElement('small');
+  node.lang = 'en';
+  node.textContent = english;
+  return node;
+}
