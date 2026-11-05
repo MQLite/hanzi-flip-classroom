@@ -11,9 +11,15 @@ button:focus-visible, a:focus-visible { outline: 3px solid #a65a10; outline-offs
 h1 { margin: 24px 0 14px; font-size: clamp(2rem, 5vw, 3.2rem); }
 h2, p { margin: 0; }
 .scene-nav, .city-choices, .city-actions { display: flex; flex-wrap: wrap; gap: 9px; }
-.scene-nav { margin: 0 0 16px; padding: 0; list-style: none; }
-.scene-nav li { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: #e1ece6; color: #446459; font-weight: 700; }
-.scene-nav li[aria-current], .scene-nav li.solved { background: #136754; color: white; }
+.memory-progress { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 9px 14px; margin-bottom: 16px; padding: 8px 0; background: #eff7f3; }
+.memory-label { font-weight: 700; }
+.memory-label small { display: block; font-weight: 500; }
+#memory-count { font-weight: 700; color: #446459; }
+.scene-nav { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); flex: 1 1 180px; max-width: 350px; margin: 0; padding: 0; list-style: none; }
+.scene-nav li { display: grid; place-items: center; height: 34px; border: 1px solid #bdd4c8; border-radius: 6px; background: #e1ece6; color: #446459; font-weight: 700; }
+.scene-nav li[aria-current] { border-color: #136754; }
+.scene-nav li.solved { background: #136754; border-color: #136754; color: white; }
+.scene-nav li.solved[aria-current] { background: #ffd580; border-color: #a15418; color: #54300d; }
 .city-choices button { border: 1px solid #9fbbb2; border-radius: 9px; color: #8a4514; background: #fff; padding: 9px 14px; }
 .scene-card { background: #fff; border: 1px solid #c7ddd3; border-radius: 19px; padding: clamp(16px, 4vw, 35px); box-shadow: 0 12px 35px #1739330c; }
 .mission-briefing { background: #173933; color: #fff; }
@@ -21,7 +27,7 @@ h2, p { margin: 0; }
 .mission-briefing p { max-width: 36ch; margin-top: .65em; font-size: clamp(1.25rem, 3vw, 2rem); line-height: 1.35; }
 .mission-briefing button { margin-top: 1.15em; background: #ffdc92; color: #173933; font-size: 1.2rem; }
 .mission-briefing .mission-question { max-width: none; }
-.mission-question ruby, .thief-speaker ruby { margin-inline-end: .14em; }
+.mission-question ruby, .robot-speaker ruby { margin-inline-end: .14em; }
 .mission-question small, .city-answer small, .city-map small { display: block; font-size: .875rem; line-height: 1.35; }
 .mission-question small { margin-top: 5px; font-size: clamp(1rem, 2vw, 1.3rem); }
 .scene-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -45,9 +51,10 @@ h1 small { font-size: clamp(1rem, 2vw, 1.3rem); }
 .city-answer { margin-top: 12px; padding: 14px 18px; background: #e9f5ee; border-radius: 10px; font-size: clamp(1.4rem, 3vw, 2rem); }
 .city-answer p + p { margin-top: 6px; }
 .city-answer .mission-complete { font-weight: 750; }
-.city-answer .thief-speaker { font-size: 1rem; font-weight: 700; }
-.thief-speech ruby { margin-inline-end: .08em; }
+.city-answer .robot-speaker { font-size: 1rem; font-weight: 700; }
+.robot-speech ruby { margin-inline-end: .08em; }
 .city-map { margin: 14px 0 0; }
+.city-map, .city-answer { scroll-margin-top: 64px; }
 .map-surface { position: relative; overflow: hidden; border: 1px solid #b6d4d9; border-radius: 12px; background: #dceff5; }
 .map-surface img { display: block; width: 100%; height: auto; }
 .map-surface svg { position: absolute; inset: 0; width: 100%; height: 100%; }

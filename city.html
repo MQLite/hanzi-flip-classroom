@@ -13,14 +13,18 @@
     </header>
     <h1><ruby>城市探索<rt>Chéngshì tànsuǒ</rt></ruby><small lang="en">City Exploration</small></h1>
     <section id="briefing" class="scene-card mission-briefing" lang="en" aria-labelledby="mission-title">
-      <h2 id="mission-title">The Missing Chinese Homework</h2>
-      <p>Seven people are from seven different cities. One of them stole our Chinese homework!</p>
-      <p>Read the clues and guess each person’s city. Find the thief’s city to get our homework back!</p>
-      <p class="mission-question" lang="zh-Hans"><ruby>猜猜<rt>Cāicai</rt></ruby><ruby>小偷<rt>xiǎotōu</rt></ruby><ruby>是<rt>shì</rt></ruby><ruby>从<rt>cóng</rt></ruby><ruby>哪儿<rt>nǎr</rt></ruby><ruby>来的？<rt>lái de?</rt></ruby><small lang="en">Can you guess where the thief came from?</small></p>
+      <h2 id="mission-title"><span aria-hidden="true">🤖 </span>Doudou’s Lost Memory</h2>
+      <p>Doudou the robot has lost its memory! It remembers seven cities, but where is it from?</p>
+      <p>Read the clues and guess each city. Every correct guess lights up one memory cell.</p>
+      <p class="mission-question" lang="zh-Hans"><ruby>豆豆，<rt>Dòudou,</rt></ruby><ruby>你<rt>nǐ</rt></ruby><ruby>从<rt>cóng</rt></ruby><ruby>哪儿<rt>nǎr</rt></ruby><ruby>来？<rt>lái?</rt></ruby><small lang="en">Doudou, where are you from?</small></p>
       <button id="start-mission" class="city-primary" type="button">Start Level 1</button>
     </section>
     <section id="game" hidden>
-      <ol id="scenes" class="scene-nav" aria-label="Level progress"></ol>
+      <div id="memory-progress" class="memory-progress">
+        <p class="memory-label"><ruby>记忆<rt>Jìyì</rt></ruby><small lang="en">Memory</small></p>
+        <ol id="scenes" class="scene-nav" aria-label="Memory cells"></ol>
+        <p id="memory-count" role="status"></p>
+      </div>
       <section class="scene-card" aria-labelledby="scene-title">
         <div class="scene-heading">
           <h2 id="scene-title" tabindex="-1"></h2>

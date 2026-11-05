@@ -8,7 +8,7 @@ export const EXPLORATIONS=[{
   description:'一件旧衣，一面旧镜，两封未寄出的信。观察物件、组合线索，读懂《游子吟》《回乡偶书》里的心意。',
 }, {
   id:'city-mission',source:'paradise',textbook:PARADISE_ID,stage:'2A',book:2,lesson:2,
-  lessonTitle:'我从北京来',title:'七城追踪',href:'./city.html',cityScene:true,
+  lessonTitle:'我从北京来',title:'豆豆的记忆',href:'./city.html',cityScene:true,
 }];
 
 export function explorationStages(textbook){
@@ -44,7 +44,7 @@ export function renderExplorations(root,selection){
       art.classList.add('city-exploration-cover');
       art.textContent='🗺️';
       meta.replaceChildren(ruby('汉语乐园','Hànyǔ Lèyuán'),' · 2A · ',ruby('第','Dì'),'2',ruby('课','kè'));
-      title.replaceChildren(ruby(scenario.title,'Qī chéng zhuīzōng'),gloss('Seven-City Chase'));
+      title.replaceChildren(ruby(scenario.title,'Dòudou de jìyì'),gloss('Doudou’s Lost Memory'));
       description.replaceChildren(ruby('读一读线索，','Dú yi dú xiànsuǒ,'),ruby('猜一猜城市。','cāi yi cāi chéngshì.'),gloss('Read the clues and guess the city.'));
       tags.replaceChildren('7 ',ruby('关','guān'),gloss('7 levels'));
       link.replaceChildren(ruby('进入情景','Jìnrù qíngjǐng'),gloss('Open the game'));
