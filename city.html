@@ -8,29 +8,36 @@
 <body>
   <main class="city-page">
     <header class="city-header">
-      <a href="./?mode=explore&amp;source=paradise&amp;stage=2A&amp;lesson=2">← 返回情景探索</a>
-      <span>汉语乐园 2A · 第2课</span>
+      <a href="./?mode=explore&amp;source=paradise&amp;stage=2A&amp;lesson=2" aria-label="返回情景探索">← <ruby>返回<rt>Fǎnhuí</rt></ruby><ruby>情景探索<rt>qíngjǐng tànsuǒ</rt></ruby></a>
+      <span><ruby>汉语乐园<rt>Hànyǔ Lèyuán</rt></ruby> 2A · <ruby>第<rt>Dì</rt></ruby>2<ruby>课<rt>kè</rt></ruby></span>
     </header>
-    <h1>城市探索</h1>
-    <nav id="scenes" class="scene-nav" aria-label="选择城市情景"></nav>
-    <section class="scene-card" aria-labelledby="scene-title">
-      <div class="scene-heading">
-        <h2 id="scene-title"></h2>
-        <p id="scene-progress"></p>
-      </div>
-      <div id="objects" class="scene-objects" aria-hidden="true"></div>
-      <div id="clues" class="scene-clues" aria-live="polite"></div>
-      <button id="show-clue" class="city-primary" type="button">打开第一条线索</button>
-      <section id="guess" hidden>
-        <h2><ruby>这是哪里？<rt>Zhè shì nǎlǐ?</rt></ruby></h2>
-        <div id="choices" class="city-choices"></div>
+    <h1><ruby>城市探索<rt>Chéngshì tànsuǒ</rt></ruby></h1>
+    <section id="briefing" class="scene-card mission-briefing" lang="en" aria-labelledby="mission-title">
+      <h2 id="mission-title">Catch the Thief!</h2>
+      <p>A thief ran through seven cities and left clues along the way.</p>
+      <p>Read the Chinese clues and guess each city. Solve all seven levels to find the thief’s hiding place!</p>
+      <button id="start-mission" class="city-primary" type="button">Start Level 1</button>
+    </section>
+    <section id="game" hidden>
+      <ol id="scenes" class="scene-nav" aria-label="Level progress"></ol>
+      <section class="scene-card" aria-labelledby="scene-title">
+        <div class="scene-heading">
+          <h2 id="scene-title" tabindex="-1"></h2>
+          <p id="scene-progress"></p>
+        </div>
+        <div id="objects" class="scene-objects" aria-hidden="true"></div>
+        <div id="clues" class="scene-clues" aria-live="polite"></div>
+        <button id="show-clue" class="city-primary" type="button"></button>
+        <section id="guess" hidden>
+          <h2><ruby>这<rt>Zhè</rt></ruby><ruby>是<rt>shì</rt></ruby><ruby>哪里？<rt>nǎlǐ?</rt></ruby></h2>
+          <div id="choices" class="city-choices"></div>
+        </section>
+        <p id="feedback" class="city-feedback" role="status"></p>
+        <div id="answer" class="city-answer" hidden></div>
+        <div class="city-actions">
+          <button id="next-scene" class="city-primary" type="button" hidden></button>
+        </div>
       </section>
-      <p id="feedback" class="city-feedback" role="status"></p>
-      <div id="answer" class="city-answer" hidden></div>
-      <div class="city-actions">
-        <button id="restart-scene" type="button" hidden>再猜一次</button>
-        <a id="next-scene" class="city-primary" hidden></a>
-      </div>
     </section>
   </main>
   <script type="module" src="/src/city-exploration.js"></script>
