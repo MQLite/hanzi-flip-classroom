@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {CAT_TRAIL,CHEST_CARD_SPOT,CLUES,EXIT_X,KEY_SPOT,PAINTING_SPOT,RUG_CENTER,TRAY_SPOT} from './room-escape-core.js';
+import {CAT_TRAIL,CHEST_CARD_SPOT,CLUES,ENTRY_Z,EXIT_X,KEY_SPOT,PAINTING_SPOT,RUG_CENTER,TRAY_SPOT} from './room-escape-core.js';
 
 const palette={wood:0xa46945,trim:0x684837,wall:0xf1d7a6,green:0x357366,orange:0xf2a256,gold:0xffca58};
 const cube=new THREE.BoxGeometry(1,1,1);
@@ -198,12 +198,25 @@ function furnishings(scene){
   const rugCard=makeClueCard(scene,RUG_CENTER.x,.111,RUG_CENTER.z+.52);
   rugCard.card.rotation.x=-Math.PI/2;
   rugCard.paw.visible=false;
-  const smallDoorZ=-1.05;
+  const smallDoorZ=ENTRY_Z;
+  box(scene,0x375e52,3.92,.047,-2.31,3.27,.095,2.5);
+  for(let row=0;row<5;row++)for(let column=0;column<7;column++){
+    const colors=[0x81a99a,0x96b7a5,0x779e8e];
+    box(scene,colors[(row+column*2)%3],2.52+column*.46,.094,-1.31-row*.5,.444,.012,.482);
+  }
+  box(scene,0x9c6944,3.635,.033,smallDoorZ,1.34,.067,.22);
+  box(scene,0xffc973,3.635,.07,smallDoorZ+.035,1.29,.013,.085);
   box(scene,0xb88764,2.23,.46,-2.39,.14,.92,2.6);
   box(scene,0xd6b78f,2.62,.49,smallDoorZ,.72,.98,.16);
   box(scene,0xd6b78f,4.94,.49,smallDoorZ,1.3,.98,.16);
   for(const x of [2.98,4.29])box(scene,trim,x,.94,smallDoorZ,.13,1.88,.2);
   box(scene,trim,3.635,1.9,smallDoorZ,1.47,.15,.22);
+  const entryDoor=group(scene,3.06,.075,smallDoorZ-.035);
+  entryDoor.rotation.y=Math.PI/2;
+  box(entryDoor,0x527b6d,.58,.88,0,1.17,1.75,.092);
+  box(entryDoor,0x709487,.58,.88,.054,.96,1.44,.022);
+  for(const x of [.17,.98])box(entryDoor,0x477062,x,.88,.069,.05,1.42,.021);
+  round(entryDoor,0xffc970,1.02,.9,.12,.055,.055,.055);
   box(scene,0x9d6948,4.65,.5,-3.29,1.15,1,.47);
   for(const y of [.34,.67]){box(scene,0xc3996c,4.65,y,-3.04,1.04,.25,.07);box(scene,trim,4.65,y,-2.98,.14,.038,.035);}
   const chest=group(scene,4.56,0,-2.48);
@@ -345,7 +358,7 @@ function showInspection(player,state,camera,cleaning,sniffing){
 
 function indoorShot(state){
   const {index}=state;
-  const eye=index<4?[-2.85,2.54,3.46]:index<7?[1.1,2.1,2.95]:index<10?[2.3,2.66,3.46]:index===10?[4.55,2.36,2.46]:[4.85,2.24,.05];
+  const eye=index<4?[-2.85,2.54,3.46]:index<7?[1.1,2.1,2.95]:index<10?[2.3,2.66,3.46]:[4.85,2.24,.05];
   const clue=CLUES[index];
   const points=[];
   const add=(p,height=.34)=>points.push(new THREE.Vector3(p.x,p.y+height,p.z));
@@ -358,8 +371,7 @@ function indoorShot(state){
     if(index!==11)for(const point of option.via)add(point);
   }
   if(index!==11){add(state.player,.13);add(state.player,1.57);}
-  if(index>=7&&index<=10){add(state.cat,.12);add(state.cat,.72);}
-  if(index===10)add(KEY_SPOT);
+  if(index>=7&&index<=9){add(state.cat,.12);add(state.cat,.72);}
   if(index===11){add({x:EXIT_X,y:2,z:3.55});add({x:EXIT_X+.67,y:0,z:4.75});}
   return {eye:new THREE.Vector3(...eye),points};
 }
@@ -373,6 +385,10 @@ function specialShot(mode){
   if(mode==='key'){
     return {eye:new THREE.Vector3(4.11,1.67,-1.18),
       points:[new THREE.Vector3(KEY_SPOT.x,KEY_SPOT.y+.2,KEY_SPOT.z),new THREE.Vector3(4.1,.13,-2.21),new THREE.Vector3(5.3,.32,-2.05)]};
+  }
+  if(mode==='entry'){
+    return {eye:new THREE.Vector3(4.33,2.16,1.81),
+      points:[new THREE.Vector3(2.8,.04,.13),new THREE.Vector3(4.52,2.1,ENTRY_Z),new THREE.Vector3(3.65,.12,-2.22),new THREE.Vector3(3.65,1.63,-.35)]};
   }
   if(mode==='painting'){
     const {x,y,z}=PAINTING_SPOT;
@@ -458,7 +474,7 @@ export function createRoomScene(host,onProject){
     const overhead=state.index===4&&state.phase==='clue';
     const showingPainting=state.index===1&&(state.phase==='solved'||travelProgress>=.56);
     const atChest=state.phase==='match'||state.phase==='key';
-    const nextShot=outside?'garden':intro?'intro':overhead?'rug':showingPainting?'painting':atChest?'key':state.index;
+    const nextShot=outside?'garden':intro?'intro':overhead?'rug':showingPainting?'painting':atChest?'key':state.index===10?'entry':state.index;
     if(nextShot!==shotKey){
       shotKey=nextShot;
       shot=typeof shotKey==='string'?specialShot(shotKey):indoorShot(state);

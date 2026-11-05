@@ -57,6 +57,13 @@ test('the locked room takes twelve clues, allows retries, and exits after collec
       await expect(page.locator('#room-card-icon')).toBeVisible();
       await page.screenshot({path:testInfo.outputPath('paw-trail.png')});
     }
+    if(i===10){
+      await page.getByRole('button',{name:'留在门外的木地板上',exact:true}).click();
+      await expect(page.locator('#room-card-slot')).toBeHidden();
+      await expect(page.locator('#room-feedback')).toContainText('再想一想');
+      await expect(page.getByRole('button',{name:'跨过门槛，进入小房间',exact:true})).toBeVisible();
+      await page.screenshot({path:testInfo.outputPath('entry.png')});
+    }
     await page.locator(`[data-choice="${choices[i]}"]`).click();
     if(i===10){
       const cardSlot=page.getByRole('button',{name:'把猫爪卡放进木箱卡槽',exact:true});

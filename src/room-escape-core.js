@@ -2,8 +2,10 @@ const spot = (x,y,z,pose='stand') => ({x,y,z,pose});
 const stairs = [spot(-3.4,.22,1.48),spot(-3.4,.44,1.02),spot(-3.4,.66,.56),spot(-3.4,.88,.08)];
 const middle = spot(0,0,.85);
 const pantryDoor = spot(3.65,0,-.35);
-const pantry = spot(3.65,0,-2.18);
-const boxSide = spot(5.03,0,-2.05);
+export const ENTRY_Z=-1.05;
+const threshold = spot(3.65,.07,ENTRY_Z);
+const pantry = spot(3.65,.1,-2.18);
+const boxSide = spot(5.03,.1,-2.05);
 const start = spot(-3.4,0,2.5);
 const catStart = spot(4.2,0,2.15);
 const pantryPath=[spot(1.75,0,1.05),spot(3.65,0,.8)];
@@ -41,10 +43,10 @@ export const CLUES = [
     choices:[choice('朝小门',catPantry,pantryPath),choice('留在小朋友旁',catClue)]},
   {char:'走',pinyin:'zǒu',prompt:'猫咪停在小门旁。小朋友怎样跟上它？',answer:'小朋友沿着猫爪印走到小门前。',correct:0,
     choices:[choice('沿爪印到小门',pantryDoor,pantryPath),choice('留在地毯旁',middle)]},
-  {char:'入',pinyin:'rù',prompt:'小门开着，里面有一个印着猫爪的木箱。',answer:'他进门，找到和卡片上图案一样的木箱。把猫爪卡放进木箱的卡槽。',correct:0,
-    choices:[choice('穿过小门到木箱旁',pantry),choice('留在小门外',pantryDoor)],catTo:boxSide},
+  {char:'入',pinyin:'rù',prompt:'小朋友站在门外。怎样进入铺着绿色地砖的小房间？',answer:'他跨过门槛，从木地板走进铺着绿砖的小房间。里面有个印着猫爪的木箱。',correct:0,
+    choices:[choice('跨过门槛，进入小房间',pantry,[threshold],spot(3.67,.1,-1.88)),choice('留在门外的木地板上',pantryDoor,[],spot(3.03,0,.13))],catTo:boxSide},
   {char:'出',pinyin:'chū',prompt:'钥匙拿到了。哪条路能离开房间？',answer:'他用钥匙打开出口，和猫咪来到花园。夜空亮起了烟花！',correct:1,
-    choices:[choice('回到圆地毯',middle),choice('穿过有锁的出口',spot(EXIT_X,0,4.85),[pantryDoor,spot(2.85,0,2.15),spot(EXIT_X,0,3.28)])]},
+    choices:[choice('回到圆地毯',middle),choice('穿过有锁的出口',spot(EXIT_X,0,4.85),[threshold,pantryDoor,spot(2.85,0,2.15),spot(EXIT_X,0,3.28)])]},
 ];
 
 export function createEscape(){

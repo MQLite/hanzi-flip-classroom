@@ -47,7 +47,10 @@ root.innerHTML=`
           <rect x="65" y="81" width="184" height="149" rx="7" fill="#bd895c" stroke="#956846" stroke-width="5"/>
           <path d="M120 228h77v81h-77z" fill="#d6a675" stroke="#966646" stroke-width="3"/><path d="M120 249h77m-77 20h77m-77 20h77" stroke="#946846" stroke-width="3"/>
           <ellipse cx="340" cy="256" rx="91" ry="61" fill="#79a48b" stroke="#47796a" stroke-width="5"/><ellipse id="room-flat-cushion" cx="340" cy="256" rx="25" ry="14" fill="#dbad76"/>
+          <rect x="457" y="39" width="179" height="128" fill="#a5bfac"/>
+          <path d="M491 39v125m35-125v125m35-125v125m35-125v125m35-125v125M457 72h179m-179 30h179m-179 30h179" stroke="#789f8b" stroke-width="2"/>
           <path d="M456 38v131h43m72 0h66" fill="none" stroke="#a47856" stroke-width="10"/>
+          <path d="M499 168h72" stroke="#bf945b" stroke-width="5"/>
           <rect x="435" y="388" width="87" height="26" rx="6" fill="#397366" stroke="#654a39" stroke-width="4"/>
           <g id="room-flat-box"><rect x="556" y="78" width="46" height="34" rx="7" fill="#ae754e" stroke="#754e37" stroke-width="4"/><path d="M556 91h46m-25 0v11" fill="none" stroke="#edbf70" stroke-width="4"/></g>
         </svg>
@@ -115,7 +118,7 @@ function projectOverlays(){
     const index=Number(pin.dataset.pin);
     const target=CLUES[state.index].choices[index]?.pin;
     if(!target)continue;
-    pin.classList.toggle('room-pin-neutral',[1,2,4].includes(state.index));
+    pin.classList.toggle('room-pin-neutral',[1,2,4,10].includes(state.index));
     if(state.index===11&&index===1)position(pin,{...target,y:1,z:3.48});
     else position(pin,target);
   }
@@ -264,11 +267,13 @@ function choose(index){
   const actor=CLUES[next.index].actor??'player';
   const route=[previous[actor],...next.travel];
   const catMoving=actor==='player'&&previous.cat!==next.cat;
-  const catRoute=catMoving?[previous.cat,{x:3.85,y:0,z:-.45},...(next.doorOpen?next.travel.slice(1,-1):[]),next.cat]:null;
+  const catWaypoints=next.doorOpen?next.travel.slice(0,-1):[{x:3.85,y:0,z:-.45},next.travel[0]];
+  const catRoute=catMoving?[previous.cat,...catWaypoints,next.cat]:null;
   const length=route.slice(1).reduce((sum,p,i)=>sum+Math.hypot(p.x-route[i].x,p.z-route[i].z),0);
   const lookingLeft=next.index===1;
   const lookingRight=next.index===2;
-  const duration=cleaning?1550:lookingLeft?1350:lookingRight?860:Math.min(1900,Math.max(430,length*190));
+  const entering=next.phase==='match';
+  const duration=cleaning?1550:lookingLeft?1350:lookingRight?860:entering?1650:Math.min(1900,Math.max(430,length*190));
   let begin;
   function frame(time){
     if(token!==generation)return;
@@ -276,13 +281,14 @@ function choose(index){
     const ratio=Math.min(1,(time-begin)/duration);
     if(cleaning)draw({...previous,player:next.player},{cleaning:ratio});
     else{
-      const walking=lookingLeft?Math.min(1,ratio/.56):ratio;
+      const walking=lookingLeft?Math.min(1,ratio/.56):entering?Math.min(1,ratio/.79):ratio;
       const move=traverse(route,walking);
       const snapshot={...previous,[actor]:move.at};
-      if(catMoving)snapshot.cat=traverse(catRoute,ratio).at;
+      if(catMoving)snapshot.cat=traverse(catRoute,walking).at;
       const turn=Math.min(1,ratio/.28);
       const angle=lookingLeft?Math.PI*(1+turn/2):lookingRight?Math.PI*(turn-.5):move.angle;
-      draw(snapshot,{actor:lookingLeft&&walking===1?undefined:actor,angle,beat:walking*length*7,catMoving,travelProgress:ratio,doorAngle:next.doorOpen?1.35*Math.max(0,Math.min(1,(ratio-.63)*8)):0});
+      const arrived=(lookingLeft||entering)&&walking===1;
+      draw(snapshot,{actor:arrived?undefined:actor,angle,beat:walking*length*7,catMoving:catMoving&&!arrived,travelProgress:ratio,doorAngle:next.doorOpen?1.35*Math.max(0,Math.min(1,(ratio-.63)*8)):0});
     }
     if(ratio<1)requestAnimationFrame(frame);
     else {moving=false;render({focus:true});}
