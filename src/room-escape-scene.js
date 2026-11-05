@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {EXIT_X} from './room-escape-core.js';
+import {CLUES,EXIT_X} from './room-escape-core.js';
 
 const palette={wood:0xa46945,trim:0x684837,wall:0xf1d7a6,green:0x357366,orange:0xf2a256,gold:0xffca58};
 const cube=new THREE.BoxGeometry(1,1,1);
@@ -18,14 +18,6 @@ function group(parent,x=0,y=0,z=0){const node=new THREE.Group();node.position.se
 function shadow(parent,x,y,z,w,d,opacity=.15){
   const object=new THREE.Mesh(new THREE.CircleGeometry(1,28),new THREE.MeshBasicMaterial({color:0x473426,transparent:true,opacity,depthWrite:false}));
   object.position.set(x,y,z);object.scale.set(w,d,1);object.rotation.x=-Math.PI/2;parent.add(object);
-}
-function sign(parent,text,x,y,z,{width=1.45,faceDown=false,color='#254d45'}={}){
-  const canvas=document.createElement('canvas');canvas.width=420;canvas.height=116;
-  const ctx=canvas.getContext('2d');ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(4,4,412,108,25);ctx.fill();
-  ctx.font='bold 58px "Microsoft YaHei", sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#fff6db';ctx.fillText(text,210,61);
-  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
-  const label=new THREE.Mesh(new THREE.PlaneGeometry(width,width*116/420),new THREE.MeshBasicMaterial({map:texture,transparent:true,side:THREE.DoubleSide}));
-  label.position.set(x,y,z);if(faceDown)label.rotation.x=-Math.PI/2;parent.add(label);return label;
 }
 function shelf(root){
   const wood=palette.wood;
@@ -65,12 +57,10 @@ function furnishings(scene){
   }
   box(scene,0xc4d19a,EXIT_X,-.047,4.65,2.8,.12,1.65);
   box(scene,0x97b48b,EXIT_X,.03,4.54,1.68,.06,1.46);
-  // High rear walls and low cutaways leave the children and the doorway in view.
+  // The camera stays under the ceiling and inside the four walls.
   box(scene,palette.wall,0,1.49,-3.67,11.5,2.98,.17);
-  box(scene,0xf4dfb6,-5.63,1.38,-1.98,.16,2.76,3.4);
-  box(scene,0xd0a579,-5.63,.37,1.62,.16,.74,3.91);
-  box(scene,0xf3ddb6,5.63,1.39,-2.43,.16,2.78,2.48);
-  box(scene,0xd0a579,5.63,.37,1.18,.16,.74,4.79);
+  for(const x of [-5.63,5.63])box(scene,0xf4dfb6,x,1.49,0,.16,2.98,7.42);
+  box(scene,0xf7e8cc,0,3.08,0,11.5,.18,7.49);
   box(scene,trim,0,.12,-3.55,11.42,.2,.08);
   box(scene,wood,0,3.02,-3.67,11.65,.13,.25);
   for(const x of [-5.63,5.63])box(scene,trim,x,.76,1.54,.23,.1,4.16);
@@ -98,7 +88,6 @@ function furnishings(scene){
   box(scene,0xd6b78f,4.94,.49,smallDoorZ,1.3,.98,.16);
   for(const x of [2.98,4.29])box(scene,trim,x,.94,smallDoorZ,.13,1.88,.2);
   box(scene,trim,3.635,1.9,smallDoorZ,1.47,.15,.22);
-  sign(scene,'储物间',3.64,2.12,-1.02,{width:1.26});
   box(scene,0x9d6948,4.65,.5,-3.29,1.15,1,.47);
   for(const y of [.34,.67]){box(scene,0xc3996c,4.65,y,-3.04,1.04,.25,.07);box(scene,trim,4.65,y,-2.98,.14,.038,.035);}
   const chest=group(scene,4.56,0,-2.48);
@@ -115,9 +104,10 @@ function furnishings(scene){
   key.rotation.z=.34;key.visible=false;
   const doorZ=3.65;
   for(const [left,right] of [[-5.63,EXIT_X-.99],[EXIT_X+.99,5.63]]){
-    box(scene,0xd0a579,(left+right)/2,.29,doorZ,right-left,.58,.16);
+    box(scene,0xf0d5ab,(left+right)/2,1.49,doorZ,right-left,2.98,.16);
     box(scene,trim,(left+right)/2,.59,doorZ,right-left,.09,.22);
   }
+  box(scene,0xf0d5ab,EXIT_X,2.64,doorZ,1.98,.68,.16);
   for(const x of [EXIT_X-.99,EXIT_X+.99])box(scene,trim,x,1.09,doorZ,.17,2.18,.23);
   box(scene,trim,EXIT_X,2.24,doorZ,2.16,.18,.27);
   const door=group(scene,EXIT_X-.91,0,doorZ);
@@ -130,7 +120,6 @@ function furnishings(scene){
   const lock=group(door,1.32,.79,.18);
   mesh(new THREE.TorusGeometry(.105,.023,8,20),0x604d40,0,.12,0,1,1,1,lock);
   box(lock,0xf0bb62,0,0,0,.22,.17,.086);box(lock,0x6a4b36,0,0,.053,.035,.065,.012);
-  sign(scene,'出口',EXIT_X,2.47,doorZ+.02,{width:1.23});
   return {door,lock,chestLid:lid,key};
 }
 
@@ -187,7 +176,26 @@ function setActor(actor,p,{walking=false,beat=0}={}){
   actor.legs.forEach((leg,i)=>{leg.rotation.x=seated?-1.25:walking?Math.sin(beat+i*Math.PI)*.36:0;});
 }
 
-const cameraTarget=new THREE.Vector3(0,.3,.44);
+function indoorShot(state){
+  const {index}=state;
+  const eye=index<4?[-2.85,2.54,3.46]:index===4?[-.4,2.72,3.46]:index<7?[1.1,2.1,2.95]:index<10?[2.3,2.66,3.46]:index===10?[4.55,2.36,2.46]:[4.85,2.24,.05];
+  const clue=CLUES[index];
+  const points=[];
+  const add=(p,height=.34)=>points.push(new THREE.Vector3(p.x,p.y+height,p.z));
+  for(const option of clue.choices){
+    if(option.at){
+      add(option.at);
+      if(index!==11)add(option.at,clue.actor==='cat'?.75:1.48);
+    }
+    if(index!==11)for(const point of option.via)add(point);
+  }
+  if(index!==11){add(state.player,.13);add(state.player,1.57);}
+  if(index>=7&&index<=10){add(state.cat,.12);add(state.cat,.72);}
+  if(index===10)add({x:4.56,y:1,z:-2.48});
+  if(index===11){add({x:EXIT_X,y:2,z:3.55});add({x:EXIT_X+.67,y:0,z:4.75});}
+  return {eye:new THREE.Vector3(...eye),points};
+}
+
 export function createRoomScene(host,onProject){
   let renderer;
   try{renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'low-power'});}catch{return null;}
@@ -210,24 +218,37 @@ export function createRoomScene(host,onProject){
     const print=disk(footprintGroup,0x4d7564,x,.059,z,.072,.01,.14);
     print.rotation.y=1.25;
   }
-  const camera=new THREE.OrthographicCamera();
-  camera.position.set(4.3,11.5,14.7);camera.lookAt(cameraTarget);
-  let frameState;
+  const camera=new THREE.PerspectiveCamera(58,1,.045,40);
+  let frameState,shot;
   function project({x,y,z}){
     const v=new THREE.Vector3(x,y+.28,z).project(camera);
     return {left:(v.x*.5+.5)*100,top:(.5-v.y*.5)*100};
   }
+  function frameCamera(){
+    if(!shot)return;
+    camera.position.copy(shot.eye);
+    const aim=new THREE.Vector3();
+    for(const point of shot.points)aim.add(point.clone().sub(shot.eye).normalize());
+    camera.lookAt(shot.eye.clone().add(aim));camera.updateMatrixWorld();
+    let halfHeight=Math.tan(THREE.MathUtils.degToRad(24));
+    for(const point of shot.points){
+      const relative=point.clone().applyMatrix4(camera.matrixWorldInverse);
+      if(relative.z>=0)continue;
+      halfHeight=Math.max(halfHeight,Math.abs(relative.y/relative.z)*1.22,Math.abs(relative.x/relative.z)*1.22/camera.aspect);
+    }
+    camera.fov=THREE.MathUtils.radToDeg(Math.atan(halfHeight)*2);
+    camera.updateProjectionMatrix();
+  }
   function resize(){
     const w=host.clientWidth,h=host.clientHeight;
     if(!w||!h)return;
-    const ratio=w/h,halfHeight=Math.max(5.75,7.2/ratio);
-    camera.left=-halfHeight*ratio;camera.right=halfHeight*ratio;camera.top=halfHeight;camera.bottom=-halfHeight;
-    camera.near=.1;camera.far=80;camera.updateProjectionMatrix();camera.updateMatrixWorld();
+    camera.aspect=w/h;frameCamera();
     renderer.setSize(w,h,false);
     if(frameState)renderer.render(scene,camera);
     onProject();
   }
   function draw(state,{actor,beat=0,angle,doorAngle,catMoving=false}={}){
+    if(state.index!==frameState?.index){shot=indoorShot(state);frameCamera();}
     frameState=state;
     setActor(player,state.player,{walking:actor==='player',beat});setActor(cat,state.cat,{walking:actor==='cat'||catMoving,beat});
     if(Number.isFinite(angle))(actor==='cat'?cat:player).root.rotation.y=angle;

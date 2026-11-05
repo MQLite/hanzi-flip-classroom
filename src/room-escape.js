@@ -3,14 +3,25 @@ import {createRoomScene} from './room-escape-scene.js';
 import './room-escape.css';
 
 const root=document.querySelector('#room-app');
+const icon=(path,fill='none')=>`<svg viewBox="0 0 24 24" aria-hidden="true" fill="${fill}" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
+const symbols={
+  back:icon('<path d="M19 12H5m6-6-6 6 6 6"/>'),
+  reset:icon('<path d="M3 10a9 9 0 1 1 2 9m-2-14v5h5"/>'),
+  full:icon('<path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5"/>'),
+  lock:icon('<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/>'),
+  key:icon('<circle cx="7.5" cy="8" r="4.5"/><path d="m11 11.5 8 8 2-2m-6-2 2-2"/>'),
+  play:icon('<path d="M8 5v14l11-7z" fill="currentColor"/>'),
+  next:icon('<path d="M5 12h14m-6-6 6 6-6 6"/>'),
+  stand:icon('<circle cx="12" cy="4" r="2"/><path d="M12 7v8m-4-4 4-3 4 3m-4 4-3 6m3-6 3 6"/>'),
+  sit:icon('<circle cx="9" cy="5" r="2"/><path d="M9 8v8h6v5m-6-9h5m-8 8h8"/>'),
+};
 root.innerHTML=`
   <header class="room-header">
-    <div>
-      <a class="room-return" href="./?mode=explore&amp;source=zhongwen&amp;stage=1&amp;lesson=3">返回情景探索</a>
-      <p class="room-kicker">识字（三） · 第二课时</p>
+    <div class="room-heading">
+      <a class="room-quiet" aria-label="返回情景探索" title="返回情景探索" href="./?mode=explore&amp;source=zhongwen&amp;stage=1&amp;lesson=3">${symbols.back}</a>
       <h1>密室逃脱</h1>
     </div>
-    <div class="room-toolbar"><button type="button" id="room-reset" class="room-quiet">重新开始</button><button type="button" id="room-fullscreen" class="room-quiet">全屏</button></div>
+    <div class="room-toolbar"><button type="button" id="room-reset" class="room-quiet" aria-label="重新开始" title="重新开始">${symbols.reset}</button><button type="button" id="room-fullscreen" class="room-quiet" aria-label="全屏" title="全屏">${symbols.full}</button></div>
   </header>
   <main class="room-game" aria-label="密室逃脱游戏">
     <div class="room-stage" id="room-stage">
@@ -23,38 +34,37 @@ root.innerHTML=`
           <path d="M120 228h77v81h-77z" fill="#d6a675" stroke="#966646" stroke-width="3"/><path d="M120 249h77m-77 20h77m-77 20h77" stroke="#946846" stroke-width="3"/>
           <ellipse cx="340" cy="265" rx="80" ry="48" fill="#79a48b" stroke="#47796a" stroke-width="5"/><ellipse cx="340" cy="265" rx="25" ry="14" fill="#dbad76"/>
           <path d="M456 38v131h43m72 0h66" fill="none" stroke="#a47856" stroke-width="10"/>
-          <text x="535" y="65" text-anchor="middle">储物间</text><text x="158" y="108" text-anchor="middle">木台</text>
           <rect x="435" y="388" width="87" height="26" rx="6" fill="#397366" stroke="#654a39" stroke-width="4"/>
-          <text x="478" y="435" text-anchor="middle">出口</text>
           <g id="room-flat-box"><rect x="556" y="78" width="46" height="34" rx="7" fill="#ae754e" stroke="#754e37" stroke-width="4"/><path d="M556 91h46m-25 0v11" fill="none" stroke="#edbf70" stroke-width="4"/></g>
         </svg>
         <span class="room-flat-actor" id="room-flat-player" aria-label="小朋友">🧒</span><span class="room-flat-actor" id="room-flat-cat" aria-label="猫咪">🐈</span>
         <span class="room-flat-actor" id="room-flat-key" aria-label="钥匙" hidden>🔑</span>
       </div>
-      <div class="room-stage-toolbar"><span id="room-view-label" class="room-chip">3D 密室</span><span id="room-door-status" class="room-chip">出口已锁</span></div>
+      <div class="room-sr-only"><span id="room-view-label">3D 密室</span><span id="room-door-status">出口已锁</span></div>
       <div id="room-pins" class="room-pins"></div>
-      <div id="room-stage-caption" class="room-stage-caption" hidden>小朋友在这里说话</div>
-      <button type="button" id="room-check-door" class="room-quiet room-check-door">试开出口</button>
+      <div id="room-stage-caption" class="room-stage-caption" aria-label="小朋友在说话" hidden>•••</div>
+      <button type="button" id="room-check-door" class="room-quiet room-check-door" aria-label="试开出口" title="试开出口">${symbols.lock}</button>
     </div>
     <section class="room-panel" aria-label="当前汉字线索">
-      <div class="room-panel-top"><span id="room-stage-label">任务</span><span id="room-count">0 / 12</span></div>
+      <div class="room-panel-top"><span id="room-count">0 / 12</span><span id="room-key-icon" aria-hidden="true" hidden>${symbols.key}</span></div>
       <progress id="room-progress" value="0" max="12" aria-label="已完成的汉字线索"></progress>
       <div class="room-clue" aria-live="polite" aria-atomic="true">
         <p id="room-pinyin" class="room-pinyin" hidden></p>
         <p id="room-glyph" class="room-glyph" hidden></p>
-        <h2 id="room-intro">门锁住了！</h2>
+        <h2 id="room-intro">找钥匙</h2>
         <h2 id="room-win" hidden>逃脱成功！</h2>
-        <p id="room-prompt" class="room-prompt">和猫咪一起读线索，找到钥匙，打开出口。</p>
+        <p id="room-prompt" class="room-sr-only">和猫咪一起读线索，找到钥匙，打开出口。</p>
       </div>
-      <p id="room-feedback" class="room-feedback" role="status"></p>
+      <p id="room-feedback" class="room-sr-only" role="status"></p>
+      <span id="room-signal" class="room-signal" aria-hidden="true" hidden></span>
       <div id="room-choices" class="room-choices" hidden></div>
       <button type="button" id="room-advance" class="room-primary">开始探索</button>
-      <div class="room-panel-foot"><span id="room-inventory">🔒 还没找到钥匙</span><button type="button" id="room-hint" class="room-quiet" hidden>看拼音</button></div>
+      <div class="room-panel-foot"><span id="room-inventory" class="room-sr-only">还没找到钥匙</span><button type="button" id="room-hint" class="room-quiet" aria-label="看拼音" title="看拼音" hidden>ā</button></div>
     </section>
   </main>
   <details class="room-guide">
     <summary>教师用法</summary>
-    <p><strong>老师：</strong>先请学生读字、指方向或示范动作，再选 A 或 B。左右以画面为准，出入以门为界，来去以说话的小朋友为参照。</p>
+    <p><strong>老师：</strong>先请学生读字，再点场景里的圆点或动作图标。数字键 1、2 也可选择。左右以画面为准，出入以门为界，来去以气泡旁的小朋友为参照。点 ā 显示拼音。</p>
     <p><strong>学生：</strong>轮流认读并选择。找到钥匙后读最后一条线索，通关后用「上台阶」「走进去」「走出来」复述路线。</p>
   </details>`;
 
@@ -75,7 +85,7 @@ function position(node,point){
 function projectOverlays(){
   for(const pin of $('pins').children){
     const target=CLUES[state.index].choices[Number(pin.dataset.pin)]?.at;
-    if(target)position(pin,target);
+    if(target)position(pin,state.index===11&&Number(pin.dataset.pin)===1?{...target,y:1,z:3.48}:target);
   }
   if(!$('stage-caption').hidden)position($('stage-caption'),{...state.player,y:state.player.y+1.44});
 }
@@ -102,52 +112,57 @@ else activateFallback();
 function makeChoice(label,index,{pin=false}={}){
   const button=document.createElement('button');
   button.type='button';button.className=pin?'room-pin':'room-choice';
-  const letter=index===0?'A':'B';
-  if(pin){button.dataset.pin=index;button.textContent=letter;button.tabIndex=-1;button.setAttribute('aria-label',`${letter} ${label}`);}
-  else{
-    button.dataset.choice=index;
-    const badge=document.createElement('span');badge.className='room-choice-letter';badge.textContent=letter;
-    button.append(badge,document.createTextNode(label));
-  }
+  button.dataset.choice=index;
+  button.setAttribute('aria-label',label);
+  if(pin)button.dataset.pin=index;
+  else button.innerHTML=index===1?symbols.sit:symbols.stand;
   const direction=CLUES[state.index].directions?.[index];
   if(direction)button.setAttribute('aria-description',direction);
   button.onclick=()=>choose(index);
   return button;
+}
+function signal(mark=''){
+  $('signal').textContent=mark;
+  $('signal').hidden=!mark;
 }
 function render({focus=false,redraw=true}={}){
   const clue=CLUES[state.index];
   const escaped=state.phase==='escaped';
   const questioning=started&&state.phase==='clue'&&!moving;
   const revealed=started&&state.phase!=='clue'&&!moving;
-  $('stage-label').textContent=escaped?'任务完成':started?'汉字线索':'任务';
   $('count').textContent=`${started?state.index+1:0} / ${CLUES.length}`;
   $('progress').value=started?state.index+(revealed?1:0):0;
   $('intro').hidden=started;
   $('win').hidden=!escaped||moving;
   $('glyph').hidden=!started||escaped;
   $('glyph').textContent=started&&!escaped?clue.char:'';
-  $('pinyin').hidden=!started||escaped||!(showHint||revealed);
+  $('pinyin').hidden=!started||escaped||!showHint;
   $('pinyin').textContent=$('pinyin').hidden?'':clue.pinyin;
   $('prompt').textContent=!started?'和猫咪一起读线索，找到钥匙，打开出口。':escaped?'用「走进去」「走出来」说一说刚才的路线。':moving?'看它怎么行动。':questioning?clue.prompt:state.phase==='key'?'木箱打开了。先拿起钥匙。':'读一读这个字，再看下一条线索。';
   $('feedback').textContent=notice||(!moving?state.feedback:'');
-  $('choices').hidden=!questioning;
+  signal(revealed&&state.phase==='solved'?'✓':'');
+  $('choices').hidden=!questioning||clue.choices.some(option=>option.at);
   $('choices').replaceChildren();$('pins').replaceChildren();
   if(questioning)clue.choices.forEach((option,index)=>{
-    $('choices').append(makeChoice(option.label,index));
-    if(option.at)$('pins').append(makeChoice(option.label,index,{pin:true}));
+    const parent=option.at?$('pins'):$('choices');
+    parent.append(makeChoice(option.label,index,{pin:!!option.at}));
   });
   $('advance').hidden=questioning;
   $('advance').disabled=moving;
-  $('advance').textContent=!started?'开始探索':moving?'正在行动…':escaped?'再玩一次':state.phase==='key'?'拿起钥匙':'下一条线索';
+  const action=!started?'开始探索':moving?'正在行动…':escaped?'再玩一次':state.phase==='key'?'拿起钥匙':'下一条线索';
+  $('advance').setAttribute('aria-label',action);$('advance').title=action;
+  $('advance').innerHTML=!started?symbols.play:escaped?symbols.reset:state.phase==='key'?symbols.key:symbols.next;
   $('hint').hidden=!questioning;
   $('hint').disabled=showHint;
   $('check-door').disabled=moving||escaped;
+  $('check-door').hidden=started&&state.phase!=='key';
   $('door-status').textContent=state.doorOpen&&!moving?'出口已打开':'出口已锁';
   $('inventory').textContent=state.key==='held'?'🔑 钥匙已拿到':state.key==='found'&&!moving?'🔑 钥匙已找到':'🔒 还没找到钥匙';
+  $('key-icon').hidden=state.key!=='held';
   $('stage-caption').hidden=!questioning||clue.actor!=='cat';
   if(redraw)draw();
   projectOverlays();
-  if(focus)(questioning?$('choices').firstElementChild:$('advance'))?.focus({preventScroll:true});
+  if(focus)(questioning?root.querySelector('[data-choice]'):$('advance'))?.focus({preventScroll:true});
 }
 
 function traverse(points,ratio){
@@ -173,6 +188,7 @@ function choose(index){
   state=next;notice='';
   if(next.phase==='clue'){
     $('feedback').textContent=next.feedback;
+    signal('↺');
     return;
   }
   if(!next.travel.length||motionPreference.matches||!scene){render({focus:true});return;}
@@ -213,19 +229,23 @@ $('reset').onclick=()=>reset();
 $('hint').onclick=()=>{
   if(!started||moving||state.phase!=='clue')return;
   showHint=true;$('pinyin').textContent=CLUES[state.index].pinyin;$('pinyin').hidden=false;$('hint').disabled=true;
-  $('choices').firstElementChild?.focus({preventScroll:true});
+  root.querySelector('[data-choice]')?.focus({preventScroll:true});
 };
 $('check-door').onclick=()=>{
   if(moving||state.doorOpen)return;
   notice=state.key==='found'?'门锁着。先拿起钥匙。':state.key==='held'?'钥匙有了。读最后一条线索，选出口的方向。':'门锁着。先找到钥匙。';
   $('feedback').textContent=notice;
+  signal('🔒');
 };
 if(!document.fullscreenEnabled)$('fullscreen').hidden=true;
 $('fullscreen').onclick=async()=>{
   try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}
   catch{$('fullscreen').hidden=true;}
 };
-document.addEventListener('fullscreenchange',()=>{$('fullscreen').textContent=document.fullscreenElement?'退出全屏':'全屏';});
+document.addEventListener('fullscreenchange',()=>{
+  const label=document.fullscreenElement?'退出全屏':'全屏';
+  $('fullscreen').setAttribute('aria-label',label);$('fullscreen').title=label;
+});
 document.addEventListener('keydown',event=>{
   if(event.repeat||event.altKey||event.ctrlKey||event.metaKey||moving||!started||state.phase!=='clue')return;
   if(event.code==='Digit1'||event.code==='Digit2')choose(event.code==='Digit1'?0:1);
