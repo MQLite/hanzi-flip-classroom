@@ -58,7 +58,7 @@ $('#help-dialog').insertAdjacentHTML('beforeend', '<p>活字组词工坊：每�
 $('.practice-box').insertAdjacentHTML('beforebegin', '<div class="train-ledger-panel" hidden><h4>旅程记录</h4><div id="train-ledger" aria-live="polite"></div></div>');
 $('#help-dialog').insertAdjacentHTML('beforeend', '<p>句子小火车：点击词语车厢，从左到右排列句子。全部接齐后发车；未命中可调整或由老师判对。看过参考句后须由老师判对才计分。再练一次只加入明确标记的句子；跳过的句子不算错。三种游戏独立保存本页进度，刷新重置。题库中的“句子小火车设置”可用 / 分隔词语。每句支持2–7节车厢；《中文》第一、二册选用课文及阅读重点句，显示栏目、篇名和教材页码，部分短句摘自分句并统一句尾标点。《汉语乐园》1A–3B选用课本对话、歌曲和故事原句，老师手工切分句仍可练习；1A第3课仅作数字认读。</p>');
 const allDefaults = [...DEFAULT_QUESTIONS, ...TEXTBOOK_QUESTIONS, ...PARADISE_QUESTIONS, ...ZHONGWEN_QUESTIONS];
-$('#help-dialog').insertAdjacentHTML('beforeend','<p>情景探索：按教材、册数、课次选择故事。目前提供“中文（暨南大学版）· 第五册 · 第9课 古诗二首”，其他课次待补充。点击“进入情景”，观察物件、找线索、读诗句，完成五关探索。故事有独立的自动存档，可带提示合作，也可独立挑战。右上角可开启或关闭探索配乐，默认关闭。</p>');
+$('#help-dialog').insertAdjacentHTML('beforeend','<p>情景探索：按教材、册数、课次选择。汉语乐园 2A 第2课可读线索、猜城市。中文（暨南大学版）第五册第9课可探索《古诗二首》，完成五关并自动保存进度。</p>');
 $('.teacher-badge').textContent = '汉语乐园 · 1A–3B';
 $('.lesson-toolbar').insertAdjacentHTML('afterbegin', `<label class="curriculum-field">题库<select id="bank-source" aria-label="题库来源"><option value="paradise">汉语乐园（1A–3B）</option><option value="textbook">中文乐园（新版）</option><option value="zhongwen">${ZHONGWEN_NAME}</option><option value="personal">个人 / 通用题库</option></select></label><label class="curriculum-field textbook-field"><span id="stage-label">阶段</span><select id="stage" aria-label="学习阶段">${STAGES.map(s=>`<option>${s}</option>`).join('')}</select></label><label class="curriculum-field textbook-field">范围<select id="scope" aria-label="练习范围"><option value="stage">整个阶段</option><option value="lesson">本课</option><option value="cumulative">截至本课累计</option></select></label><label class="curriculum-field textbook-field">课次<select id="lesson" aria-label="选择课次"></select></label>`);
 $('.lesson-toolbar').insertAdjacentHTML('afterend', '<p id="curriculum-note" class="curriculum-note"></p><div id="textbook-notice" class="notice" hidden><span></span><button id="add-textbook">补充教材题库</button></div>');
@@ -303,7 +303,9 @@ function switchMode(mode) {
   gameMode = mode;
   if (saved) ({ session, grade, teamNames, selectedTeam, showPinyin, selection, extensionOpen, workshopState,sudokuState,sudokuPool,sudokuSelectedIds,moleState,molePool,moleType } = saved);
   else {
-    if(mode==='explore')selection={source:'zhongwen',stage:'5',scope:'lesson',lesson:9};
+    if(mode==='explore' && !(selection.source==='paradise' && selection.stage==='2A' && selection.lesson===2)){
+      selection={source:'zhongwen',stage:'5',scope:'lesson',lesson:9};
+    }
     else {
       const textbook=textbookForSource(selection.source),stages=stagesForTextbook(textbook);
       if(!stages.includes(selection.stage)){
@@ -938,5 +940,9 @@ document.addEventListener("keydown", (event) => {
     back();
   }
 });
-const requestedMode=new URLSearchParams(window.location.search).get('mode');
+const entryParams=new URLSearchParams(window.location.search);
+const requestedMode=entryParams.get('mode');
+if(requestedMode==='explore' && entryParams.get('source')==='paradise' && entryParams.get('stage')==='2A' && entryParams.get('lesson')==='2'){
+  selection={source:'paradise',stage:'2A',scope:'lesson',lesson:2};
+}
 if(['explore','mole'].includes(requestedMode))switchMode(requestedMode);else render();

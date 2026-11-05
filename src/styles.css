@@ -1812,6 +1812,12 @@ body:not(.workshop-mode) #restart { margin-left: auto; }
 .textbook-vocabulary-dialog { width: min(900px, calc(100vw - 32px)); max-height: 85vh; overflow: auto; }
 .textbook-vocabulary-dialog section + section { margin-top: 22px; padding-top: 12px; border-top: 1px solid #d5decf; }
 /* Lesson-scoped scenarios sit beside the four classroom practice modes. */
+.city-exploration-cover {
+  display: grid;
+  place-items: center;
+  font-size: clamp(3rem, 9vw, 6rem);
+  background: linear-gradient(140deg, #e0f4f1, #faf0d6);
+}
 .game-modes{flex-wrap:wrap}
 .explore-mode .lesson-toolbar{justify-content:flex-start}
 .exploration-card{display:grid;grid-template-columns:minmax(210px,.8fr) 1.2fr;min-height:330px;border:1px solid #b7c5ab;border-radius:20px;overflow:hidden;background:#f9f6e9;margin:22px 0 32px;box-shadow:0 12px 30px #344a3610}
