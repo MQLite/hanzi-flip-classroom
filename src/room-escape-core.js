@@ -3,9 +3,14 @@ const stairs = [spot(-3.4,.22,1.48),spot(-3.4,.44,1.02),spot(-3.4,.66,.56),spot(
 const middle = spot(0,0,.85);
 const pantryDoor = spot(3.65,0,-.35);
 const pantry = spot(3.65,0,-2.18);
-const boxSide = spot(4.48,0,-2.18);
+const boxSide = spot(5.03,0,-2.05);
 const start = spot(-3.4,0,2.5);
 const catStart = spot(4.2,0,2.15);
+const pantryPath=[spot(1.75,0,1.05),spot(3.65,0,.8)];
+const catClue=spot(.8,0,1.1);
+const catPantry=spot(4.2,0,-.35);
+export const CAT_TRAIL=[catClue,...pantryPath,catPantry];
+export const KEY_SPOT=spot(4.56,1.04,-2.47);
 export const BRUSH_SPOT=spot(-4.38,.88,-.75);
 export const TRAY_SPOT=spot(-2.45,.88,-.75);
 export const RUG_CENTER=middle;
@@ -22,20 +27,20 @@ export const CLUES = [
   {char:'下',pinyin:'xià',prompt:'看台阶。他接下来要去哪儿？',answer:'他走下台阶，回到地面。',correct:1,
     choices:[choice('木台上的脚印',spot(-3.6,.88,-1.65)),choice('地面的脚印',start,[spot(-3.4,.88,-.75),...stairs.slice().reverse()])]},
   {char:'中',pinyin:'zhōng',prompt:'圆地毯的正中在哪里？',answer:'他走到地毯正中，发现坐垫旁有一张蒙灰的卡片。',correct:1,
-    choices:[choice('地毯边缘',spot(1.26,0,.85)),choice('地毯正中',middle)]},
+    choices:[choice('地毯左边',spot(-1.08,0,.85)),choice('地毯正中',middle),choice('地毯右边',spot(1.08,0,.85))]},
   {char:'坐',pinyin:'zuò',prompt:'坐下仔细看看地毯。',answer:'他坐下来，捡起蒙灰的卡片，放在托盘里。',correct:1,
     choices:[choice('继续站着',null),choice('坐下来看看',null)],pose:'sit',rugClue:'inspected'},
   {char:'立',pinyin:'lì',prompt:'站起来，拍拍卡片上的灰。',answer:'他站起来，用刷子轻拍灰尘，卡片上露出猫爪印。',correct:0,
     choices:[choice('站起来拍拍灰',null),choice('留在垫子上',null)],pose:'stand',rugClue:'revealed'},
-  {char:'来',pinyin:'lái',prompt:'卡片上有猫爪印。小朋友把猫咪叫过来。',answer:'猫咪朝说话的小朋友跑过来。',correct:1,actor:'cat',
-    choices:[choice('朝窗边',spot(1.5,0,-2.8)),choice('朝小朋友',spot(.8,0,1.1))]},
-  {char:'去',pinyin:'qù',prompt:'小朋友还在原地。猫咪要往哪里跑？',answer:'猫咪离开小朋友，跑到小门旁。',correct:0,actor:'cat',
-    choices:[choice('朝小门',spot(4.2,0,-.35)),choice('留在小朋友旁',spot(.8,0,1.1))]},
-  {char:'走',pinyin:'zǒu',prompt:'猫咪停在小门旁。小朋友怎样跟上它？',answer:'小朋友沿地上的脚印走到小门前。',correct:0,
-    choices:[choice('沿脚印到小门',pantryDoor,[spot(1.75,0,1.05),spot(3.65,0,.8)]),choice('留在地毯旁',middle)]},
-  {char:'入',pinyin:'rù',prompt:'小门开着。选一个门的方向。',answer:'他跨过小门，进入储物间。猫咪发现了钥匙！',correct:0,
+  {char:'来',pinyin:'lái',prompt:'卡片上有猫爪印。小朋友把猫咪叫过来。',answer:'猫咪跑到小朋友身边，闻了闻卡片。',correct:1,actor:'cat',
+    choices:[choice('朝窗边',spot(1.5,0,-2.8)),choice('朝小朋友',catClue)]},
+  {char:'去',pinyin:'qù',prompt:'猫咪认出了气味。它要往哪里跑？',answer:'猫咪跑到小门旁，一路留下了爪印。',correct:0,actor:'cat',
+    choices:[choice('朝小门',catPantry,pantryPath),choice('留在小朋友旁',catClue)]},
+  {char:'走',pinyin:'zǒu',prompt:'猫咪停在小门旁。小朋友怎样跟上它？',answer:'小朋友沿着猫爪印走到小门前。',correct:0,
+    choices:[choice('沿爪印到小门',pantryDoor,pantryPath),choice('留在地毯旁',middle)]},
+  {char:'入',pinyin:'rù',prompt:'小门开着，里面有一个印着猫爪的木箱。',answer:'他进门，找到和卡片上图案一样的木箱。猫咪找到了钥匙！',correct:0,
     choices:[choice('穿过小门到木箱旁',pantry),choice('留在小门外',pantryDoor)],catTo:boxSide},
-  {char:'出',pinyin:'chū',prompt:'钥匙拿到了。哪条路能离开房间？',answer:'他用钥匙打开出口，和猫咪一起走出房间。',correct:1,
+  {char:'出',pinyin:'chū',prompt:'钥匙拿到了。哪条路能离开房间？',answer:'他用钥匙打开出口，和猫咪来到花园。夜空亮起了烟花！',correct:1,
     choices:[choice('回到圆地毯',middle),choice('穿过有锁的出口',spot(EXIT_X,0,4.85),[pantryDoor,spot(2.85,0,2.15),spot(EXIT_X,0,3.28)])]},
 ];
 

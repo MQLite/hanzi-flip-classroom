@@ -1,4 +1,4 @@
-import {BRUSH_SPOT,CLUES,RUG_CENTER,TRAY_SPOT,createEscape,resolveChoice,continueEscape,takeKey} from './room-escape-core.js';
+import {BRUSH_SPOT,CAT_TRAIL,CLUES,KEY_SPOT,RUG_CENTER,TRAY_SPOT,createEscape,resolveChoice,continueEscape,takeKey} from './room-escape-core.js';
 import {createRoomScene} from './room-escape-scene.js';
 import './room-escape.css';
 
@@ -19,6 +19,15 @@ const symbols={
   card:icon('<rect x="5" y="3" width="14" height="18" rx="2" fill="#d4bc99"/><path d="M8 9l8 3m-8 2 6 2"/>'),
   paw:icon('<path d="M8 17c0-3 2-5 4-5s4 2 4 5-2 3-4 2c-2 1-4 1-4-2z"/><circle cx="6" cy="10" r="1"/><circle cx="10" cy="6" r="1"/><circle cx="14" cy="6" r="1"/><circle cx="18" cy="10" r="1"/>'),
 };
+function firework(x,y,color,radius,delay){
+  const rays=Array.from({length:14},(_,index)=>{
+    const angle=index*Math.PI/7;
+    const distance=radius*(index%3===0?.9:1);
+    const dx=Math.cos(angle),dy=Math.sin(angle);
+    return `<path d="M${(dx*distance*.31).toFixed(1)} ${(dy*distance*.31).toFixed(1)}L${(dx*distance*.8).toFixed(1)} ${(dy*distance*.8).toFixed(1)}"/><circle cx="${(dx*distance).toFixed(1)}" cy="${(dy*distance).toFixed(1)}" r="2.1" fill="currentColor" stroke="none"/>`;
+  }).join('');
+  return `<g transform="translate(${x} ${y})" style="color:${color}"><g class="room-burst" style="--burst-delay:${delay}ms" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round">${rays}</g></g>`;
+}
 root.innerHTML=`
   <header class="room-header">
     <div class="room-heading">
@@ -36,11 +45,12 @@ root.innerHTML=`
           <path d="M54 89h572M54 145h572M54 201h572M54 257h572M54 313h572M54 369h572" stroke="#e2c393" stroke-width="2"/>
           <rect x="65" y="81" width="184" height="149" rx="7" fill="#bd895c" stroke="#956846" stroke-width="5"/>
           <path d="M120 228h77v81h-77z" fill="#d6a675" stroke="#966646" stroke-width="3"/><path d="M120 249h77m-77 20h77m-77 20h77" stroke="#946846" stroke-width="3"/>
-          <ellipse cx="340" cy="265" rx="80" ry="48" fill="#79a48b" stroke="#47796a" stroke-width="5"/><ellipse cx="340" cy="265" rx="25" ry="14" fill="#dbad76"/>
+          <ellipse cx="340" cy="256" rx="91" ry="61" fill="#79a48b" stroke="#47796a" stroke-width="5"/><ellipse id="room-flat-cushion" cx="340" cy="256" rx="25" ry="14" fill="#dbad76"/>
           <path d="M456 38v131h43m72 0h66" fill="none" stroke="#a47856" stroke-width="10"/>
           <rect x="435" y="388" width="87" height="26" rx="6" fill="#397366" stroke="#654a39" stroke-width="4"/>
           <g id="room-flat-box"><rect x="556" y="78" width="46" height="34" rx="7" fill="#ae754e" stroke="#754e37" stroke-width="4"/><path d="M556 91h46m-25 0v11" fill="none" stroke="#edbf70" stroke-width="4"/></g>
         </svg>
+        <div id="room-flat-trail" class="room-flat-trail" aria-hidden="true" hidden></div>
         <span class="room-flat-actor" id="room-flat-player" aria-label="小朋友">🧒</span><span class="room-flat-actor" id="room-flat-cat" aria-label="猫咪">🐈</span>
         <span class="room-flat-actor" id="room-flat-key" aria-label="钥匙" hidden>🔑</span>
         <span class="room-flat-prop" id="room-flat-brush" aria-label="刷子" hidden>${symbols.brush}</span>
@@ -49,8 +59,12 @@ root.innerHTML=`
       </div>
       <div class="room-sr-only"><span id="room-view-label">3D 密室</span><span id="room-door-status">出口已锁</span></div>
       <div id="room-pins" class="room-pins"></div>
+      <button type="button" id="room-key-pickup" class="room-key-pickup" aria-label="捡起木箱上的钥匙" title="捡起钥匙" hidden></button>
       <div id="room-stage-caption" class="room-stage-caption" aria-label="小朋友在说话" hidden>•••</div>
       <button type="button" id="room-check-door" class="room-quiet room-check-door" aria-label="试开出口" title="试开出口">${symbols.lock}</button>
+      <svg id="room-fireworks" class="room-fireworks" viewBox="0 0 1000 620" preserveAspectRatio="none" aria-hidden="true" hidden>
+        ${firework(235,148,'#ffe6a0',76,0)}${firework(710,106,'#ffc3d2',85,250)}${firework(460,80,'#a9eff5',58,540)}
+      </svg>
     </div>
     <section class="room-panel" aria-label="当前汉字线索">
       <div class="room-panel-top"><span id="room-count">0 / 12</span><span class="room-items"><span id="room-brush-icon" role="img" aria-label="刷子" hidden>${symbols.brush}</span><span id="room-tray-icon" role="img" aria-label="托盘" hidden>${symbols.tray}</span><span id="room-key-icon" aria-hidden="true" hidden>${symbols.key}</span></span></div>
@@ -71,7 +85,7 @@ root.innerHTML=`
   </main>
   <details class="room-guide">
     <summary>教师用法</summary>
-    <p><strong>老师：</strong>先请学生读字，再点场景里的圆点或动作图标。数字键 1、2 也可选择。左右以画面为准，出入以门为界，来去以气泡旁的小朋友为参照。点 ā 显示拼音。</p>
+    <p><strong>老师：</strong>先请学生读字，再点场景里的圆点或动作图标。数字键 1、2、3 也可选择。左右以画面为准，出入以门为界，来去以气泡旁的小朋友为参照。点 ā 显示拼音。</p>
     <p><strong>学生：</strong>轮流认读并选择。找到钥匙后读最后一条线索，通关后用「上台阶」「走进去」「走出来」复述路线。</p>
   </details>`;
 
@@ -95,24 +109,38 @@ function projectOverlays(){
     const target=CLUES[state.index].choices[index]?.at;
     if(!target)continue;
     const aboveTool=state.index===1||(state.index===2&&index===0);
+    pin.classList.toggle('room-pin-neutral',state.index===4);
     if(state.index===11&&index===1)position(pin,{...target,y:1,z:3.48});
     else position(pin,aboveTool?{...target,y:target.y+.45}:target);
   }
   if(!$('stage-caption').hidden)position($('stage-caption'),{...state.player,y:state.player.y+1.44});
+  if(!$('key-pickup').hidden)position($('key-pickup'),scene?{...KEY_SPOT,y:KEY_SPOT.y-.28}:KEY_SPOT);
 }
 function draw(snapshot=state,animation){
-  if(scene)scene.draw(snapshot,animation);
+  if(scene)scene.draw(snapshot,{intro:!started,...animation});
   else{
     position($('flat-player'),snapshot.player);position($('flat-cat'),snapshot.cat);
     $('flat-player').classList.toggle('is-seated',snapshot.player.pose==='sit');
     $('flat-key').hidden=snapshot.key!=='found';
-    position($('flat-key'),{x:4.56,y:.5,z:-2.48});
+    const overhead=snapshot.index===4&&snapshot.phase==='clue';
+    $('flat-cushion').style.display=overhead?'none':'';
+    const trail=$('flat-trail');
+    trail.hidden=snapshot.index!==9&&(snapshot.index!==8||snapshot.phase!=='solved');
+    if(!trail.hidden&&!trail.firstChild){
+      for(let i=1;i<9;i++){
+        const print=document.createElement('span');
+        print.innerHTML=symbols.paw;
+        trail.append(print);
+        position(print,traverse(CAT_TRAIL,i/9).at);
+      }
+    }
+    position($('flat-key'),KEY_SPOT);
     $('flat-brush').hidden=snapshot.tools.includes('brush');
     $('flat-tray').hidden=snapshot.tools.includes('tray');
     position($('flat-brush'),BRUSH_SPOT);
     position($('flat-tray'),TRAY_SPOT);
     const card=$('flat-card');
-    card.hidden=snapshot.index<4||snapshot.index>7;
+    card.hidden=overhead||snapshot.index<4||snapshot.index>7;
     card.innerHTML=snapshot.rugClue==='revealed'?symbols.paw:symbols.card;
     const holding=snapshot.rugClue!=='covered';
     position(card,holding?{...snapshot.player,x:snapshot.player.x+.38,y:snapshot.player.y+.4}:{...RUG_CENTER,z:RUG_CENTER.z+.52});
@@ -154,6 +182,8 @@ function render({focus=false,redraw=true}={}){
   $('progress').value=started?state.index+(revealed?1:0):0;
   $('intro').hidden=started;
   $('win').hidden=!escaped||moving;
+  $('fireworks').toggleAttribute('hidden',!escaped||moving);
+  $('key-pickup').hidden=state.phase!=='key'||moving;
   $('glyph').hidden=!started||escaped;
   $('glyph').textContent=started&&!escaped?clue.char:'';
   $('pinyin').hidden=!started||escaped||!showHint;
@@ -233,7 +263,7 @@ function choose(index){
       const move=traverse(route,ratio);
       const snapshot={...previous,[actor]:move.at};
       if(catMoving)snapshot.cat=traverse(catRoute,ratio).at;
-      draw(snapshot,{actor,angle:move.angle,beat:ratio*length*7,catMoving,doorAngle:next.doorOpen?1.35*Math.max(0,Math.min(1,(ratio-.63)*8)):0});
+      draw(snapshot,{actor,angle:move.angle,beat:ratio*length*7,catMoving,travelProgress:ratio,doorAngle:next.doorOpen?1.35*Math.max(0,Math.min(1,(ratio-.63)*8)):0});
     }
     if(ratio<1)requestAnimationFrame(frame);
     else {moving=false;render({focus:true});}
@@ -250,6 +280,9 @@ $('advance').onclick=()=>{
   if(!started||state.phase==='escaped'){reset({begin:true});return;}
   state=state.phase==='key'?takeKey(state):continueEscape(state);
   showHint=false;notice='';render({focus:true});
+};
+$('key-pickup').onclick=()=>{
+  if(state.phase==='key'&&!moving)$('advance').click();
 };
 $('reset').onclick=()=>reset();
 $('hint').onclick=()=>{
@@ -274,6 +307,6 @@ document.addEventListener('fullscreenchange',()=>{
 });
 document.addEventListener('keydown',event=>{
   if(event.repeat||event.altKey||event.ctrlKey||event.metaKey||moving||!started||state.phase!=='clue')return;
-  if(event.code==='Digit1'||event.code==='Digit2')choose(event.code==='Digit1'?0:1);
+  if(/^Digit[1-3]$/.test(event.code))choose(Number(event.code.at(-1))-1);
 });
 render();

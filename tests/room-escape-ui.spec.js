@@ -26,6 +26,7 @@ test('the locked room takes twelve clues, allows retries, and exits after collec
   await page.emulateMedia({reducedMotion:'no-preference'});
   await page.goto('/room.html');
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  await expect(page.locator('#room-fireworks')).toBeHidden();
   await page.getByRole('button',{name:'试开出口',exact:true}).click();
   await expect(page.locator('#room-feedback')).toContainText('门锁着');
   await page.getByRole('button',{name:'开始探索',exact:true}).click();
@@ -41,13 +42,21 @@ test('the locked room takes twelve clues, allows retries, and exits after collec
     await expect(page.locator('#room-glyph')).toHaveText(steps[i]);
     if(i===7)await page.screenshot({path:testInfo.outputPath('cat-come.png')});
     if(i===1||i===4)await page.screenshot({path:testInfo.outputPath(i===1?'find-tools.png':'rug-center.png')});
+    if(i===4){
+      await expect(page.locator('[data-choice]')).toHaveCount(3);
+      await page.keyboard.press('3');
+      await expect(page.locator('#room-feedback')).toContainText('再想一想');
+    }
+    if(i===9)await page.screenshot({path:testInfo.outputPath('paw-trail.png')});
     await page.locator(`[data-choice="${choices[i]}"]`).click();
     if(i===10){
       await expect(page.locator('#room-inventory')).toContainText('钥匙已找到');
       await page.getByRole('button',{name:'试开出口',exact:true}).click();
       await expect(page.locator('#room-feedback')).toContainText('先拿起钥匙');
-      await page.getByRole('button',{name:'拿起钥匙',exact:true}).click();
+      await page.screenshot({path:testInfo.outputPath('key-box.png')});
+      await page.getByRole('button',{name:'捡起木箱上的钥匙',exact:true}).click();
       await expect(page.locator('#room-inventory')).toContainText('钥匙已拿到');
+      await expect(page.locator('#room-fireworks')).toBeHidden();
     }else if(i<11){
       if(i===1)await expect(page.locator('#room-brush-icon')).toBeVisible();
       if(i===2)await expect(page.locator('#room-tray-icon')).toBeVisible();
@@ -65,9 +74,12 @@ test('the locked room takes twelve clues, allows retries, and exits after collec
   }
   await expect(page.getByRole('heading',{name:'逃脱成功！',exact:true})).toBeVisible();
   await expect(page.locator('#room-door-status')).toHaveText('出口已打开');
+  await expect(page.locator('#room-fireworks')).toBeVisible();
+  await page.waitForFunction(()=>Number(getComputedStyle(document.querySelector('.room-burst')).opacity)>.7);
   await page.screenshot({path:testInfo.outputPath('escaped.png')});
   await page.getByRole('button',{name:'再玩一次',exact:true}).click();
   await expect(page.locator('#room-door-status')).toHaveText('出口已锁');
+  await expect(page.locator('#room-fireworks')).toBeHidden();
   expect(errors).toEqual([]);
 });
 

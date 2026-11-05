@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {BRUSH_SPOT,CLUES,EXIT_X,RUG_CENTER,TRAY_SPOT} from './room-escape-core.js';
+import {BRUSH_SPOT,CAT_TRAIL,CLUES,EXIT_X,KEY_SPOT,RUG_CENTER,TRAY_SPOT} from './room-escape-core.js';
 
 const palette={wood:0xa46945,trim:0x684837,wall:0xf1d7a6,green:0x357366,orange:0xf2a256,gold:0xffca58};
 const cube=new THREE.BoxGeometry(1,1,1);
@@ -64,20 +64,59 @@ function makeTray(parent,x,y,z){
   return tray;
 }
 
+function makePaw(parent,x,y,z,color=0x425f50){
+  const paw=group(parent,x,y,z);
+  round(paw,color,0,-.033,0,.077,.057,.012);
+  for(const [dx,dy] of [[-.085,.022],[-.04,.071],[.035,.076],[.083,.03]]){
+    round(paw,color,dx,dy,0,.025,.035,.013);
+  }
+  return paw;
+}
+
 function makeClueCard(parent,x,y,z){
   const card=group(parent,x,y,z);
   box(card,0xe5c390,0,0,0,.49,.35,.033);
   box(card,0xffe5af,0,0,.024,.443,.31,.018);
-  const paw=group(card,0,-.016,.038);
-  round(paw,0x425f50,0,-.033,0,.077,.057,.012);
-  for(const [dx,dy] of [[-.085,.022],[-.04,.071],[.035,.076],[.083,.03]]){
-    round(paw,0x425f50,dx,dy,0,.025,.035,.013);
-  }
+  const paw=makePaw(card,0,-.016,.038);
   const dust=group(card,0,0,.06);
   round(dust,0x94897c,0,-.008,0,.19,.134,.018);
   round(dust,0xb4a494,-.13,.062,.008,.055,.055,.019);
   round(dust,0xb4a494,.11,-.08,.008,.06,.043,.018);
   return {card,paw,dust};
+}
+
+function garden(scene){
+  const lawn=group(scene);
+  box(lawn,0x64885f,0,-.27,6.2,27,.47,13);
+  for(let i=0;i<6;i++){
+    const stone=disk(lawn,i%2?0xb6a581:0x9b9f8d,EXIT_X+(i%2?.14:-.14),.012,4.18+i*.68,.62,.043,.29);
+    stone.rotation.y=i*.62;
+  }
+  for(const [x,z] of [[-.8,4.45],[.45,5.25],[4.25,4.45],[5.04,5.18],[6.05,5.4]]){
+    for(let i=0;i<3;i++){
+      round(lawn,i%2?0x41735b:0x528365,x+(i-1)*.27,.21+i*.05,z,.35,.36,.32);
+      round(lawn,i%2?0xffc770:0xe99eab,x+(i-1)*.24,.48+i*.055,z+.17,.065,.055,.065);
+    }
+  }
+  for(const [x,z,h] of [[-1.6,3.75,3.7],[6.3,3.5,4.2],[7.1,2.2,3.45]]){
+    box(lawn,0x755642,x,h*.38,z,.17,h*.76,.2);
+    round(lawn,0x3e705b,x,h*.73,z,.66,h*.27,.62);
+    round(lawn,0x527e61,x-.31,h*.67,z+.19,.5,h*.19,.48);
+  }
+  box(lawn,0x69524c,0,3.25,3.93,11.9,.2,.6);
+  box(lawn,0x8f6c59,0,3.4,3.71,11.8,.13,.62);
+  for(const x of [EXIT_X-1.29,EXIT_X+1.29]){
+    box(lawn,0x604a3d,x,1.81,3.83,.24,.37,.23);
+    box(lawn,0xffd180,x,1.81,3.95,.15,.21,.035);
+    box(lawn,0x604a3d,x,2.015,3.87,.32,.06,.3);
+    const lantern=new THREE.PointLight(0xffbe65,3.8,3.8,2);
+    lantern.position.set(x,1.83,4.1);lawn.add(lantern);
+  }
+  box(lawn,0x795640,.12,1.82,3.76,1.48,1.15,.12);
+  box(lawn,0xf1c67b,.12,1.82,3.831,1.28,.95,.04);
+  box(lawn,0xa17554,.12,1.82,3.86,.07,.95,.04);
+  box(lawn,0xa17554,.12,1.82,3.86,1.28,.07,.04);
+  return lawn;
 }
 
 function furnishings(scene){
@@ -90,10 +129,9 @@ function furnishings(scene){
   }
   box(scene,0xc4d19a,EXIT_X,-.047,4.65,2.8,.12,1.65);
   box(scene,0x97b48b,EXIT_X,.03,4.54,1.68,.06,1.46);
-  // The camera stays under the ceiling and inside the four walls.
   box(scene,palette.wall,0,1.49,-3.67,11.5,2.98,.17);
   for(const x of [-5.63,5.63])box(scene,0xf4dfb6,x,1.49,0,.16,2.98,7.42);
-  box(scene,0xf7e8cc,0,3.08,0,11.5,.18,7.49);
+  const ceiling=box(scene,0xf7e8cc,0,3.08,0,11.5,.18,7.49);
   box(scene,trim,0,.12,-3.55,11.42,.2,.08);
   box(scene,wood,0,3.02,-3.67,11.65,.13,.25);
   for(const x of [-5.63,5.63])box(scene,trim,x,.76,1.54,.23,.1,4.16);
@@ -114,7 +152,12 @@ function furnishings(scene){
   disk(scene,0xbb985e,0,.041,.85,1.8,.027,1.48);
   disk(scene,0x477f69,0,.058,.85,1.69,.032,1.37);
   disk(scene,0x62947b,0,.077,.85,1.54,.019,1.22);
-  disk(scene,0xe7b97b,0,.091,.85,.48,.075,.4);
+  for(let i=0;i<32;i++){
+    const angle=i*Math.PI/16;
+    const stitch=box(scene,0xabbd93,Math.cos(angle)*1.44,.091,.85+Math.sin(angle)*1.12,.085,.009,.028);
+    stitch.rotation.y=-angle-Math.PI/2;
+  }
+  const cushion=disk(scene,0xe7b97b,0,.091,.85,.48,.075,.4);
   const centerRing=new THREE.Mesh(new THREE.RingGeometry(.53,.575,48),new THREE.MeshBasicMaterial({color:0xffe9b5,side:THREE.DoubleSide}));
   centerRing.rotation.x=-Math.PI/2;
   centerRing.position.set(RUG_CENTER.x,.093,RUG_CENTER.z);
@@ -138,8 +181,10 @@ function furnishings(scene){
   const lid=group(chest,0,.45,-.28);
   box(lid,0xc48b52,0,.07,.27,.92,.17,.59);
   box(chest,0xe1a850,0,.36,.294,.16,.17,.045);
+  box(chest,0xe5c390,-.21,.24,.305,.24,.22,.024);
+  makePaw(chest,-.21,.232,.326).scale.setScalar(.82);
   for(const x of [-.34,.34])box(chest,0xb5784a,x,.23,.29,.095,.41,.025);
-  const key=group(scene,4.56,1.04,-2.47);
+  const key=group(scene,KEY_SPOT.x,KEY_SPOT.y,KEY_SPOT.z);
   const ring=new THREE.TorusGeometry(.147,.043,12,24);
   mesh(ring,palette.gold,-.14,0,0,1,1,1,key);
   box(key,palette.gold,.11,0,0,.39,.084,.08);box(key,palette.gold,.22,-.064,0,.07,.15,.08);box(key,palette.gold,.29,-.037,0,.07,.105,.08);
@@ -154,15 +199,19 @@ function furnishings(scene){
   box(scene,trim,EXIT_X,2.24,doorZ,2.16,.18,.27);
   const door=group(scene,EXIT_X-.91,0,doorZ);
   box(door,0x36685b,.91,1.06,0,1.82,2.1,.16);
-  for(const y of [.54,1.56]){
-    box(door,0x2c574d,.91,y,.092,1.43,.67,.06);
-    box(door,0x478073,.91,y,.129,1.3,.55,.04);
+  const lock=group(door);
+  for(const side of [-1,1]){
+    for(const y of [.54,1.56]){
+      box(door,0x2c574d,.91,y,side*.092,1.43,.67,.06);
+      box(door,0x478073,.91,y,side*.129,1.3,.55,.04);
+    }
+    round(door,0xf1bd64,1.55,.96,side*.18,.064,.064,.064);
+    const face=group(lock,1.32,.79,side*.18);
+    mesh(new THREE.TorusGeometry(.105,.023,8,20),0x604d40,0,.12,0,1,1,1,face);
+    box(face,0xf0bb62,0,0,0,.22,.17,.086);
+    box(face,0x6a4b36,0,0,side*.053,.035,.065,.012);
   }
-  round(door,0xf1bd64,1.55,.96,.18,.064,.064,.064);
-  const lock=group(door,1.32,.79,.18);
-  mesh(new THREE.TorusGeometry(.105,.023,8,20),0x604d40,0,.12,0,1,1,1,lock);
-  box(lock,0xf0bb62,0,0,0,.22,.17,.086);box(lock,0x6a4b36,0,0,.053,.035,.065,.012);
-  return {door,lock,chestLid:lid,key,brush,tray,rugCard:rugCard.card,centerRing};
+  return {door,lock,chestLid:lid,key,brush,tray,rugCard:rugCard.card,centerRing,cushion,ceiling};
 }
 
 function makeChild(scene){
@@ -255,7 +304,7 @@ function showInspection(player,state,camera,cleaning){
 
 function indoorShot(state){
   const {index}=state;
-  const eye=index<4?[-2.85,2.54,3.46]:index===4?[-.4,2.72,3.46]:index<7?[1.1,2.1,2.95]:index<10?[2.3,2.66,3.46]:index===10?[4.55,2.36,2.46]:[4.85,2.24,.05];
+  const eye=index<4?[-2.85,2.54,3.46]:index<7?[1.1,2.1,2.95]:index<10?[2.3,2.66,3.46]:index===10?[4.55,2.36,2.46]:[4.85,2.24,.05];
   const clue=CLUES[index];
   const points=[];
   const add=(p,height=.34)=>points.push(new THREE.Vector3(p.x,p.y+height,p.z));
@@ -268,9 +317,46 @@ function indoorShot(state){
   }
   if(index!==11){add(state.player,.13);add(state.player,1.57);}
   if(index>=7&&index<=10){add(state.cat,.12);add(state.cat,.72);}
-  if(index===10)add({x:4.56,y:1,z:-2.48});
+  if(index===10)add(KEY_SPOT);
   if(index===11){add({x:EXIT_X,y:2,z:3.55});add({x:EXIT_X+.67,y:0,z:4.75});}
   return {eye:new THREE.Vector3(...eye),points};
+}
+
+function specialShot(mode){
+  if(mode==='rug'){
+    const {x,z}=RUG_CENTER;
+    return {eye:new THREE.Vector3(x,3.75,z),up:new THREE.Vector3(0,0,-1),
+      points:[new THREE.Vector3(x-1.86,0,z),new THREE.Vector3(x+1.86,0,z),new THREE.Vector3(x,0,z-1.54),new THREE.Vector3(x,0,z+1.54)]};
+  }
+  if(mode==='key'){
+    return {eye:new THREE.Vector3(4.11,1.67,-1.18),
+      points:[new THREE.Vector3(KEY_SPOT.x,KEY_SPOT.y+.2,KEY_SPOT.z),new THREE.Vector3(4.1,.13,-2.21),new THREE.Vector3(5.3,.32,-2.05)]};
+  }
+  const intro=mode==='intro';
+  const eye=new THREE.Vector3(intro?4.35:EXIT_X+.18,intro?2.05:2.15,intro?.33:9.6);
+  const points=(intro?[[EXIT_X-1.1,0,3.55],[EXIT_X+1.1,2.35,3.55],[EXIT_X+.45,1.05,3.48]]:
+    [[EXIT_X-2.45,2.9,3.8],[EXIT_X+2.45,2.9,3.8],[EXIT_X,.04,5.6],[EXIT_X,5.2,3.8]])
+    .map(point=>new THREE.Vector3(...point));
+  return {eye,points};
+}
+
+function makeTrail(scene){
+  const trail=group(scene);
+  for(let index=1;index<CAT_TRAIL.length;index++){
+    const from=CAT_TRAIL[index-1],to=CAT_TRAIL[index];
+    const dx=to.x-from.x,dz=to.z-from.z;
+    const count=Math.max(1,Math.round(Math.hypot(dx,dz)/.34));
+    const heading=Math.atan2(dx,dz);
+    for(let i=0;i<count;i++){
+      const ratio=(i+.65)/count;
+      const offset=trail.children.length%2===0?.14:-.14;
+      const print=group(trail,from.x+dx*ratio+Math.cos(heading)*offset,.054,from.z+dz*ratio-Math.sin(heading)*offset);
+      print.rotation.y=heading+Math.PI;
+      const paw=makePaw(print,0,0,0,0x547869);
+      paw.rotation.x=-Math.PI/2;
+    }
+  }
+  return trail;
 }
 
 export function createRoomScene(host,onProject){
@@ -284,19 +370,14 @@ export function createRoomScene(host,onProject){
   renderer.domElement.setAttribute('role','img');
   host.prepend(renderer.domElement);
   const scene=new THREE.Scene();
-  scene.add(new THREE.HemisphereLight(0xfff6df,0x8eaa93,2.4));
+  const ambient=new THREE.HemisphereLight(0xfff6df,0x8eaa93,2.4);scene.add(ambient);
   const light=new THREE.DirectionalLight(0xffe7bc,2.25);light.position.set(-5,9,7);scene.add(light);
   const props=furnishings(scene),player=makeChild(scene),cat=makeCat(scene);
+  const porch=garden(scene);
   player.root.rotation.y=.18;cat.root.rotation.y=-.42;
-  const footprintGroup=group(scene);
-  for(let i=0;i<7;i++){
-    const ratio=i/6;
-    const x=.38+3.2*ratio,z=1.1-.27*ratio+(i%2===0?.14:-.14);
-    const print=disk(footprintGroup,0x4d7564,x,.059,z,.072,.01,.14);
-    print.rotation.y=1.25;
-  }
+  const footprints=makeTrail(scene);
   const camera=new THREE.PerspectiveCamera(58,1,.045,40);
-  let frameState,shot;
+  let frameState,shot,shotKey;
   function project({x,y,z}){
     const v=new THREE.Vector3(x,y+.28,z).project(camera);
     return {left:(v.x*.5+.5)*100,top:(.5-v.y*.5)*100};
@@ -304,6 +385,7 @@ export function createRoomScene(host,onProject){
   function frameCamera(){
     if(!shot)return;
     camera.position.copy(shot.eye);
+    camera.up.copy(shot.up??THREE.Object3D.DEFAULT_UP);
     const aim=new THREE.Vector3();
     for(const point of shot.points)aim.add(point.clone().sub(shot.eye).normalize());
     camera.lookAt(shot.eye.clone().add(aim));camera.updateMatrixWorld();
@@ -324,22 +406,48 @@ export function createRoomScene(host,onProject){
     if(frameState)renderer.render(scene,camera);
     onProject();
   }
-  function draw(state,{actor,beat=0,angle,doorAngle,catMoving=false,cleaning}={}){
-    if(state.index!==frameState?.index){shot=indoorShot(state);frameCamera();}
+  function draw(state,{actor,beat=0,angle,doorAngle,catMoving=false,cleaning,intro=false,travelProgress=0}={}){
+    const outside=state.phase==='escaped';
+    const overhead=state.index===4&&state.phase==='clue';
+    const nextShot=outside?'garden':intro?'intro':overhead?'rug':state.phase==='key'?'key':state.index;
+    if(nextShot!==shotKey){
+      shotKey=nextShot;
+      shot=typeof shotKey==='string'?specialShot(shotKey):indoorShot(state);
+      frameCamera();
+      renderer.setClearColor(outside?0x3c476d:0xc9d9bf);
+      ambient.color.setHex(outside?0xb6c4ff:0xfff6df);
+      light.intensity=outside?.85:2.25;
+    }
     frameState=state;
+    porch.visible=outside||state.index===11;
+    props.ceiling.visible=!overhead;
+    props.cushion.visible=!overhead;
     const seat=cleaning===undefined?undefined:Math.max(0,1-cleaning/.2);
     setActor(player,state.player,{walking:actor==='player',beat,seat});setActor(cat,state.cat,{walking:actor==='cat'||catMoving,beat});
     if(Number.isFinite(angle))(actor==='cat'?cat:player).root.rotation.y=angle;
+    const sniffing=state.index===7&&(state.phase==='solved'||travelProgress>.8);
+    cat.model.rotation.x=sniffing?.18:0;
+    if(sniffing)cat.root.rotation.y=Math.atan2(state.player.x-state.cat.x,state.player.z+.3-state.cat.z);
+    if(state.phase==='key')cat.root.rotation.y=Math.atan2(KEY_SPOT.x-state.cat.x,KEY_SPOT.z-state.cat.z);
+    if(outside){
+      for(const character of [player,cat]){
+        const {x,z}=character.root.position;
+        character.root.rotation.y=Math.atan2(camera.position.x-x,camera.position.z-z);
+      }
+    }
     showInspection(player,state,camera,cleaning);
     props.brush.visible=!state.tools.includes('brush');
     props.tray.visible=!state.tools.includes('tray');
-    props.rugCard.visible=state.index>=4&&state.rugClue==='covered';
-    props.centerRing.visible=state.index>=4&&state.index<=6;
+    props.rugCard.visible=!overhead&&state.index>=4&&state.rugClue==='covered';
+    props.centerRing.visible=!overhead&&state.index>=4&&state.index<=6;
     props.chestLid.rotation.x=state.key==='hidden'?0:-1.09;
     props.key.visible=state.key==='found';
     props.door.rotation.y=doorAngle??(state.doorOpen?1.35:0);
     props.lock.visible=!state.doorOpen;
-    footprintGroup.visible=state.index===9&&state.phase==='clue';
+    footprints.visible=state.index===9||(state.index===8&&(state.phase==='solved'||travelProgress>0));
+    if(footprints.visible)for(const [index,print] of footprints.children.entries()){
+      print.visible=state.index===9||state.phase==='solved'||(index+.65)/footprints.children.length<=travelProgress;
+    }
     renderer.render(scene,camera);
   }
   const observer=new ResizeObserver(resize);observer.observe(host);
