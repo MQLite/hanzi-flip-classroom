@@ -18,6 +18,23 @@ describe('识字三密室逃脱',()=>{
     expect(wrong).toMatchObject({index:0,phase:'clue',key:'hidden',player:state.player,cat:state.cat});
     expect(correct(wrong)).toMatchObject({phase:'solved',index:0});
   });
+  it('collects tools on either side and uncovers the cat clue only after inspecting the rug',()=>{
+    let state=continueEscape(correct(createEscape()));
+    expect(resolveChoice(state,0).tools).toEqual([]);
+    state=correct(state);
+    expect(state.tools).toEqual(['brush']);
+    state=correct(continueEscape(state));
+    expect(state.tools).toEqual(['brush','tray']);
+    state=correct(continueEscape(state));
+    state=correct(continueEscape(state));
+    expect(state.player).toMatchObject({x:0,z:.85});
+    expect(state.rugClue).toBe('covered');
+    state=correct(continueEscape(state));
+    expect(state).toMatchObject({rugClue:'inspected',player:{pose:'sit'}});
+    const standing=continueEscape(state);
+    expect(resolveChoice(standing,1).rugClue).toBe('inspected');
+    expect(correct(standing)).toMatchObject({rugClue:'revealed',player:{pose:'stand'},key:'hidden'});
+  });
   it('uses all twelve characters and requires the key and the final direction to exit',()=>{
     expect(CLUES.map(s=>s.char).join('')).toBe('上左右下中坐立来去走入出');
     let state=createEscape();

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {CLUES,EXIT_X} from './room-escape-core.js';
+import {BRUSH_SPOT,CLUES,EXIT_X,RUG_CENTER,TRAY_SPOT} from './room-escape-core.js';
 
 const palette={wood:0xa46945,trim:0x684837,wall:0xf1d7a6,green:0x357366,orange:0xf2a256,gold:0xffca58};
 const cube=new THREE.BoxGeometry(1,1,1);
@@ -47,6 +47,39 @@ function plant(root,x,z){
     leaf.rotation.z=Math.cos(angle)*.62;leaf.rotation.x=Math.sin(angle)*.62;
   }
 }
+
+function makeBrush(parent,x,y,z){
+  const brush=group(parent,x,y,z);
+  box(brush,0xb56343,-.09,.045,0,.35,.07,.085);
+  box(brush,0xe4ad65,.16,.05,0,.2,.095,.21);
+  for(let row=0;row<5;row++)box(brush,0x76503b,.17,-.025,(row-2)*.04,.19,.078,.026);
+  return brush;
+}
+
+function makeTray(parent,x,y,z){
+  const tray=group(parent,x,y,z);
+  box(tray,0x487f73,0,0,0,.65,.048,.45);
+  for(const z of [-.212,.212])box(tray,0x77a996,0,.045,z,.65,.08,.04);
+  for(const x of [-.303,.303])box(tray,0x77a996,x,.045,0,.046,.08,.41);
+  return tray;
+}
+
+function makeClueCard(parent,x,y,z){
+  const card=group(parent,x,y,z);
+  box(card,0xe5c390,0,0,0,.49,.35,.033);
+  box(card,0xffe5af,0,0,.024,.443,.31,.018);
+  const paw=group(card,0,-.016,.038);
+  round(paw,0x425f50,0,-.033,0,.077,.057,.012);
+  for(const [dx,dy] of [[-.085,.022],[-.04,.071],[.035,.076],[.083,.03]]){
+    round(paw,0x425f50,dx,dy,0,.025,.035,.013);
+  }
+  const dust=group(card,0,0,.06);
+  round(dust,0x94897c,0,-.008,0,.19,.134,.018);
+  round(dust,0xb4a494,-.13,.062,.008,.055,.055,.019);
+  round(dust,0xb4a494,.11,-.08,.008,.06,.043,.018);
+  return {card,paw,dust};
+}
+
 function furnishings(scene){
   const wood=palette.wood,trim=palette.trim;
   box(scene,0x698e70,0,-.43,.58,13.7,.46,10.7);
@@ -82,6 +115,15 @@ function furnishings(scene){
   disk(scene,0x477f69,0,.058,.85,1.69,.032,1.37);
   disk(scene,0x62947b,0,.077,.85,1.54,.019,1.22);
   disk(scene,0xe7b97b,0,.091,.85,.48,.075,.4);
+  const centerRing=new THREE.Mesh(new THREE.RingGeometry(.53,.575,48),new THREE.MeshBasicMaterial({color:0xffe9b5,side:THREE.DoubleSide}));
+  centerRing.rotation.x=-Math.PI/2;
+  centerRing.position.set(RUG_CENTER.x,.093,RUG_CENTER.z);
+  scene.add(centerRing);
+  const brush=makeBrush(scene,BRUSH_SPOT.x,.971,BRUSH_SPOT.z);
+  const tray=makeTray(scene,TRAY_SPOT.x,.931,TRAY_SPOT.z);
+  const rugCard=makeClueCard(scene,RUG_CENTER.x,.111,RUG_CENTER.z+.52);
+  rugCard.card.rotation.x=-Math.PI/2;
+  rugCard.paw.visible=false;
   const smallDoorZ=-1.05;
   box(scene,0xb88764,2.23,.46,-2.39,.14,.92,2.6);
   box(scene,0xd6b78f,2.62,.49,smallDoorZ,.72,.98,.16);
@@ -120,11 +162,11 @@ function furnishings(scene){
   const lock=group(door,1.32,.79,.18);
   mesh(new THREE.TorusGeometry(.105,.023,8,20),0x604d40,0,.12,0,1,1,1,lock);
   box(lock,0xf0bb62,0,0,0,.22,.17,.086);box(lock,0x6a4b36,0,0,.053,.035,.065,.012);
-  return {door,lock,chestLid:lid,key};
+  return {door,lock,chestLid:lid,key,brush,tray,rugCard:rugCard.card,centerRing};
 }
 
 function makeChild(scene){
-  const root=group(scene),model=group(root),legs=[];
+  const root=group(scene),model=group(root),legs=[],arms=[];
   shadow(root,0,.024,0,.36,.26);
   const skin=0xd99c72,coat=0xf2b650,shoe=0x355264;
   for(const side of [-1,1]){
@@ -132,9 +174,11 @@ function makeChild(scene){
     box(leg,0x416879,0,-.17,0,.16,.37,.17);
     round(leg,shoe,0,-.37,.047,.12,.08,.18);
     legs.push(leg);
-    const arm=round(model,coat,side*.34,.72,.005,.105,.25,.11);
+    const arm=group(model,side*.32,.9,0);
     arm.rotation.z=side*.19;
-    round(model,skin,side*.378,.51,.012,.078,.09,.079);
+    round(arm,coat,0,-.18,.005,.105,.25,.11);
+    round(arm,skin,0,-.39,.012,.078,.09,.079);
+    arms.push(arm);
   }
   round(model,coat,0,.73,0,.29,.38,.22);
   round(model,0x33796a,0,.73,-.205,.18,.23,.10);
@@ -143,7 +187,13 @@ function makeChild(scene){
   round(model,0xb95f4b,0,1.38,-.006,.275,.138,.264);
   round(model,0xc96c56,0,1.33,.165,.225,.033,.153);
   for(const x of [-.088,.088])round(model,0x42372f,x,1.16,.266,.026,.034,.018);
-  return {root,model,legs};
+  const inspection=group(root,0,.76,.43);
+  makeTray(inspection,0,-.1,.012);
+  const card=makeClueCard(inspection,0,.04,.067);
+  card.card.rotation.x=-.21;
+  const brush=makeBrush(inspection,.27,.12,.14);
+  const dustPuffs=Array.from({length:7},()=>round(inspection,0xb0a496,0,0,0,.038,.038,.038));
+  return {root,model,legs,arms,inspection,card,brush,dustPuffs};
 }
 
 function makeCat(scene){
@@ -169,11 +219,38 @@ function makeCat(scene){
   return {root,model,legs};
 }
 
-function setActor(actor,p,{walking=false,beat=0}={}){
+function setActor(actor,p,{walking=false,beat=0,seat=p.pose==='sit'?1:0}={}){
   actor.root.position.set(p.x,p.y,p.z);
-  const seated=p.pose==='sit';
-  actor.model.position.y=seated?-.22:walking?Math.abs(Math.sin(beat))*.035:0;
-  actor.legs.forEach((leg,i)=>{leg.rotation.x=seated?-1.25:walking?Math.sin(beat+i*Math.PI)*.36:0;});
+  actor.model.position.y=seat?-.22*seat:walking?Math.abs(Math.sin(beat))*.035:0;
+  actor.legs.forEach((leg,i)=>{leg.rotation.x=seat?-1.25*seat:walking?Math.sin(beat+i*Math.PI)*.36:0;});
+}
+
+function showInspection(player,state,camera,cleaning){
+  const inspect=state.index>=5&&state.index<=7&&state.rugClue!=='covered';
+  const seat=cleaning===undefined?(state.player.pose==='sit'?1:0):Math.max(0,1-cleaning/.2);
+  const brushing=cleaning!==undefined&&cleaning>.2&&cleaning<.92;
+  const sweep=brushing?Math.sin((cleaning-.2)*Math.PI*9):0;
+  player.inspection.visible=inspect;
+  player.model.rotation.x=inspect?.12*seat:0;
+  player.arms[0].rotation.x=inspect?-1.07:0;
+  player.arms[1].rotation.x=inspect?-1.07+sweep*.14:0;
+  player.arms[1].rotation.z=inspect?.19+sweep*.43:.19;
+  if(!inspect)return;
+  if(state.index<=6)player.root.rotation.y=Math.atan2(camera.position.x-state.player.x,camera.position.z-state.player.z);
+  player.inspection.position.y=.76-seat*.2;
+  player.brush.visible=state.tools.includes('brush')&&state.index===6&&state.rugClue!=='revealed';
+  player.brush.position.x=.25+sweep*.23;
+  player.brush.rotation.z=-.22+sweep*.35;
+  const revealed=state.rugClue==='revealed'||cleaning>.79;
+  player.card.paw.visible=revealed;
+  player.card.dust.visible=!revealed;
+  for(const [i,puff] of player.dustPuffs.entries()){
+    puff.visible=brushing;
+    if(!brushing)continue;
+    const rise=((cleaning-.2)*5+i*.17)%1;
+    puff.position.set((i-3)*.047+sweep*.1,.1+rise*.35,.17+rise*.11);
+    puff.scale.setScalar(.019+(1-rise)*.035);
+  }
 }
 
 function indoorShot(state){
@@ -247,11 +324,17 @@ export function createRoomScene(host,onProject){
     if(frameState)renderer.render(scene,camera);
     onProject();
   }
-  function draw(state,{actor,beat=0,angle,doorAngle,catMoving=false}={}){
+  function draw(state,{actor,beat=0,angle,doorAngle,catMoving=false,cleaning}={}){
     if(state.index!==frameState?.index){shot=indoorShot(state);frameCamera();}
     frameState=state;
-    setActor(player,state.player,{walking:actor==='player',beat});setActor(cat,state.cat,{walking:actor==='cat'||catMoving,beat});
+    const seat=cleaning===undefined?undefined:Math.max(0,1-cleaning/.2);
+    setActor(player,state.player,{walking:actor==='player',beat,seat});setActor(cat,state.cat,{walking:actor==='cat'||catMoving,beat});
     if(Number.isFinite(angle))(actor==='cat'?cat:player).root.rotation.y=angle;
+    showInspection(player,state,camera,cleaning);
+    props.brush.visible=!state.tools.includes('brush');
+    props.tray.visible=!state.tools.includes('tray');
+    props.rugCard.visible=state.index>=4&&state.rugClue==='covered';
+    props.centerRing.visible=state.index>=4&&state.index<=6;
     props.chestLid.rotation.x=state.key==='hidden'?0:-1.09;
     props.key.visible=state.key==='found';
     props.door.rotation.y=doorAngle??(state.doorOpen?1.35:0);

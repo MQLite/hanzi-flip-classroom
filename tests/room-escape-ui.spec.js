@@ -40,6 +40,7 @@ test('the locked room takes twelve clues, allows retries, and exits after collec
   for(let i=0;i<steps.length;i++){
     await expect(page.locator('#room-glyph')).toHaveText(steps[i]);
     if(i===7)await page.screenshot({path:testInfo.outputPath('cat-come.png')});
+    if(i===1||i===4)await page.screenshot({path:testInfo.outputPath(i===1?'find-tools.png':'rug-center.png')});
     await page.locator(`[data-choice="${choices[i]}"]`).click();
     if(i===10){
       await expect(page.locator('#room-inventory')).toContainText('钥匙已找到');
@@ -48,9 +49,16 @@ test('the locked room takes twelve clues, allows retries, and exits after collec
       await page.getByRole('button',{name:'拿起钥匙',exact:true}).click();
       await expect(page.locator('#room-inventory')).toContainText('钥匙已拿到');
     }else if(i<11){
+      if(i===1)await expect(page.locator('#room-brush-icon')).toBeVisible();
+      if(i===2)await expect(page.locator('#room-tray-icon')).toBeVisible();
       if(i===5){
         await expect(page.getByRole('button',{name:'下一条线索',exact:true})).toBeVisible();
         await page.screenshot({path:testInfo.outputPath('seated.png')});
+      }
+      if(i===6){
+        await expect(page.getByRole('button',{name:'下一条线索',exact:true})).toBeVisible();
+        await expect(page.locator('#room-feedback')).toContainText('露出猫爪印');
+        await page.screenshot({path:testInfo.outputPath('paw-clue.png')});
       }
       await page.getByRole('button',{name:'下一条线索',exact:true}).click();
     }

@@ -1,4 +1,4 @@
-import {CLUES,createEscape,resolveChoice,continueEscape,takeKey} from './room-escape-core.js';
+import {BRUSH_SPOT,CLUES,RUG_CENTER,TRAY_SPOT,createEscape,resolveChoice,continueEscape,takeKey} from './room-escape-core.js';
 import {createRoomScene} from './room-escape-scene.js';
 import './room-escape.css';
 
@@ -14,6 +14,10 @@ const symbols={
   next:icon('<path d="M5 12h14m-6-6 6 6-6 6"/>'),
   stand:icon('<circle cx="12" cy="4" r="2"/><path d="M12 7v8m-4-4 4-3 4 3m-4 4-3 6m3-6 3 6"/>'),
   sit:icon('<circle cx="9" cy="5" r="2"/><path d="M9 8v8h6v5m-6-9h5m-8 8h8"/>'),
+  brush:icon('<path d="m4 18 9-9m-1-2 3-3 5 5-3 3zM13 10l-4 4m7-1-3 3m6-5-3 4"/>'),
+  tray:icon('<path d="M3 12h18l-2 6H5zm2-3h14"/>'),
+  card:icon('<rect x="5" y="3" width="14" height="18" rx="2" fill="#d4bc99"/><path d="M8 9l8 3m-8 2 6 2"/>'),
+  paw:icon('<path d="M8 17c0-3 2-5 4-5s4 2 4 5-2 3-4 2c-2 1-4 1-4-2z"/><circle cx="6" cy="10" r="1"/><circle cx="10" cy="6" r="1"/><circle cx="14" cy="6" r="1"/><circle cx="18" cy="10" r="1"/>'),
 };
 root.innerHTML=`
   <header class="room-header">
@@ -39,6 +43,9 @@ root.innerHTML=`
         </svg>
         <span class="room-flat-actor" id="room-flat-player" aria-label="小朋友">🧒</span><span class="room-flat-actor" id="room-flat-cat" aria-label="猫咪">🐈</span>
         <span class="room-flat-actor" id="room-flat-key" aria-label="钥匙" hidden>🔑</span>
+        <span class="room-flat-prop" id="room-flat-brush" aria-label="刷子" hidden>${symbols.brush}</span>
+        <span class="room-flat-prop" id="room-flat-tray" aria-label="托盘" hidden>${symbols.tray}</span>
+        <span class="room-flat-prop" id="room-flat-card" aria-label="线索卡" hidden></span>
       </div>
       <div class="room-sr-only"><span id="room-view-label">3D 密室</span><span id="room-door-status">出口已锁</span></div>
       <div id="room-pins" class="room-pins"></div>
@@ -46,7 +53,7 @@ root.innerHTML=`
       <button type="button" id="room-check-door" class="room-quiet room-check-door" aria-label="试开出口" title="试开出口">${symbols.lock}</button>
     </div>
     <section class="room-panel" aria-label="当前汉字线索">
-      <div class="room-panel-top"><span id="room-count">0 / 12</span><span id="room-key-icon" aria-hidden="true" hidden>${symbols.key}</span></div>
+      <div class="room-panel-top"><span id="room-count">0 / 12</span><span class="room-items"><span id="room-brush-icon" role="img" aria-label="刷子" hidden>${symbols.brush}</span><span id="room-tray-icon" role="img" aria-label="托盘" hidden>${symbols.tray}</span><span id="room-key-icon" aria-hidden="true" hidden>${symbols.key}</span></span></div>
       <progress id="room-progress" value="0" max="12" aria-label="已完成的汉字线索"></progress>
       <div class="room-clue" aria-live="polite" aria-atomic="true">
         <p id="room-pinyin" class="room-pinyin" hidden></p>
@@ -84,8 +91,12 @@ function position(node,point){
 }
 function projectOverlays(){
   for(const pin of $('pins').children){
-    const target=CLUES[state.index].choices[Number(pin.dataset.pin)]?.at;
-    if(target)position(pin,state.index===11&&Number(pin.dataset.pin)===1?{...target,y:1,z:3.48}:target);
+    const index=Number(pin.dataset.pin);
+    const target=CLUES[state.index].choices[index]?.at;
+    if(!target)continue;
+    const aboveTool=state.index===1||(state.index===2&&index===0);
+    if(state.index===11&&index===1)position(pin,{...target,y:1,z:3.48});
+    else position(pin,aboveTool?{...target,y:target.y+.45}:target);
   }
   if(!$('stage-caption').hidden)position($('stage-caption'),{...state.player,y:state.player.y+1.44});
 }
@@ -96,6 +107,15 @@ function draw(snapshot=state,animation){
     $('flat-player').classList.toggle('is-seated',snapshot.player.pose==='sit');
     $('flat-key').hidden=snapshot.key!=='found';
     position($('flat-key'),{x:4.56,y:.5,z:-2.48});
+    $('flat-brush').hidden=snapshot.tools.includes('brush');
+    $('flat-tray').hidden=snapshot.tools.includes('tray');
+    position($('flat-brush'),BRUSH_SPOT);
+    position($('flat-tray'),TRAY_SPOT);
+    const card=$('flat-card');
+    card.hidden=snapshot.index<4||snapshot.index>7;
+    card.innerHTML=snapshot.rugClue==='revealed'?symbols.paw:symbols.card;
+    const holding=snapshot.rugClue!=='covered';
+    position(card,holding?{...snapshot.player,x:snapshot.player.x+.38,y:snapshot.player.y+.4}:{...RUG_CENTER,z:RUG_CENTER.z+.52});
     $('fallback').classList.toggle('room-flat-open',snapshot.doorOpen);
   }
 }
@@ -159,6 +179,8 @@ function render({focus=false,redraw=true}={}){
   $('door-status').textContent=state.doorOpen&&!moving?'出口已打开':'出口已锁';
   $('inventory').textContent=state.key==='held'?'🔑 钥匙已拿到':state.key==='found'&&!moving?'🔑 钥匙已找到':'🔒 还没找到钥匙';
   $('key-icon').hidden=state.key!=='held';
+  $('brush-icon').hidden=!state.tools.includes('brush')||state.rugClue==='revealed';
+  $('tray-icon').hidden=!state.tools.includes('tray')||state.rugClue==='revealed';
   $('stage-caption').hidden=!questioning||clue.actor!=='cat';
   if(redraw)draw();
   projectOverlays();
@@ -191,7 +213,8 @@ function choose(index){
     signal('↺');
     return;
   }
-  if(!next.travel.length||motionPreference.matches||!scene){render({focus:true});return;}
+  const cleaning=previous.rugClue==='inspected'&&next.rugClue==='revealed';
+  if((!next.travel.length&&!cleaning)||motionPreference.matches||!scene){render({focus:true});return;}
   moving=true;render({redraw:false});
   const token=++generation;
   const actor=CLUES[next.index].actor??'player';
@@ -199,16 +222,19 @@ function choose(index){
   const catMoving=actor==='player'&&previous.cat!==next.cat;
   const catRoute=catMoving?[previous.cat,{x:3.85,y:0,z:-.45},...(next.doorOpen?next.travel.slice(1,-1):[]),next.cat]:null;
   const length=route.slice(1).reduce((sum,p,i)=>sum+Math.hypot(p.x-route[i].x,p.z-route[i].z),0);
-  const duration=Math.min(1900,Math.max(430,length*190));
+  const duration=cleaning?1550:Math.min(1900,Math.max(430,length*190));
   let begin;
   function frame(time){
     if(token!==generation)return;
     begin??=time;
     const ratio=Math.min(1,(time-begin)/duration);
-    const move=traverse(route,ratio);
-    const snapshot={...previous,[actor]:move.at};
-    if(catMoving)snapshot.cat=traverse(catRoute,ratio).at;
-    draw(snapshot,{actor,angle:move.angle,beat:ratio*length*7,catMoving,doorAngle:next.doorOpen?1.35*Math.max(0,Math.min(1,(ratio-.63)*8)):0});
+    if(cleaning)draw({...previous,player:next.player},{cleaning:ratio});
+    else{
+      const move=traverse(route,ratio);
+      const snapshot={...previous,[actor]:move.at};
+      if(catMoving)snapshot.cat=traverse(catRoute,ratio).at;
+      draw(snapshot,{actor,angle:move.angle,beat:ratio*length*7,catMoving,doorAngle:next.doorOpen?1.35*Math.max(0,Math.min(1,(ratio-.63)*8)):0});
+    }
     if(ratio<1)requestAnimationFrame(frame);
     else {moving=false;render({focus:true});}
   }
