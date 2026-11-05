@@ -13,9 +13,10 @@
     </header>
     <h1><ruby>城市探索<rt>Chéngshì tànsuǒ</rt></ruby><small lang="en">City Exploration</small></h1>
     <section id="briefing" class="scene-card mission-briefing" lang="en" aria-labelledby="mission-title">
-      <h2 id="mission-title">Catch the Thief!</h2>
-      <p>A thief ran through seven cities and left clues along the way.</p>
-      <p>Read the Chinese clues and guess each city. Solve all seven levels to find the thief’s hiding place!</p>
+      <h2 id="mission-title">The Missing Chinese Homework</h2>
+      <p>A thief stole our Chinese homework! He left clues in seven cities.</p>
+      <p>Guess each city and follow the trail on the map. Let’s find him and get our homework back!</p>
+      <p class="mission-question" lang="zh-Hans"><ruby>猜猜<rt>Cāicai</rt></ruby><ruby>小偷<rt>xiǎotōu</rt></ruby><ruby>是<rt>shì</rt></ruby><ruby>从<rt>cóng</rt></ruby><ruby>哪儿<rt>nǎr</rt></ruby><ruby>来的？<rt>lái de?</rt></ruby><small lang="en">Can you guess where the thief came from?</small></p>
       <button id="start-mission" class="city-primary" type="button">Start Level 1</button>
     </section>
     <section id="game" hidden>
@@ -34,6 +35,13 @@
         </section>
         <p id="feedback" class="city-feedback" role="status"></p>
         <div id="answer" class="city-answer" hidden></div>
+        <figure id="city-map" class="city-map" hidden>
+          <div class="map-surface">
+            <img src="./src/city-world.svg" alt="" width="720" height="320">
+            <svg id="city-route" viewBox="0 0 720 320" aria-hidden="true"></svg>
+          </div>
+          <figcaption id="map-city"></figcaption>
+        </figure>
         <div class="city-actions">
           <button id="next-scene" class="city-primary" type="button" hidden></button>
         </div>

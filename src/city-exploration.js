@@ -1,11 +1,13 @@
 import scenes from './city-scenes.json';
 import {ruby, gloss} from './ruby.js';
+import {renderRoute} from './city-route.js';
 import './city-exploration.css';
 
 const byId = id => document.getElementById(id);
 const choices = byId('choices');
 const showClue = byId('show-clue');
 const next = byId('next-scene');
+const map = byId('city-map');
 let level = 0;
 let revealed = 0;
 let solved = false;
@@ -68,35 +70,47 @@ function showAnswer() {
   renderTracker();
   const scene = scenes[level];
   const city = [scene.city, scene.pinyin];
-  const name = document.createElement('p');
-  annotate(name, ['这', 'Zhè'], ['是', 'shì'], city, ['。']);
-  const model = document.createElement('p');
-  annotate(model, ['我', 'Wǒ'], ['从', 'cóng'], city, ['来', 'lái'], ['。']);
+  const final = level === scenes.length - 1;
+  const speaker = document.createElement('p');
+  speaker.className = 'thief-speaker';
+  guide(speaker, 'The thief says', ['小偷', 'Xiǎotōu'], ['说', 'shuō']);
+  const speech = document.createElement('p');
+  speech.className = 'thief-speech';
+  if (final) {
+    annotate(speech, ['我', 'Wǒ'], ['从', 'cóng'], city, ['来', 'lái'], ['。']);
+  } else {
+    guide(speech, `I didn’t come from ${scene.english}.`,
+      ['我', 'Wǒ'], ['不是', 'bú shì'], ['从', 'cóng'], city, ['来的', 'lái de'], ['。']);
+  }
   const answer = byId('answer');
-  answer.replaceChildren(name, model);
+  answer.replaceChildren(speaker, speech);
   answer.hidden = false;
 
-  if (level === scenes.length - 1) {
+  if (final) {
     const ending = document.createElement('p');
     ending.className = 'mission-complete';
     ending.lang = 'en';
-    ending.textContent = `Case closed! We found the thief in ${scene.english}.`;
-    answer.prepend(ending);
+    ending.textContent = 'Case closed! We found the thief and got our Chinese homework back.';
+    answer.append(ending);
     label(next, '再玩一次', 'Zài wán yí cì', 'Play again');
   } else {
     label(next, '下一关 →', 'Xià yì guān', 'Next level');
   }
-  guide(byId('feedback'), 'Correct! Say the sentence together.', ['猜对了！', 'Cāi duì le!'], ['一起说一句。', 'Yìqǐ shuō yí jù.']);
+  guide(byId('feedback'), 'Correct!', ['猜对了！', 'Cāi duì le!']);
   for (const button of choices.children) button.disabled = true;
+  guide(byId('map-city'), scene.english, city);
+  map.hidden = false;
+  renderRoute(byId('city-route'), scenes.slice(0, level + 1));
   next.hidden = false;
-  next.focus();
+  next.focus({preventScroll:true});
+  answer.scrollIntoView({block:'start'});
 }
 
 function openLevel() {
   revealed = 0;
   solved = false;
   for (const id of ['clues', 'objects', 'feedback', 'answer']) byId(id).replaceChildren();
-  for (const id of ['guess', 'answer', 'next-scene']) byId(id).hidden = true;
+  for (const id of ['guess', 'answer', 'next-scene', 'city-map']) byId(id).hidden = true;
   for (const button of choices.children) button.disabled = false;
   guide(byId('scene-title'), `Level ${level + 1}`, ['第', 'Dì'], [String(level + 1)], ['关', 'guān']);
   label(showClue, '打开第一条线索', 'Dǎkāi dì yī tiáo xiànsuǒ', 'Open the first clue');
