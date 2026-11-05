@@ -53,10 +53,21 @@ test('the locked room takes twelve clues, allows retries, and exits after collec
       await page.keyboard.press('3');
       await expect(page.locator('#room-feedback')).toContainText('再想一想');
     }
-    if(i===9)await page.screenshot({path:testInfo.outputPath('paw-trail.png')});
+    if(i===9){
+      await expect(page.locator('#room-card-icon')).toBeVisible();
+      await page.screenshot({path:testInfo.outputPath('paw-trail.png')});
+    }
     await page.locator(`[data-choice="${choices[i]}"]`).click();
     if(i===10){
+      const cardSlot=page.getByRole('button',{name:'把猫爪卡放进木箱卡槽',exact:true});
+      await expect(cardSlot).toBeVisible();
+      await expect(page.getByRole('button',{name:'捡起木箱上的钥匙',exact:true})).toBeHidden();
+      await expect(page.locator('#room-card-icon')).toBeVisible();
+      await page.screenshot({path:testInfo.outputPath('card-slot.png')});
+      await cardSlot.click();
       await expect(page.locator('#room-inventory')).toContainText('钥匙已找到');
+      await expect(cardSlot).toBeHidden();
+      await expect(page.locator('#room-card-icon')).toBeHidden();
       await page.getByRole('button',{name:'试开出口',exact:true}).click();
       await expect(page.locator('#room-feedback')).toContainText('先拿起钥匙');
       await page.screenshot({path:testInfo.outputPath('key-box.png')});
@@ -82,6 +93,7 @@ test('the locked room takes twelve clues, allows retries, and exits after collec
       if(i===6){
         await expect(page.getByRole('button',{name:'下一条线索',exact:true})).toBeVisible();
         await expect(page.locator('#room-feedback')).toContainText('露出猫爪印');
+        await expect(page.locator('#room-card-icon')).toBeVisible();
         await page.screenshot({path:testInfo.outputPath('paw-clue.png')});
       }
       await page.getByRole('button',{name:'下一条线索',exact:true}).click();

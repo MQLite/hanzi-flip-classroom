@@ -11,6 +11,7 @@ const catClue=spot(.8,0,1.1);
 const catPantry=spot(4.2,0,-.35);
 export const CAT_TRAIL=[catClue,...pantryPath,catPantry];
 export const KEY_SPOT=spot(4.56,1.04,-2.47);
+export const CHEST_CARD_SPOT=spot(4.56,.23,-2.145);
 export const PAINTING_SPOT=spot(-5.49,1.85,-.85);
 export const TRAY_SPOT=spot(-2.45,1.45,-1.49);
 export const RUG_CENTER=middle;
@@ -32,7 +33,7 @@ export const CLUES = [
     choices:[choice('地毯左边',spot(-1.08,0,.85)),choice('地毯正中',middle),choice('地毯右边',spot(1.08,0,.85))]},
   {char:'坐',pinyin:'zuò',prompt:'坐下仔细看看地毯。',answer:'他坐下来，捡起蒙灰的卡片，放在托盘里。',correct:1,
     choices:[choice('继续站着',null),choice('坐下来看看',null)],pose:'sit',rugClue:'inspected'},
-  {char:'立',pinyin:'lì',prompt:'站起来，拍拍卡片上的灰。',answer:'他站起来，用刷子轻拍灰尘，卡片上露出猫爪印。',correct:0,
+  {char:'立',pinyin:'lì',prompt:'站起来，拍拍卡片上的灰。',answer:'他站起来，用刷子轻拍灰尘，卡片上露出猫爪印。把这张卡片带上。',correct:0,
     choices:[choice('站起来拍拍灰',null),choice('留在垫子上',null)],pose:'stand',rugClue:'revealed'},
   {char:'来',pinyin:'lái',prompt:'卡片上有猫爪印。小朋友把猫咪叫过来。',answer:'猫咪跑到小朋友身边，闻了闻卡片。',correct:1,actor:'cat',
     choices:[choice('朝窗边',spot(1.5,0,-2.8)),choice('朝小朋友',catClue)]},
@@ -40,7 +41,7 @@ export const CLUES = [
     choices:[choice('朝小门',catPantry,pantryPath),choice('留在小朋友旁',catClue)]},
   {char:'走',pinyin:'zǒu',prompt:'猫咪停在小门旁。小朋友怎样跟上它？',answer:'小朋友沿着猫爪印走到小门前。',correct:0,
     choices:[choice('沿爪印到小门',pantryDoor,pantryPath),choice('留在地毯旁',middle)]},
-  {char:'入',pinyin:'rù',prompt:'小门开着，里面有一个印着猫爪的木箱。',answer:'他进门，找到和卡片上图案一样的木箱。猫咪找到了钥匙！',correct:0,
+  {char:'入',pinyin:'rù',prompt:'小门开着，里面有一个印着猫爪的木箱。',answer:'他进门，找到和卡片上图案一样的木箱。把猫爪卡放进木箱的卡槽。',correct:0,
     choices:[choice('穿过小门到木箱旁',pantry),choice('留在小门外',pantryDoor)],catTo:boxSide},
   {char:'出',pinyin:'chū',prompt:'钥匙拿到了。哪条路能离开房间？',answer:'他用钥匙打开出口，和猫咪来到花园。夜空亮起了烟花！',correct:1,
     choices:[choice('回到圆地毯',middle),choice('穿过有锁的出口',spot(EXIT_X,0,4.85),[pantryDoor,spot(2.85,0,2.15),spot(EXIT_X,0,3.28)])]},
@@ -72,7 +73,7 @@ export function resolveChoice(state,selected){
   if(clue.pose)next.player={...state.player,pose:clue.pose};
   if(clue.collect)next.tools=[...state.tools,clue.collect];
   if(clue.rugClue)next.rugClue=clue.rugClue;
-  if(clue.catTo){next.cat=clue.catTo;next.key='found';next.phase='key';}
+  if(clue.catTo){next.cat=clue.catTo;next.phase='match';}
   if(last){next.cat=spot(EXIT_X+.67,0,4.75);return tryExit(next);}
   return next;
 }
@@ -80,6 +81,11 @@ export function resolveChoice(state,selected){
 export function continueEscape(state){
   if(state.phase!=='solved'||state.index>=CLUES.length-1)return state;
   return {...state,index:state.index+1,phase:'clue',feedback:'',travel:[]};
+}
+
+export function useClueCard(state){
+  if(state.phase!=='match'||state.rugClue!=='revealed')return state;
+  return {...state,phase:'key',key:'found',feedback:'猫爪卡放进了卡槽，木箱打开，露出了钥匙！'};
 }
 
 export function takeKey(state){

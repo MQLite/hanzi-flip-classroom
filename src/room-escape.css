@@ -24,8 +24,10 @@ button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #28
 .room-flat-prop svg{width:23px;height:23px}
 .room-flat-open svg rect[width="87"]{fill:#bad3a2;stroke:#7b9b75}
 .room-flat-trail span{position:absolute;transform:translate(-50%,-50%);width:clamp(12px,2.1vw,24px);color:#3d6453;pointer-events:none}
-.room-key-pickup{position:absolute;z-index:2;transform:translate(-50%,-50%);width:clamp(50px,6vw,76px);aspect-ratio:1;border:2px solid #fff3bd;border-radius:50%;background:transparent;box-shadow:0 0 13px 4px #ffc34e66}
-.room-key-pickup:hover,.room-key-pickup:focus-visible{background:#ffdb7233;box-shadow:0 0 18px 6px #ffc34e99}
+.room-item-target{position:absolute;z-index:2;transform:translate(-50%,-50%);width:clamp(50px,6vw,76px);aspect-ratio:1;border:2px solid #fff3bd;border-radius:50%;background:transparent;box-shadow:0 0 13px 4px #ffc34e66}
+.room-item-target:hover,.room-item-target:focus-visible{background:#ffdb7233;box-shadow:0 0 18px 6px #ffc34e99}
+#room-flat-socket{background:#456653;color:#ffdfa2}
+#room-flat-socket.is-filled{background:#f1ce94;color:#365845}
 .room-fireworks{position:absolute;z-index:3;inset:0;width:100%;height:100%;pointer-events:none}
 .room-burst{transform-box:fill-box;transform-origin:center;animation:room-firework 2600ms var(--burst-delay) ease-out both}
 @keyframes room-firework{
@@ -56,6 +58,7 @@ button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #28
 .room-panel progress::-moz-progress-bar{background:#377f64}
 .room-clue{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:120px}
 .room-clue h2{font-size:clamp(19px,2.25vw,32px);font-weight:900;margin:0}
+.room-match-hint{margin:7px 0 0;font-size:clamp(13px,1.35vw,18px);font-weight:700}
 .room-pinyin{margin:0;color:#925022;font-size:clamp(17px,1.8vw,27px);font-weight:750}
 .room-glyph{font-size:clamp(74px,10vw,140px);line-height:1.08;margin:0;font-weight:900}
 .room-signal{text-align:center;font-size:clamp(17px,2.4vw,33px);font-weight:800;color:#35694e}

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {CAT_TRAIL,CLUES,EXIT_X,KEY_SPOT,PAINTING_SPOT,RUG_CENTER,TRAY_SPOT} from './room-escape-core.js';
+import {CAT_TRAIL,CHEST_CARD_SPOT,CLUES,EXIT_X,KEY_SPOT,PAINTING_SPOT,RUG_CENTER,TRAY_SPOT} from './room-escape-core.js';
 
 const palette={wood:0xa46945,trim:0x684837,wall:0xf1d7a6,green:0x357366,orange:0xf2a256,gold:0xffca58};
 const cube=new THREE.BoxGeometry(1,1,1);
@@ -211,9 +211,13 @@ function furnishings(scene){
   box(chest,0x825137,0,.23,0,.88,.44,.57);
   const lid=group(chest,0,.45,-.28);
   box(lid,0xc48b52,0,.07,.27,.92,.17,.59);
-  box(chest,0xe1a850,0,.36,.294,.16,.17,.045);
-  box(chest,0xe5c390,-.21,.24,.305,.24,.22,.024);
-  makePaw(chest,-.21,.232,.326).scale.setScalar(.82);
+  const {x:cardX,y:cardY,z:cardZ}=CHEST_CARD_SPOT;
+  box(scene,0xe1a850,cardX,cardY,cardZ-.029,.55,.39,.036);
+  box(scene,0x4b5d4d,cardX,cardY,cardZ-.005,.48,.32,.018);
+  const socketPaw=makePaw(scene,cardX,cardY,cardZ+.012,0xf4cb7d);
+  socketPaw.scale.setScalar(1.17);
+  const chestCard=makeClueCard(scene,cardX,cardY,cardZ+.025);
+  chestCard.dust.visible=false;
   for(const x of [-.34,.34])box(chest,0xb5784a,x,.23,.29,.095,.41,.025);
   const key=group(scene,KEY_SPOT.x,KEY_SPOT.y,KEY_SPOT.z);
   const ring=new THREE.TorusGeometry(.147,.043,12,24);
@@ -242,7 +246,7 @@ function furnishings(scene){
     box(face,0xf0bb62,0,0,0,.22,.17,.086);
     box(face,0x6a4b36,0,0,side*.053,.035,.065,.012);
   }
-  return {door,lock,chestLid:lid,key,painting,tray,rugCard:rugCard.card,centerRing,cushion,ceiling};
+  return {door,lock,chestLid:lid,chestCard:chestCard.card,socketPaw,key,painting,tray,rugCard:rugCard.card,centerRing,cushion,ceiling};
 }
 
 function makeChild(scene){
@@ -310,8 +314,8 @@ function setActor(actor,p,{walking=false,beat=0,seat=p.pose==='sit'?1:0}={}){
   actor.legs.forEach((leg,i)=>{leg.rotation.x=seat?-1.25*seat:walking?Math.sin(beat+i*Math.PI)*.36:0;});
 }
 
-function showInspection(player,state,camera,cleaning){
-  const inspect=state.index>=5&&state.index<=7&&state.rugClue!=='covered';
+function showInspection(player,state,camera,cleaning,sniffing){
+  const inspect=state.rugClue!=='covered'&&state.key==='hidden';
   const seat=cleaning===undefined?(state.player.pose==='sit'?1:0):Math.max(0,1-cleaning/.2);
   const brushing=cleaning!==undefined&&cleaning>.2&&cleaning<.92;
   const sweep=brushing?Math.sin((cleaning-.2)*Math.PI*9):0;
@@ -321,8 +325,9 @@ function showInspection(player,state,camera,cleaning){
   player.arms[1].rotation.x=inspect?-1.07+sweep*.14:0;
   player.arms[1].rotation.z=inspect?.19+sweep*.43:.19;
   if(!inspect)return;
-  if(state.index<=6)player.root.rotation.y=Math.atan2(camera.position.x-state.player.x,camera.position.z-state.player.z);
-  player.inspection.position.y=.76-seat*.2;
+  if(sniffing)player.root.rotation.y=Math.atan2(state.cat.x-state.player.x,state.cat.z-state.player.z);
+  else if(state.index<=6||state.phase==='match')player.root.rotation.y=Math.atan2(camera.position.x-state.player.x,camera.position.z-state.player.z);
+  player.inspection.position.y=sniffing?.57:.76-seat*.2;
   player.brush.visible=state.tools.includes('brush')&&state.index===6&&state.rugClue!=='revealed';
   player.brush.position.x=.25+sweep*.23;
   player.brush.rotation.z=-.22+sweep*.35;
@@ -452,7 +457,8 @@ export function createRoomScene(host,onProject){
     const outside=state.phase==='escaped';
     const overhead=state.index===4&&state.phase==='clue';
     const showingPainting=state.index===1&&(state.phase==='solved'||travelProgress>=.56);
-    const nextShot=outside?'garden':intro?'intro':overhead?'rug':showingPainting?'painting':state.phase==='key'?'key':state.index;
+    const atChest=state.phase==='match'||state.phase==='key';
+    const nextShot=outside?'garden':intro?'intro':overhead?'rug':showingPainting?'painting':atChest?'key':state.index;
     if(nextShot!==shotKey){
       shotKey=nextShot;
       shot=typeof shotKey==='string'?specialShot(shotKey):indoorShot(state);
@@ -473,14 +479,14 @@ export function createRoomScene(host,onProject){
     const sniffing=state.index===7&&(state.phase==='solved'||travelProgress>.8);
     cat.model.rotation.x=sniffing?.18:0;
     if(sniffing)cat.root.rotation.y=Math.atan2(state.player.x-state.cat.x,state.player.z+.3-state.cat.z);
-    if(state.phase==='key')cat.root.rotation.y=Math.atan2(KEY_SPOT.x-state.cat.x,KEY_SPOT.z-state.cat.z);
+    if(atChest)cat.root.rotation.y=Math.atan2(KEY_SPOT.x-state.cat.x,KEY_SPOT.z-state.cat.z);
     if(outside){
       for(const character of [player,cat]){
         const {x,z}=character.root.position;
         character.root.rotation.y=Math.atan2(camera.position.x-x,camera.position.z-z);
       }
     }
-    showInspection(player,state,camera,cleaning);
+    showInspection(player,state,camera,cleaning,sniffing);
     const carrying=state.index<=4;
     player.carriedBrush.visible=state.index===2&&state.tools.includes('brush')&&!state.tools.includes('tray');
     player.carriedTray.visible=carrying&&state.tools.includes('tray');
@@ -493,6 +499,8 @@ export function createRoomScene(host,onProject){
     props.rugCard.visible=!overhead&&state.index>=4&&state.rugClue==='covered';
     props.centerRing.visible=!overhead&&state.index>=4&&state.index<=6;
     props.chestLid.rotation.x=state.key==='hidden'?0:-1.09;
+    props.chestCard.visible=state.key!=='hidden';
+    props.socketPaw.visible=state.key==='hidden';
     props.key.visible=state.key==='found';
     props.door.rotation.y=doorAngle??(state.doorOpen?1.35:0);
     props.lock.visible=!state.doorOpen;

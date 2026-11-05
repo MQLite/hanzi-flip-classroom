@@ -1,4 +1,4 @@
-import {CAT_TRAIL,CLUES,KEY_SPOT,PAINTING_SPOT,RUG_CENTER,TRAY_SPOT,createEscape,resolveChoice,continueEscape,takeKey} from './room-escape-core.js';
+import {CAT_TRAIL,CHEST_CARD_SPOT,CLUES,KEY_SPOT,PAINTING_SPOT,RUG_CENTER,TRAY_SPOT,createEscape,resolveChoice,continueEscape,takeKey,useClueCard} from './room-escape-core.js';
 import {createRoomScene} from './room-escape-scene.js';
 import './room-escape.css';
 
@@ -57,10 +57,12 @@ root.innerHTML=`
         <span class="room-flat-prop" id="room-flat-painting" aria-label="墙上的地毯画">${symbols.painting}</span>
         <span class="room-flat-prop" id="room-flat-tray" aria-label="托盘" hidden>${symbols.tray}</span>
         <span class="room-flat-prop" id="room-flat-card" aria-label="线索卡" hidden></span>
+        <span class="room-flat-prop" id="room-flat-socket" aria-label="木箱的猫爪卡槽" hidden>${symbols.paw}</span>
       </div>
       <div class="room-sr-only"><span id="room-view-label">3D 密室</span><span id="room-door-status">出口已锁</span></div>
       <div id="room-pins" class="room-pins"></div>
-      <button type="button" id="room-key-pickup" class="room-key-pickup" aria-label="捡起木箱上的钥匙" title="捡起钥匙" hidden></button>
+      <button type="button" id="room-card-slot" class="room-item-target" aria-label="把猫爪卡放进木箱卡槽" title="把猫爪卡放进木箱卡槽" hidden></button>
+      <button type="button" id="room-key-pickup" class="room-item-target" aria-label="捡起木箱上的钥匙" title="捡起钥匙" hidden></button>
       <div id="room-stage-caption" class="room-stage-caption" aria-label="小朋友在说话" hidden>•••</div>
       <button type="button" id="room-check-door" class="room-quiet room-check-door" aria-label="试开出口" title="试开出口">${symbols.lock}</button>
       <svg id="room-fireworks" class="room-fireworks" viewBox="0 0 1000 620" preserveAspectRatio="none" aria-hidden="true" hidden>
@@ -68,13 +70,14 @@ root.innerHTML=`
       </svg>
     </div>
     <section class="room-panel" aria-label="当前汉字线索">
-      <div class="room-panel-top"><span id="room-count">0 / 12</span><span class="room-items"><span id="room-brush-icon" role="img" aria-label="刷子" hidden>${symbols.brush}</span><span id="room-tray-icon" role="img" aria-label="托盘" hidden>${symbols.tray}</span><span id="room-key-icon" aria-hidden="true" hidden>${symbols.key}</span></span></div>
+      <div class="room-panel-top"><span id="room-count">0 / 12</span><span class="room-items"><span id="room-brush-icon" role="img" aria-label="刷子" hidden>${symbols.brush}</span><span id="room-tray-icon" role="img" aria-label="托盘" hidden>${symbols.tray}</span><span id="room-card-icon" role="img" aria-label="已找到的猫爪卡" title="猫爪卡" hidden>${symbols.paw}</span><span id="room-key-icon" aria-hidden="true" hidden>${symbols.key}</span></span></div>
       <progress id="room-progress" value="0" max="12" aria-label="已完成的汉字线索"></progress>
       <div class="room-clue" aria-live="polite" aria-atomic="true">
         <p id="room-pinyin" class="room-pinyin" hidden></p>
         <p id="room-glyph" class="room-glyph" hidden></p>
         <h2 id="room-intro">找钥匙</h2>
         <h2 id="room-win" hidden>逃脱成功！</h2>
+        <p id="room-match-hint" class="room-match-hint" hidden>把猫爪卡放进卡槽</p>
         <p id="room-prompt" class="room-sr-only">和猫咪一起读线索，找到钥匙，打开出口。</p>
       </div>
       <p id="room-feedback" class="room-sr-only" role="status"></p>
@@ -104,6 +107,9 @@ function position(node,point){
   const {left,top}=project(point);
   node.style.left=`${left}%`;node.style.top=`${top}%`;
 }
+function placeItemTarget(id,point){
+  if(!$(id).hidden)position($(id),scene?{...point,y:point.y-.28}:point);
+}
 function projectOverlays(){
   for(const pin of $('pins').children){
     const index=Number(pin.dataset.pin);
@@ -114,7 +120,8 @@ function projectOverlays(){
     else position(pin,target);
   }
   if(!$('stage-caption').hidden)position($('stage-caption'),{...state.player,y:state.player.y+1.44});
-  if(!$('key-pickup').hidden)position($('key-pickup'),scene?{...KEY_SPOT,y:KEY_SPOT.y-.28}:KEY_SPOT);
+  placeItemTarget('card-slot',CHEST_CARD_SPOT);
+  placeItemTarget('key-pickup',KEY_SPOT);
 }
 function draw(snapshot=state,animation){
   if(scene)scene.draw(snapshot,{intro:!started,...animation});
@@ -139,10 +146,14 @@ function draw(snapshot=state,animation){
     position($('flat-painting'),PAINTING_SPOT);
     position($('flat-tray'),TRAY_SPOT);
     const card=$('flat-card');
-    card.hidden=overhead||snapshot.index<4||snapshot.index>7;
+    card.hidden=overhead||snapshot.index<4||snapshot.key!=='hidden';
     card.innerHTML=snapshot.rugClue==='revealed'?symbols.paw:symbols.card;
     const holding=snapshot.rugClue!=='covered';
     position(card,holding?{...snapshot.player,x:snapshot.player.x+.38,y:snapshot.player.y+.4}:{...RUG_CENTER,z:RUG_CENTER.z+.52});
+    const socket=$('flat-socket');
+    socket.hidden=snapshot.index<10;
+    socket.classList.toggle('is-filled',snapshot.key!=='hidden');
+    position(socket,CHEST_CARD_SPOT);
     $('fallback').classList.toggle('room-flat-open',snapshot.doorOpen);
   }
 }
@@ -175,6 +186,7 @@ function signal(mark=''){
 function render({focus=false,redraw=true}={}){
   const clue=CLUES[state.index];
   const escaped=state.phase==='escaped';
+  const matching=state.phase==='match'&&!moving;
   const questioning=started&&state.phase==='clue'&&!moving;
   const revealed=started&&state.phase!=='clue'&&!moving;
   $('count').textContent=`${started?state.index+1:0} / ${CLUES.length}`;
@@ -182,12 +194,14 @@ function render({focus=false,redraw=true}={}){
   $('intro').hidden=started;
   $('win').hidden=!escaped||moving;
   $('fireworks').toggleAttribute('hidden',!escaped||moving);
+  $('card-slot').hidden=!matching;
+  $('match-hint').hidden=!matching;
   $('key-pickup').hidden=state.phase!=='key'||moving;
   $('glyph').hidden=!started||escaped;
   $('glyph').textContent=started&&!escaped?clue.char:'';
   $('pinyin').hidden=!started||escaped||!showHint;
   $('pinyin').textContent=$('pinyin').hidden?'':clue.pinyin;
-  $('prompt').textContent=!started?'和猫咪一起读线索，找到钥匙，打开出口。':escaped?'用「走进去」「走出来」说一说刚才的路线。':moving?'看它怎么行动。':questioning?clue.prompt:state.phase==='key'?'木箱打开了。先拿起钥匙。':'读一读这个字，再看下一条线索。';
+  $('prompt').textContent=!started?'和猫咪一起读线索，找到钥匙，打开出口。':escaped?'用「走进去」「走出来」说一说刚才的路线。':moving?'看它怎么行动。':questioning?clue.prompt:matching?'看看木箱上的图案，把猫爪卡放进卡槽。':state.phase==='key'?'木箱打开了。先拿起钥匙。':'读一读这个字，再看下一条线索。';
   $('feedback').textContent=notice||(!moving?state.feedback:'');
   signal(revealed&&state.phase==='solved'?'✓':'');
   $('choices').hidden=!questioning||clue.choices.some(option=>option.at);
@@ -198,9 +212,9 @@ function render({focus=false,redraw=true}={}){
   });
   $('advance').hidden=questioning;
   $('advance').disabled=moving;
-  const action=!started?'开始探索':moving?'正在行动…':escaped?'再玩一次':state.phase==='key'?'拿起钥匙':'下一条线索';
+  const action=!started?'开始探索':moving?'正在行动…':escaped?'再玩一次':matching?'放入猫爪卡':state.phase==='key'?'拿起钥匙':'下一条线索';
   $('advance').setAttribute('aria-label',action);$('advance').title=action;
-  $('advance').innerHTML=!started?symbols.play:escaped?symbols.reset:state.phase==='key'?symbols.key:symbols.next;
+  $('advance').innerHTML=!started?symbols.play:escaped?symbols.reset:matching?symbols.card:state.phase==='key'?symbols.key:symbols.next;
   $('hint').hidden=!questioning;
   $('hint').disabled=showHint;
   $('check-door').disabled=moving||escaped;
@@ -208,6 +222,7 @@ function render({focus=false,redraw=true}={}){
   $('door-status').textContent=state.doorOpen&&!moving?'出口已打开':'出口已锁';
   $('inventory').textContent=state.key==='held'?'🔑 钥匙已拿到':state.key==='found'&&!moving?'🔑 钥匙已找到':'🔒 还没找到钥匙';
   $('key-icon').hidden=state.key!=='held';
+  $('card-icon').hidden=moving&&state.index===6||state.rugClue!=='revealed'||state.key!=='hidden';
   $('brush-icon').hidden=!state.tools.includes('brush')||state.rugClue==='revealed';
   $('tray-icon').hidden=!state.tools.includes('tray')||state.rugClue==='revealed';
   $('stage-caption').hidden=!questioning||clue.actor!=='cat';
@@ -282,8 +297,12 @@ function reset({begin=false}={}){
 $('advance').onclick=()=>{
   if(moving)return;
   if(!started||state.phase==='escaped'){reset({begin:true});return;}
-  state=state.phase==='key'?takeKey(state):continueEscape(state);
+  if(state.phase==='match')state=useClueCard(state);
+  else state=state.phase==='key'?takeKey(state):continueEscape(state);
   showHint=false;notice='';render({focus:true});
+};
+$('card-slot').onclick=()=>{
+  if(state.phase==='match'&&!moving)$('advance').click();
 };
 $('key-pickup').onclick=()=>{
   if(state.phase==='key'&&!moving)$('advance').click();

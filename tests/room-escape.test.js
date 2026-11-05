@@ -1,6 +1,6 @@
 import {describe,expect,it} from 'vitest';
 import {EXPLORATIONS,matchingExplorations} from '../src/exploration.js';
-import {CLUES,createEscape,resolveChoice,continueEscape,takeKey,tryExit} from '../src/room-escape-core.js';
+import {CLUES,createEscape,resolveChoice,continueEscape,takeKey,tryExit,useClueCard} from '../src/room-escape-core.js';
 
 const correct = state => resolveChoice(state,CLUES[state.index].correct);
 
@@ -35,9 +35,10 @@ describe('识字三密室逃脱',()=>{
     expect(resolveChoice(standing,1).rugClue).toBe('inspected');
     expect(correct(standing)).toMatchObject({rugClue:'revealed',player:{pose:'stand'},key:'hidden'});
   });
-  it('uses all twelve characters and requires the key and the final direction to exit',()=>{
+  it('uses the cat card to unlock the key and requires the final direction to exit',()=>{
     expect(CLUES.map(s=>s.char).join('')).toBe('上左右下中坐立来去走入出');
     let state=createEscape();
+    expect(useClueCard(state)).toBe(state);
     for(let i=0;i<CLUES.length-1;i++){
       expect(tryExit(state)).toBe(state);
       state=correct(state);
@@ -47,9 +48,13 @@ describe('识字三密室逃脱',()=>{
       if(i===8)expect(Math.abs(state.cat.x-state.player.x)).toBeGreaterThan(3);
       if(i<CLUES.length-2)state=continueEscape(state);
     }
-    expect(state).toMatchObject({key:'found',phase:'key',doorOpen:false});
+    expect(state).toMatchObject({key:'hidden',phase:'match',doorOpen:false});
     expect(continueEscape(state)).toBe(state);
     expect(tryExit(state)).toBe(state);
+    expect(takeKey(state)).toBe(state);
+    state=useClueCard(state);
+    expect(state).toMatchObject({key:'found',phase:'key',doorOpen:false});
+    expect(useClueCard(state)).toBe(state);
     state=takeKey(state);
     expect(state).toMatchObject({key:'held',phase:'clue',index:11,doorOpen:false});
     expect(tryExit(state)).toBe(state);
