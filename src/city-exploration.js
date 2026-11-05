@@ -50,15 +50,17 @@ function renderLine(words) {
 }
 
 function renderTracker() {
+  const restored = level + Number(solved);
   byId('scenes').replaceChildren(...scenes.map((_, index) => {
     const item = document.createElement('li');
-    const complete = index < level || (index === level && solved);
+    const complete = index < restored;
     item.textContent = complete ? '✓' : String(index + 1);
     item.setAttribute('aria-label', `Level ${index + 1}: ${complete ? 'solved' : index === level ? 'open' : 'locked'}`);
     if (complete) item.className = 'solved';
     if (index === level) item.setAttribute('aria-current', 'step');
     return item;
   }));
+  byId('memory-count').textContent = `${restored} / ${scenes.length}`;
 }
 
 function renderProgress() {
@@ -71,27 +73,20 @@ function showAnswer() {
   const scene = scenes[level];
   const city = [scene.city, scene.pinyin];
   const final = level === scenes.length - 1;
-  const speaker = document.createElement('p');
-  speaker.className = 'thief-speaker';
-  guide(speaker, 'The thief says', ['小偷', 'Xiǎotōu'], ['说', 'shuō']);
-  const speech = document.createElement('p');
-  speech.className = 'thief-speech';
-  if (final) {
-    annotate(speech, ['我', 'Wǒ'], ['从', 'cóng'], city, ['来', 'lái'], ['。']);
-  } else {
-    guide(speech, `I didn’t come from ${scene.english}.`,
-      ['我', 'Wǒ'], ['不是', 'bú shì'], ['从', 'cóng'], city, ['来的', 'lái de'], ['。']);
-  }
   const answer = byId('answer');
-  answer.replaceChildren(speaker, speech);
-  answer.hidden = false;
-
   if (final) {
+    const speaker = document.createElement('p');
+    speaker.className = 'robot-speaker';
+    guide(speaker, 'Doudou says', ['豆豆', 'Dòudou'], ['说', 'shuō']);
+    const speech = document.createElement('p');
+    speech.className = 'robot-speech';
+    annotate(speech, ['我', 'Wǒ'], ['从', 'cóng'], city, ['来', 'lái'], ['。']);
     const ending = document.createElement('p');
     ending.className = 'mission-complete';
     ending.lang = 'en';
-    ending.textContent = 'Case closed! We found the thief and got our Chinese homework back.';
-    answer.append(ending);
+    ending.textContent = 'All seven memories restored!';
+    answer.replaceChildren(speaker, speech, ending);
+    answer.hidden = false;
     label(next, '再玩一次', 'Zài wán yí cì', 'Play again');
   } else {
     label(next, '下一关 →', 'Xià yì guān', 'Next level');
@@ -103,7 +98,7 @@ function showAnswer() {
   renderRoute(byId('city-route'), scenes.slice(0, level + 1));
   next.hidden = false;
   next.focus({preventScroll:true});
-  answer.scrollIntoView({block:'start'});
+  (final ? answer : map).scrollIntoView({block:'nearest'});
 }
 
 function openLevel() {
