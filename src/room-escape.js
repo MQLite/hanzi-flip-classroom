@@ -1,4 +1,4 @@
-import {BRUSH_SPOT,CAT_TRAIL,CLUES,KEY_SPOT,RUG_CENTER,TRAY_SPOT,createEscape,resolveChoice,continueEscape,takeKey} from './room-escape-core.js';
+import {CAT_TRAIL,CLUES,KEY_SPOT,PAINTING_SPOT,RUG_CENTER,TRAY_SPOT,createEscape,resolveChoice,continueEscape,takeKey} from './room-escape-core.js';
 import {createRoomScene} from './room-escape-scene.js';
 import './room-escape.css';
 
@@ -15,6 +15,7 @@ const symbols={
   stand:icon('<circle cx="12" cy="4" r="2"/><path d="M12 7v8m-4-4 4-3 4 3m-4 4-3 6m3-6 3 6"/>'),
   sit:icon('<circle cx="9" cy="5" r="2"/><path d="M9 8v8h6v5m-6-9h5m-8 8h8"/>'),
   brush:icon('<path d="m4 18 9-9m-1-2 3-3 5 5-3 3zM13 10l-4 4m7-1-3 3m6-5-3 4"/>'),
+  painting:icon('<rect x="2" y="4" width="20" height="16" rx="1.5" fill="#f0d19b"/><ellipse cx="12" cy="12" rx="7" ry="4.3" fill="#72a38a"/><ellipse cx="12" cy="12" rx="1.65" ry="1.2" fill="#eab777" stroke="none"/>'),
   tray:icon('<path d="M3 12h18l-2 6H5zm2-3h14"/>'),
   card:icon('<rect x="5" y="3" width="14" height="18" rx="2" fill="#d4bc99"/><path d="M8 9l8 3m-8 2 6 2"/>'),
   paw:icon('<path d="M8 17c0-3 2-5 4-5s4 2 4 5-2 3-4 2c-2 1-4 1-4-2z"/><circle cx="6" cy="10" r="1"/><circle cx="10" cy="6" r="1"/><circle cx="14" cy="6" r="1"/><circle cx="18" cy="10" r="1"/>'),
@@ -53,7 +54,7 @@ root.innerHTML=`
         <div id="room-flat-trail" class="room-flat-trail" aria-hidden="true" hidden></div>
         <span class="room-flat-actor" id="room-flat-player" aria-label="小朋友">🧒</span><span class="room-flat-actor" id="room-flat-cat" aria-label="猫咪">🐈</span>
         <span class="room-flat-actor" id="room-flat-key" aria-label="钥匙" hidden>🔑</span>
-        <span class="room-flat-prop" id="room-flat-brush" aria-label="刷子" hidden>${symbols.brush}</span>
+        <span class="room-flat-prop" id="room-flat-painting" aria-label="墙上的地毯画">${symbols.painting}</span>
         <span class="room-flat-prop" id="room-flat-tray" aria-label="托盘" hidden>${symbols.tray}</span>
         <span class="room-flat-prop" id="room-flat-card" aria-label="线索卡" hidden></span>
       </div>
@@ -106,12 +107,11 @@ function position(node,point){
 function projectOverlays(){
   for(const pin of $('pins').children){
     const index=Number(pin.dataset.pin);
-    const target=CLUES[state.index].choices[index]?.at;
+    const target=CLUES[state.index].choices[index]?.pin;
     if(!target)continue;
-    const aboveTool=state.index===1||(state.index===2&&index===0);
-    pin.classList.toggle('room-pin-neutral',state.index===4);
+    pin.classList.toggle('room-pin-neutral',[1,2,4].includes(state.index));
     if(state.index===11&&index===1)position(pin,{...target,y:1,z:3.48});
-    else position(pin,aboveTool?{...target,y:target.y+.45}:target);
+    else position(pin,target);
   }
   if(!$('stage-caption').hidden)position($('stage-caption'),{...state.player,y:state.player.y+1.44});
   if(!$('key-pickup').hidden)position($('key-pickup'),scene?{...KEY_SPOT,y:KEY_SPOT.y-.28}:KEY_SPOT);
@@ -135,9 +135,8 @@ function draw(snapshot=state,animation){
       }
     }
     position($('flat-key'),KEY_SPOT);
-    $('flat-brush').hidden=snapshot.tools.includes('brush');
     $('flat-tray').hidden=snapshot.tools.includes('tray');
-    position($('flat-brush'),BRUSH_SPOT);
+    position($('flat-painting'),PAINTING_SPOT);
     position($('flat-tray'),TRAY_SPOT);
     const card=$('flat-card');
     card.hidden=overhead||snapshot.index<4||snapshot.index>7;
@@ -252,7 +251,9 @@ function choose(index){
   const catMoving=actor==='player'&&previous.cat!==next.cat;
   const catRoute=catMoving?[previous.cat,{x:3.85,y:0,z:-.45},...(next.doorOpen?next.travel.slice(1,-1):[]),next.cat]:null;
   const length=route.slice(1).reduce((sum,p,i)=>sum+Math.hypot(p.x-route[i].x,p.z-route[i].z),0);
-  const duration=cleaning?1550:Math.min(1900,Math.max(430,length*190));
+  const lookingLeft=next.index===1;
+  const lookingRight=next.index===2;
+  const duration=cleaning?1550:lookingLeft?1350:lookingRight?860:Math.min(1900,Math.max(430,length*190));
   let begin;
   function frame(time){
     if(token!==generation)return;
@@ -260,10 +261,13 @@ function choose(index){
     const ratio=Math.min(1,(time-begin)/duration);
     if(cleaning)draw({...previous,player:next.player},{cleaning:ratio});
     else{
-      const move=traverse(route,ratio);
+      const walking=lookingLeft?Math.min(1,ratio/.56):ratio;
+      const move=traverse(route,walking);
       const snapshot={...previous,[actor]:move.at};
       if(catMoving)snapshot.cat=traverse(catRoute,ratio).at;
-      draw(snapshot,{actor,angle:move.angle,beat:ratio*length*7,catMoving,travelProgress:ratio,doorAngle:next.doorOpen?1.35*Math.max(0,Math.min(1,(ratio-.63)*8)):0});
+      const turn=Math.min(1,ratio/.28);
+      const angle=lookingLeft?Math.PI*(1+turn/2):lookingRight?Math.PI*(turn-.5):move.angle;
+      draw(snapshot,{actor:lookingLeft&&walking===1?undefined:actor,angle,beat:walking*length*7,catMoving,travelProgress:ratio,doorAngle:next.doorOpen?1.35*Math.max(0,Math.min(1,(ratio-.63)*8)):0});
     }
     if(ratio<1)requestAnimationFrame(frame);
     else {moving=false;render({focus:true});}

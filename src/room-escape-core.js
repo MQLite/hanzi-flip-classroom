@@ -11,20 +11,22 @@ const catClue=spot(.8,0,1.1);
 const catPantry=spot(4.2,0,-.35);
 export const CAT_TRAIL=[catClue,...pantryPath,catPantry];
 export const KEY_SPOT=spot(4.56,1.04,-2.47);
-export const BRUSH_SPOT=spot(-4.38,.88,-.75);
-export const TRAY_SPOT=spot(-2.45,.88,-.75);
+export const PAINTING_SPOT=spot(-5.49,1.85,-.85);
+export const TRAY_SPOT=spot(-2.45,1.45,-1.49);
 export const RUG_CENTER=middle;
 export const EXIT_X=2.6;
-const choice = (label,at,via=[]) => ({label,at,via});
+const choice = (label,at,via=[],pin=at) => ({label,at,via,pin});
+const left=choice('向左转，看墙上的画',spot(-4.57,.88,-.75),[],{...PAINTING_SPOT,y:1.08});
+const right=choice('向右转，到小桌边拿托盘',spot(-2.45,.88,-.75),[],{...TRAY_SPOT,y:1.36});
 
 export const CLUES = [
-  {char:'上',pinyin:'shàng',prompt:'看木台阶。他该往哪里走？',answer:'他走上了台阶。',correct:0,
+  {char:'上',pinyin:'shàng',prompt:'台阶上有一幅画和一张小桌。该往哪里走？',answer:'他走上台阶，来到挂画和小桌前。',correct:0,
     choices:[choice('木台顶端',spot(-3.4,.88,-.75),stairs),choice('地面的脚印',spot(-1.75,0,2.5))]},
-  {char:'左',pinyin:'zuǒ',prompt:'往左边找一样东西。',answer:'他在左边找到一把刷子。',correct:1,collect:'brush',
-    choices:[choice('木台右边',TRAY_SPOT),choice('木台左边',BRUSH_SPOT)]},
-  {char:'右',pinyin:'yòu',prompt:'再往右边找。',answer:'他在右边找到一个托盘，可以接住灰尘。',correct:0,collect:'tray',
-    choices:[choice('木台右边',TRAY_SPOT),choice('木台左边',spot(-4.73,.88,-.75))]},
-  {char:'下',pinyin:'xià',prompt:'看台阶。他接下来要去哪儿？',answer:'他走下台阶，回到地面。',correct:1,
+  {char:'左',pinyin:'zuǒ',prompt:'向左转，看看墙上挂着什么。',answer:'他向左转，看见一幅地毯画。画框打开了，后面藏着一把刷子。',correct:1,collect:'brush',
+    choices:[right,left]},
+  {char:'右',pinyin:'yòu',prompt:'向右转，找一个可以接住灰尘的东西。',answer:'他向右转，从小桌上拿起托盘，等会儿可以用它接住灰尘。',correct:0,collect:'tray',
+    choices:[right,left]},
+  {char:'下',pinyin:'xià',prompt:'画里的地毯在台阶下面。要怎样走过去？',answer:'他走下台阶，去找画里那块圆地毯。',correct:1,
     choices:[choice('木台上的脚印',spot(-3.6,.88,-1.65)),choice('地面的脚印',start,[spot(-3.4,.88,-.75),...stairs.slice().reverse()])]},
   {char:'中',pinyin:'zhōng',prompt:'圆地毯的正中在哪里？',answer:'他走到地毯正中，发现坐垫旁有一张蒙灰的卡片。',correct:1,
     choices:[choice('地毯左边',spot(-1.08,0,.85)),choice('地毯正中',middle),choice('地毯右边',spot(1.08,0,.85))]},

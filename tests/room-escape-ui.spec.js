@@ -40,6 +40,12 @@ test('the locked room takes twelve clues, allows retries, and exits after collec
   const choices=[0,1,0,1,1,1,0,1,0,0,0,1];
   for(let i=0;i<steps.length;i++){
     await expect(page.locator('#room-glyph')).toHaveText(steps[i]);
+    if(i===1){
+      await expect(page.getByRole('button',{name:'向左转，看墙上的画',exact:true})).toBeVisible();
+      await page.getByRole('button',{name:'向右转，到小桌边拿托盘',exact:true}).click();
+      await expect(page.locator('#room-brush-icon')).toBeHidden();
+      await expect(page.locator('#room-feedback')).toContainText('再想一想');
+    }
     if(i===7)await page.screenshot({path:testInfo.outputPath('cat-come.png')});
     if(i===1||i===4)await page.screenshot({path:testInfo.outputPath(i===1?'find-tools.png':'rug-center.png')});
     if(i===4){
@@ -58,8 +64,17 @@ test('the locked room takes twelve clues, allows retries, and exits after collec
       await expect(page.locator('#room-inventory')).toContainText('钥匙已拿到');
       await expect(page.locator('#room-fireworks')).toBeHidden();
     }else if(i<11){
-      if(i===1)await expect(page.locator('#room-brush-icon')).toBeVisible();
-      if(i===2)await expect(page.locator('#room-tray-icon')).toBeVisible();
+      if(i===1){
+        await expect(page.getByRole('button',{name:'下一条线索',exact:true})).toBeEnabled();
+        await expect(page.locator('#room-brush-icon')).toBeVisible();
+        await expect(page.locator('#room-feedback')).toContainText('画框打开了');
+        await page.screenshot({path:testInfo.outputPath('left-painting.png')});
+      }
+      if(i===2){
+        await expect(page.getByRole('button',{name:'下一条线索',exact:true})).toBeEnabled();
+        await expect(page.locator('#room-tray-icon')).toBeVisible();
+        await page.screenshot({path:testInfo.outputPath('right-tray.png')});
+      }
       if(i===5){
         await expect(page.getByRole('button',{name:'下一条线索',exact:true})).toBeVisible();
         await page.screenshot({path:testInfo.outputPath('seated.png')});
