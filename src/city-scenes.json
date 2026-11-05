@@ -91,7 +91,9 @@
     "sources": [
       "https://english.visitbeijing.com.cn/article/47ONj2F7WAj",
       "https://english.visitbeijing.com.cn/article/4HPlpDR08tw"
-    ]
+    ],
+    "longitude": 116.4074,
+    "latitude": 39.9042
   },
   {
     "id": "auckland",
@@ -181,7 +183,9 @@
       "https://www.aucklandnz.com/explore/sky-tower-skycity-auckland",
       "https://www.aucklandnz.com/events/all-events/ted-ashby-sailings",
       "https://www.aucklandnz.com/explore/harbourside-ocean-bar-grill"
-    ]
+    ],
+    "longitude": 174.7633,
+    "latitude": -36.8485
   },
   {
     "id": "london",
@@ -271,7 +275,9 @@
       "https://www.visitlondon.com/things-to-do/sightseeing/london-attraction/big-ben",
       "https://www.visitlondon.com/traveller-information/getting-around-london/london-bus",
       "https://www.visitlondon.com/things-to-do/food-and-drink/restaurant/british/fish-and-chips"
-    ]
+    ],
+    "longitude": -0.1276,
+    "latitude": 51.5072
   },
   {
     "id": "new-york",
@@ -359,7 +365,9 @@
     ],
     "sources": [
       "https://www.nyctourism.com/NYCTourismOVM-090924.pdf"
-    ]
+    ],
+    "longitude": -74.006,
+    "latitude": 40.7128
   },
   {
     "id": "vancouver",
@@ -457,7 +465,9 @@
     ],
     "sources": [
       "https://www.destinationvancouver.com/things-to-do/listings/stanley-park"
-    ]
+    ],
+    "longitude": -123.1207,
+    "latitude": 49.2827
   },
   {
     "id": "sydney",
@@ -546,7 +556,9 @@
     "sources": [
       "https://www.sydney.com/destinations/sydney/sydney-city/sydney-harbour/sydney-opera-house",
       "https://www.sydney.com/destinations/sydney/sydney-west/campbelltown/food-and-drink/harrys-cafe-de-wheels-woodbine"
-    ]
+    ],
+    "longitude": 151.2093,
+    "latitude": -33.8688
   },
   {
     "id": "paris",
@@ -634,6 +646,8 @@
     ],
     "sources": [
       "https://parisjetaime.com/eng/article/explore-the-eiffel-tower-a1068"
-    ]
+    ],
+    "longitude": 2.3522,
+    "latitude": 48.8566
   }
 ]

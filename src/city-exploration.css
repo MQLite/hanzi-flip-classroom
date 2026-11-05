@@ -20,6 +20,10 @@ h2, p { margin: 0; }
 .mission-briefing h2 { font-size: clamp(2rem, 6vw, 4rem); line-height: 1.12; }
 .mission-briefing p { max-width: 36ch; margin-top: .65em; font-size: clamp(1.25rem, 3vw, 2rem); line-height: 1.35; }
 .mission-briefing button { margin-top: 1.15em; background: #ffdc92; color: #173933; font-size: 1.2rem; }
+.mission-briefing .mission-question { max-width: none; }
+.mission-question ruby, .thief-speaker ruby { margin-inline-end: .14em; }
+.mission-question small, .city-answer small, .city-map small { display: block; font-size: .875rem; line-height: 1.35; }
+.mission-question small { margin-top: 5px; font-size: clamp(1rem, 2vw, 1.3rem); }
 .scene-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .scene-heading p { color: #446459; }
 .scene-objects { display: flex; gap: 12px; flex-wrap: wrap; margin: 16px 0; }
@@ -41,3 +45,16 @@ h1 small { font-size: clamp(1rem, 2vw, 1.3rem); }
 .city-answer { margin-top: 12px; padding: 14px 18px; background: #e9f5ee; border-radius: 10px; font-size: clamp(1.4rem, 3vw, 2rem); }
 .city-answer p + p { margin-top: 6px; }
 .city-answer .mission-complete { font-weight: 750; }
+.city-answer .thief-speaker { font-size: 1rem; font-weight: 700; }
+.thief-speech ruby { margin-inline-end: .08em; }
+.city-map { margin: 14px 0 0; }
+.map-surface { position: relative; overflow: hidden; border: 1px solid #b6d4d9; border-radius: 12px; background: #dceff5; }
+.map-surface img { display: block; width: 100%; height: auto; }
+.map-surface svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.route-leg { fill: none; stroke: #628a82; stroke-width: 1.5; stroke-dasharray: 4 4; stroke-linecap: round; }
+.route-leg.current { stroke: #a15418; stroke-width: 2.2; }
+.route-stop circle { fill: #216354; stroke: white; stroke-width: 1.5; }
+.route-stop.current circle { fill: #a15418; }
+.route-stop text { fill: white; font-size: 10px; font-weight: 750; text-anchor: middle; }
+.route-traveller { fill: #ffe29d; stroke: #994910; stroke-width: 2.5; }
+.city-map figcaption { padding-top: 8px; text-align: center; font-size: 1.25rem; font-weight: 650; }
