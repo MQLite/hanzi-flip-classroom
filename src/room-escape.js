@@ -4,6 +4,7 @@ import {createExplorationMusic} from './exploration-music.js';
 import './room-escape.css';
 
 const root=document.querySelector('#room-app');
+const fireworkDelays=[0,250,540];
 const icon=(path,fill='none')=>`<svg viewBox="0 0 24 24" aria-hidden="true" fill="${fill}" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
 const symbols={
   back:icon('<path d="M19 12H5m6-6-6 6 6 6"/>'),
@@ -77,7 +78,7 @@ root.innerHTML=`
       <div id="room-stage-caption" class="room-stage-caption" aria-label="小朋友在说话" hidden>•••</div>
       <button type="button" id="room-check-door" class="room-quiet room-check-door" aria-label="试开出口" title="试开出口">${symbols.lock}</button>
       <svg id="room-fireworks" class="room-fireworks" viewBox="0 0 1000 620" preserveAspectRatio="none" aria-hidden="true" hidden>
-        ${firework(235,148,'#ffe6a0',76,0)}${firework(710,106,'#ffc3d2',85,250)}${firework(460,80,'#a9eff5',58,540)}
+        ${firework(235,148,'#ffe6a0',76,fireworkDelays[0])}${firework(710,106,'#ffc3d2',85,fireworkDelays[1])}${firework(460,80,'#a9eff5',58,fireworkDelays[2])}
       </svg>
     </div>
     <section class="room-panel" aria-label="当前汉字线索">
@@ -213,6 +214,9 @@ function signal(mark=''){
 function render({focus=false,redraw=true}={}){
   const clue=CLUES[state.index];
   const escaped=state.phase==='escaped';
+  const fireworks=$('fireworks');
+  const celebrating=escaped&&!moving;
+  const startingCelebration=celebrating&&fireworks.hasAttribute('hidden');
   const matching=state.phase==='match'&&!moving;
   const questioning=started&&state.phase==='clue'&&!moving;
   const revealed=started&&state.phase!=='clue'&&!moving;
@@ -220,7 +224,7 @@ function render({focus=false,redraw=true}={}){
   $('progress').value=started?state.index+(revealed?1:0):0;
   $('intro').hidden=started;
   $('win').hidden=!escaped||moving;
-  $('fireworks').toggleAttribute('hidden',!escaped||moving);
+  fireworks.toggleAttribute('hidden',!celebrating);
   $('card-slot').hidden=!matching;
   $('match-hint').hidden=!matching;
   $('key-pickup').hidden=state.phase!=='key'||moving;
@@ -256,6 +260,7 @@ function render({focus=false,redraw=true}={}){
   syncMusic();
   if(redraw)draw();
   projectOverlays();
+  if(startingCelebration&&musicAllowed)music.playCelebration(fireworkDelays);
   if(focus)(questioning?root.querySelector('[data-choice]'):$('advance'))?.focus({preventScroll:true});
 }
 
@@ -322,6 +327,7 @@ function choose(index){
 }
 
 function reset({begin=false}={}){
+  music.stopCelebration();
   generation++;state=createEscape();started=begin;moving=false;showHint=false;notice='';
   render({focus:true});
 }
@@ -341,6 +347,7 @@ $('key-pickup').onclick=()=>{
 $('reset').onclick=()=>reset();
 $('music').onclick=()=>{
   musicAllowed=!musicAllowed;
+  if(!musicAllowed)music.stopCelebration();
   syncMusic();
 };
 $('hint').onclick=()=>{

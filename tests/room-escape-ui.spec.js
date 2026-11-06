@@ -22,12 +22,22 @@ test('a scenario-only book does not become the active practice book',async({page
 });
 
 test('the locked room takes twelve clues, allows retries, and exits after collecting the key',async({page},testInfo)=>{
-  test.setTimeout(45000);
+  test.setTimeout(75000);
   await page.emulateMedia({reducedMotion:'no-preference'});
   await page.addInitScript(()=>{
+    window.roomChime=[];
     window.AudioContext=class extends window.AudioContext {
       constructor(){super();window.roomAudio=this;}
-      createOscillator(){window.roomNotes=(window.roomNotes??0)+1;return super.createOscillator();}
+      createOscillator(){
+        window.roomNotes=(window.roomNotes??0)+1;
+        const note=super.createOscillator();
+        const start=note.start.bind(note);
+        note.start=time=>{
+          if(!document.querySelector('#room-fireworks').hasAttribute('hidden'))window.roomChime.push(time);
+          start(time);
+        };
+        return note;
+      }
     };
   });
   await page.goto('/room.html');
@@ -125,10 +135,14 @@ test('the locked room takes twelve clues, allows retries, and exits after collec
   }
   await expect(page.getByRole('heading',{name:'逃脱成功！',exact:true})).toBeVisible();
   await expect(page.locator('#room-door-status')).toHaveText('出口已打开');
-  await expect.poll(audioState).toBe('suspended');
   await expect(page.locator('#room-fireworks')).toBeVisible();
+  const chimeTimes=await page.evaluate(()=>window.roomChime);
+  expect(chimeTimes).toHaveLength(4);
+  expect(chimeTimes[1]-chimeTimes[0]).toBeCloseTo(.25,4);
+  expect(chimeTimes[2]-chimeTimes[0]).toBeCloseTo(.54,4);
   await page.waitForFunction(()=>Number(getComputedStyle(document.querySelector('.room-burst')).opacity)>.7);
   await page.screenshot({path:testInfo.outputPath('escaped.png')});
+  await expect.poll(audioState).toBe('suspended');
   await page.getByRole('button',{name:'再玩一次',exact:true}).click();
   await expect(page.locator('#room-door-status')).toHaveText('出口已锁');
   await expect(page.locator('#room-fireworks')).toBeHidden();

@@ -8,15 +8,16 @@ const roomBass=[50,48,46,45];
 // Original ambient music, generated only after a player interaction.
 export function createExplorationMusic(onChange,{room=false}={}){
   let context,master,enabled=false,requested=false,revision=0,timer=null,pauseTimer=null,nextTime=0,step=0;
+  let filter,celebration;
   const melody=room?roomMelody:questMelody;
   const frequency=midi=>440*2**((midi-69)/12);
-  function tone(midi,time,length,volume,type='sine'){
+  function tone(midi,time,length,volume,type='sine',output=master){
     const oscillator=context.createOscillator(),envelope=context.createGain();
     oscillator.type=type;oscillator.frequency.value=frequency(midi);
     envelope.gain.setValueAtTime(0,time);
     envelope.gain.linearRampToValueAtTime(volume,time+.09);
     envelope.gain.exponentialRampToValueAtTime(.0001,time+length);
-    oscillator.connect(envelope);envelope.connect(master);
+    oscillator.connect(envelope);envelope.connect(output);
     oscillator.start(time);oscillator.stop(time+length+.05);
     oscillator.onended=()=>{oscillator.disconnect();envelope.disconnect();};
   }
@@ -41,6 +42,34 @@ export function createExplorationMusic(onChange,{room=false}={}){
     schedule();
     timer=setInterval(schedule,250);
   }
+  function pauseWhenIdle(delay){
+    clearTimeout(pauseTimer);
+    pauseTimer=setTimeout(()=>{
+      if(!requested)context.suspend().catch(()=>{});
+    },delay);
+  }
+  function stopCelebration(){
+    if(!celebration)return;
+    const output=celebration;
+    celebration=null;
+    output.gain.setTargetAtTime(0,context.currentTime,.018);
+    setTimeout(()=>output.disconnect(),120);
+    pauseWhenIdle(150);
+  }
+  function playCelebration(delays){
+    if(context?.state!=='running'||document.hidden)return;
+    stopCelebration();
+    celebration=context.createGain();
+    celebration.gain.value=.16;
+    celebration.connect(filter);
+    const start=context.currentTime+.02;
+    for(const [index,delay] of delays.entries()){
+      const time=start+delay/1000;
+      tone([72,76,79][index],time,.72,.18,'sine',celebration);
+      if(index===delays.length-1)tone(84,time,1,.085,'sine',celebration);
+    }
+    pauseWhenIdle(delays.at(-1)+1150);
+  }
   async function setEnabled(value){
     if(requested===value)return;
     requested=value;
@@ -51,7 +80,7 @@ export function createExplorationMusic(onChange,{room=false}={}){
       if(context&&master){
         master.gain.cancelScheduledValues(context.currentTime);
         master.gain.setTargetAtTime(0,context.currentTime,.045);
-        pauseTimer=setTimeout(()=>{if(!requested)context.suspend().catch(()=>{});},200);
+        pauseWhenIdle(200);
       }
       onChange();return;
     }
@@ -60,7 +89,7 @@ export function createExplorationMusic(onChange,{room=false}={}){
         const Audio=window.AudioContext||window.webkitAudioContext;
         if(!Audio)throw new Error('unsupported');
         context=new Audio();master=context.createGain();
-        const filter=context.createBiquadFilter();filter.type='lowpass';filter.frequency.value=2200;
+        filter=context.createBiquadFilter();filter.type='lowpass';filter.frequency.value=2200;
         master.gain.value=0;master.connect(filter);filter.connect(context.destination);
       }
       await context.resume();
@@ -78,15 +107,16 @@ export function createExplorationMusic(onChange,{room=false}={}){
     }
   }
   document.addEventListener('visibilitychange',()=>{
+    if(document.hidden)stopCelebration();
     if(!context||!enabled)return;
     if(document.hidden){stopScheduler();context.suspend().catch(()=>{});}
     else context.resume().then(()=>{if(enabled&&!document.hidden)startScheduler();}).catch(()=>{});
   });
-  window.addEventListener('pagehide',()=>{stopScheduler();context?.suspend().catch(()=>{});});
+  window.addEventListener('pagehide',()=>{stopCelebration();stopScheduler();context?.suspend().catch(()=>{});});
   window.addEventListener('pageshow',event=>{
     if(event.persisted&&enabled&&context&&!document.hidden){
       context.resume().then(()=>{if(enabled&&!document.hidden)startScheduler();}).catch(()=>{});
     }
   });
-  return {setEnabled,toggle:()=>setEnabled(!requested),get enabled(){return enabled;}};
+  return {setEnabled,playCelebration,stopCelebration,toggle:()=>setEnabled(!requested),get enabled(){return enabled;}};
 }
