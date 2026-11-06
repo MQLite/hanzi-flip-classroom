@@ -1,5 +1,6 @@
 import {CAT_TRAIL,CHEST_CARD_SPOT,CLUES,KEY_SPOT,PAINTING_SPOT,RUG_CENTER,TRAY_SPOT,createEscape,resolveChoice,continueEscape,takeKey,useClueCard} from './room-escape-core.js';
 import {createRoomScene} from './room-escape-scene.js';
+import {createExplorationMusic} from './exploration-music.js';
 import './room-escape.css';
 
 const root=document.querySelector('#room-app');
@@ -8,6 +9,8 @@ const symbols={
   back:icon('<path d="M19 12H5m6-6-6 6 6 6"/>'),
   reset:icon('<path d="M3 10a9 9 0 1 1 2 9m-2-14v5h5"/>'),
   full:icon('<path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5"/>'),
+  music:icon('<path d="M9 18V6l11-2v12M9 10l11-2"/><ellipse cx="6" cy="18" rx="3" ry="2"/><ellipse cx="17" cy="16" rx="3" ry="2"/>'),
+  musicOff:icon('<path d="M9 11V6l11-2v9M9 16v2M2 2l20 20"/><ellipse cx="6" cy="18" rx="3" ry="2"/>'),
   lock:icon('<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/>'),
   key:icon('<circle cx="7.5" cy="8" r="4.5"/><path d="m11 11.5 8 8 2-2m-6-2 2-2"/>'),
   play:icon('<path d="M8 5v14l11-7z" fill="currentColor"/>'),
@@ -35,7 +38,12 @@ root.innerHTML=`
       <a class="room-quiet" aria-label="返回情景探索" title="返回情景探索" href="./?mode=explore&amp;source=zhongwen&amp;stage=1&amp;lesson=3">${symbols.back}</a>
       <h1>密室逃脱</h1>
     </div>
-    <div class="room-toolbar"><button type="button" id="room-reset" class="room-quiet" aria-label="重新开始" title="重新开始">${symbols.reset}</button><button type="button" id="room-fullscreen" class="room-quiet" aria-label="全屏" title="全屏">${symbols.full}</button></div>
+    <div class="room-toolbar">
+      <button type="button" id="room-music" class="room-quiet" aria-label="背景音乐" aria-pressed="true" title="关闭背景音乐">${symbols.music}</button>
+      <span id="room-music-status" class="room-sr-only" role="status"></span>
+      <button type="button" id="room-reset" class="room-quiet" aria-label="重新开始" title="重新开始">${symbols.reset}</button>
+      <button type="button" id="room-fullscreen" class="room-quiet" aria-label="全屏" title="全屏">${symbols.full}</button>
+    </div>
   </header>
   <main class="room-game" aria-label="密室逃脱游戏">
     <div class="room-stage" id="room-stage">
@@ -100,7 +108,23 @@ const $=id=>document.getElementById(`room-${id}`);
 const motionPreference=window.matchMedia('(prefers-reduced-motion: reduce)');
 let state=createEscape();
 let started=false,moving=false,showHint=false,notice='',generation=0;
+let musicAllowed=true;
+const music=createExplorationMusic(message=>{
+  $('music-status').textContent=message??'';
+  if(message){
+    musicAllowed=false;
+    syncMusic();
+  }
+},{room:true});
 let scene;
+
+function syncMusic(){
+  const button=$('music');
+  button.setAttribute('aria-pressed',String(musicAllowed));
+  button.title=musicAllowed?'关闭背景音乐':'开启背景音乐';
+  button.innerHTML=musicAllowed?symbols.music:symbols.musicOff;
+  void music.setEnabled(musicAllowed&&started&&(state.phase!=='escaped'||moving));
+}
 
 function flatProject({x,y,z}){
   return {left:50+x*7.8,top:42+z*9.8-y*4.2};
@@ -229,6 +253,7 @@ function render({focus=false,redraw=true}={}){
   $('brush-icon').hidden=!state.tools.includes('brush')||state.rugClue==='revealed';
   $('tray-icon').hidden=!state.tools.includes('tray')||state.rugClue==='revealed';
   $('stage-caption').hidden=!questioning||clue.actor!=='cat';
+  syncMusic();
   if(redraw)draw();
   projectOverlays();
   if(focus)(questioning?root.querySelector('[data-choice]'):$('advance'))?.focus({preventScroll:true});
@@ -314,6 +339,10 @@ $('key-pickup').onclick=()=>{
   if(state.phase==='key'&&!moving)$('advance').click();
 };
 $('reset').onclick=()=>reset();
+$('music').onclick=()=>{
+  musicAllowed=!musicAllowed;
+  syncMusic();
+};
 $('hint').onclick=()=>{
   if(!started||moving||state.phase!=='clue')return;
   showHint=true;$('pinyin').textContent=CLUES[state.index].pinyin;$('pinyin').hidden=false;$('hint').disabled=true;

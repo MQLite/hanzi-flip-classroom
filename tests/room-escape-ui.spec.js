@@ -24,12 +24,29 @@ test('a scenario-only book does not become the active practice book',async({page
 test('the locked room takes twelve clues, allows retries, and exits after collecting the key',async({page},testInfo)=>{
   test.setTimeout(45000);
   await page.emulateMedia({reducedMotion:'no-preference'});
+  await page.addInitScript(()=>{
+    window.AudioContext=class extends window.AudioContext {
+      constructor(){super();window.roomAudio=this;}
+      createOscillator(){window.roomNotes=(window.roomNotes??0)+1;return super.createOscillator();}
+    };
+  });
   await page.goto('/room.html');
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
   await expect(page.locator('#room-fireworks')).toBeHidden();
   await page.getByRole('button',{name:'试开出口',exact:true}).click();
   await expect(page.locator('#room-feedback')).toContainText('门锁着');
+  expect(await page.evaluate(()=>window.roomAudio)).toBeUndefined();
   await page.getByRole('button',{name:'开始探索',exact:true}).click();
+  const music=page.getByRole('button',{name:'背景音乐',exact:true});
+  const audioState=()=>page.evaluate(()=>window.roomAudio?.state);
+  await expect.poll(audioState).toBe('running');
+  await expect.poll(()=>page.evaluate(()=>window.roomNotes??0)).toBeGreaterThan(0);
+  await music.click();
+  await expect(music).toHaveAttribute('aria-pressed','false');
+  await expect.poll(audioState).toBe('suspended');
+  await music.click();
+  await expect(music).toHaveAttribute('aria-pressed','true');
+  await expect.poll(audioState).toBe('running');
   await expect(page.locator('#room-glyph')).toHaveText('上');
   await expect(page.locator('#room-pinyin')).toBeHidden();
   await page.locator('[data-choice="1"]').click();
@@ -108,6 +125,7 @@ test('the locked room takes twelve clues, allows retries, and exits after collec
   }
   await expect(page.getByRole('heading',{name:'逃脱成功！',exact:true})).toBeVisible();
   await expect(page.locator('#room-door-status')).toHaveText('出口已打开');
+  await expect.poll(audioState).toBe('suspended');
   await expect(page.locator('#room-fireworks')).toBeVisible();
   await page.waitForFunction(()=>Number(getComputedStyle(document.querySelector('.room-burst')).opacity)>.7);
   await page.screenshot({path:testInfo.outputPath('escaped.png')});
