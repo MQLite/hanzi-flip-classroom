@@ -41,6 +41,6 @@
 
 **Files:** create maze-core.js/maze.js/maze.css, tests/maze.test.js and tests/maze/ui.spec.js; modify main/README and relevant regressions.
 **Interfaces:** createMazeState({words,random}), selectMazeCell(state,index), confirmMazeStep(state), cancelMazeStep(state). createMazeView(host,dispatch).update({state,pool,showPinyin}); main goActivity(mode) passes current lesson with fresh target initialization.
-- [ ] RED generated-graph/exit/dead-end, legal/read-gated/repeated/complete/snapshot tests; implement core and accessible9×9 view.
-- [ ] Integrate ninth mode, lesson selection/snapshots/keyboard guards and three-activity strip/buttons. Verify all lesson boundaries and full continuation flow.
+- [x] RED generated-graph/exit/dead-end, legal/read-gated/repeated/complete/snapshot tests; implement core and accessible9×9 view.
+- [x] Integrate ninth mode, lesson selection/snapshots/keyboard guards and three-activity strip/buttons. Verify all lesson boundaries and full continuation flow.159 units,38 new/activity browser cases pass;8 original-mode checks verified after a720p navigation-padding fix. Production helper completes3D→instant witch→maze→next lesson without bank writes/errors.
 - [ ] Run relevant UI regressions, all units, production build/screenshots; one fresh whole-new-scope review, fix material findings once with RED/GREEN, publish and verify public activities/3D.
