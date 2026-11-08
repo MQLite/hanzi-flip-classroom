@@ -52,7 +52,7 @@ test('personal grade restoration agrees with the displayed control and launched 
 });
 test('projector island artwork leaves the game names readable below it',async({page})=>{
  await page.setViewportSize({width:1280,height:720});await page.goto('/');
- const boxes=await page.locator('.island-card').evaluateAll(cards=>cards.map(card=>({art:Math.max(card.querySelector('.island-art').getBoundingClientRect().bottom,card.querySelector('.island-glyph').getBoundingClientRect().bottom),label:card.querySelector('.island-label').getBoundingClientRect().top})));
+ const boxes=await page.locator('.island-card').evaluateAll(cards=>cards.map(card=>({art:card.querySelector('.island-art').getBoundingClientRect().bottom,label:card.querySelector('.island-label').getBoundingClientRect().top})));
  for(const box of boxes)expect(box.label).toBeGreaterThanOrEqual(box.art);
 });
 for(const viewport of [{width:1280,height:720},{width:1920,height:1080},{width:390,height:844}])test(`homepage islands and launch controls fit ${viewport.width}`,async({page})=>{

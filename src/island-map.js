@@ -1,14 +1,29 @@
 import {GAME_ORDER} from './game-order.js';
 import './island-map.css';
 
-const islandGlyphs = ['字','鼠','迷','拼','笔','词','药','建','数','句','景'];
-const islandArt = `<svg class="island-art" viewBox="0 0 200 96" aria-hidden="true" focusable="false">
+// Distinct coastlines keep the map recognisable without lettering on the land.
+const islandForms = [
+  {coast:'M18 68C29 40 70 23 113 25l64-6c6 23-9 45-40 55-40 14-91 16-119-6Z',tree:[129,48]},
+  {coast:'M15 54C13 30 48 20 73 35c17 9 23 8 39-4 29-20 71-7 73 17 3 29-37 39-64 28-21-9-26-7-45 4-30 16-65 0-61-26Z',tree:[145,49]},
+  {coast:'M181 35C153 14 83 17 41 34 6 48 11 73 52 82c39 9 104 0 128-19-41 12-94 9-110-5-18-17 45-33 111-23Z',tree:[40,53]},
+  {coast:'M28 72Q14 69 29 56l62-35q13-8 24 2l62 39q18 14-3 16L28 72Z',tree:[109,51]},
+  {coast:'M20 72C3 55 43 35 73 39c25 4 24-18 55-20 28-2 58 10 52 24-5 12-39 5-55 13-20 10-27 28-56 27-23 0-40-2-49-11Z',tree:[139,40]},
+  {coast:'M100 38C62 7 19 26 24 51c4 20 44 30 76 36 32-7 76-19 78-40 2-25-45-36-78-9Z',tree:[145,48]},
+  {coast:'m100 18 24 20 45-8-12 22 28 18-50 2-23 16-28-15-51 3 17-23-26-14 51-1Z',tree:[100,48]},
+  {coast:'M24 32 87 23l11 14 61-3 22 26-35 19-36-9-17 14-65-11 15-21-25-8Z',tree:[142,53]},
+  {coast:'M19 62C14 38 45 23 73 25c29 2 32 18 55 12 27-7 52-2 55 18 3 23-34 30-57 24-28-7-37 6-66 4-22-2-37-8-41-21Z',tree:[52,48]},
+  {coast:'M16 48Q25 30 51 35l28-8 35 8 35-8 27 14q15 8 7 21l-22 12-36-3-31 9-40-8-26 3Q9 66 16 48Z',tree:[153,48]},
+  {coast:'M25 52C22 30 59 20 99 22c42-3 78 11 80 31 2 22-36 32-78 31-44 3-76-12-76-32Zm46 0c0 9 17 14 33 13 19 0 32-6 32-14-1-10-19-13-34-12-18 0-31 5-31 13Z',tree:[155,49]},
+];
+function islandArt(index) {
+  const {coast,tree:[x,y]} = islandForms[index];
+  return `<svg class="island-art" viewBox="0 0 200 96" aria-hidden="true" focusable="false">
   <ellipse class="island-water" cx="100" cy="78" rx="92" ry="14"/>
-  <path class="island-sand" d="M16 66C22 52 38 48 52 47c4-22 30-32 49-23 21-14 51-3 54 18 17 0 33 12 31 23-3 22-147 29-170 1Z"/>
-  <path class="island-grass" d="M24 58c9-11 26-12 37-13 6-20 27-23 40-14 20-12 44-4 47 16 15 0 27 5 30 13-21 15-126 19-154-2Z"/>
-  <path class="island-tree" d="M147 45V20m0 7c-14-15-23-7-22-1 10-3 16 0 22 7m0-6c5-18 18-18 23-10-13 1-18 7-23 14m0-5c-4-15-16-20-19-11 8 3 12 8 19 16"/>
-  <path class="island-rock" d="m39 60 8-13 13 2 7 12Z"/>
+  <path class="island-sand" fill-rule="evenodd" d="${coast}"/>
+  <path class="island-grass" fill-rule="evenodd" d="${coast}" transform="translate(100 51) scale(.9 .82) translate(-100 -51)"/>
+  <path class="island-tree" transform="translate(${x} ${y})" d="M0 0V-23m0 8c-12-13-20-6-19-1 8-3 14 0 19 6m0-6c4-15 16-15 20-8-11 1-16 6-20 12m0-5c-4-13-14-17-17-9 7 2 11 7 17 13"/>
 </svg>`;
+}
 
 /** A presentation-only map. Journey decisions and storage belong to its caller. */
 export function createIslandMap({onStart,onResume,onRestart,onChallenge,embedded=false,host=document.body} = {}) {
@@ -111,7 +126,7 @@ export function createIslandMap({onStart,onResume,onRestart,onChallenge,embedded
       const entry = rows.find(item => item.id === game.id);
       const skipped = entry?.available !== true;
       const status = skipped ? 'skipped' : completed.has(game.id) ? 'completed' : currentId === game.id && state?.status !== 'complete' ? 'current' : 'available';
-      const statusText = {skipped:'已跳过',completed:'已完成',current:'当前岛',available:'可挑战'}[status];
+      const statusText = {skipped:'已跳过',completed:'已完成',current:'当前岛',available:''}[status];
       const card = document.createElement('button');
       card.type = 'button';
       card.className = `island-card is-${status}`;
@@ -119,7 +134,7 @@ export function createIslandMap({onStart,onResume,onRestart,onChallenge,embedded
       card.dataset.status = status;
       card.disabled = skipped;
       if (status === 'current') card.setAttribute('aria-current','step');
-      card.innerHTML = `${islandArt}<span class="island-glyph" aria-hidden="true">${islandGlyphs[index]}</span><span class="island-number">${index + 1}</span><span class="island-label"></span><span class="island-status"></span>`;
+      card.innerHTML = `${islandArt(index)}<span class="island-caption"><span class="island-number">${index + 1}</span><span class="island-label"></span></span><span class="island-status"${statusText?'':' hidden'}></span>`;
       card.querySelector('.island-label').textContent = game.label;
       card.querySelector('.island-status').textContent = statusText;
       if (skipped) {
