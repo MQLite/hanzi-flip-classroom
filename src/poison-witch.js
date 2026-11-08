@@ -7,10 +7,6 @@ export function createPoisonWitch({animate=false}={}){
   svg.setAttribute('class',`poison-witch${animate?' is-cackling':''}`);
   svg.innerHTML=`
     <ellipse cx="205" cy="285" rx="97" ry="9" fill="#54345f" opacity=".13"/>
-    <g class="witch-cackle-text">
-      <path d="M20 12H112Q127 12 127 27V44Q127 58 112 58H93L105 74 78 58H20Q8 58 8 44V27Q8 12 20 12Z" fill="#fff9e7" stroke="#c6a7d0" stroke-width="2"/>
-      <text x="21" y="43" fill="#713d80" font-size="26" font-weight="700">嘿嘿嘿…</text>
-    </g>
     <g class="witch-cackle">
       <path d="M164 252 157 281Q142 292 126 284L141 272 143 252M218 255 228 279Q243 283 254 274L246 292 218 289 204 259" fill="#342740" stroke="#342740" stroke-width="4" stroke-linejoin="round"/>
       <path d="M159 168Q186 181 212 164L239 196 263 270Q208 290 141 272L153 204 132 189Z" fill="#694277" stroke="#412b50" stroke-width="3" stroke-linejoin="round"/>
@@ -42,7 +38,6 @@ export function createPoisonWitch({animate=false}={}){
           <path d="M281 184H291V201Q310 214 311 236 311 253 290 255 266 254 266 238 267 215 281 202Z" fill="#f6fcff" fill-opacity=".32" stroke="#609da7" stroke-width="3" stroke-linejoin="round"/>
           <ellipse cx="286" cy="184" rx="9" ry="3" fill="#f9ffff" stroke="#609da7" stroke-width="3"/>
           <path d="M278 215Q272 224 272 235m25-21 6 13" fill="none" stroke="#fff" stroke-opacity=".95" stroke-width="4" stroke-linecap="round"/>
-          <text x="275" y="245" font-size="15" fill="#5f8791">空</text>
         </g>
         <path d="M269 181q9-5 15 0l10 5q4 6-2 9l-11-5-9 2-8-6Z" fill="#bdd78b" stroke="#536447" stroke-width="2"/>
         <path d="m280 181 8 5m-12-2 9 6" fill="none" stroke="#7a945f" stroke-width="2" stroke-linecap="round"/>

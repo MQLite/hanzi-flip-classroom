@@ -11,12 +11,12 @@ async function poison(page){
 test('poison immediately brings out a grinning witch holding an empty bottle, alongside the antidote choice',async({page})=>{
   await page.setViewportSize({width:1280,height:720});await page.emulateMedia({reducedMotion:'no-preference'});const saved=await poison(page);
   const witch=page.getByRole('img',{name:'女巫拿着空药瓶，咧嘴坏笑',exact:true});await expect(witch).toBeVisible();await expect(page.locator('#poison-antidote-prompt')).toBeVisible();
-  await expect(witch.locator('[data-empty="true"]')).toHaveCount(1);await expect(witch.locator('.witch-grin')).toBeVisible();await expect(witch.locator('.witch-cackle-text')).toContainText('嘿嘿嘿');
+  await expect(witch.locator('[data-empty="true"]')).toHaveCount(1);await expect(witch.locator('.witch-grin')).toBeVisible();await expect(witch.locator('text')).toHaveCount(0);
   expect(await witch.evaluate(n=>n.getAnimations({subtree:true}).length)).toBeGreaterThan(0);
   await witch.evaluate(n=>Promise.all(n.getAnimations({subtree:true}).map(a=>a.finished.catch(()=>{}))));
   await page.screenshot({path:'docs/codex/poison/witch-empty-bottle-1280.png',fullPage:true});
   await page.locator('#pinyin').check();await expect(page.locator('.poison-witch')).toBeVisible();expect(await page.locator('.poison-witch').evaluate(n=>n.getAnimations({subtree:true}).length)).toBe(0);
-  await page.locator('#poison-antidote').click();await expect(page.locator('#poison-antidote-sentence')).toBeVisible();await page.locator('#poison-rescue').click();await expect(page.locator('.poison-witch')).toHaveCount(0);await expect(page.locator('#poison-magic')).toContainText('解救成功');
+  await page.locator('#poison-antidote').click();await expect(page.locator('#poison-antidote-sentence')).toBeVisible();await page.locator('#poison-rescue').click();await expect(page.locator('.poison-witch')).toHaveCount(0);await expect(page.locator('.poison-magic-art.is-rescued')).toBeVisible();
   await page.locator('#poison-next').click();await expect(page.locator('.poison-witch')).toHaveCount(0);expect(await page.evaluate(()=>localStorage.getItem('hanzi-flip.question-bank'))).toBe(saved);
 });
 

@@ -40,8 +40,8 @@ export function createPoisonView(host,dispatch){
   }
   function buildBoard(animateHit=false){
     const state=model.state;host.replaceChildren();cardNodes=[];
-    host.append(heading(state.phase==='hide'?'嘘，小女巫正在藏毒':state.phase==='complete'?'这一轮遇到魔法啦':'轮流读词，点卡立即检查',state.phase==='hide'?`其他同学继续闭眼；秘密选${state.poisonCount}张卡，再点“藏好了”。`:state.phase==='complete'?'选择使用解药，或继续下一活动。':'学生先读，老师点刚读过的词卡，立即出现结果。'));
-    const summary=el('p',undefined,'poison-summary');summary.id='poison-summary';host.append(summary);
+    const intro=heading(state.phase==='hide'?'嘘，小女巫正在藏毒':'轮流读词，点卡立即检查',state.phase==='hide'?`其他同学继续闭眼；秘密选${state.poisonCount}张卡，再点“藏好了”。`:'学生先读，老师点刚读过的词卡，立即出现结果。');intro.hidden=state.phase==='complete';host.append(intro);
+    const summary=el('p',undefined,'poison-summary');summary.id='poison-summary';summary.hidden=state.phase==='complete';host.append(summary);
     const grid=el('div',undefined,'poison-grid');grid.setAttribute('role','group');grid.setAttribute('aria-label',state.phase==='hide'?'秘密选择毒药词':'本轮词卡');
     for(const word of state.words){const b=el('button',undefined,'poison-card');b.dataset.poisonCard=word.id;b.append(term(word,model.showPinyin));const status=el('span','','poison-card-status');b.append(status);cardNodes.push({b,status,word});grid.append(b);}host.append(grid);
     const controls=el('div',undefined,'poison-controls');
@@ -56,22 +56,21 @@ export function createPoisonView(host,dispatch){
       if(state.antidoteStatus==='rescued'){art.classList.add('is-rescued');art.setAttribute('aria-label','解药生效，同学恢复笑脸');}
       art.append(el('span','🙂','poison-before'),el('span','🐸','poison-frog'));
       for(let i=0;i<9;i++){const puff=el('i');puff.style.setProperty('--puff',i);art.append(puff);}magic.append(art);
-      const copy=el('div');copy.append(el('span',state.antidoteStatus==='rescued'?'本课句子就是解药':'噗！女巫的魔法出现了','poison-kicker'),el('h3',state.antidoteStatus==='rescued'?'解救成功！同学恢复啦':'哎呀，中毒啦！'),el('p','魔法变身，本轮结束。'));
-      const hit=state.words.find(w=>w.id===state.results.at(-1)?.cardId);if(hit)copy.append(el('p',`“${hit.word}”是本轮的毒药词。`));
+      const copy=el('div');if(state.antidoteStatus!=='rescued')copy.append(el('h3','哎呀，中毒啦！'));
       if(['available','unavailable'].includes(state.antidoteStatus)){
-        const prompt=el('section',undefined,'poison-antidote-prompt');prompt.id='poison-antidote-prompt';prompt.setAttribute('role','dialog');prompt.setAttribute('aria-modal','false');prompt.setAttribute('aria-labelledby','poison-antidote-title');
-        const title=el('h4','需要解药吗？');title.id='poison-antidote-title';const use=button('poison-antidote','要解药 · 读本课句子','primary');use.disabled=!state.antidote;
-        prompt.append(title,use,button('poison-antidote-skip','不用解药，继续'));if(!state.antidote)prompt.append(el('small','本轮没有解药句子，可以直接继续下一活动。'));copy.append(prompt);
+        const prompt=el('section',undefined,'poison-antidote-prompt');prompt.id='poison-antidote-prompt';prompt.setAttribute('role','dialog');prompt.setAttribute('aria-modal','false');prompt.setAttribute('aria-label','需要解药吗？');
+        const use=button('poison-antidote',state.antidote?'要解药 · 读本课句子':'本课暂无解药','primary');use.disabled=!state.antidote;
+        prompt.append(use,button('poison-antidote-skip','不用解药，继续'));copy.append(prompt);
       }
       if(state.antidoteStatus==='reading'){
         const panel=el('div',undefined,'poison-antidote-panel'),sentence=el('p',state.antidote.sentence);sentence.id='poison-antidote-sentence';
-        panel.append(el('small','请大声读出解药句子'),sentence,el('small',state.antidote.source),button('poison-rescue','读完了，解救成功','primary'),button('poison-antidote-skip','暂不用解药，继续'));copy.append(panel);
+        panel.append(el('small','请读出解药句子'),sentence,button('poison-rescue','读完了，解救成功','primary'),button('poison-antidote-skip','暂不用解药，继续'));copy.append(panel);
       }
       if(['rescued','skipped'].includes(state.antidoteStatus))copy.append(button('poison-next-activity','下一活动：汉字迷宫','primary'));
-      copy.append(button('poison-next','换一位小女巫，再来一轮','primary'),button('poison-change-lesson','选择其他课','text-button'),el('small','大家都可以继续参加下一轮。'));magic.append(copy);host.append(magic);
+      copy.append(button('poison-next','再来一轮','primary'),button('poison-change-lesson','选择其他课','text-button'));magic.append(copy);host.append(magic);
     }
     controls.append(button('poison-prepare','调整本轮词语','text-button'));host.append(controls);
-    const feedback=el('p',undefined,'poison-feedback');feedback.id='poison-feedback';feedback.setAttribute('role','status');feedback.setAttribute('aria-live','polite');host.append(feedback);
+    const feedback=el('p',undefined,'poison-feedback');feedback.id='poison-feedback';feedback.hidden=state.phase==='complete';feedback.setAttribute('role','status');feedback.setAttribute('aria-live','polite');host.append(feedback);
   }
   function updateBoard(){
     const state=model.state;

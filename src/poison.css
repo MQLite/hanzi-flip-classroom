@@ -18,11 +18,9 @@
 .poison-witch.is-cackling .witch-cackle{transform-origin:200px 269px;animation:witch-cackle .28s .55s 6 ease-in-out}
 .poison-witch.is-cackling .witch-grin{transform-origin:190px 148px;animation:witch-grin .28s .55s 6 ease-in-out}
 .poison-witch.is-cackling .witch-bottle-hand{transform-origin:270px 184px;animation:witch-bottle .56s .55s 3 ease-in-out}
-.poison-witch.is-cackling .witch-cackle-text{transform-origin:68px 42px;animation:witch-chuckle-text .56s .55s 3 ease-in-out}
 @keyframes witch-arrive{from{opacity:0;transform:translate(80px,22px) scale(.8)}to{opacity:1;transform:none}}
 @keyframes witch-cackle{0%,100%{transform:rotate(-1deg) translateY(0)}50%{transform:rotate(1.5deg) translateY(-5px)}}
 @keyframes witch-grin{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.35)}}
 @keyframes witch-bottle{0%,100%{transform:rotate(0)}50%{transform:rotate(-12deg)}}
-@keyframes witch-chuckle-text{0%,100%{transform:scale(1)}50%{transform:scale(1.07) rotate(-3deg)}}
 @media(max-width:720px){.poison-magic{gap:5px}.poison-magic-art{width:min(100%,300px);height:auto;aspect-ratio:34/30;flex:none}.poison-magic-art:has(.poison-witch) .poison-before,.poison-magic-art:has(.poison-witch) .poison-frog{font-size:72px}}
 @media(prefers-reduced-motion:reduce){.poison-witch.is-cackling,.poison-witch.is-cackling *{animation:none!important;transform:none!important;opacity:1}}
