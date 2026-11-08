@@ -135,7 +135,7 @@ function prepareMaze(){
   const pool=getMolePool({...selection,grade,type:'characters'},bank.questions);
   mazePool={...pool,words:pool.words.map(word=>({...word,id:word.id.replace('mole/','maze/')}))};mazeState=null;
 }
-$('#help-dialog').insertAdjacentHTML('beforeend','<p>汉字迷宫：先观察通道与岔路，再选上下左右相邻的汉字。学生认读，老师点击“读对了，前进一步”才移动；读错先重读，死路可以退回来。汉字来自本课，会重复出现。活动导航与结束按钮按“搭建挑战 → 女巫毒药 → 汉字迷宫”携带当前教材课次；原游戏导航保留各自本页进度。</p>');
+$('#help-dialog').insertAdjacentHTML('beforeend','<p>汉字迷宫：先观察立体墙和岔路，再选上下左右相邻的汉字。学生认读，老师点击“读对了，前进一步”，小人才迈步走一格；读错先重读，死路可以退回来。小人抵达出口后跳跃挥手、飞出彩纸庆祝，结束后可选下一课。可切换平面，减少动态效果时静态显示。汉字来自本课，会重复出现。活动导航按“搭建挑战 → 女巫毒药 → 汉字迷宫”携带当前教材课次；原导航保留各自本页进度。</p>');
 function prepareBuilding(){
   if(selection.source!=='personal')selection={...selection,scope:'lesson'};
   const pool=getPoisonPool({...selection,grade},bank.questions);
@@ -390,7 +390,7 @@ function sudokuIntent(intent,value){
   }
   render();
 }
-function activeScene() { return gameMode==='building'?buildingView.scene:gameMode==='poison'?poisonView.scene:gameMode==='sudoku'||gameMode==='explore'||gameMode==='mole'||gameMode==='maze'?null:gameMode === 'train' ? trainView.scene : gameMode === 'workshop' ? workshopScene : scene; }
+function activeScene() { return gameMode==='building'?buildingView.scene:gameMode==='poison'?poisonView.scene:gameMode==='maze'?mazeView.scene:gameMode==='sudoku'||gameMode==='explore'||gameMode==='mole'?null:gameMode === 'train' ? trainView.scene : gameMode === 'workshop' ? workshopScene : scene; }
 function syncSimpleControl() {
   $('#simplify').hidden=gameMode==='sudoku'||gameMode==='explore'||gameMode==='mole'||gameMode==='poison'||gameMode==='building'||gameMode==='maze';
   if(gameMode==='sudoku'||gameMode==='explore'||gameMode==='mole'||gameMode==='poison'||gameMode==='building'||gameMode==='maze')return;
