@@ -34,4 +34,6 @@
 - [x] RED browser cases for labeled brick counts/pixels, arbitrary safe removal, danger→full rescue/new challenge, mode/reduce/context/flat boundaries and real lesson/maze changes.
 - [x] Implement scene/flat/view integration; retain native controls and correct busy locks. Expected browser cases pass.
 - [x] All units/build, existing building/maze/witch flow regressions and real production preview/screenshots. Expected green, bank unchanged.
-- [ ] One fresh whole-change read-only review, fix material findings once RED→GREEN; prepare reviewable result before release authorization. Publish only after authorization and verify public flow.
+- [x] One fresh whole-change read-only review, fix material findings once RED→GREEN; prepare reviewable result before release authorization. Both Important findings fixed and verified.
+
+Release gate: publish through existing GitHub Pages within authorized website scope, verify the public word-brick/maze flow and record deployed SHA/workflow/browser proof in the release ledger.

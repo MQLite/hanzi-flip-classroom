@@ -14,7 +14,7 @@ export function createBlueprintArt(blueprint,state){
     else group.append(svgNode('rect',{x:-w/2,y:-h/2,width:w,height:h,rx:.045,fill:block.color,stroke:'#496b5633','stroke-width':.025}));
     if(block.word){const {lines,fontSize}=brickTextLayout(block.word,w,h);
       group.append(svgNode('rect',{x:-w*.45,y:-h*.41,width:w*.9,height:h*.82,rx:.04,fill:'#fff5dc'}));lines.forEach((line,i)=>group.append(svgNode('text',{x:0,y:(i-(lines.length-1)/2)*fontSize*1.13,'text-anchor':'middle','dominant-baseline':'central','font-family':'KaiTi, STKaiti, serif','font-size':fontSize,fill:'#315b48'},line)));
-    }items.push(group);
+    }items.push({group,depth:pose.position[2]+block.size[2]/2});
   });
-  svg.setAttribute('viewBox',`${minX-.3} ${minY-.3} ${maxX-minX+.6} ${maxY-minY+.6}`);svg.append(...items);return svg;
+  svg.setAttribute('viewBox',`${minX-.3} ${minY-.3} ${maxX-minX+.6} ${maxY-minY+.6}`);svg.append(...items.sort((a,b)=>a.depth-b.depth).map(item=>item.group));return svg;
 }

@@ -10,6 +10,8 @@ export function createBuildingScene(host,{onBusyChange=()=>{}}={}){
   const world=node('div','builder-world'),flat=node('div','builder-flat'),caption=node('p','builder-motion-status'),toggle=node('button','builder-scene-mode');
   caption.id='builder-motion-status';caption.setAttribute('role','status');caption.setAttribute('aria-live','polite');caption.tabIndex=-1;
   toggle.id='builder-scene-mode';toggle.type='button';host.append(world,flat,toggle,caption);
+  const controller=new AbortController(),inspect=node('button','builder-inspect'),dialog=node('dialog','builder-inspect-dialog'),title=node('h4','builder-inspect-title'),choiceLabel=node('label','builder-inspect-label'),choice=node('select','builder-inspect-choice'),bigWord=node('strong','builder-inspect-word'),hint=node('p','builder-inspect-hint'),close=node('button','builder-inspect-close');
+  inspect.id='builder-inspect';inspect.type='button';inspect.textContent='放大词砖';dialog.id='builder-inspect-dialog';title.id='builder-inspect-title';title.textContent='看清词砖，大声读';dialog.setAttribute('aria-labelledby',title.id);choice.id='builder-inspect-choice';choiceLabel.textContent='选择要放大的词砖';choiceLabel.append(choice);bigWord.id='builder-inspect-word';hint.textContent='可以直接点建筑上的词砖放大。读对后，关闭这里，再点右侧对应词卡拆砖。';close.type='button';close.textContent='关闭，回到建筑';dialog.append(title,choiceLabel,bigWord,hint,close);host.append(inspect,dialog);
   const media=matchMedia('(prefers-reduced-motion: reduce)'),scene=new THREE.Scene(),camera=new THREE.OrthographicCamera(-5,5,4,-4,.1,80);
   const assembly=new THREE.Group(),river=new THREE.Group(),particles=new THREE.Group();scene.add(assembly,river,particles);
   const geometries={box:new THREE.BoxGeometry(1,1,1),stud:new THREE.CylinderGeometry(.5,.5,1,12),roof:new THREE.CylinderGeometry(.045,.5,1,8),spire:new THREE.ConeGeometry(.5,1,8),dust:new THREE.SphereGeometry(1,7,5),label:new THREE.PlaneGeometry(1,1)};
@@ -25,7 +27,20 @@ export function createBuildingScene(host,{onBusyChange=()=>{}}={}){
   const dustMaterial=new THREE.MeshBasicMaterial({color:'#e4cca1',transparent:true,opacity:0,depthWrite:false});
   for(let i=0;i<20;i++){const puff=new THREE.Mesh(geometries.dust,dustMaterial);puff.scale.setScalar(.07+(i%4)*.025);particles.add(puff);}particles.visible=false;
   let renderer,state,blueprint,blocks=[],descriptors=[],motion=null,frame=0,active=false,simple=false,available=true,disposed=false;
-  const labels=[];
+  const labels=[];let inspectedId=null;
+  function syncInspector(){
+    const ids=state?visibleBuildingWords(state):[],words=state?.words.filter(word=>ids.includes(word.id))??[];inspect.disabled=!active||Boolean(motion)||!words.length;
+    if(dialog.open&&(!ids.includes(inspectedId)||!active||motion))dialog.close();choice.replaceChildren(...words.map(word=>{const option=document.createElement('option');option.value=word.id;option.textContent=word.word;return option;}));
+    if(ids.includes(inspectedId))choice.value=inspectedId;bigWord.textContent=words.find(word=>word.id===choice.value)?.word??'';
+  }
+  function inspectWord(id){if(!active||motion||!state)return;const ids=visibleBuildingWords(state);inspectedId=ids.includes(id)?id:ids[0];if(!inspectedId)return;syncInspector();if(!dialog.open)dialog.showModal();}
+  inspect.addEventListener('click',()=>inspectWord(inspectedId),{signal:controller.signal});close.addEventListener('click',()=>dialog.close(),{signal:controller.signal});choice.addEventListener('change',()=>{inspectedId=choice.value;bigWord.textContent=state.words.find(word=>word.id===inspectedId)?.word??'';},{signal:controller.signal});
+  flat.addEventListener('click',event=>{const brick=event.target.closest('[data-word-brick]');if(brick)inspectWord(brick.dataset.wordBrick);},{signal:controller.signal});
+  const raycaster=new THREE.Raycaster();
+  world.addEventListener('click',event=>{
+    if(!active||motion||simple||!available)return;const rect=world.getBoundingClientRect();if(!rect.width||!rect.height)return;scene.updateMatrixWorld(true);camera.updateMatrixWorld(true);raycaster.setFromCamera(new THREE.Vector2((event.clientX-rect.left)/rect.width*2-1,1-(event.clientY-rect.top)/rect.height*2),camera);
+    for(const hit of raycaster.intersectObjects(assembly.children,true)){let group=hit.object;while(group.parent&&group.parent!==assembly)group=group.parent;if(group.parent!==assembly||!group.visible)continue;if(group.userData.wordId)inspectWord(group.userData.wordId);break;}
+  },{signal:controller.signal});
   function setPose(group,pose){group.position.set(...pose.position);group.rotation.set(...pose.rotation);}
   function currentPose(group){return {position:group.position.toArray(),rotation:[group.rotation.x,group.rotation.y,group.rotation.z]};}
   function captionText(){
@@ -34,6 +49,7 @@ export function createBuildingScene(host,{onBusyChange=()=>{}}={}){
     const settled={build:'大声读词，让对应词砖一块块搭起来',built:'建筑搭好啦，挑词朗读，每读一词移走一砖',challenge:`安全！还剩${state?visibleBuildingWords(state).length:0}块词砖，继续挑选`,collapsed:'建筑倒塌了，读出本课句子来拯救',restored:'复原完成！所有词砖重新回来了'};
     caption.textContent=(host.dataset.renderMode==='3d'?'3D积木 · ':'平面显示 · ')+(motion?moving[motion.kind]:settled[state?.phase]??'准备搭建');
     toggle.textContent=host.dataset.renderMode==='3d'?'平面显示':'立体显示';toggle.disabled=!available;toggle.setAttribute('aria-label',host.dataset.renderMode==='3d'?'切换平面显示':'切换立体显示');
+    inspect.disabled=!active||Boolean(motion)||!state||!visibleBuildingWords(state).length;
   }
   function draw(){
     if(disposed||!active||document.hidden||simple||!available||!renderer)return;
@@ -57,7 +73,7 @@ export function createBuildingScene(host,{onBusyChange=()=>{}}={}){
     for(const key of ['left','right','top','bottom'])camera[key]=fit[key];camera.position.set(...fit.position);camera.lookAt(...fit.target);camera.updateProjectionMatrix();draw();
   }
   function makeBlock(description){
-    const group=new THREE.Group(),size=description.size;assembly.add(group);
+    const group=new THREE.Group(),size=description.size;group.userData.wordId=description.wordId;assembly.add(group);
     mesh(geometries[description.kind],description.color,size,[0,0,0],group);
     if(description.kind==='box'&&!['window','door','rail'].includes(description.detail)){
       const nx=Math.min(3,Math.max(1,Math.floor(size[0]/.7))),nz=Math.min(2,Math.max(1,Math.floor(size[2]/.7)));
@@ -104,14 +120,14 @@ export function createBuildingScene(host,{onBusyChange=()=>{}}={}){
     if(media.matches||!active||document.hidden||simple||!available)finish();else frame=requestAnimationFrame(tick);
   }
   const observer=new ResizeObserver(resize);observer.observe(world);
-  function visibility(){if(document.hidden)finish();else{resize();draw();}}
+  function visibility(){if(document.hidden){if(dialog.open)dialog.close();finish();}else{resize();draw();}}
   function preference(){if(media.matches)finish();}
   document.addEventListener('visibilitychange',visibility);media.addEventListener('change',preference);
   toggle.onclick=()=>api.setSimple(!simple);
   const api={
     update(next){
       const fresh=state?.words!==next.words||state?.structure!==next.structure||state?.variant!==next.variant,previous=state;
-      if(fresh){finish();clearLabels();assembly.clear();blueprint=buildingBlueprint(next.structure,{words:next.words,variant:next.variant});descriptors=blueprint.blocks;blocks=descriptors.map(makeBlock);}
+      if(fresh){if(dialog.open)dialog.close();inspectedId=null;finish();clearLabels();assembly.clear();blueprint=buildingBlueprint(next.structure,{words:next.words,variant:next.variant});descriptors=blueprint.blocks;blocks=descriptors.map(makeBlock);}
       state=next;river.visible=next.structure==='bridge';const visible=visibleBuildingWords(next);host.dataset.wordBricks=String(visible.length);host.dataset.parts=String(visible.length);host.dataset.blueprint=blueprint.name;host.setAttribute('aria-label',`${blueprint.name}，${next.phase==='collapsed'?'已倒塌，':''}剩余${visible.length}块词砖：${next.words.filter(w=>visible.includes(w.id)).map(w=>w.word).join('、')}`);
       flat.replaceChildren(createBlueprintArt(blueprint,next));
       const wanted=index=>blueprintBlockVisible(descriptors[index],next),indices=blocks.map((_,i)=>i);
@@ -124,11 +140,11 @@ export function createBuildingScene(host,{onBusyChange=()=>{}}={}){
         const added=indices.filter(i=>wanted(i)&&!blueprintBlockVisible(descriptors[i],previous)),removed=indices.filter(i=>!wanted(i)&&blueprintBlockVisible(descriptors[i],previous));
         if(removed.length)animate('remove',removed);else if(added.length)animate('drop',added);
       }
-      captionText();resize();
+      syncInspector();captionText();resize();
     },
     get isAnimating(){return Boolean(motion);},
-    setActive(value){active=value;if(!value)finish();else{resize();draw();}},
+    setActive(value){active=value;if(!value){if(dialog.open)dialog.close();finish();}else{captionText();resize();draw();}},
     setSimple(value){simple=Boolean(value)||!available;finish();captionText();resize();},
-    dispose(){disposed=true;active=false;finish();observer.disconnect();document.removeEventListener('visibilitychange',visibility);media.removeEventListener('change',preference);renderer?.domElement.removeEventListener('webglcontextlost',lost);renderer?.domElement.removeEventListener('webglcontextrestored',restored);clearLabels();Object.values(geometries).forEach(g=>g.dispose());materials.forEach(m=>m.dispose());dustMaterial.dispose();sun.shadow.dispose();renderer?.dispose();host.replaceChildren();},
+    dispose(){disposed=true;active=false;if(dialog.open)dialog.close();controller.abort();finish();observer.disconnect();document.removeEventListener('visibilitychange',visibility);media.removeEventListener('change',preference);renderer?.domElement.removeEventListener('webglcontextlost',lost);renderer?.domElement.removeEventListener('webglcontextrestored',restored);clearLabels();Object.values(geometries).forEach(g=>g.dispose());materials.forEach(m=>m.dispose());dustMaterial.dispose();sun.shadow.dispose();renderer?.dispose();host.replaceChildren();},
   };captionText();return api;
 }
