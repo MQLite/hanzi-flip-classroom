@@ -58,3 +58,17 @@ test('a full available lesson traverses five native games and celebrates on the 
  await page.getByRole('button',{name:'关闭庆祝',exact:true}).click();await expect(page.locator('#island-journey-strip')).toContainText('5 / 5 岛');
  expect(await page.evaluate(k=>localStorage.getItem(k),key)).toBe(before);await page.locator('#mode-flip').click();await expect(page.locator('#island-journey-strip')).toBeHidden();
 });
+test('starting a journey during an outgoing final flip animation cannot award the old round',async({page})=>{
+ await personal(page);await page.locator('#reveal').click();page.once('dialog',d=>d.accept());
+ await page.evaluate(()=>{document.querySelector('#correct').click();document.querySelector('#open-island-map').click();document.querySelector('.island-map-primary').click();});
+ expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('hanzi-flip.island-journeys.v1'))[0].completed)).toEqual([]);
+ await expect(page.locator('#journey-next')).toBeDisabled();await expect(page.locator('#reveal')).toBeVisible();
+});
+test('workshop completion waits for its result animation and transfers without pausing the journey',async({page})=>{
+ await personal(page);await page.locator('#open-island-map').click();await page.getByRole('button',{name:'按顺序闯关',exact:true}).click();
+ await page.evaluate(()=>{const key='hanzi-flip.island-journeys.v1',rows=JSON.parse(localStorage.getItem(key)),s=rows[0];s.index=5;s.completed=s.stages.filter((g,i)=>g.available&&i<5).map(g=>g.id);localStorage.setItem(key,JSON.stringify(rows));});await page.reload();
+ await expect(page.locator('#mode-workshop')).toHaveAttribute('aria-pressed','true');for(const char of '明月')await page.locator('#workshop-tiles button[aria-pressed="false"]').getByText(char,{exact:true}).first().click();
+ const disabled=await page.evaluate(()=>{document.querySelector('#workshop-submit').click();return document.querySelector('#journey-next').disabled;});expect(disabled).toBe(true);
+ await expect(page.locator('#journey-next')).toBeEnabled();await page.locator('#journey-next').click();await expect(page.locator('#mode-poison')).toHaveAttribute('aria-pressed','true');await expect(page.locator('#island-journey-strip')).toBeVisible();
+ expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('hanzi-flip.island-journeys.v1'))[0].status)).toBe('active');
+});

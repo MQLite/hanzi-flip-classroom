@@ -746,7 +746,7 @@ function el(tag, text, className) {
   return e;
 }
 function render() {
-  journey.sync(gameMode,{session,moleState,mazeState,puzzleState,strokeState,handwritingState,strokeInputMode,workshopState,poisonState,buildingState,sudokuState});
+  journey.sync(gameMode,{session,moleState,mazeState,puzzleState,strokeState,handwritingState,strokeInputMode,workshopState,workshopTransition,poisonState,buildingState,sudokuState});
   if(journey.isActive())$('#scope').closest('label').hidden=true;
   syncPinyinLocation();
   $('#activity-flow').hidden=!['building','poison','maze'].includes(gameMode);for(const mode of ['building','poison','maze'])$('#activity-'+mode).setAttribute('aria-current',mode===gameMode?'step':'false');

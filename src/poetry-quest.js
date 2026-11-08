@@ -23,10 +23,11 @@ try{
 }catch{saveNote='此浏览器暂时不能保存进度，本次仍可继续。';}
 
 function persist(){
+  const wasComplete=saved?getProgress(saved).complete:false;
   saved=state;
   try{window.localStorage.setItem(QUEST_STORAGE_KEY,JSON.stringify(state));}
   catch{saveNote='此浏览器暂时不能保存进度，本次仍可继续。离开页面后需重新开始。';}
-  if(getProgress(state).complete)islandJourney.reportComplete();
+  if(!wasComplete&&getProgress(state).complete)islandJourney.reportComplete();
 }
 function header(playing){return `<header class="quest-header">
   <a class="quest-home" href="./?mode=explore" aria-label="返回情景探索"><span class="quest-brand">字</span><span>汉字奇遇岛 <small> / 情景探索</small></span></a>

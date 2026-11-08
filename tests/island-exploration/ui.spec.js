@@ -29,10 +29,12 @@ test('opening an old completed poetry save does not award a new journey',async({
  await page.goto('/quest.html');await page.getByRole('button',{name:'带提示探索',exact:true}).click();await finishPoetry(page);
  await openPoetryJourney(page);await page.getByRole('button',{name:'继续上次探索',exact:true}).click();
  await expect(page.locator('#quest-complete')).toBeVisible();await expect(page.locator('#lesson-celebration')).toHaveCount(0);
+ await page.getByRole('button',{name:'再读两首诗',exact:true}).click();await expect(page.locator('#lesson-celebration')).toHaveCount(0);
+ await page.getByRole('button',{name:'诗集',exact:true}).click();await expect(page.locator('#lesson-celebration')).toHaveCount(0);
  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('hanzi-flip.island-journeys.v1'))[0].completed)).toEqual([]);
 });
 test('native city mission completion awards its matching final island',async({page})=>{
- await finalStage(page,'source=paradise&stage=2A&lesson=2');await page.locator('#start-mission').click();
+ await finalStage(page,'source=paradise&stage=2A&lesson=2');await expect(page.locator('#choices button')).toHaveCount(scenes.length);await page.locator('#start-mission').click();
  for(let i=0;i<scenes.length;i++){for(let j=0;j<scenes[i].lines.length;j++)await page.locator('#show-clue').click();await page.getByRole('button',{name:scenes[i].city,exact:true}).click();if(i<scenes.length-1)await page.locator('#next-scene').click();}
  await expect(page.locator('#lesson-celebration')).toBeVisible();await page.getByRole('button',{name:'关闭庆祝',exact:true}).click();
  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('hanzi-flip.island-journeys.v1'))[0].status)).toBe('complete');

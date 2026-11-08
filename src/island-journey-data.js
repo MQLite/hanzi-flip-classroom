@@ -27,7 +27,7 @@ export function isJourneyStageComplete(mode,m={}){
  case 'maze':return m.mazeState?.phase==='complete';
  case 'puzzle':return Boolean(m.puzzleState?.targets.length&&m.puzzleState.targets.every(t=>m.puzzleState.found.includes(t.character)));
  case 'strokes':{const s=m.strokeInputMode==='write'?m.handwritingState:m.strokeState;return Boolean(s?.characters.length&&s.characters.every(c=>s.completed.includes(c.character)));}
- case 'workshop':return m.workshopState?.phase==='complete';
+ case 'workshop':return m.workshopState?.phase==='complete'&&!m.workshopTransition;
  case 'poison':return m.poisonState?.phase==='complete'&&['rescued','skipped'].includes(m.poisonState.antidoteStatus);
  case 'building':return m.buildingState?.phase==='restored'||m.buildingState?.phase==='built'&&!m.buildingState.sentence;
  case 'sudoku':return m.sudokuState?.phase==='complete';
