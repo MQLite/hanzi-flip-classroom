@@ -10,3 +10,19 @@
 @keyframes poison-choice-enter{from{opacity:0;transform:translateY(20px) scale(.9)}to{opacity:1;transform:none}}@keyframes poison-hit-flash{0%{background-color:#bd8bca;transform:scale(.98)}100%{background-color:transparent;transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){.poison-antidote-prompt,.poison-magic:has(.poison-antidote-prompt){animation:none}}
 #poison-sound-label{display:inline-flex;flex-direction:row;align-items:center;white-space:nowrap}#poison-sound-label[hidden]{display:none}
+.poison-magic{grid-template-columns:350px minmax(0,1fr);max-width:980px;gap:22px}
+.poison-magic-art{width:340px;height:300px}
+.poison-witch{display:block;position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-index:2;pointer-events:none}
+.poison-magic-art:has(.poison-witch) .poison-before,.poison-magic-art:has(.poison-witch) .poison-frog{font-size:82px;left:0;top:auto;bottom:6px;z-index:3}
+.poison-witch.is-cackling{animation:witch-arrive .6s cubic-bezier(.2,.8,.2,1) both}
+.poison-witch.is-cackling .witch-cackle{transform-origin:200px 269px;animation:witch-cackle .28s .55s 6 ease-in-out}
+.poison-witch.is-cackling .witch-grin{transform-origin:190px 148px;animation:witch-grin .28s .55s 6 ease-in-out}
+.poison-witch.is-cackling .witch-bottle-hand{transform-origin:270px 184px;animation:witch-bottle .56s .55s 3 ease-in-out}
+.poison-witch.is-cackling .witch-cackle-text{transform-origin:68px 42px;animation:witch-chuckle-text .56s .55s 3 ease-in-out}
+@keyframes witch-arrive{from{opacity:0;transform:translate(80px,22px) scale(.8)}to{opacity:1;transform:none}}
+@keyframes witch-cackle{0%,100%{transform:rotate(-1deg) translateY(0)}50%{transform:rotate(1.5deg) translateY(-5px)}}
+@keyframes witch-grin{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.35)}}
+@keyframes witch-bottle{0%,100%{transform:rotate(0)}50%{transform:rotate(-12deg)}}
+@keyframes witch-chuckle-text{0%,100%{transform:scale(1)}50%{transform:scale(1.07) rotate(-3deg)}}
+@media(max-width:720px){.poison-magic{gap:5px}.poison-magic-art{width:min(100%,300px);height:auto;aspect-ratio:34/30;flex:none}.poison-magic-art:has(.poison-witch) .poison-before,.poison-magic-art:has(.poison-witch) .poison-frog{font-size:72px}}
+@media(prefers-reduced-motion:reduce){.poison-witch.is-cackling,.poison-witch.is-cackling *{animation:none!important;transform:none!important;opacity:1}}

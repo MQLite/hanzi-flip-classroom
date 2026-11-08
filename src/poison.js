@@ -1,4 +1,5 @@
 import {createPoisonAudio} from './poison-sound.js';
+import {createPoisonWitch} from './poison-witch.js';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 function term(word,pinyin){
   const box=el('span',undefined,'poison-word'),han=el('strong',word.word,'poison-term');
@@ -37,7 +38,7 @@ export function createPoisonView(host,dispatch){
     panel.append(button(ready?'poison-read':'poison-begin-hide',ready?'大家睁眼，开始读词':'大家已闭眼，开始藏毒','primary'));
     panel.append(button('poison-prepare','调整本轮词语','text-button'));host.append(panel);
   }
-  function buildBoard(){
+  function buildBoard(animateHit=false){
     const state=model.state;host.replaceChildren();cardNodes=[];
     host.append(heading(state.phase==='hide'?'嘘，小女巫正在藏毒':state.phase==='complete'?'这一轮遇到魔法啦':'轮流读词，点卡立即检查',state.phase==='hide'?`其他同学继续闭眼；秘密选${state.poisonCount}张卡，再点“藏好了”。`:state.phase==='complete'?'选择使用解药，或继续下一活动。':'学生先读，老师点刚读过的词卡，立即出现结果。'));
     const summary=el('p',undefined,'poison-summary');summary.id='poison-summary';host.append(summary);
@@ -50,6 +51,7 @@ export function createPoisonView(host,dispatch){
     }else{
       const magic=el('section',undefined,'poison-magic');magic.id='poison-magic';
       const art=el('div',undefined,'poison-magic-art');art.setAttribute('role','img');art.setAttribute('aria-label','魔法烟雾和小青蛙变身效果');
+      if(state.antidoteStatus!=='rescued'){art.setAttribute('role','group');art.setAttribute('aria-label','女巫拿着空瓶坏笑，同学变成小青蛙');art.append(createPoisonWitch({animate:animateHit}));}
       if(state.antidoteStatus==='reading')art.classList.add('is-transformed');
       if(state.antidoteStatus==='rescued'){art.classList.add('is-rescued');art.setAttribute('aria-label','解药生效，同学恢复笑脸');}
       art.append(el('span','🙂','poison-before'),el('span','🐸','poison-frog'));
@@ -110,7 +112,7 @@ export function createPoisonView(host,dispatch){
       if(!next.state){prepare();if(focus?.choice)host.querySelectorAll('[data-poison-choice]').forEach(b=>{if(b.dataset.poisonChoice===focus.choice)b.focus();});else if(focus?.id)host.querySelector(`#${focus.id}`)?.focus();return;}
       const changed=key!==next.state.words||previous?.phase!==next.state.phase||previous?.antidoteStatus!==next.state.antidoteStatus||previousPinyin!==next.showPinyin;
       host.dataset.phase=next.state.phase;
-      if(changed){key=next.state.words;if(next.state.phase==='cover'||next.state.phase==='ready')cover(next.state.phase==='ready');else buildBoard();}
+      if(changed){key=next.state.words;if(next.state.phase==='cover'||next.state.phase==='ready')cover(next.state.phase==='ready');else buildBoard(previous?.phase==='read'&&next.state.phase==='complete');}
       if(['hide','read','complete'].includes(next.state.phase))updateBoard();
       if(changed&&focus){const target=host.querySelector('#poison-rescue,#poison-begin-hide,#poison-read,#poison-antidote:not(:disabled),#poison-antidote-skip,#poison-next,[data-poison-card]:not(:disabled)');target?.focus();}
     },
