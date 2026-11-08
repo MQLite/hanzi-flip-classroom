@@ -1,6 +1,7 @@
 import {FORM_CATALOG,STROKE_NAMES} from './construction-data.js';
 import {createStrokeAudio} from './stroke-audio.js';
 import {mountHandwritingPad} from './handwriting-pad.js';
+import {showHandwritingScore} from './handwriting-score-dialog.js';
 import './handwriting.css';
 import {renderComponentPuzzle} from './component-puzzle.js';
 import './component-puzzle.css';
@@ -17,7 +18,9 @@ async function loadGlyph(character){
 }
 
 export function createConstructionView(root,{onAction}){
-  const audio=createStrokeAudio();let current=null,epoch=0,audioAttempt=0,visible=true,disposed=false,selected='',muted=false,drag=null,suppressUntil=0,pad=null;
+  const audio=createStrokeAudio();let current=null,epoch=0,audioAttempt=0,visible=true,disposed=false,selected='',muted=false,drag=null,suppressUntil=0,pad=null,scorePopup=null;
+  function dismissScore(){scorePopup?.dispose();scorePopup=null;}
+  function scoreMetrics(state){const results=state.strokeScores[state.index];return Object.fromEntries(['shape','position','length'].map(key=>[key,Math.round(results.reduce((sum,r)=>sum+r.metrics[key],0)/results.length)]));}
   function cancelDrag(){if(drag){drag.ghost?.remove();drag=null;}window.removeEventListener('pointermove',pointerMove);window.removeEventListener('pointerup',pointerUp);window.removeEventListener('pointercancel',pointerCancel);}
   function pointerCancel(){cancelDrag();}
   function stop(){audioAttempt++;cancelDrag();pad?.cancel();audio.stop();}
@@ -77,13 +80,13 @@ export function createConstructionView(root,{onAction}){
     const record=state.characters[state.index],layout=node('div',undefined,'writing-layout handwriting-layout'),stage=node('section',undefined,'writing-stage'),side=node('aside',undefined,'writing-side handwriting-side');
     stage.append(node('h3',`写一写：${record.character}`),node('p',`已完成 ${state.placed} / ${record.names.length} 笔 · 本课完成 ${state.completed.length} / ${pool.characters.length} 字`,'stroke-progress'));
     const grid=svgNode('svg',{viewBox:'0 0 1024 1024',class:'writing-grid handwriting-pad',role:'group','aria-label':`${record.character}的触屏描写田字格`});grid.append(svgNode('path',{d:'M512 0V1024M0 512H1024',class:'grid-cross'}),svgNode('path',{d:'M0 0L1024 1024M1024 0L0 1024',class:'grid-diagonal'}));stage.append(grid);
-    const messages={ready:'从小圆点起笔，沿白色字影描完一笔后抬手。',accepted:`写对了：${state.lastName??''}。继续下一笔。`,complete:'✦ 这个字写完了！看看右侧的参考分。','wrong-order':'请按笔顺描写亮起的这一笔。','wrong-direction':'这一笔方向反了，请从小圆点重新起笔。',retry:'再试一次，连续描完这一笔，尽量贴近白色字影。'};
+    const messages={ready:'从小圆点起笔，沿细虚线写完一笔后抬手。',accepted:`写对了：${state.lastName??''}。继续下一笔。`,complete:'✦ 这个字写完了！看看你的描写参考分。','wrong-order':'请按笔顺描写亮起的这一笔。','wrong-direction':'这一笔方向反了，请从小圆点重新起笔。',retry:'再试一次，连续写完这一笔，注意细虚线的方向和位置。'};
     const feedback=status(messages[state.feedback]??messages.ready);feedback.classList.add('handwriting-status');stage.append(feedback);
     const token=epoch;loadGlyph(record.character).then(data=>{
       if(disposed||!visible||token!==epoch||!grid.isConnected)return;if(data.strokes.length!==record.names.length)throw Error('count');current.geometry=data;
       pad=mountHandwritingPad(grid,{geometry:data,state,onStroke:points=>action('trace',{points,geometry:data}),onCancel:message=>{if(token===epoch)feedback.textContent=message;}});
     }).catch(()=>{if(token===epoch&&grid.isConnected)feedback.textContent='字形暂未载入，请切换本字后重试。';});
-    side.append(node('h3','沿着字影，自己写'),node('p','用手指、触屏笔或鼠标连续描写；写对一笔，自动读出笔画名。','construction-instruction'));
+    side.append(node('h3','沿细线，自己写'),node('p','用手指、触屏笔或鼠标沿细虚线写，不必描满粗字影；写对一笔，自动读出笔画名。','construction-instruction'));
     if(state.scores[state.index]!==null){
       const score=node('section',undefined,'handwriting-score');score.id='handwriting-score';score.dataset.score=state.scores[state.index];score.setAttribute('aria-live','polite');const number=node('strong',String(state.scores[state.index]));number.append(node('small',' / 100'));score.append(node('h4','描写相似度参考分'),number);
       const results=state.strokeScores[state.index],metrics=node('div',undefined,'handwriting-score-metrics');for(const [key,label] of [['shape','形状'],['position','位置'],['length','长短']])metrics.append(node('span',`${label} ${Math.round(results.reduce((sum,r)=>sum+r.metrics[key],0)/results.length)}`));score.append(metrics,node('p','按完成的笔画比较；写得慢、重试不扣分。'));side.append(score);
@@ -129,8 +132,10 @@ export function createConstructionView(root,{onAction}){
   function onHidden(){if(document.hidden)stop();}document.addEventListener('visibilitychange',onHidden);window.addEventListener('blur',stop);
   return {
     update(value){const accepted=current&&visible&&!document.hidden&&value.mode==='strokes'&&value.inputMode==='write'&&current.inputMode==='write'&&current.mode===value.mode&&current.pool===value.pool&&current.state.index===value.state.index&&value.state.placed===current.state.placed+1&&['accepted','complete'].includes(value.state.feedback);
-      const changed=!current||current.mode!==value.mode||current.pool!==value.pool||current.state.index!==value.state.index||current.inputMode!==value.inputMode;const advanced=current&&current.state.placed!==value.state.placed;if(changed){stop();selected='';}else if(advanced)selected='';current={...value};render();if(accepted){audioAttempt++;audio.play(value.state.lastName);}},
-    setVisible(value){if(visible===value)return;visible=value;epoch++;stop();if(!visible){pad?.dispose();pad=null;}if(visible)render();},
-    dispose(){disposed=true;epoch++;stop();pad?.dispose();pad=null;audio.dispose();document.removeEventListener('visibilitychange',onHidden);window.removeEventListener('blur',stop);root.replaceChildren();}
+      const changed=!current||current.mode!==value.mode||current.pool!==value.pool||current.state.index!==value.state.index||current.inputMode!==value.inputMode;const advanced=current&&current.state.placed!==value.state.placed;if(changed){dismissScore();stop();selected='';}else if(advanced)selected='';current={...value};render();if(accepted){audioAttempt++;audio.play(value.state.lastName);
+        if(value.state.feedback==='complete'){const {state}=value;dismissScore();scorePopup=showHandwritingScore({character:state.characters[state.index].character,score:state.scores[state.index],metrics:scoreMetrics(state),onClose(){scorePopup=null;const summary=root.querySelector('#handwriting-score');if(visible&&!disposed&&summary){summary.tabIndex=-1;summary.focus({preventScroll:true});}}});}
+      }},
+    setVisible(value){if(visible===value)return;visible=value;epoch++;stop();if(!visible){dismissScore();pad?.dispose();pad=null;}if(visible)render();},
+    dispose(){disposed=true;epoch++;dismissScore();stop();pad?.dispose();pad=null;audio.dispose();document.removeEventListener('visibilitychange',onHidden);window.removeEventListener('blur',stop);root.replaceChildren();}
   };
 }

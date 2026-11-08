@@ -53,7 +53,7 @@ test('a full available lesson traverses five native games and celebrates on the 
  await expect(page.locator('#journey-next')).toBeEnabled();
  for(const viewport of [{width:1280,height:720},{width:1920,height:1080},{width:390,height:844}]){await page.setViewportSize(viewport);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:`docs/codex/journey-main-${viewport.width}.png`,fullPage:true});}
  await page.setViewportSize({width:1280,height:720});await page.locator('#journey-next').click();await expect(page.locator('#mode-building')).toHaveAttribute('aria-pressed','true');
- await page.locator('#builder-start').click();await page.locator('#builder-draw').click();await page.locator('#builder-confirm').click();await page.locator('[data-builder-card]').click();await page.locator('#builder-restore').click();
+ await page.locator('#builder-start').click();await page.locator('#builder-draw').click();await page.locator('#builder-confirm').click();await page.locator('[data-builder-card]').click();
  await expect(page.locator('#lesson-celebration')).toBeVisible();await expect(page.locator('#lesson-celebration')).toContainText('太牛啦');
  await page.getByRole('button',{name:'关闭庆祝',exact:true}).click();await expect(page.locator('#island-journey-strip')).toContainText('5 / 5 岛');
  expect(await page.evaluate(k=>localStorage.getItem(k),key)).toBe(before);await page.locator('#mode-flip').click();await expect(page.locator('#island-journey-strip')).toBeHidden();

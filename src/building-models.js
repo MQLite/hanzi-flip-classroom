@@ -25,18 +25,18 @@ const models=Object.freeze({house:Object.freeze(house),bridge:Object.freeze(brid
 export function buildingBlocks(type){return models[type]??models.house;}
 export function blockHome(block){return {position:[...block.position],rotation:[...(block.rotation??[0,0,0])]};}
 export function blockRubble(block,index){
-  const angle=index*2.399963,radius=1.65+(index%4)*.37;
-  const rotation=index===0?[0,.65,0]:block.kind==='box'?[.95+(index%3)*.2,0,((index%5)-2)*.35]:[.08,.8+(index%4)*.5,-.08];
+  const direction=index%2?1:-1;
+  const rotation=[.06*direction,0,.14*direction];
   const [x,y,z]=rotation,a=Math.cos(x),b=Math.sin(x),c=Math.cos(y),d=Math.sin(y),e=Math.cos(z),f=Math.sin(z);
   const halfY=(Math.abs(a*f+b*e*d)*block.size[0]+Math.abs(a*e-b*f*d)*block.size[1]+Math.abs(b*c)*block.size[2])/2;
-  return {position:[Math.cos(angle)*radius,halfY+.04+(index%3)*.055,Math.sin(angle)*radius],rotation};
+  return {position:[block.position[0]+direction*.14,Math.min(block.position[1],halfY+.26+(index%3)*.025),block.position[2]+((index%3)-1)*.12],rotation};
 }
 function bounce(t){const n=7.5625,d=2.75;if(t<1/d)return n*t*t;if(t<2/d)return n*(t-=1.5/d)*t+.75;if(t<2.5/d)return n*(t-=2.25/d)*t+.9375;return n*(t-=2.625/d)*t+.984375;}
 export function sampleBlockMotion({from,to,kind,index=0,progress}){
   const t=Number.isFinite(progress)?Math.max(0,Math.min(1,progress)):0;
   if(t===0||t===1){const pose=t===0?from:to;return {position:[...pose.position],rotation:[...pose.rotation]};}
-  const smooth=t*t*(3-2*t),position=from.position.map((v,i)=>v+(to.position[i]-v)*(kind==='drop'?bounce(t):smooth));
+  const falling=kind==='collapse'||kind==='settle',smooth=t*t*(3-2*t),position=from.position.map((v,i)=>v+(to.position[i]-v)*(kind==='drop'?bounce(t):falling&&i===1?t*t:smooth));
   const rotation=from.rotation.map((v,i)=>v+(to.rotation[i]-v)*smooth);
-  if(kind!=='drop'){position[1]+=Math.sin(Math.PI*t)*(kind==='restore'?2.8:1.5+(index%3)*.2);rotation[1]+=Math.sin(Math.PI*t)*(kind==='restore'?1.8:.7);}
+  if(kind!=='drop'&&!falling){position[1]+=Math.sin(Math.PI*t)*(kind==='restore'?2.8:1.5+(index%3)*.2);rotation[1]+=Math.sin(Math.PI*t)*(kind==='restore'?1.8:.7);}
   return {position,rotation};
 }

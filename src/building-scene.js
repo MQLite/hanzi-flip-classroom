@@ -4,6 +4,7 @@ import {buildingBlueprint,brickTextLayout} from './building-blueprint.js';
 import {createBlueprintArt,blueprintBlockVisible} from './building-blueprint-art.js';
 import {visibleBuildingWords} from './building-core.js';
 import {buildingCameraFrame} from './building-camera.js';
+import {buildingBlockFallen} from './building-support.js';
 
 const node=(tag,cls)=>{const el=document.createElement(tag);el.className=cls;return el;};
 export function createBuildingScene(host,{onBusyChange=()=>{}}={}){
@@ -45,8 +46,8 @@ export function createBuildingScene(host,{onBusyChange=()=>{}}={}){
   function currentPose(group){return {position:group.position.toArray(),rotation:[group.rotation.x,group.rotation.y,group.rotation.z]};}
   function captionText(){
     host.dataset.renderMode=simple||!available?'flat':'3d';host.dataset.motion=motion?.kind??'idle';host.setAttribute('aria-busy',String(Boolean(motion)));
-    const moving={drop:'词砖逐块落下，正在就位…',remove:'读对了！对应词砖正在移出…',collapse:'轰隆！剩下的积木翻转，散落到地面…',restore:'魔法复原！全部词砖正飞回原位…'};
-    const settled={build:'大声读词，让对应词砖一块块搭起来',built:'建筑搭好啦，挑词朗读，每读一词移走一砖',challenge:`安全！还剩${state?visibleBuildingWords(state).length:0}块词砖，继续挑选`,collapsed:'建筑倒塌了，读出本课句子来拯救',restored:'复原完成！所有词砖重新回来了'};
+    const moving={drop:'词砖逐块落下，正在就位…',remove:'读对了！对应词砖正在移出…',collapse:'失去支撑的词砖正在向下落…',settle:'失去支撑的装饰正在落下…',restore:'魔法复原！全部词砖正飞回原位…'};
+    const settled={build:'大声读词，让对应词砖一块块搭起来',built:'建筑搭好啦，挑词朗读，每读一词移走一砖',challenge:`词砖站稳了！还剩${state?visibleBuildingWords(state).length:0}块词砖，继续挑选`,collapsed:'部分词砖失去支撑，读出本课句子来拯救',cleared:'词砖已安全拆完，可以读句子复原或进入下一活动',restored:'复原完成！所有词砖重新回来了'};
     caption.textContent=(host.dataset.renderMode==='3d'?'3D积木 · ':'平面显示 · ')+(motion?moving[motion.kind]:settled[state?.phase]??'准备搭建');
     toggle.textContent=host.dataset.renderMode==='3d'?'平面显示':'立体显示';toggle.disabled=!available;toggle.setAttribute('aria-label',host.dataset.renderMode==='3d'?'切换平面显示':'切换立体显示');
     inspect.disabled=!active||Boolean(motion)||!state||!visibleBuildingWords(state).length;
@@ -100,20 +101,20 @@ export function createBuildingScene(host,{onBusyChange=()=>{}}={}){
     if(!motion){draw();return;}let done=true;
     for(const item of motion.items){
       const progress=Math.max(0,Math.min(1,(now-item.start)/item.duration));item.group.visible=now>=item.start;
-      setPose(item.group,sampleBlockMotion({...item,kind:motion.kind,progress}));item.group.scale.setScalar(motion.kind==='remove'?1-progress*.85:1);if(progress<1)done=false;
+      setPose(item.group,sampleBlockMotion({...item,kind:item.kind,progress}));item.group.scale.setScalar(item.kind==='remove'?1-progress*.85:1);if(progress<1)done=false;
     }
     const t=Math.max(0,Math.min(1,(now-motion.start)/motion.duration));
-    if(motion.kind==='collapse'&&t<.25)assembly.position.x=Math.sin(t*120)*.09*(1-t*4);else assembly.position.x=0;
-    particles.visible=['collapse','restore'].includes(motion.kind)&&t>0&&t<1;dustMaterial.color.set(motion.kind==='restore'?'#e7bd5d':'#d2bb92');dustMaterial.opacity=Math.sin(Math.PI*t)*.55;
+    particles.visible=motion.kind==='restore'&&t>0&&t<1;dustMaterial.color.set('#e7bd5d');dustMaterial.opacity=Math.sin(Math.PI*t)*.55;
     particles.children.forEach((p,i)=>{const angle=i*2.399963,r=(motion.kind==='restore'?1-t:t)*3.1;p.position.set(Math.cos(angle)*r,.25+Math.sin(Math.PI*t)*(1+(i%4)*.33),Math.sin(angle)*r);});
     draw();if(!motion||disposed)return;if(done)finish();else frame=requestAnimationFrame(tick);
   }
-  function animate(kind,indices){
-    finish();const start=performance.now(),duration=kind==='drop'?620:kind==='remove'?720:kind==='collapse'?1350:1250,stagger=kind==='drop'?85:kind==='remove'?0:24;
+  function animate(kind,indices,removed=[]){
+    finish();const start=performance.now(),duration=kind==='drop'?620:kind==='remove'?720:['collapse','settle'].includes(kind)?850:1250,stagger=kind==='drop'?85:kind==='remove'?0:24;
     const items=indices.map((index,order)=>{
-      const group=blocks[index],home=blockHome(descriptors[index]),to=kind==='collapse'?blockRubble(descriptors[index],index):kind==='remove'?{position:[home.position[0]+1.4,home.position[1]+.5,home.position[2]+2.5],rotation:[0,.6,-.25]}:home;
+      const itemKind=removed.includes(index)?'remove':kind,group=blocks[index],home=blockHome(descriptors[index]),to=['collapse','settle'].includes(itemKind)?blockRubble(descriptors[index],index):itemKind==='remove'?{position:[home.position[0]+1.4,home.position[1]+.5,home.position[2]+2.5],rotation:[0,.6,-.25]}:home;
       const from=kind==='drop'?{position:[home.position[0],home.position[1]+4.4,home.position[2]],rotation:[0,(index%2?1:-1)*.35,0]}:currentPose(group);
-      group.scale.setScalar(1);setPose(group,from);group.visible=kind!=='drop';return {group,from,to,index,start:start+order*stagger,duration,visibleEnd:kind!=='remove'};
+      const visibleEnd=itemKind!=='remove'&&(Boolean(descriptors[index].wordId)||!buildingBlockFallen(descriptors[index],index,state));
+      group.scale.setScalar(1);setPose(group,from);group.visible=kind!=='drop';return {group,from,to,index,kind:itemKind,start:start+order*stagger,duration,visibleEnd};
     });
     if(!items.length)return;
     motion={kind,items,start,duration:duration+(items.length-1)*stagger};captionText();onBusyChange(true);
@@ -130,15 +131,14 @@ export function createBuildingScene(host,{onBusyChange=()=>{}}={}){
       if(fresh){if(dialog.open)dialog.close();inspectedId=null;finish();clearLabels();assembly.clear();blueprint=buildingBlueprint(next.structure,{words:next.words,variant:next.variant});descriptors=blueprint.blocks;blocks=descriptors.map(makeBlock);}
       state=next;river.visible=next.structure==='bridge';const visible=visibleBuildingWords(next);host.dataset.wordBricks=String(visible.length);host.dataset.parts=String(visible.length);host.dataset.blueprint=blueprint.name;host.setAttribute('aria-label',`${blueprint.name}，${next.phase==='collapsed'?'已倒塌，':''}剩余${visible.length}块词砖：${next.words.filter(w=>visible.includes(w.id)).map(w=>w.word).join('、')}`);
       flat.replaceChildren(createBlueprintArt(blueprint,next));
-      const wanted=index=>blueprintBlockVisible(descriptors[index],next),indices=blocks.map((_,i)=>i);
-      if(fresh){blocks.forEach((group,index)=>{group.visible=wanted(index);setPose(group,next.phase==='collapsed'?blockRubble(descriptors[index],index):blockHome(descriptors[index]));});}
-      else if(next.phase==='collapsed'&&previous.phase!=='collapsed'){
-        finish();blocks.forEach((group,index)=>{if(!wanted(index))group.visible=false;});animate('collapse',indices.filter(wanted));
-      }else if(next.phase==='restored'&&previous.phase==='collapsed'){
-        finish();blocks.forEach((group,index)=>{if(!group.visible)setPose(group,blockRubble(descriptors[index],index));group.visible=true;});animate('restore',indices);
+      const wanted=index=>blueprintBlockVisible(descriptors[index],next,index),indices=blocks.map((_,i)=>i);
+      if(fresh){blocks.forEach((group,index)=>{group.visible=wanted(index);setPose(group,buildingBlockFallen(descriptors[index],index,next)?blockRubble(descriptors[index],index):blockHome(descriptors[index]));});}
+      else if(next.phase==='restored'&&['collapsed','cleared'].includes(previous.phase)){
+        finish();const returning=indices.filter(index=>!blocks[index].visible||buildingBlockFallen(descriptors[index],index,previous));returning.forEach(index=>{if(!blocks[index].visible)setPose(blocks[index],blockRubble(descriptors[index],index));blocks[index].visible=true;});animate('restore',returning);
       }else{
-        const added=indices.filter(i=>wanted(i)&&!blueprintBlockVisible(descriptors[i],previous)),removed=indices.filter(i=>!wanted(i)&&blueprintBlockVisible(descriptors[i],previous));
-        if(removed.length)animate('remove',removed);else if(added.length)animate('drop',added);
+        const added=indices.filter(i=>wanted(i)&&!blueprintBlockVisible(descriptors[i],previous,i)),removed=indices.filter(i=>!wanted(i)&&blueprintBlockVisible(descriptors[i],previous,i));
+        const falling=indices.filter(i=>buildingBlockFallen(descriptors[i],i,next)&&!buildingBlockFallen(descriptors[i],i,previous));
+        if(falling.length)animate(next.phase==='collapsed'?'collapse':'settle',[...new Set([...removed,...falling])],removed.filter(i=>descriptors[i].wordId));else if(removed.length)animate('remove',removed);else if(added.length)animate('drop',added);
       }
       syncInspector();captionText();resize();
     },

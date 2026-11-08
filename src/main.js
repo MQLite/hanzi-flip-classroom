@@ -159,7 +159,7 @@ function prepareConstruction(){
   if(gameMode==='puzzle')puzzleState=createPuzzleState(constructionPool.puzzles);
   else {strokeState=createStrokeState(constructionPool.characters);handwritingState=createHandwritingState(constructionPool.characters);}
 }
-$('#help-dialog').insertAdjacentHTML('beforeend','<p>汉字拼图：先只给部件，学生发现能组成的本课汉字；同一部件可多选，点“合一合”后才揭晓。独体字不强拆，尚不确定的分拆不出题。展开“本课新部件”可看英文介绍。笔画很忙：学生说名称，老师选笔听读音，再拖到大田字格的白色字影位置；也可选笔后点位置，或用键盘聚焦字影后回车。按规范笔顺逐笔完成，支持撤回和关闭读音；课末自动进入基础笔画复习与预习。切换游戏保留本页进度，刷新重置。两个游戏使用当前课次，不改变个人题库。</p>');
+$('#help-dialog').insertAdjacentHTML('beforeend','<p>汉字拼图：先只给部件，学生发现能组成的本课汉字；同一部件可多选，点“合一合”后才揭晓。独体字不强拆，尚不确定的分拆不出题。展开“本课新部件”可看英文介绍。笔画很忙：学生说名称，老师选笔听读音，再拖到大田字格的白色字影位置；也可选笔后点位置，或用键盘聚焦字影后回车。按规范笔顺逐笔完成，支持撤回和关闭读音；触屏描写沿细虚线写，不必描满粗字影，写完一字会全屏显示描写参考分，关闭后继续；课末可进入基础笔画复习与预习。切换游戏保留本页进度，刷新重置。两个游戏使用当前课次，不改变个人题库。</p>');
 function prepareMaze(){
   if(selection.source!=='personal')selection={...selection,scope:'lesson'};
   const pool=getMolePool({...selection,grade,type:'characters'},bank.questions);
@@ -172,7 +172,7 @@ function prepareBuilding(){
   buildingPool={...pool,words:pool.words.map(word=>({...word,id:word.id.replace(/^poison\//u,'building/')}))};
   buildingSelectedIds=buildingPool.words.slice(0,12).map(word=>word.id);buildingSentenceId=buildingPool.sentences[0]?.id??'';buildingState=null;
 }
-$('#help-dialog').insertAdjacentHTML('beforeend','<p>汉字建筑师：每课可选房、桥、塔、楼，以及1–16个本课字词；四类建筑各有不同款式，换课变外形。每个词写在对应词砖上，学生朗读后老师确认，词砖逐块落下。搭好后从右侧挑词朗读，老师点卡；安全词会移走对应砖块和词卡，危险词让剩余建筑翻转散落。读出本课重点句子，老师确认后全部词砖飞回复原，再继续女巫活动。没有重点句子的课仍可搭建并进入下一活动。</p>');
+$('#help-dialog').insertAdjacentHTML('beforeend','<p>汉字建筑师：每课可选房、桥、塔、楼，以及1–16个本课字词；四类建筑各有不同款式，换课变外形。每个词写在对应词砖上，学生朗读后老师确认，词砖逐块落下。搭好后从右侧挑词朗读，老师点卡；安全词会移走对应砖块和词卡，失去支撑的词砖会带动上方部分落下，仍有支撑的部分保留；从上往下安全拆完也能完成本轮。读出本课重点句子，老师确认后全部词砖飞回复原，再继续女巫活动。没有重点句子的课仍可搭建并进入下一活动。</p>');
 $('#help-dialog').insertAdjacentHTML('beforeend','<p>女巫解药为可选环节：准备时选择本课重点句子，变身后点击“使用解药”，学生朗读，再由老师点击“读完了，解救成功”。可以跳过解药直接换小女巫，也可以点击“选择其他课”更换教材或课次。</p>');
 $('#help-dialog').insertAdjacentHTML('beforeend','<p>女巫的毒药：选本课2–16张词卡和1–2个毒药，其他同学闭眼，小女巫秘密点选。藏好后睁眼，学生先读，老师点刚读过的词卡，立即给结果。安全卡变灰；读中毒药词时，女巫拿着空药瓶现身坏笑，同时出现烟雾、青蛙变身和卡通音效，结束本轮并询问是否使用解药。可读本课句子解救，也可跳过后进入迷宫。音效可关闭，所有同学仍可继续参加。离开藏毒画面先遮挡秘密选择。</p>');
 function preparePoison(){
@@ -772,7 +772,7 @@ function render() {
     strokeCleanup?.();strokeCleanup=null;cardStrokeCleanup?.();cardStrokeCleanup=null;cardStrokeKey=null;cardStrokeView=null;$('#card-face').replaceChildren();
     for(const id of ['#extension-toggle','#extension-hint','#extension'])$(id).hidden=true;
     $('#round-caption').textContent=gameMode==='puzzle'?'本课部件 · 自己发现汉字':'本课生字 · 规范笔顺';
-    $('footer > span').textContent=gameMode==='puzzle'?'先选部件，再合一合；每个汉字只收集一次。':strokeInputMode==='write'?'沿字影描写，写对一笔听一次名称；每字完成后显示参考分。':'学生说名称，老师拖笔画；按笔顺完成后进入总复习。';
+    $('footer > span').textContent=gameMode==='puzzle'?'先选部件，再合一合；每个汉字只收集一次。':strokeInputMode==='write'?'沿细线描写，不必描满粗字影；写完一字，全屏看看参考分。':'学生说名称，老师拖笔画；按笔顺完成后进入总复习。';
     constructionView.update({mode:gameMode,state:gameMode==='puzzle'?puzzleState:strokeInputMode==='write'?handwritingState:strokeState,pool:constructionPool,inputMode:strokeInputMode});return;
   }
   if(gameMode==='explore'){

@@ -5,11 +5,12 @@ const pathFor=points=>points.map((p,i)=>`${i?'L':'M'}${p[0].toFixed(2)} ${p[1].t
 /** One mounted pad owns one gesture. Context changes dispose its listeners. */
 export function mountHandwritingPad(svg,{geometry,state,onStroke,onCancel=()=>{}}){
   const controller=new AbortController(),options={signal:controller.signal};let gesture=null,disposed=false;
-  const transform='translate(0 900) scale(1 -1)',shadow=svgNode('g',{transform,class:'glyph-shadow'}),ink=svgNode('g',{transform,class:'handwriting-ink'}),draft=svgNode('g',{transform,class:'handwriting-draft'});
+  const transform='translate(0 900) scale(1 -1)',shadow=svgNode('g',{transform,class:'glyph-shadow'}),guide=svgNode('g',{transform,class:'handwriting-guide','aria-hidden':'true'}),ink=svgNode('g',{transform,class:'handwriting-ink'}),draft=svgNode('g',{transform,class:'handwriting-draft'});
   geometry.strokes.forEach((d,i)=>shadow.append(svgNode('path',{d,class:i===state.placed?'is-next':''})));
   for(const points of state.drawings[state.index])ink.append(svgNode('path',{d:pathFor(points)}));
   if(state.lastAttempt.length)draft.append(svgNode('path',{d:pathFor(state.lastAttempt),class:'handwriting-rejected'}));
-  svg.append(shadow,ink,draft);
+  const median=geometry.medians[state.placed];if(median)guide.append(svgNode('path',{d:pathFor(median)}));
+  svg.append(shadow,guide,ink,draft);
   const start=geometry.medians[state.placed]?.[0];
   if(start)svg.append(svgNode('circle',{cx:start[0],cy:900-start[1],r:18,class:'handwriting-start','aria-hidden':'true'}));
   function point(event){const matrix=svg.getScreenCTM();if(!matrix)return null;const p=new DOMPoint(event.clientX,event.clientY).matrixTransform(matrix.inverse());return [p.x,900-p.y];}

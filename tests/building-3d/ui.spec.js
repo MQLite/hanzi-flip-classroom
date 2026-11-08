@@ -6,14 +6,14 @@ async function start(page,{type='house',words=2,motion='no-preference'}={}){
 }
 async function build(page,words=2){for(let i=0;i<words;i++){await page.locator('#builder-draw').click();await page.locator('#builder-confirm').click();}await expect(page.locator('[data-builder-card]').first()).toBeEnabled();}
 async function collapse(page,words=2){if(await page.locator('#builder-challenge').count())await page.locator('#builder-challenge').click();for(let i=0;i<words;i++){await page.locator('[data-builder-card]').first().click();if(await page.locator('#hanzi-building').getAttribute('data-phase')==='collapsed')break;}}
-test('actual 3D blocks drop, scatter and fly back with distinct frames while teacher controls wait',async({page})=>{
-  await start(page);const canvas=page.locator('#builder-scene canvas');await expect(canvas).toBeVisible();const before=await canvas.screenshot();
+test('actual 3D blocks drop, lose support locally and fly back while teacher controls wait',async({page})=>{
+  await start(page,{words:4});const canvas=page.locator('#builder-scene canvas');await expect(canvas).toBeVisible();const before=await canvas.screenshot();
   await page.locator('#builder-draw').click();await page.locator('#builder-confirm').click();await expect(page.locator('#builder-scene')).toHaveAttribute('data-motion','drop');await expect(page.locator('#builder-draw')).toBeDisabled();
   const flying=await canvas.screenshot();expect(Buffer.compare(before,flying)).not.toBe(0);await expect(page.locator('#builder-draw')).toBeEnabled();
-  await page.locator('#builder-draw').click();await page.locator('#builder-confirm').click();await expect(page.locator('[data-builder-card]').first()).toBeEnabled();const whole=await canvas.screenshot();
+  await build(page,3);const whole=await canvas.screenshot();
   await collapse(page);await expect(page.locator('#builder-scene')).toHaveAttribute('data-motion','collapse');await expect(page.locator('#builder-restore')).toBeDisabled();await expect(page.locator('#builder-restore')).toBeEnabled();const rubble=await canvas.screenshot();expect(Buffer.compare(whole,rubble)).not.toBe(0);
-  await page.screenshot({path:'docs/codex/poison/3d-collapse.png',fullPage:true});await page.locator('#builder-restore').click();await expect(page.locator('#builder-scene')).toHaveAttribute('data-motion','restore');await expect(page.locator('#builder-challenge')).toBeDisabled();
-  const returning=await canvas.screenshot();expect(Buffer.compare(rubble,returning)).not.toBe(0);await expect(page.locator('#builder-challenge')).toBeEnabled();await page.screenshot({path:'docs/codex/poison/3d-restored.png',fullPage:true});
+  await page.screenshot({path:'test-results/building-support/manual/3d-collapse.png',fullPage:true});await page.locator('#builder-restore').click();await expect(page.locator('#builder-scene')).toHaveAttribute('data-motion','restore');await expect(page.locator('#builder-challenge')).toBeDisabled();
+  const returning=await canvas.screenshot();expect(Buffer.compare(rubble,returning)).not.toBe(0);await expect(page.locator('#builder-challenge')).toBeEnabled();await page.screenshot({path:'test-results/building-support/manual/3d-restored.png',fullPage:true});
 });
 test('word/pinyin renders reuse one canvas and leaving mid-drop settles without stale locks',async({page})=>{
   await start(page);await page.locator('#builder-scene canvas').evaluate(n=>n.dataset.identity='keep');await page.locator('#builder-draw').click();await page.locator('#pinyin').locator('..').click();
@@ -23,7 +23,7 @@ test('word/pinyin renders reuse one canvas and leaving mid-drop settles without 
   await expect(page.locator('#builder-scene')).toHaveAttribute('data-motion','idle');await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:false});document.dispatchEvent(new Event('visibilitychange'));});await expect(page.locator('[data-builder-card]').first()).toBeEnabled();
 });
 test('reduced motion retains static 3D and changing display during collapse unlocks SVG rescue',async({page})=>{
-  await start(page,{motion:'reduce',words:1});await build(page,1);await expect(page.locator('#builder-scene')).toHaveAttribute('data-motion','idle');await page.emulateMedia({reducedMotion:'no-preference'});await collapse(page,1);
+  await start(page,{motion:'reduce',words:4});await build(page,4);await expect(page.locator('#builder-scene')).toHaveAttribute('data-motion','idle');await page.emulateMedia({reducedMotion:'no-preference'});await collapse(page,4);
   await page.locator('#builder-scene-mode').click();await expect(page.locator('#builder-scene')).toHaveAttribute('data-render-mode','flat');await expect(page.locator('#builder-restore')).toBeEnabled();await page.locator('#builder-restore').click();await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','restored');
   await page.locator('#builder-scene-mode').click();await expect(page.locator('#builder-scene')).toHaveAttribute('data-render-mode','3d');await expect(page.locator('#builder-challenge')).toBeEnabled();
 });
@@ -45,10 +45,10 @@ test('reducing motion settles a drop immediately and restarting a collapse leave
 });
 test('four static 3D silhouettes fit projector/mobile and keep the saved bank unchanged',async({page})=>{
   for(const type of ['house','bridge','tower','building']){
-    await page.setViewportSize({width:1280,height:720});await start(page,{type,words:1,motion:'reduce'});const saved=await page.evaluate(()=>localStorage.getItem('hanzi-flip.question-bank'));await build(page,1);await expect(page.locator('#builder-scene canvas')).toBeVisible();await page.screenshot({path:`docs/codex/poison/3d-${type}.png`,fullPage:true});
+    await page.setViewportSize({width:1280,height:720});await start(page,{type,words:1,motion:'reduce'});const saved=await page.evaluate(()=>localStorage.getItem('hanzi-flip.question-bank'));await build(page,1);await expect(page.locator('#builder-scene canvas')).toBeVisible();await page.screenshot({path:`test-results/building-support/manual/3d-${type}.png`,fullPage:true});
     await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);expect(await page.locator('#builder-scene canvas').evaluate(n=>n.width>0&&n.height>0)).toBe(true);expect(await page.evaluate(()=>localStorage.getItem('hanzi-flip.question-bank'))).toBe(saved);
-    await collapse(page,1);await page.screenshot({path:`docs/codex/poison/3d-mobile-collapsed-${type}.png`,fullPage:true});
-  }await page.screenshot({path:'docs/codex/poison/3d-mobile.png',fullPage:true});
+    await collapse(page,1);await page.screenshot({path:`test-results/building-support/manual/3d-mobile-collapsed-${type}.png`,fullPage:true});
+  }await page.screenshot({path:'test-results/building-support/manual/3d-mobile.png',fullPage:true});
 });
 test('an inactive view settles newly received progress without starting an animation or locking controls',async({page})=>{
   await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/?mode=building');

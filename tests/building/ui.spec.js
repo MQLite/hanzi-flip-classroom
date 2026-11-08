@@ -16,7 +16,7 @@ async function collapse(page,count=3){
     await expect(page.locator('.is-danger,[data-danger],.builder-danger')).toHaveCount(0);await page.locator('[data-builder-card]').first().click();
     if(await page.locator('#hanzi-building').getAttribute('data-phase')==='collapsed')break;
   }
-  await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','collapsed');
+  await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase',/^(collapsed|cleared)$/);
 }
 for(const [type,name] of [['house','房'],['bridge','桥'],['tower','塔'],['building','楼']])test(`${name}: words construct the building, random danger collapses it, lesson sentence restores it`,async({page})=>{
   const phrase=await setup(page,type),saved=await page.evaluate(()=>localStorage.getItem('hanzi-flip.question-bank'));
@@ -47,7 +47,7 @@ test('holding Enter cannot advance through reading, construction, collapse and r
   await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','build');await expect(page.locator('#builder-progress')).toContainText('0 / 1');
   await expect(page.locator('#builder-word')).toBeVisible();
   await page.keyboard.press('Enter');await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','built');
-  await page.keyboard.press('Enter');await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','collapsed');
+  await page.keyboard.press('Enter');await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','cleared');
   await page.keyboard.press('Enter');await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','restored');
 });
 test('touchscreen reads, collapses and rescues without overflow',async({browser,baseURL})=>{
@@ -56,7 +56,7 @@ test('touchscreen reads, collapses and rescues without overflow',async({browser,
   await page.locator('#builder-type-bridge').tap();await page.locator('#builder-start').tap();
   for(let i=0;i<2;i++){await page.locator('#builder-draw').tap();await page.locator('#builder-confirm').tap();}
   for(let i=0;i<2;i++){await page.locator('[data-builder-card]').first().tap();if(await page.locator('#hanzi-building').getAttribute('data-phase')==='collapsed')break;}
-  await expect(page.locator('#builder-rescue-sentence')).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'docs/codex/poison/building-mobile.png',fullPage:true});await page.locator('#builder-restore').tap();await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','restored');await context.close();
+  await expect(page.locator('#builder-rescue-sentence')).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'test-results/building-support/manual/building-mobile.png',fullPage:true});await page.locator('#builder-restore').tap();await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','restored');await context.close();
 });
 test('Zhongwen lesson choices stay scoped and selection is limited to sixteen words',async({page})=>{
   await page.goto('/?mode=building');await page.getByLabel('题库来源').selectOption('zhongwen');await page.getByLabel('选择册数').selectOption('2');
@@ -72,6 +72,6 @@ test('long words fit a projector; normal-motion collapse and restoration animate
   await page.setViewportSize({width:1280,height:720});await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/?mode=building');await page.getByLabel('学习阶段',{exact:true}).selectOption('3A');await page.getByLabel('选择课次').selectOption('4');
   const ids=await page.locator('[data-builder-choice][aria-pressed="true"]').evaluateAll(nodes=>nodes.map(n=>n.dataset.builderChoice));for(const id of ids)await page.locator(`[data-builder-choice="${id}"]`).click();
   await page.locator('[data-builder-choice]').filter({hasText:'玩儿电子游戏'}).click();await page.locator('#builder-start').click();await page.locator('#builder-draw').click();
-  expect(await page.locator('#builder-word').evaluate(n=>n.scrollWidth<=n.clientWidth)).toBe(true);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'docs/codex/poison/building-desktop.png',fullPage:true});await page.locator('#builder-confirm').click();await collapse(page,1);
-  await expect(page.locator('#builder-scene')).toHaveAttribute('data-motion','collapse');await expect(page.locator('#builder-restore')).toBeEnabled();await page.locator('#builder-restore').click();await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','restored');
+  expect(await page.locator('#builder-word').evaluate(n=>n.scrollWidth<=n.clientWidth)).toBe(true);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'test-results/building-support/manual/building-desktop.png',fullPage:true});await page.locator('#builder-confirm').click();await collapse(page,1);
+  await expect(page.locator('#builder-scene')).toHaveAttribute('data-motion','settle');await expect(page.locator('#builder-restore')).toBeEnabled();await page.locator('#builder-restore').click();await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','restored');
 });

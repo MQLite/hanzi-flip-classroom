@@ -37,6 +37,7 @@ describe('native completion gates',()=>{
   expect(isJourneyStageComplete('strokes',{strokeState:{characters:[{}],completed:[],review:true}})).toBe(false);
   expect(isJourneyStageComplete('building',{buildingState:{phase:'built',sentence:{sentence:'你好'}}})).toBe(false);
   expect(isJourneyStageComplete('building',{buildingState:{phase:'built',sentence:null}})).toBe(true);
+  expect(isJourneyStageComplete('building',{buildingState:{phase:'cleared',sentence:{sentence:'你好'}}})).toBe(true);
   expect(isJourneyStageComplete('workshop',{workshopState:{phase:'complete'},workshopTransition:{outcome:'correct'}})).toBe(false);
  });
  it('uses actual lesson availability, including independent-only puzzles and missing exploration',()=>{

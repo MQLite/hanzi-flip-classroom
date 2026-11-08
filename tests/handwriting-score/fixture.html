@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Handwriting score fixture</title>
+<style>
+  body { margin: 0; min-height: 180vh; background: #e9eee1; color: #244e41; font-family: sans-serif; }
+  main { padding: 24px; }
+  button { font: inherit; padding: 12px 20px; }
+  #writing-pad { height: 240px; background: #7a978b; touch-action: none; }
+</style>
+<body style="overflow: auto; padding-right: 7px">
+<main>
+  <h1>课堂描写</h1><button id="start">查看评分</button><button id="underlying">游戏操作</button>
+  <div id="writing-pad" aria-label="描写区域"></div>
+</main>
+<script type="module">
+const fixture = window.fixture = {loadError: null, closes: 0, keys: [], pointers: 0, handles: []};
+for (const type of ['keydown', 'keyup', 'keypress']) {
+  document.addEventListener(type, event => fixture.keys.push(`${type}:${event.key}`));
+}
+document.querySelector('#writing-pad').addEventListener('pointerdown', () => fixture.pointers++);
+try {
+  const modulePath = '/src/handwriting-score-dialog.js';
+  const {showHandwritingScore} = await import(/* @vite-ignore */ modulePath);
+  const native = {
+    addEventListener: window.addEventListener.bind(window), removeEventListener: window.removeEventListener.bind(window),
+    setTimeout: window.setTimeout.bind(window), clearTimeout: window.clearTimeout.bind(window),
+    requestAnimationFrame: window.requestAnimationFrame.bind(window), cancelAnimationFrame: window.cancelAnimationFrame.bind(window),
+  };
+  const timers = new Set(), frames = new Set(), listeners = new Map();
+  const tracked = new Set(['keydown', 'keyup', 'keypress', 'resize', 'pagehide']);
+  window.addEventListener = (type, listener, options) => {
+    if (tracked.has(type)) {
+      if (!listeners.has(type)) listeners.set(type, new Set());
+      listeners.get(type).add(listener);
+    }
+    native.addEventListener(type, listener, options);
+  };
+  window.removeEventListener = (type, listener, options) => {
+    listeners.get(type)?.delete(listener);
+    native.removeEventListener(type, listener, options);
+  };
+  window.setTimeout = (callback, delay, ...args) => {
+    const id = native.setTimeout(() => { timers.delete(id); callback(...args); }, delay);
+    timers.add(id); return id;
+  };
+  window.clearTimeout = id => { timers.delete(id); native.clearTimeout(id); };
+  window.requestAnimationFrame = callback => {
+    const id = native.requestAnimationFrame(time => { frames.delete(id); callback(time); });
+    frames.add(id); return id;
+  };
+  window.cancelAnimationFrame = id => { frames.delete(id); native.cancelAnimationFrame(id); };
+  fixture.resources = () => ({timers: timers.size, frames: frames.size, listeners: [...listeners.values()].reduce((sum, set) => sum + set.size, 0)});
+  fixture.show = (options = {}) => {
+    const handle = showHandwritingScore({character: '好', score: 86, metrics: {shape: 91, position: 73, length: 82}, onClose: () => fixture.closes++, ...options});
+    fixture.handles.push(handle);
+    return handle;
+  };
+  document.querySelector('#start').addEventListener('click', () => fixture.show());
+} catch (error) {
+  fixture.loadError = error.message;
+}
+fixture.ready = true;
+</script></body></html>

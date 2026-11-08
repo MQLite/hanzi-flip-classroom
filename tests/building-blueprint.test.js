@@ -27,11 +27,11 @@ it('roof decorations rest on the building rather than floating above the silhoue
     for(const b of blocks.filter(b=>b.reveal==='finish'&&!b.rotation))expect(blocks.some(other=>other!==b&&other.position[1]<b.position[1]&&b.position[1]-b.size[1]/2<=other.position[1]+other.size[1]/2+.09&&[0,2].every(axis=>Math.abs(b.position[axis]-other.position[axis])<(b.size[axis]+other.size[axis])/2)),`${type}/${variant} ${b.kind} ${b.position}`).toBe(true);
   }
 });
-it('safe or dangerous reads remove only their own brick, restoration puts all bricks back, and new challenges start whole',()=>{
+it('each read removes its own brick, unsupported neighbors fall locally, and restoration starts whole',()=>{
   let state=createBuildingState({words:words(4),variant:3,sentence:{id:'s',sentence:'我喜欢中文。'},random:()=>.5});expect(state.variant).toBe(3);expect(visibleBuildingWords(state)).toEqual([]);
   state=confirmBuildingWord(drawBuildingWord(state));expect(visibleBuildingWords(state)).toEqual(state.builtIds);
   for(let i=1;i<4;i++)state=confirmBuildingWord(drawBuildingWord(state));state=beginBuildingChallenge(state,{random:()=>.5});
-  const ids=state.words.map(w=>w.id),safe=ids.find(id=>id!==state.dangerId);state=chooseBuildingChallengeWord(state,safe);expect(visibleBuildingWords(state)).toEqual(ids.filter(id=>id!==safe));expect(visibleBuildingWords(chooseBuildingChallengeWord(state,safe))).toEqual(visibleBuildingWords(state));
-  state=chooseBuildingChallengeWord(state,state.dangerId);expect(state.phase).toBe('collapsed');expect(visibleBuildingWords(state)).toEqual(ids.filter(id=>!state.checkedIds.includes(id)));
+  const ids=state.words.map(w=>w.id),safe=ids[2];state=chooseBuildingChallengeWord(state,safe);expect(visibleBuildingWords(state)).toEqual(ids.filter(id=>id!==safe));expect(visibleBuildingWords(chooseBuildingChallengeWord(state,safe))).toEqual(visibleBuildingWords(state));
+  state=chooseBuildingChallengeWord(state,ids[1]);expect(state.phase).toBe('collapsed');expect(state.fallenIds).toEqual([ids[3]]);expect(visibleBuildingWords(state)).toEqual(ids.filter(id=>!state.checkedIds.includes(id)));
   state=restoreBuilding(state);expect(visibleBuildingWords(state)).toEqual(ids);state=beginBuildingChallenge(state);expect(visibleBuildingWords(state)).toEqual(ids);expect(state.variant).toBe(3);
 });
