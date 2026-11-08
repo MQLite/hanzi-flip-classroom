@@ -49,6 +49,10 @@ import {getPoisonPool} from './poison-vocabulary.js';
 import {readPoisonCard,skipPoisonAntidote} from './poison-core.js';
 import {createPoisonState,beginPoisonHiding,togglePoisonWord,sealPoison,beginPoisonReading,selectPoisonCard,cancelPoisonCard,revealPoisonCard,coverPoisonSecrets,nextPoisonRound,beginPoisonAntidote,finishPoisonAntidote} from './poison-core.js';
 import {createSudokuState,collectSudokuWord,placeSudokuWord,clearSudokuCell,undoSudoku,getSudokuProgress} from './sudoku-core.js';
+import './construction.css';
+import {getConstructionPool} from './construction-data.js';
+import {createConstructionView} from './construction-view.js';
+import {createPuzzleState,selectPuzzlePart,removePuzzlePart,checkPuzzle,createStrokeState,placeStroke,undoStroke,nextStrokeCharacter} from './construction-core.js';
 
 const app = document.querySelector("#app");
 app.innerHTML = `<header class="site-header"><a class="brand" href="./" aria-label="汉字奇遇岛首页"><span class="brand-mark">字<span></span></span><div><h1>汉字奇遇岛</h1><p>每一个汉字，都是一次小小的发现。</p></div></a><nav aria-label="教师工具"><span class="teacher-badge">教师课堂 · 1–4 年级</span><button id="open-bank">题库管理</button><button id="open-help">使用帮助</button><button id="fullscreen" class="icon-button" aria-label="全屏显示">⛶</button></nav></header>
@@ -68,6 +72,8 @@ $('.play-area').insertAdjacentHTML('beforeend','<div id="witch-poison" hidden></
 $('.game-modes').insertAdjacentHTML('beforeend','<button id="mode-building" aria-pressed="false">汉字建筑师</button>');
 $('.play-area').insertAdjacentHTML('beforeend','<div id="hanzi-building" hidden></div>');
 $('.game-modes').insertAdjacentHTML('beforeend','<button id="mode-maze" aria-pressed="false">汉字迷宫</button>');
+$('#mode-flip').insertAdjacentHTML('afterend','<button id="mode-puzzle" aria-pressed="false">汉字拼图</button><button id="mode-strokes" aria-pressed="false">笔画很忙</button>');
+$('.play-area').insertAdjacentHTML('beforeend','<div id="hanzi-construction" hidden></div>');
 $('.play-area').insertAdjacentHTML('beforeend','<div id="hanzi-maze" hidden></div>');
 $('.play-area').insertAdjacentHTML('beforeend','<div id="reading-pinyin-dock" class="reading-pinyin-dock" hidden></div>');
 const optionalPinyinModes=new Set(['building','maze','poison']);
@@ -138,6 +144,15 @@ $('.lesson-toolbar').insertAdjacentHTML('beforeend','<label id="poison-sound-lab
 $('#poison-sound').onchange=event=>{poisonSoundEnabled=event.target.checked;render();};
 let buildingState=null,buildingPool=null,buildingSelectedIds=[],buildingStructure='house',buildingSentenceId='';
 let mazeState=null,mazePool=null;
+let constructionPool=null,puzzleState=null,strokeState=null;
+const isConstruction=mode=>mode==='puzzle'||mode==='strokes';
+function prepareConstruction(){
+  if(selection.source!=='personal')selection={...selection,scope:'lesson'};
+  constructionPool=getConstructionPool(selection,bank.questions,grade);
+  if(gameMode==='puzzle')puzzleState=createPuzzleState(constructionPool.puzzles);
+  else strokeState=createStrokeState(constructionPool.characters);
+}
+$('#help-dialog').insertAdjacentHTML('beforeend','<p>汉字拼图：先只给部件，学生发现能组成的本课汉字；同一部件可多选，点“合一合”后才揭晓。独体字不强拆，尚不确定的分拆不出题。展开“本课新部件”可看英文介绍。笔画很忙：学生说名称，老师选笔听读音，再拖到大田字格的白色字影位置；也可选笔后点位置，或用键盘聚焦字影后回车。按规范笔顺逐笔完成，支持撤回和关闭读音；课末自动进入基础笔画复习与预习。切换游戏保留本页进度，刷新重置。两个游戏使用当前课次，不改变个人题库。</p>');
 function prepareMaze(){
   if(selection.source!=='personal')selection={...selection,scope:'lesson'};
   const pool=getMolePool({...selection,grade,type:'characters'},bank.questions);
@@ -225,7 +240,7 @@ function syncSelection() {
   $('#lesson').disabled = !explore && selection.scope === 'stage';
   $('.grade-label').hidden = explore || selection.source !== 'personal';
   document.querySelectorAll('.textbook-field').forEach(e=>e.hidden=selection.source === 'personal');
-  if(gameMode==='sudoku'||gameMode==='mole'||gameMode==='poison'||gameMode==='building'||gameMode==='maze'||explore)$('#scope').closest('label').hidden=true;
+  if(isConstruction(gameMode)||gameMode==='sudoku'||gameMode==='mole'||gameMode==='poison'||gameMode==='building'||gameMode==='maze'||explore)$('#scope').closest('label').hidden=true;
   $('#curriculum-note').textContent = selection.source !== 'personal'
     ? zhongwen
       ? `《中文》（暨南大学华文学院 · 第三版）${ZHONGWEN_BOOK_LABELS[selection.stage]} · ${selection.scope === 'cumulative' ? `第一册第1课至${ZHONGWEN_BOOK_LABELS[selection.stage]}第${selection.lesson}课` : selection.scope === 'lesson' ? `第${selection.lesson}课` : '全册'} · ${gameMode === 'train' ? '课文与阅读重点句' : '全部生字与教材词语'}`
@@ -304,6 +319,22 @@ const moleView=createMoleView($('#mole'),moleIntent);
 const poisonView=createPoisonView($('#witch-poison'),poisonIntent);
 const buildingView=createBuildingView($('#hanzi-building'),buildingIntent);
 const mazeView=createMazeView($('#hanzi-maze'),mazeIntent);
+const constructionView=createConstructionView($('#hanzi-construction'),{onAction:constructionIntent});
+constructionView.setVisible(false);
+function constructionIntent(intent,value){
+  if(!isConstruction(gameMode))return;
+  if(gameMode==='puzzle'){
+    if(intent==='part')puzzleState=selectPuzzlePart(puzzleState,value);
+    else if(intent==='remove')puzzleState=removePuzzlePart(puzzleState,value);
+    else if(intent==='check')puzzleState=checkPuzzle(puzzleState);
+  }else{
+    if(intent==='place')strokeState=placeStroke(strokeState,value,value.geometry);
+    else if(intent==='undo')strokeState=undoStroke(strokeState);
+    else if(intent==='next')strokeState=nextStrokeCharacter(strokeState,value);
+    else if(intent==='review')strokeState={...strokeState,review:Boolean(value),feedback:'ready'};
+  }
+  render();
+}
 function mazeIntent(intent,value){
   if(gameMode!=='maze')return;
   if(intent==='next-activity'){goActivity('building');$(selection.source==='personal'?'#grade':'#lesson').focus();notify('请先在上方选择下一课，再开始新一组活动。');return;}
@@ -398,8 +429,9 @@ function sudokuIntent(intent,value){
   }
   render();
 }
-function activeScene() { return gameMode==='building'?buildingView.scene:gameMode==='poison'?poisonView.scene:gameMode==='maze'?mazeView.scene:gameMode==='sudoku'||gameMode==='explore'||gameMode==='mole'?null:gameMode === 'train' ? trainView.scene : gameMode === 'workshop' ? workshopScene : scene; }
+function activeScene() { return isConstruction(gameMode)?null:gameMode==='building'?buildingView.scene:gameMode==='poison'?poisonView.scene:gameMode==='maze'?mazeView.scene:gameMode==='sudoku'||gameMode==='explore'||gameMode==='mole'?null:gameMode === 'train' ? trainView.scene : gameMode === 'workshop' ? workshopScene : scene; }
 function syncSimpleControl() {
+  if(isConstruction(gameMode)){$('#simplify').hidden=true;return;}
   $('#simplify').hidden=gameMode==='sudoku'||gameMode==='explore'||gameMode==='mole'||gameMode==='poison'||gameMode==='building'||gameMode==='maze';
   if(gameMode==='sudoku'||gameMode==='explore'||gameMode==='mole'||gameMode==='poison'||gameMode==='building'||gameMode==='maze')return;
   const simple = $(gameMode === 'train' ? '#train-scene' : gameMode === 'workshop' ? '#workshop-scene' : '#scene').dataset.mode === 'simple';
@@ -415,12 +447,13 @@ function switchMode(mode, linkedSelection) {
   if(gameMode === 'workshop' && workshopTransition) finishWorkshopTransition(workshopTransition);
   if(gameMode==='mole'){moleView.cancelAnimations();moleState=finishMoleHits(moleState);}
   sudokuView.cancelDrag();
-  modeSnapshots[gameMode] = { session, grade, teamNames: [...teamNames], selectedTeam, showPinyin, selection: {...selection}, extensionOpen, workshopState, sudokuState,sudokuPool,sudokuSelectedIds:[...sudokuSelectedIds],moleState,molePool,moleType,poisonState,poisonPool,poisonSelectedIds:[...poisonSelectedIds],poisonCount,poisonAntidoteId,buildingState,buildingPool,buildingSelectedIds:[...buildingSelectedIds],buildingStructure,buildingSentenceId,mazeState,mazePool };
+  constructionView.setVisible(false);
+  modeSnapshots[gameMode] = { session, grade, teamNames: [...teamNames], selectedTeam, showPinyin, selection: {...selection}, extensionOpen, workshopState, sudokuState,sudokuPool,sudokuSelectedIds:[...sudokuSelectedIds],moleState,molePool,moleType,poisonState,poisonPool,poisonSelectedIds:[...poisonSelectedIds],poisonCount,poisonAntidoteId,buildingState,buildingPool,buildingSelectedIds:[...buildingSelectedIds],buildingStructure,buildingSentenceId,mazeState,mazePool,constructionPool,puzzleState,strokeState };
   activeScene()?.setActive(false);
   const carried=linkedSelection&&['building','poison','maze'].includes(mode),saved=carried?null:modeSnapshots[mode];
   gameMode = mode;
   if(carried)selection={...linkedSelection,scope:'lesson'};
-  if (saved) ({ session, grade, teamNames, selectedTeam, showPinyin, selection, extensionOpen, workshopState,sudokuState,sudokuPool,sudokuSelectedIds,moleState,molePool,moleType,poisonState,poisonPool,poisonSelectedIds,poisonCount,poisonAntidoteId,buildingState,buildingPool,buildingSelectedIds,buildingStructure,buildingSentenceId,mazeState,mazePool } = saved);
+  if (saved) ({ session, grade, teamNames, selectedTeam, showPinyin, selection, extensionOpen, workshopState,sudokuState,sudokuPool,sudokuSelectedIds,moleState,molePool,moleType,poisonState,poisonPool,poisonSelectedIds,poisonCount,poisonAntidoteId,buildingState,buildingPool,buildingSelectedIds,buildingStructure,buildingSentenceId,mazeState,mazePool,constructionPool,puzzleState,strokeState } = saved);
   else {
     if(mode==='explore'){
       selection=linkedSelection??(matchingExplorations(selection).length?selection:{source:'zhongwen',stage:'5',scope:'lesson',lesson:9});
@@ -441,6 +474,7 @@ function switchMode(mode, linkedSelection) {
   if(mode==='poison'&&!saved)preparePoison();
   if(mode==='building'&&!saved)prepareBuilding();
   if(mode==='maze'&&!saved)prepareMaze();
+  if(isConstruction(mode)&&!saved)prepareConstruction();
   if(!saved&&optionalPinyinModes.has(mode))showPinyin=false;
   gameMode = mode;
   document.body.classList.toggle('workshop-mode', mode === 'workshop');
@@ -451,6 +485,9 @@ function switchMode(mode, linkedSelection) {
   document.body.classList.toggle('poison-mode',mode === 'poison');
   document.body.classList.toggle('building-mode',mode === 'building');
   document.body.classList.toggle('maze-mode',mode === 'maze');
+  document.body.classList.toggle('construction-mode',isConstruction(mode));
+  $('#hanzi-construction').hidden=!isConstruction(mode);constructionView.setVisible(isConstruction(mode));
+  $('#mode-puzzle').setAttribute('aria-pressed',String(mode==='puzzle'));$('#mode-strokes').setAttribute('aria-pressed',String(mode==='strokes'));
   $('#hanzi-maze').hidden=mode!=='maze';$('#mode-maze').setAttribute('aria-pressed',String(mode==='maze'));
   $('#hanzi-building').hidden=mode!=='building';$('#mode-building').setAttribute('aria-pressed',String(mode==='building'));
   $('#witch-poison').hidden=mode!=='poison';$('#mode-poison').setAttribute('aria-pressed',String(mode==='poison'));
@@ -473,11 +510,12 @@ function switchMode(mode, linkedSelection) {
   $('#workshop').hidden = mode !== 'workshop';
   $('#workshop-collection-panel').hidden = mode !== 'workshop';
   $('#workshop-count-label').hidden = mode !== 'workshop';
-  $('.game-controls').hidden = mode === 'workshop' || mode === 'sudoku' || mode === 'explore' || mode === 'mole' || mode === 'poison' || mode === 'building' || mode === 'maze';
+  $('.game-controls').hidden = isConstruction(mode) || mode === 'workshop' || mode === 'sudoku' || mode === 'explore' || mode === 'mole' || mode === 'poison' || mode === 'building' || mode === 'maze';
   $('#mode-flip').setAttribute('aria-pressed',String(mode === 'flip'));
   $('#mode-workshop').setAttribute('aria-pressed',String(mode === 'workshop'));
-  $('.lesson-heading h2').textContent = mode==='maze'?'汉字迷宫':mode==='building'?'汉字建筑师':mode==='poison'?'女巫的毒药':mode==='mole'?'打地鼠':mode==='explore'?'情景探索':mode==='sudoku'?'汉字数独':mode === 'train' ? '句子小火车' : mode === 'workshop' ? '组词小工坊' : '识字翻翻乐';
+  $('.lesson-heading h2').textContent = mode==='puzzle'?'汉字拼图':mode==='strokes'?'笔画很忙':mode==='maze'?'汉字迷宫':mode==='building'?'汉字建筑师':mode==='poison'?'女巫的毒药':mode==='mole'?'打地鼠':mode==='explore'?'情景探索':mode==='sudoku'?'汉字数独':mode === 'train' ? '句子小火车' : mode === 'workshop' ? '组词小工坊' : '识字翻翻乐';
   $('.lesson-heading > p').textContent = mode==='maze'?'观察路线 · 认字前进 · 找到出口':mode==='building'?'读词搭建 · 随机挑战 · 读句复原':mode==='poison'?'闭眼藏毒 · 大声读词 · 魔法变身':mode==='mole'?'读生字 · 认词语 · 快乐挥锤':mode==='explore'?'观察情景 · 寻找线索 · 读懂中文':mode==='sudoku'?'认词整理 · 九宫格填空':mode === 'train' ? '接车厢 · 排句子 · 快乐出发' : mode === 'workshop' ? '挑活字 · 排词语 · 融合木质印版' : '看一看 · 读一读 · 说一说';
+  if(isConstruction(mode))$('.lesson-heading > p').textContent=mode==='puzzle'?'观察部件 · 发现汉字':'听笔画 · 按笔顺 · 写汉字';
   $('#reveal').textContent = mode === 'workshop' ? '揭晓参考词' : '翻牌揭晓';
   $('#reveal').setAttribute('aria-label',mode === 'workshop' ? '揭晓参考词' : '翻牌揭晓');
   const shortcutLabel = $('footer > span');
@@ -491,6 +529,8 @@ function switchMode(mode, linkedSelection) {
   syncSelection(); render(); activeScene()?.setActive(true); syncSimpleControl();
 }
 $('#mode-flip').onclick = () => switchMode('flip');
+$('#mode-puzzle').onclick = () => switchMode('puzzle');
+$('#mode-strokes').onclick = () => switchMode('strokes');
 $('#mode-workshop').onclick = () => switchMode('workshop');
 $('#mode-train').onclick = () => switchMode('train');
 $('#mode-sudoku').onclick = () => switchMode('sudoku');
@@ -634,6 +674,8 @@ function storageAlert(result) {
 }
 if (!load.ok) storageAlert(load);
 function progressed() {
+  if(gameMode==='puzzle')return Boolean(puzzleState?.selected.length||puzzleState?.found.length);
+  if(gameMode==='strokes')return Boolean(strokeState?.progress.some(Boolean));
   return (
     (gameMode==='poison'&&poisonState?.phase!=='complete'&&Boolean(poisonState?.poisonIds.length||poisonState?.results.length)) ||
     (gameMode==='maze'&&mazeState?.phase==='play'&&Boolean(mazeState.steps||mazeState.pendingIndex!==null)) ||
@@ -660,6 +702,7 @@ function newRound() {
   if(gameMode==='poison'){preparePoison();syncSelection();}
   if(gameMode==='building'){prepareBuilding();syncSelection();}
   if(gameMode==='maze'){prepareMaze();syncSelection();}
+  if(isConstruction(gameMode)){prepareConstruction();syncSelection();}
   if (gameMode === 'workshop') { workshopState = createWorkshopState(session,{wordCount:workshopCount}); workshopRound++; }
   selectedTeam = "team-1";
   extensionOpen = false;
@@ -675,6 +718,13 @@ function render() {
   syncPinyinLocation();
   $('#activity-flow').hidden=!['building','poison','maze'].includes(gameMode);for(const mode of ['building','poison','maze'])$('#activity-'+mode).setAttribute('aria-current',mode===gameMode?'step':'false');
   $('#pinyin').closest('label').hidden=gameMode!=='train'&&gameMode!=='mole'&&gameMode!=='poison'&&gameMode!=='building'&&gameMode!=='maze';
+  if(isConstruction(gameMode)){
+    strokeCleanup?.();strokeCleanup=null;cardStrokeCleanup?.();cardStrokeCleanup=null;cardStrokeKey=null;cardStrokeView=null;$('#card-face').replaceChildren();
+    for(const id of ['#extension-toggle','#extension-hint','#extension'])$(id).hidden=true;
+    $('#round-caption').textContent=gameMode==='puzzle'?'本课部件 · 自己发现汉字':'本课生字 · 规范笔顺';
+    $('footer > span').textContent=gameMode==='puzzle'?'先选部件，再合一合；每个汉字只收集一次。':'学生说名称，老师拖笔画；按笔顺完成后进入总复习。';
+    constructionView.update({mode:gameMode,state:gameMode==='puzzle'?puzzleState:strokeState,pool:constructionPool});return;
+  }
   if(gameMode==='explore'){
     strokeCleanup?.();strokeCleanup=null;
     cardStrokeCleanup?.();cardStrokeCleanup=null;cardStrokeKey=null;cardStrokeView=null;
@@ -1077,6 +1127,7 @@ $("#apply-teams").onclick = () => {
   newRound();
 };
 document.addEventListener("keydown", (event) => {
+  if(isConstruction(gameMode))return;
   if(gameMode==='sudoku'||gameMode==='explore'||gameMode==='mole'||gameMode==='poison'||gameMode==='building'||gameMode==='maze')return;
   if (
     event.repeat || event.isComposing || event.keyCode === 229 ||
@@ -1107,4 +1158,5 @@ if(requestedMode==='explore'){
 else if(requestedMode==='poison')switchMode('poison');
 else if(requestedMode==='building')switchMode('building');
 else if(requestedMode==='maze')switchMode('maze');
+else if(isConstruction(requestedMode))switchMode(requestedMode);
 else render();
