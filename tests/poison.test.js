@@ -1,12 +1,20 @@
 import {describe,it,expect} from 'vitest';
 import {createPoisonState,beginPoisonHiding,togglePoisonWord,sealPoison,beginPoisonReading,selectPoisonCard,cancelPoisonCard,revealPoisonCard,coverPoisonSecrets,nextPoisonRound,beginPoisonAntidote,finishPoisonAntidote} from '../src/poison-core.js';
 import {getPoisonPool} from '../src/poison-vocabulary.js';
+import {readPoisonCard,skipPoisonAntidote} from '../src/poison-core.js';
 import {PARADISE_QUESTIONS,ZHONGWEN_QUESTIONS} from '../src/curriculum.js';
 const words=()=>['苹果','香蕉','西瓜','牛奶','面包','饺子'].map((word,i)=>({id:`w${i}`,word,pinyin:'test'}));
 const fresh=(extra={})=>createPoisonState({words:words(),poisonCount:2,random:()=>.5,...extra});
 function reading(state=fresh(),poisons=['w0','w1']){state=beginPoisonHiding(state);for(const id of poisons)state=togglePoisonWord(state,id);return beginPoisonReading(sealPoison(state));}
 const reveal=(state,id)=>revealPoisonCard(selectPoisonCard(state,id));
 describe('witch poison round rules',()=>{
+  it('a read card has an immediate result; first poison ends now and antidote may be explicitly skipped',()=>{
+    let state=reading(fresh({antidote:{id:'s',sentence:'你好！',source:'本课'}}));
+    expect(readPoisonCard(state,'unknown')).toBe(state);state=readPoisonCard(state,'w3');expect(state.results).toEqual([{cardId:'w3',poison:false}]);expect(state.pendingId).toBeNull();expect(readPoisonCard(state,'w3')).toBe(state);
+    state=readPoisonCard(state,'w0');expect(state.phase).toBe('complete');expect(state.results).toHaveLength(2);expect(state.antidoteStatus).toBe('available');expect(readPoisonCard(state,'w1')).toBe(state);
+    state=skipPoisonAntidote(state);expect(state.antidoteStatus).toBe('skipped');expect(beginPoisonAntidote(state)).toBe(state);expect(nextPoisonRound(state).antidoteStatus).toBe('available');
+    const none=skipPoisonAntidote(readPoisonCard(reading(),'w0'));expect(none.antidoteStatus).toBe('skipped');
+  });
   it('allows optional sentence rescue only after poison, requires teacher confirmation and resets next round',()=>{
     const antidote={id:'s1',sentence:'我爱老师。',source:'本课课文'},initial=fresh({antidote});antidote.sentence='改';
     expect(initial.antidote.sentence).toBe('我爱老师。');expect(beginPoisonAntidote(initial)).toBe(initial);

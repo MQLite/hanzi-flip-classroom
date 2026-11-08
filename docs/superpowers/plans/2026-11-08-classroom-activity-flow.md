@@ -34,8 +34,8 @@
 
 **Files:** poison-core.js/poison.js/poison.css/main.js, new poison-sound.js, poison tests.
 **Interfaces:** readPoisonCard(state,id); skipPoisonAntidote(state); createPoisonAudio().playPoison/playRescue/setEnabled/stop/dispose. View removes public reveal step, offers use/skip antidote and next-activity dispatch; main shows sound toggle and later routes continuation.
-- [ ] RED immediate-safe/toxic/prompt/reset/duplicate tests and real offline-audio output; implement core, prompt and audio lifecycle.
-- [ ] Update old UI cases to latest one-click results; verify/commit/ledger Task2 before Task3.
+- [x] RED immediate-safe/toxic/prompt/reset/duplicate tests and real offline-audio output; implement core, prompt and audio lifecycle.
+- [x] Update old UI cases to latest one-click results; verify/commit/ledger Task2 before Task3.155 units and13 poison/instant/audio UI tests pass; prompt screenshot inspected.
 
 ### Task3: Maze and activity links
 

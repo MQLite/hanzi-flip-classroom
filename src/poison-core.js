@@ -23,7 +23,7 @@ export function togglePoisonWord(state,id){
   return report({...state,poisonIds:[...state.poisonIds,id]},'info',`已选${state.poisonIds.length+1} / ${state.poisonCount}个。`);
 }
 export function sealPoison(state){return state.phase==='hide'&&state.poisonIds.length===state.poisonCount?report({...state,phase:'ready'},'info','毒药已藏好，大家可以睁眼了。'):state;}
-export function beginPoisonReading(state){return state.phase==='ready'?report({...state,phase:'read'},'info','请一位同学选词并大声读，读完再揭晓。'):state;}
+export function beginPoisonReading(state){return state.phase==='ready'?report({...state,phase:'read'},'info','学生大声读，老师点击读过的词卡，立即检查。'):state;}
 export function selectPoisonCard(state,id){
   if(state.phase!=='read'||!state.words.some(w=>w.id===id)||state.results.some(r=>r.cardId===id))return state;
   return report({...state,pendingId:id},'info','先大声读出来；读错先纠正，再由老师揭晓。');
@@ -38,3 +38,8 @@ export function coverPoisonSecrets(state){return state?.phase==='hide'?report({.
 export function beginPoisonAntidote(state){return state.phase==='complete'&&state.antidoteStatus==='available'?report({...state,antidoteStatus:'reading'},'info','请读出本课解药句子，再由老师确认解救。'):state;}
 export function finishPoisonAntidote(state){return state.phase==='complete'&&state.antidoteStatus==='reading'?report({...state,antidoteStatus:'rescued'},'safe','解救成功！同学恢复啦，大家继续参加。'):state;}
 export function nextPoisonRound(state){return state.phase==='complete'?createPoisonState({words:state.words,poisonCount:state.poisonCount,round:state.round+1,antidote:state.antidote}):state;}
+export function readPoisonCard(state,id){
+  if(state.phase!=='read'||!state.words.some(w=>w.id===id)||state.results.some(r=>r.cardId===id))return state;
+  return revealPoisonCard(selectPoisonCard(state,id));
+}
+export function skipPoisonAntidote(state){return state.phase==='complete'&&['available','unavailable','reading'].includes(state.antidoteStatus)?report({...state,antidoteStatus:'skipped'},'info','本轮不使用解药，大家仍可继续参加下一活动。'):state;}
