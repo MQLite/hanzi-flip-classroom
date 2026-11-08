@@ -43,7 +43,7 @@ export function placeStroke(state,{name,point}={},geometry){
   if(distance>70||other)return {...state,feedback:'wrong-position'};
   const placed=state.placed+1,progress=[...state.progress];progress[state.index]=placed;
   const completed=placed===current.names.length?[...new Set([...state.completed,current.character])]:state.completed;
-  return {...state,placed,progress,completed,feedback:placed===current.names.length?'complete':'placed'};
+  return {...state,placed,progress,completed,review:completed.length===state.characters.length,feedback:placed===current.names.length?'complete':'placed'};
 }
 export function undoStroke(state){
   if(!state.placed)return state;

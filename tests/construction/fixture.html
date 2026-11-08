@@ -1,0 +1,12 @@
+<!doctype html><html lang="zh"><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Construction fixture</title><body><div id="fixture"></div><script type="module">
+import {createConstructionView} from '/src/construction-view.js';
+import '/src/construction.css';
+import {createPuzzleState,selectPuzzlePart,removePuzzlePart,checkPuzzle,createStrokeState,placeStroke,undoStroke,nextStrokeCharacter} from '/src/construction-core.js';
+import {getConstructionPool} from '/src/construction-data.js';
+import {DEFAULT_QUESTIONS} from '/src/data.js';
+const mode=new URLSearchParams(location.search).get('mode')||'strokes';
+const questions=DEFAULT_QUESTIONS.filter(q=>['明','好','三','十'].includes(q.character)).map(q=>({...q,grade:1,textbook:undefined}));
+let pool=getConstructionPool({source:'personal'},questions,1),state=mode==='puzzle'?createPuzzleState(pool.puzzles):createStrokeState(pool.characters);
+const view=createConstructionView(document.querySelector('#fixture'),{onAction(action,value){if(action==='part')state=selectPuzzlePart(state,value);if(action==='remove')state=removePuzzlePart(state,value);if(action==='check')state=checkPuzzle(state);if(action==='place')state=placeStroke(state,value,value.geometry);if(action==='undo')state=undoStroke(state);if(action==='next')state=nextStrokeCharacter(state,value);if(action==='review')state={...state,review:!state.review};view.update({mode,state,pool});window.state=state;}});
+view.update({mode,state,pool});view.setVisible(true);window.state=state;window.view=view;
+</script></body></html>

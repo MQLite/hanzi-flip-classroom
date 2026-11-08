@@ -9,6 +9,8 @@
     "preview": "vite preview --host 127.0.0.1 --port 5174 --strictPort",
     "test": "vitest run",
     "test:ui": "playwright test",
+    "test:construction": "vitest run tests/construction.test.js tests/construction-data.test.js tests/stroke-audio.test.js && playwright test tests/construction/ui.spec.js",
+    "prepare:construction": "node scripts/prepare-construction-data.mjs",
     "prepare:strokes": "node scripts/prepare-strokes.mjs"
   },
   "dependencies": {

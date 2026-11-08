@@ -24,6 +24,8 @@ describe('reviewed character forms',()=>{
   it('uses actual lesson scope, independent introductions and honest unknown coverage',()=>{
     const pool=getConstructionPool({source:'zhongwen',stage:'1',lesson:1,scope:'stage'},all,1);expect(pool.characters.length).toBeGreaterThan(0);expect(pool.characters.length).toBeLessThan(285);expect(pool.newComponents.every(c=>c.english&&c.name)).toBe(true);
     const later=getConstructionPool({source:'zhongwen',stage:'1',lesson:2},all,1);expect(later.newComponents.every(c=>!pool.components.some(p=>p.id===c.id))).toBe(true);
+    const first=getConstructionPool({source:'paradise',stage:'1A',lesson:1},all,1),second=getConstructionPool({source:'paradise',stage:'1A',lesson:2},all,1);
+    expect(first.newComponents.some(c=>c.name==='单立人'&&c.english.includes('person'))).toBe(true);expect(second.components.some(c=>c.name==='女')).toBe(true);expect(second.newComponents.some(c=>c.name==='女')).toBe(false);
     const custom=getConstructionPool({source:'personal'},[{id:'new',character:'龘',grade:1}],1);expect(custom.characters).toEqual([]);expect(custom.unsupported).toEqual(['龘']);
   });
   it('ships a non-silent Mandarin WAV for each stroke name',()=>{
