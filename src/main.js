@@ -53,6 +53,7 @@ import './construction.css';
 import {getConstructionPool} from './construction-data.js';
 import {createConstructionView} from './construction-view.js';
 import {createPuzzleState,selectPuzzlePart,removePuzzlePart,checkPuzzle,createStrokeState,placeStroke,undoStroke,nextStrokeCharacter} from './construction-core.js';
+import {createHandwritingState,submitHandwritingStroke,undoHandwritingStroke,rewriteHandwritingCharacter,navigateHandwriting} from './handwriting-core.js';
 
 const app = document.querySelector("#app");
 app.innerHTML = `<header class="site-header"><a class="brand" href="./" aria-label="汉字奇遇岛首页"><span class="brand-mark">字<span></span></span><div><h1>汉字奇遇岛</h1><p>每一个汉字，都是一次小小的发现。</p></div></a><nav aria-label="教师工具"><span class="teacher-badge">教师课堂 · 1–4 年级</span><button id="open-bank">题库管理</button><button id="open-help">使用帮助</button><button id="fullscreen" class="icon-button" aria-label="全屏显示">⛶</button></nav></header>
@@ -144,13 +145,13 @@ $('.lesson-toolbar').insertAdjacentHTML('beforeend','<label id="poison-sound-lab
 $('#poison-sound').onchange=event=>{poisonSoundEnabled=event.target.checked;render();};
 let buildingState=null,buildingPool=null,buildingSelectedIds=[],buildingStructure='house',buildingSentenceId='';
 let mazeState=null,mazePool=null;
-let constructionPool=null,puzzleState=null,strokeState=null;
+let constructionPool=null,puzzleState=null,strokeState=null,handwritingState=null,strokeInputMode='drag';
 const isConstruction=mode=>mode==='puzzle'||mode==='strokes';
 function prepareConstruction(){
   if(selection.source!=='personal')selection={...selection,scope:'lesson'};
   constructionPool=getConstructionPool(selection,bank.questions,grade);
   if(gameMode==='puzzle')puzzleState=createPuzzleState(constructionPool.puzzles);
-  else strokeState=createStrokeState(constructionPool.characters);
+  else {strokeState=createStrokeState(constructionPool.characters);handwritingState=createHandwritingState(constructionPool.characters);}
 }
 $('#help-dialog').insertAdjacentHTML('beforeend','<p>汉字拼图：先只给部件，学生发现能组成的本课汉字；同一部件可多选，点“合一合”后才揭晓。独体字不强拆，尚不确定的分拆不出题。展开“本课新部件”可看英文介绍。笔画很忙：学生说名称，老师选笔听读音，再拖到大田字格的白色字影位置；也可选笔后点位置，或用键盘聚焦字影后回车。按规范笔顺逐笔完成，支持撤回和关闭读音；课末自动进入基础笔画复习与预习。切换游戏保留本页进度，刷新重置。两个游戏使用当前课次，不改变个人题库。</p>');
 function prepareMaze(){
@@ -323,10 +324,17 @@ const constructionView=createConstructionView($('#hanzi-construction'),{onAction
 constructionView.setVisible(false);
 function constructionIntent(intent,value){
   if(!isConstruction(gameMode))return;
+  if(gameMode==='strokes'&&intent==='input-mode'){if(['drag','write'].includes(value))strokeInputMode=value;render();return;}
   if(gameMode==='puzzle'){
     if(intent==='part')puzzleState=selectPuzzlePart(puzzleState,value);
     else if(intent==='remove')puzzleState=removePuzzlePart(puzzleState,value);
     else if(intent==='check')puzzleState=checkPuzzle(puzzleState);
+  }else if(strokeInputMode==='write'){
+    if(intent==='trace')handwritingState=submitHandwritingStroke(handwritingState,value.points,value.geometry);
+    else if(intent==='undo')handwritingState=undoHandwritingStroke(handwritingState);
+    else if(intent==='rewrite')handwritingState=rewriteHandwritingCharacter(handwritingState);
+    else if(intent==='next')handwritingState=navigateHandwriting(handwritingState,value);
+    else if(intent==='review')handwritingState={...handwritingState,review:Boolean(value),feedback:'ready',lastName:null};
   }else{
     if(intent==='place')strokeState=placeStroke(strokeState,value,value.geometry);
     else if(intent==='undo')strokeState=undoStroke(strokeState);
@@ -448,12 +456,12 @@ function switchMode(mode, linkedSelection) {
   if(gameMode==='mole'){moleView.cancelAnimations();moleState=finishMoleHits(moleState);}
   sudokuView.cancelDrag();
   constructionView.setVisible(false);
-  modeSnapshots[gameMode] = { session, grade, teamNames: [...teamNames], selectedTeam, showPinyin, selection: {...selection}, extensionOpen, workshopState, sudokuState,sudokuPool,sudokuSelectedIds:[...sudokuSelectedIds],moleState,molePool,moleType,poisonState,poisonPool,poisonSelectedIds:[...poisonSelectedIds],poisonCount,poisonAntidoteId,buildingState,buildingPool,buildingSelectedIds:[...buildingSelectedIds],buildingStructure,buildingSentenceId,mazeState,mazePool,constructionPool,puzzleState,strokeState };
+  modeSnapshots[gameMode] = { session, grade, teamNames: [...teamNames], selectedTeam, showPinyin, selection: {...selection}, extensionOpen, workshopState, sudokuState,sudokuPool,sudokuSelectedIds:[...sudokuSelectedIds],moleState,molePool,moleType,poisonState,poisonPool,poisonSelectedIds:[...poisonSelectedIds],poisonCount,poisonAntidoteId,buildingState,buildingPool,buildingSelectedIds:[...buildingSelectedIds],buildingStructure,buildingSentenceId,mazeState,mazePool,constructionPool,puzzleState,strokeState,handwritingState,strokeInputMode };
   activeScene()?.setActive(false);
   const carried=linkedSelection&&['building','poison','maze'].includes(mode),saved=carried?null:modeSnapshots[mode];
   gameMode = mode;
   if(carried)selection={...linkedSelection,scope:'lesson'};
-  if (saved) ({ session, grade, teamNames, selectedTeam, showPinyin, selection, extensionOpen, workshopState,sudokuState,sudokuPool,sudokuSelectedIds,moleState,molePool,moleType,poisonState,poisonPool,poisonSelectedIds,poisonCount,poisonAntidoteId,buildingState,buildingPool,buildingSelectedIds,buildingStructure,buildingSentenceId,mazeState,mazePool,constructionPool,puzzleState,strokeState } = saved);
+  if (saved) ({ session, grade, teamNames, selectedTeam, showPinyin, selection, extensionOpen, workshopState,sudokuState,sudokuPool,sudokuSelectedIds,moleState,molePool,moleType,poisonState,poisonPool,poisonSelectedIds,poisonCount,poisonAntidoteId,buildingState,buildingPool,buildingSelectedIds,buildingStructure,buildingSentenceId,mazeState,mazePool,constructionPool,puzzleState,strokeState,handwritingState,strokeInputMode } = saved);
   else {
     if(mode==='explore'){
       selection=linkedSelection??(matchingExplorations(selection).length?selection:{source:'zhongwen',stage:'5',scope:'lesson',lesson:9});
@@ -675,7 +683,7 @@ function storageAlert(result) {
 if (!load.ok) storageAlert(load);
 function progressed() {
   if(gameMode==='puzzle')return Boolean(puzzleState?.selected.length||puzzleState?.found.length);
-  if(gameMode==='strokes')return Boolean(strokeState?.progress.some(Boolean));
+  if(gameMode==='strokes')return Boolean(strokeState?.progress.some(Boolean)||handwritingState?.progress.some(Boolean)||handwritingState?.lastAttempt.length);
   return (
     (gameMode==='poison'&&poisonState?.phase!=='complete'&&Boolean(poisonState?.poisonIds.length||poisonState?.results.length)) ||
     (gameMode==='maze'&&mazeState?.phase==='play'&&Boolean(mazeState.steps||mazeState.pendingIndex!==null)) ||
@@ -722,8 +730,8 @@ function render() {
     strokeCleanup?.();strokeCleanup=null;cardStrokeCleanup?.();cardStrokeCleanup=null;cardStrokeKey=null;cardStrokeView=null;$('#card-face').replaceChildren();
     for(const id of ['#extension-toggle','#extension-hint','#extension'])$(id).hidden=true;
     $('#round-caption').textContent=gameMode==='puzzle'?'本课部件 · 自己发现汉字':'本课生字 · 规范笔顺';
-    $('footer > span').textContent=gameMode==='puzzle'?'先选部件，再合一合；每个汉字只收集一次。':'学生说名称，老师拖笔画；按笔顺完成后进入总复习。';
-    constructionView.update({mode:gameMode,state:gameMode==='puzzle'?puzzleState:strokeState,pool:constructionPool});return;
+    $('footer > span').textContent=gameMode==='puzzle'?'先选部件，再合一合；每个汉字只收集一次。':strokeInputMode==='write'?'沿字影描写，写对一笔听一次名称；每字完成后显示参考分。':'学生说名称，老师拖笔画；按笔顺完成后进入总复习。';
+    constructionView.update({mode:gameMode,state:gameMode==='puzzle'?puzzleState:strokeInputMode==='write'?handwritingState:strokeState,pool:constructionPool,inputMode:strokeInputMode});return;
   }
   if(gameMode==='explore'){
     strokeCleanup?.();strokeCleanup=null;

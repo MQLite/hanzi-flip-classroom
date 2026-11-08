@@ -1,0 +1,17 @@
+<!doctype html><html lang="zh"><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Touch writing fixture</title><body><div id="fixture"></div><script type="module">
+import '/src/construction.css';
+import {createConstructionView} from '/src/construction-view.js';
+import {getConstructionPool} from '/src/construction-data.js';
+import {createStrokeState,placeStroke,undoStroke,nextStrokeCharacter} from '/src/construction-core.js';
+import {createHandwritingState,submitHandwritingStroke,undoHandwritingStroke,rewriteHandwritingCharacter,navigateHandwriting} from '/src/handwriting-core.js';
+const pool=getConstructionPool({source:'personal'},[{id:'one',character:'一',pinyin:'yī',grade:1,words:[]}]);
+let inputMode='write',drag=createStrokeState(pool.characters),writing=createHandwritingState(pool.characters);
+const view=createConstructionView(document.querySelector('#fixture'),{onAction(action,value){
+ if(action==='input-mode')inputMode=value;
+ else if(inputMode==='write'){if(action==='trace')writing=submitHandwritingStroke(writing,value.points,value.geometry);if(action==='undo')writing=undoHandwritingStroke(writing);if(action==='rewrite')writing=rewriteHandwritingCharacter(writing);if(action==='next')writing=navigateHandwriting(writing,value);if(action==='review')writing={...writing,review:Boolean(value),feedback:'ready',lastName:null};}
+ else{if(action==='place')drag=placeStroke(drag,value,value.geometry);if(action==='undo')drag=undoStroke(drag);if(action==='next')drag=nextStrokeCharacter(drag,value);if(action==='review')drag={...drag,review:Boolean(value)};}
+ update();
+}});
+function update(){view.update({mode:'strokes',pool,state:inputMode==='write'?writing:drag,inputMode});}
+update();
+</script></body></html>

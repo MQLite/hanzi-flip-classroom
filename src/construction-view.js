@@ -1,5 +1,7 @@
 import {FORM_CATALOG,STROKE_NAMES} from './construction-data.js';
 import {createStrokeAudio} from './stroke-audio.js';
+import {mountHandwritingPad} from './handwriting-pad.js';
+import './handwriting.css';
 
 const NS='http://www.w3.org/2000/svg',cache=new Map();
 const colors=['#e6b857','#79b6c5','#da8f9c','#a3b36e'];
@@ -7,16 +9,16 @@ function node(tag,text,className){const n=document.createElement(tag);if(text!==
 function svgNode(tag,attributes={}){const n=document.createElementNS(NS,tag);for(const [key,value] of Object.entries(attributes))n.setAttribute(key,value);return n;}
 async function loadGlyph(character){
   if(!cache.has(character))cache.set(character,fetch(`${import.meta.env.BASE_URL}strokes/${encodeURIComponent(character)}.json`).then(r=>{if(!r.ok)throw Error('missing');return r.json();}).then(data=>{
-    if(!Array.isArray(data.strokes)||!data.strokes.every(d=>typeof d==='string'&&/^[Mm]/.test(d))||!Array.isArray(data.medians)||data.medians.length!==data.strokes.length)throw Error('invalid');return data;
+    if(!Array.isArray(data.strokes)||!data.strokes.every(d=>typeof d==='string'&&/^[Mm]/.test(d))||!Array.isArray(data.medians)||data.medians.length!==data.strokes.length||!data.medians.every(stroke=>Array.isArray(stroke)&&stroke.length>=2&&stroke.every(p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite))))throw Error('invalid');return data;
   }).catch(error=>{cache.delete(character);throw error;}));
   return cache.get(character);
 }
 
 export function createConstructionView(root,{onAction}){
-  const audio=createStrokeAudio();let current=null,epoch=0,audioAttempt=0,visible=true,disposed=false,selected='',muted=false,drag=null,suppressUntil=0;
+  const audio=createStrokeAudio();let current=null,epoch=0,audioAttempt=0,visible=true,disposed=false,selected='',muted=false,drag=null,suppressUntil=0,pad=null;
   function cancelDrag(){if(drag){drag.ghost?.remove();drag=null;}window.removeEventListener('pointermove',pointerMove);window.removeEventListener('pointerup',pointerUp);window.removeEventListener('pointercancel',pointerCancel);}
   function pointerCancel(){cancelDrag();}
-  function stop(){audioAttempt++;cancelDrag();audio.stop();}
+  function stop(){audioAttempt++;cancelDrag();pad?.cancel();audio.stop();}
   function action(name,value){if(!visible||disposed)return;onAction(name,value);}
   function button(text,name,value,className=''){const b=node('button',text,className);b.type='button';b.onclick=()=>action(name,value);return b;}
   function status(text){const p=node('p',text,'construction-status');p.setAttribute('role','status');return p;}
@@ -94,13 +96,36 @@ export function createConstructionView(root,{onAction}){
     const panel=node('section',undefined,'stroke-review');panel.append(node('h3',state.completed.length===pool.characters.length?'✦ 本课完成！笔画总复习':'基础笔画 · 复习与预习'),node('p','点笔画听读音。标“本课”的是这节课已经用过的；其他笔画可以提前认识。'));
     const used=new Set(pool.characters.flatMap(c=>c.names)),list=node('div',undefined,'stroke-review-grid');for(const name of STROKE_NAMES){const card=strokeButton(name,true);card.append(node('small',used.has(name)?'本课':'预习'));list.append(card);}panel.append(list,button('返回本课练习','review',false));root.append(panel);
   }
+  function renderHandwriting(state,pool){
+    const record=state.characters[state.index],layout=node('div',undefined,'writing-layout handwriting-layout'),stage=node('section',undefined,'writing-stage'),side=node('aside',undefined,'writing-side handwriting-side');
+    stage.append(node('h3',`写一写：${record.character}`),node('p',`已完成 ${state.placed} / ${record.names.length} 笔 · 本课完成 ${state.completed.length} / ${pool.characters.length} 字`,'stroke-progress'));
+    const grid=svgNode('svg',{viewBox:'0 0 1024 1024',class:'writing-grid handwriting-pad',role:'group','aria-label':`${record.character}的触屏描写田字格`});grid.append(svgNode('path',{d:'M512 0V1024M0 512H1024',class:'grid-cross'}),svgNode('path',{d:'M0 0L1024 1024M1024 0L0 1024',class:'grid-diagonal'}));stage.append(grid);
+    const messages={ready:'从小圆点起笔，沿白色字影描完一笔后抬手。',accepted:`写对了：${state.lastName??''}。继续下一笔。`,complete:'✦ 这个字写完了！看看右侧的参考分。','wrong-order':'请按笔顺描写亮起的这一笔。','wrong-direction':'这一笔方向反了，请从小圆点重新起笔。',retry:'再试一次，连续描完这一笔，尽量贴近白色字影。'};
+    const feedback=status(messages[state.feedback]??messages.ready);feedback.classList.add('handwriting-status');stage.append(feedback);
+    const token=epoch;loadGlyph(record.character).then(data=>{
+      if(disposed||!visible||token!==epoch||!grid.isConnected)return;if(data.strokes.length!==record.names.length)throw Error('count');current.geometry=data;
+      pad=mountHandwritingPad(grid,{geometry:data,state,onStroke:points=>action('trace',{points,geometry:data}),onCancel:message=>{if(token===epoch)feedback.textContent=message;}});
+    }).catch(()=>{if(token===epoch&&grid.isConnected)feedback.textContent='字形暂未载入，请切换本字后重试。';});
+    side.append(node('h3','沿着字影，自己写'),node('p','用手指、触屏笔或鼠标连续描写；写对一笔，自动读出笔画名。','construction-instruction'));
+    if(state.scores[state.index]!==null){
+      const score=node('section',undefined,'handwriting-score');score.id='handwriting-score';score.dataset.score=state.scores[state.index];score.setAttribute('aria-live','polite');const number=node('strong',String(state.scores[state.index]));number.append(node('small',' / 100'));score.append(node('h4','描写相似度参考分'),number);
+      const results=state.strokeScores[state.index],metrics=node('div',undefined,'handwriting-score-metrics');for(const [key,label] of [['shape','形状'],['position','位置'],['length','长短']])metrics.append(node('span',`${label} ${Math.round(results.reduce((sum,r)=>sum+r.metrics[key],0)/results.length)}`));score.append(metrics,node('p','按完成的笔画比较；写得慢、重试不扣分。'));side.append(score);
+    }else side.append(node('p',`正在描写第 ${state.placed+1} 笔，完成整字后显示参考分。`,'handwriting-ready'));
+    const written=node('div',undefined,'handwriting-written-strokes');written.setAttribute('aria-label','已写对的笔画，可点选再听');for(const name of record.names.slice(0,state.placed)){const b=node('button',name);b.type='button';b.setAttribute('aria-label',`重听${name}`);b.onclick=()=>audio.play(name);written.append(b);}side.append(written);
+    if(state.completed.length===pool.characters.length)side.append(node('p','✦ 本课写完啦！可以打开“笔画总复习 / 预习”。','construction-celebrate'));
+    const history=node('section',undefined,'handwriting-results');history.append(node('h4','本课描写记录'));const list=node('div',undefined,'handwriting-result-list');state.characters.forEach((c,i)=>{if(state.scores[i]===null)return;const item=node('span');item.dataset.character=c.character;item.append(node('b',c.character),node('span',`${state.scores[i]}分`));list.append(item);});if(!list.children.length)list.append(node('p','完成一个字，就会记下一个参考分。'));history.append(list);side.append(history,coverage(pool),references());layout.append(stage,side);root.append(layout);
+  }
   function renderStrokes(state,pool){
     if(!pool.characters.length){root.append(empty('本课暂无核定笔画','请选择其他课次，或补充核定的汉字资料。'),coverage(pool));return;}
+    const inputMode=current.inputMode??'drag',switcher=node('div',undefined,'stroke-input-switch');switcher.setAttribute('role','group');switcher.setAttribute('aria-label','练习方式');switcher.append(node('span','练习方式'));
+    for(const [value,label] of [['drag','拖动笔画'],['write','触屏描写']]){const b=button(label,'input-mode',value);b.setAttribute('aria-pressed',String(inputMode===value));switcher.append(b);}root.append(switcher);
     const top=node('div',undefined,'writing-top'),record=state.characters[state.index];
     const controls=node('div',undefined,'construction-actions');const prev=button('← 上一字','next',-1),next=button('下一字 →','next',1);prev.disabled=state.index===0;next.disabled=state.index===state.characters.length-1;
     controls.append(prev,node('span',`${state.index+1} / ${state.characters.length}`),next,button('撤回一笔','undo'),button('笔画总复习 / 预习','review',true));
+    if(inputMode==='write')controls.append(button('重写本字','rewrite'));
     const mute=node('button',muted?'读音：关闭':'读音：开启');mute.type='button';mute.setAttribute('aria-pressed',String(!muted));mute.onclick=()=>{audioAttempt++;muted=!muted;audio.setMuted(muted);mute.textContent=muted?'读音：关闭':'读音：开启';mute.setAttribute('aria-pressed',String(!muted));};controls.append(mute);top.append(controls);root.append(top);
     if(state.review){renderReview(state,pool);return;}
+    if(inputMode==='write'){renderHandwriting(state,pool);return;}
     const layout=node('div',undefined,'writing-layout'),stage=node('section',undefined,'writing-stage'),side=node('aside',undefined,'writing-side');
     stage.append(node('h3',`写一写：${record.character}`),node('p',`已完成 ${state.placed} / ${record.names.length} 笔 · 本课完成 ${state.completed.length} / ${pool.characters.length} 字`,'stroke-progress'));
     const grid=svgNode('svg',{viewBox:'0 0 1024 1024',class:'writing-grid',role:'group','aria-label':`${record.character}的大田字格`});
@@ -121,13 +146,14 @@ export function createConstructionView(root,{onAction}){
     side.append(node('p','按规范笔顺完成；每放对一笔，白色字影就会亮起来。','construction-instruction'),coverage(pool),references());layout.append(stage,side);root.append(layout);
   }
   function render(){
-    if(!current||!visible||disposed)return;epoch++;current.geometry=null;cancelDrag();root.replaceChildren();root.classList.add('construction-game');root.dataset.activity=current.mode;
+    if(!current||!visible||disposed)return;epoch++;pad?.dispose();pad=null;current.geometry=null;cancelDrag();root.replaceChildren();root.classList.add('construction-game');root.dataset.activity=current.mode;root.dataset.inputMode=current.inputMode??'drag';
     const {mode,state,pool}=current;if(mode==='puzzle')renderPuzzle(state,pool);else renderStrokes(state,pool);
   }
   function onHidden(){if(document.hidden)stop();}document.addEventListener('visibilitychange',onHidden);window.addEventListener('blur',stop);
   return {
-    update(value){const changed=!current||current.mode!==value.mode||current.pool!==value.pool||current.state.index!==value.state.index;const advanced=current&&current.state.placed!==value.state.placed;if(changed){stop();selected='';}else if(advanced)selected='';current={...value};render();},
-    setVisible(value){if(visible===value)return;visible=value;epoch++;stop();if(visible)render();},
-    dispose(){disposed=true;epoch++;stop();audio.dispose();document.removeEventListener('visibilitychange',onHidden);window.removeEventListener('blur',stop);root.replaceChildren();}
+    update(value){const accepted=current&&visible&&!document.hidden&&value.mode==='strokes'&&value.inputMode==='write'&&current.inputMode==='write'&&current.mode===value.mode&&current.pool===value.pool&&current.state.index===value.state.index&&value.state.placed===current.state.placed+1&&['accepted','complete'].includes(value.state.feedback);
+      const changed=!current||current.mode!==value.mode||current.pool!==value.pool||current.state.index!==value.state.index||current.inputMode!==value.inputMode;const advanced=current&&current.state.placed!==value.state.placed;if(changed){stop();selected='';}else if(advanced)selected='';current={...value};render();if(accepted){audioAttempt++;audio.play(value.state.lastName);}},
+    setVisible(value){if(visible===value)return;visible=value;epoch++;stop();if(!visible){pad?.dispose();pad=null;}if(visible)render();},
+    dispose(){disposed=true;epoch++;stop();pad?.dispose();pad=null;audio.dispose();document.removeEventListener('visibilitychange',onHidden);window.removeEventListener('blur',stop);root.replaceChildren();}
   };
 }

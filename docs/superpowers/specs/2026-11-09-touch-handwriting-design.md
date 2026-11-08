@@ -9,6 +9,10 @@
 
 The user explicitly prioritized 1–3 before 4. No witch files are to change in the first delivery. All implementation is authorized; production publishing is a separate release boundary.
 
+## Later user steering: continue unattended in this order
+
+After the above are completed: reorder the eleven existing games exactly as 识字翻翻乐、打地鼠、汉字迷宫、汉字拼图、笔画很忙、组词小工坊、女巫的毒药、汉字建筑师、汉字数独、句子小火车、情景探索. Limit each mole round to at most9 lesson words, with another round available. Add one island per game in that order, optional sequential lesson challenges and independent play; after a lesson's islands are passed show full-viewport fireworks for10seconds with “太牛啦”. Skip exploration where none is configured. The user is going to sleep and requests completion of all work; do not stop at intermediate plans or repeatedly ask routine questions. Implement this later group after handwriting/puzzle and witch copy, with a separate plan and one consolidated release at the end.
+
 ## Handwriting behavior
 
 Default input remains dragging. Two visible buttons, 拖动笔画 and 触屏描写, switch input. Each keeps separate in-page progress for the selected lesson. New lesson/round resets both through the existing confirmation flow. Personal banks and saved content are untouched.
