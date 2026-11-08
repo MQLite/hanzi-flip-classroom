@@ -32,9 +32,9 @@
 
 **Interfaces:** getLessonSentences(selection,questions): [{id,sentence,source}]; poison state adds antidote:null|{id,sentence,source}, antidoteStatus; beginPoisonAntidote(state), finishPoisonAntidote(state). View intents antidote,rescue,change-lesson and antidote-choice. Main snapshots selected sentence ID.
 
-- [ ] Test exact lesson/curated source and empty personal data; optional, premature, duplicate, reset antidote actions; observe RED.
-- [ ] Implement adapter/snapshot/rules and selectable sentence; completion shows optional read-and-confirm rescue and other-course button.
-- [ ] Browser test optional skip/rescue, new round, other lesson, no-sentence fallback and unchanged bank; run unit/browser/build, commit, deploy and verify online.
+- [x] Test exact lesson/curated source and empty personal data; optional, premature, duplicate, reset antidote actions; observe RED.
+- [x] Implement adapter/snapshot/rules and selectable sentence; completion shows optional read-and-confirm rescue and other-course button.
+- [x] Browser test optional skip/rescue, new round, other lesson, no-sentence fallback and unchanged bank; run unit/browser/build, commit, deploy and verify online. Release7678621; Pages run42436858800 succeeded; live rescue verified.
 
 ### Task 2: Building rules and progressive scene
 
@@ -42,7 +42,7 @@
 
 **Interfaces:** createBuildingState({words,structure,sentence,random}); drawBuildingWord(state); confirmBuildingWord(state); beginBuildingChallenge(state,{random}); restoreBuilding(state). State phase(build,built,challenge,collapsed,restored), words, structure, sentence, builtIds, checkedIds, challengeWords, dangerId, pendingId. createBuildingView(host,dispatch).update({state,pool,selectedIds,structure,sentenceId,showPinyin}); actions choose-word,structure,sentence,start,draw,confirm,challenge,restore,prepare,change-lesson.
 
-- [ ] Test input/snapshot, four types, draw/confirm gating, one-use parts, all-built transition, safe/danger challenges, disabled collapsed actions, exact sentence restore, no-sentence construction and immutable reset; observe RED.
-- [ ] Implement pure transitions, four recognizable SVG shapes, progressive parts, collapse/restore effects, setup/card/teacher controls and mode snapshots without old shortcuts.
-- [ ] Browser test all shapes, whole build/challenge/rescue, mode/lesson isolation, sentence provenance, empty data, mobile/touch/keyboard/reduced motion; inspect screenshots, run relevant old regressions, all units and production build.
+- [x] Test input/snapshot, four types, draw/confirm gating, one-use parts, all-built transition, safe/danger challenges, disabled collapsed actions, exact sentence restore, no-sentence construction and immutable reset; observe RED.
+- [x] Implement pure transitions, four recognizable SVG shapes, progressive parts, collapse/restore effects, setup/card/teacher controls and mode snapshots without old shortcuts.
+- [x] Browser test all shapes, whole build/challenge/rescue, mode/lesson isolation, sentence provenance, empty data, mobile/touch/keyboard/reduced motion; inspect screenshots, run relevant old regressions, all units and production build. Nine new cases, nineteen regressions and148 units passed; production four-shape helper passed.
 - [ ] Fresh whole-change review, fix material findings, deploy and verify live. Preserve other worktrees.
