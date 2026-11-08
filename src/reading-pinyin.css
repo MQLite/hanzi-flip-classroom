@@ -1,0 +1,14 @@
+.reading-pinyin-dock{display:flex;justify-content:flex-end;min-height:28px;margin:8px 0 0}
+.reading-pinyin-dock[hidden]{display:none}
+.reading-pinyin-dock>.switch-label{position:relative;margin:0;padding:4px 8px;border:1px solid #ccd5be;border-radius:8px;background:#fffdf2;font-size:11px;gap:7px;white-space:nowrap}
+.reading-pinyin-dock .switch-label input{inset:0;width:100%;height:100%;margin:0;z-index:1;cursor:pointer}
+@media(min-width:1000px){
+  .building-mode:has(.builder-round-layout) .reading-pinyin-dock,
+  .maze-mode:has(#hanzi-maze[data-phase="play"],#hanzi-maze[data-phase="complete"]) .reading-pinyin-dock,
+  .poison-mode:has(#witch-poison:not([data-phase="prepare"])) .reading-pinyin-dock{position:absolute;right:12px;bottom:8px;z-index:2;margin:0}
+}
+@media(max-width:720px){
+  .reading-pinyin-dock{margin-top:10px}
+  .reading-pinyin-dock>.switch-label{min-height:38px;padding:8px 10px}
+  .poison-mode:has(#witch-poison[data-phase="read"]) .play-area{padding-bottom:96px}
+}

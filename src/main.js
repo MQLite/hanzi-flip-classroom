@@ -38,6 +38,7 @@ import {createMoleState,hitMole,settleMole,finishMoleHits} from './mole-core.js'
 import './poison.css';
 import './building.css';
 import './maze.css';
+import './reading-pinyin.css';
 import {createMazeView} from './maze.js';
 import {createMazeState,selectMazeCell,confirmMazeStep,cancelMazeStep} from './maze-core.js';
 import {createBuildingView} from './building.js';
@@ -68,6 +69,12 @@ $('.game-modes').insertAdjacentHTML('beforeend','<button id="mode-building" aria
 $('.play-area').insertAdjacentHTML('beforeend','<div id="hanzi-building" hidden></div>');
 $('.game-modes').insertAdjacentHTML('beforeend','<button id="mode-maze" aria-pressed="false">汉字迷宫</button>');
 $('.play-area').insertAdjacentHTML('beforeend','<div id="hanzi-maze" hidden></div>');
+$('.play-area').insertAdjacentHTML('beforeend','<div id="reading-pinyin-dock" class="reading-pinyin-dock" hidden></div>');
+const optionalPinyinModes=new Set(['building','maze','poison']);
+function syncPinyinLocation(){
+  const local=optionalPinyinModes.has(gameMode),dock=$('#reading-pinyin-dock'),label=$('#pinyin').closest('label'),parent=local?dock:$('.lesson-toolbar');dock.hidden=!local;
+  if(label.parentElement!==parent){if(local)parent.append(label);else $('#restart').before(label);}
+}
 $('.lesson-toolbar').insertAdjacentHTML('afterend','<nav id="activity-flow" class="activity-flow" aria-label="本课活动衔接" hidden><span>本课三项活动</span><button id="activity-building">1 · 搭建挑战</button><i>→</i><button id="activity-poison">2 · 女巫毒药</button><i>→</i><button id="activity-maze">3 · 汉字迷宫</button></nav>');
 $('.classroom').insertAdjacentHTML('afterend','<section id="exploration-catalog" aria-label="本课情景探索" hidden></section>');
 $('#scene').insertAdjacentHTML('afterend', '<div id="workshop" hidden></div><div id="sentence-train" hidden></div><div id="sudoku" hidden></div><div id="mole" hidden></div>');
@@ -434,6 +441,7 @@ function switchMode(mode, linkedSelection) {
   if(mode==='poison'&&!saved)preparePoison();
   if(mode==='building'&&!saved)prepareBuilding();
   if(mode==='maze'&&!saved)prepareMaze();
+  if(!saved&&optionalPinyinModes.has(mode))showPinyin=false;
   gameMode = mode;
   document.body.classList.toggle('workshop-mode', mode === 'workshop');
   document.body.classList.toggle('train-mode',mode === 'train');
@@ -664,6 +672,7 @@ function el(tag, text, className) {
   return e;
 }
 function render() {
+  syncPinyinLocation();
   $('#activity-flow').hidden=!['building','poison','maze'].includes(gameMode);for(const mode of ['building','poison','maze'])$('#activity-'+mode).setAttribute('aria-current',mode===gameMode?'step':'false');
   $('#pinyin').closest('label').hidden=gameMode!=='train'&&gameMode!=='mole'&&gameMode!=='poison'&&gameMode!=='building'&&gameMode!=='maze';
   if(gameMode==='explore'){
@@ -983,7 +992,7 @@ for (const [id, key] of [['bank-source','source'],['stage','stage'],['scope','sc
       selection.lesson = 1;
     }
     if (key === 'stage') selection.lesson = (gameMode==='explore'?explorationCourses:coursesForTextbook)(textbookForSource(selection.source)).find(c=>c.stage===selection.stage)?.lesson??1;
-    if (key === 'stage' || key === 'source') {
+    if ((key === 'stage' || key === 'source')&&!optionalPinyinModes.has(gameMode)) {
       showPinyin = (selection.source !== 'personal' ? Number(selection.stage[0]) : grade) <= 2;
       $('#pinyin').checked = showPinyin;
     }
@@ -1005,7 +1014,7 @@ $("#grade").onchange = (event) => {
     return;
   }
   grade = Number(event.target.value);
-  showPinyin = grade <= 2;
+  if(!optionalPinyinModes.has(gameMode))showPinyin = grade <= 2;
   $("#pinyin").checked = showPinyin;
   newRound();
 };
