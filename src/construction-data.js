@@ -18,7 +18,8 @@ export function getConstructionPool(selection,questions,grade=1){
     const textbook=textbookForSource(selection.source),courses=coursesForTextbook(textbook);
     const index=courses.findIndex(c=>c.stage===selection.stage&&c.lesson===selection.lesson);
     for(const course of courses.slice(0,Math.max(0,index))){
-      for(const q of originals.filter(q=>q.textbook===textbook&&q.book===course.book&&q.lesson===course.lesson))idsFor(catalog.characters[q.character]).forEach(id=>seen.add(id));
+      const prior=getMolePool({source:selection.source,stage:course.stage,lesson:course.lesson,grade,type:'characters'},originals);
+      for(const word of prior.words)idsFor(catalog.characters[word.word]).forEach(id=>seen.add(id));
     }
   }
   return {characters,puzzles,components,newComponents:components.filter(c=>!seen.has(c.id)),label:pool.label,unsupported,

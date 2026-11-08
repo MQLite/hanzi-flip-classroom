@@ -1819,6 +1819,7 @@ body:not(.workshop-mode) #restart { margin-left: auto; }
   background: linear-gradient(140deg, #e0f4f1, #faf0d6);
 }
 .game-modes{flex-wrap:wrap}
+@media(min-width:1000px){body .game-modes button{padding:6px 8px;font-size:11px}}
 .explore-mode .lesson-toolbar{justify-content:flex-start}
 .exploration-card{display:grid;grid-template-columns:minmax(210px,.8fr) 1.2fr;min-height:330px;border:1px solid #b7c5ab;border-radius:20px;overflow:hidden;background:#f9f6e9;margin:22px 0 32px;box-shadow:0 12px 30px #344a3610}
 .exploration-card>div:last-child{padding:38px 42px}

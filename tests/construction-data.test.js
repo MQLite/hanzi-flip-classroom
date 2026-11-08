@@ -31,4 +31,9 @@ describe('reviewed character forms',()=>{
   it('ships a non-silent Mandarin WAV for each stroke name',()=>{
     for(const name of STROKE_NAMES){const wav=fs.readFileSync(new URL(`../public/audio/stroke-names/${name}.wav`,import.meta.url));expect(wav.toString('ascii',0,4),name).toBe('RIFF');expect(wav.toString('ascii',8,12),name).toBe('WAVE');expect(wav.length,name).toBeGreaterThan(4000);expect(wav.subarray(100).some(b=>b>1),name).toBe(true);}
   });
+  it('counts earlier textbook reading vocabulary when introducing components',()=>{
+    const earlier=getConstructionPool({source:'zhongwen',stage:'1',lesson:5},all,1),later=getConstructionPool({source:'zhongwen',stage:'1',lesson:7},all,1);
+    expect(earlier.characters.some(c=>c.character==='字')).toBe(true);expect(earlier.components.some(c=>c.id==='gf0014-13')).toBe(true);
+    expect(later.components.some(c=>c.id==='gf0014-13')).toBe(true);expect(later.newComponents.some(c=>c.id==='gf0014-13')).toBe(false);
+  });
 });

@@ -61,3 +61,12 @@ test('fixture: a cancelled old audio promise cannot overwrite the next selection
  await page.goto('/tests/construction/fixture.html?mode=strokes');const b=page.locator('.stroke-palette button').first();await b.click();await b.click();
  await page.evaluate(()=>window._pending[0]());await expect(page.locator('.selected-stroke-label')).not.toContainText('未能播放');
 });
+test('site: an expanded textbook list stays hidden during discovery and is preserved on return',async({page})=>{
+ await page.goto('/');await page.locator('#bank-source').selectOption('zhongwen');await page.locator('#scope').selectOption('lesson');await page.locator('#lesson').selectOption('3');await page.locator('#zhongwen-vocabulary summary').click();
+ await expect(page.locator('#zhongwen-vocabulary')).toHaveAttribute('open','');await page.locator('#mode-puzzle').click();await expect(page.locator('#zhongwen-vocabulary')).toBeHidden();await expect(page.locator('.puzzle-reveal svg')).toHaveCount(0);
+ await page.locator('#mode-flip').click();await expect(page.locator('#zhongwen-vocabulary')).toBeVisible();await expect(page.locator('#zhongwen-vocabulary')).toHaveAttribute('open','');
+});
+test('site: a merged puzzle answer is fully visible on a 720p projector',async({page})=>{
+ await page.setViewportSize({width:1280,height:720});await page.goto('/?mode=puzzle');await page.getByRole('button',{name:'选择女',exact:true}).click();await page.getByRole('button',{name:'选择子',exact:true}).click();await page.getByRole('button',{name:'合一合',exact:true}).click();
+ const card=page.locator('.puzzle-reveal article');await expect(card).toContainText('好');await expect(card.locator('svg path')).toHaveCount(6);const bounds=await card.boundingBox();expect(bounds.y+bounds.height).toBeLessThanOrEqual(720);
+});

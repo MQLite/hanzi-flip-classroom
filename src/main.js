@@ -261,7 +261,7 @@ function syncSelection() {
     $('#curriculum-note').append(viewWords);
   }
   $('.teacher-badge').textContent = zhongwen ? `${ZHONGWEN_NAME} · ${ZHONGWEN_BOOK_LABELS[selection.stage]}` : selection.source === 'paradise' ? '汉语乐园 · 1A–3B' : selection.source === 'textbook' ? '中文乐园（新版）' : '教师课堂 · 个人题库';
-  $('#zhongwen-vocabulary').hidden = !zhongwen || explore || gameMode === 'mole' || gameMode === 'poison' || gameMode === 'building' || gameMode === 'maze' || gameMode === 'train' || gameMode === 'sudoku';
+  $('#zhongwen-vocabulary').hidden = !zhongwen || explore || gameMode === 'puzzle' || gameMode === 'mole' || gameMode === 'poison' || gameMode === 'building' || gameMode === 'maze' || gameMode === 'train' || gameMode === 'sudoku';
   if (zhongwen&&!explore&&gameMode!=='mole') {
     const keys = new Set(filterCurriculum(ZHONGWEN_QUESTIONS, {...selection, textbook: ZHONGWEN_ID}).map(q => `${q.book}/${q.lesson}`));
     const courses = coursesForTextbook(ZHONGWEN_ID).filter(c => keys.has(`${c.book}/${c.lesson}`));

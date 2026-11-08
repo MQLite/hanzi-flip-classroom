@@ -55,13 +55,14 @@ export function createConstructionView(root,{onAction}){
     const palette=node('div',undefined,'parts-palette');
     for(const c of pool.components){const b=button('', 'part',c.id,'part-card');b.setAttribute('aria-label',`选择${c.name}`);const shape=node('span',undefined,'part-shape');glyph(shape,c.example.character,c.example.indices,{fit:true});b.append(shape,node('span',c.name));palette.append(b);}
     play.append(palette);
+    const bench=node('div',undefined,'puzzle-bench'),assembly=node('div',undefined,'puzzle-assembly');
     const tray=node('div',undefined,'parts-tray');tray.setAttribute('aria-label','选中的部件');
     state.selected.forEach((id,index)=>{const c=FORM_CATALOG.components[id],b=button('', 'remove',index,'selected-part');b.setAttribute('aria-label',`移除第${index+1}个${c.name}`);const shape=node('span',undefined,'part-shape');glyph(shape,c.example.character,c.example.indices,{fit:true});b.append(shape,node('span',c.name+' ×'));tray.append(b);});
-    if(!state.selected.length)tray.append(node('p','点选部件，放进这里。'));play.append(tray);
-    const check=button('合一合','check',null,'construction-primary');check.disabled=!state.selected.length;play.append(check);
-    const message=state.feedback==='retry'?'这组还没有拼成本课的字，试着换一换部件。':state.feedback==='matched'?'拼出来了！一起读一读，再找下一个。':'可以先观察部件的形状。';play.append(status(message));
+    if(!state.selected.length)tray.append(node('p','点选部件，放进这里。'));assembly.append(tray);
+    const check=button('合一合','check',null,'construction-primary');check.disabled=!state.selected.length;assembly.append(check);
+    const message=state.feedback==='retry'?'这组还没有拼成本课的字，试着换一换部件。':state.feedback==='matched'?'拼出来了！一起读一读，再找下一个。':'可以先观察部件的形状。';assembly.append(status(message));
     const reveal=node('div',undefined,'puzzle-reveal');reveal.setAttribute('aria-live','polite');
-    for(const ch of state.revealed){const card=node('article'),r=pool.puzzles.find(p=>p.character===ch);glyph(card,ch,null,{parts:r.parts});card.append(node('strong',ch),node('p',r.parts.map(p=>FORM_CATALOG.components[p.id].name).join(' ＋ ')));reveal.append(card);}play.append(reveal);
+    for(const ch of state.revealed){const card=node('article'),r=pool.puzzles.find(p=>p.character===ch);glyph(card,ch,null,{parts:r.parts});card.append(node('strong',ch),node('p',r.parts.map(p=>FORM_CATALOG.components[p.id].name).join(' ＋ ')));reveal.append(card);}bench.append(assembly,reveal);play.append(bench);
     aside.append(node('h3',`本课发现 ${state.found.length} / ${pool.puzzles.length}`));const collected=node('div',undefined,'puzzle-collected');for(const ch of state.found)collected.append(node('span',ch));aside.append(collected);
     if(pool.puzzles.length&&state.found.length===pool.puzzles.length)aside.append(node('p','✦ 本课拼图全部完成！可以继续做笔画练习。','construction-celebrate'));
     aside.append(introductions(pool),coverage(pool),references());layout.append(play,aside);root.append(layout);
