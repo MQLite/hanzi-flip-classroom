@@ -26,7 +26,7 @@ export function buildingBlocks(type){return models[type]??models.house;}
 export function blockHome(block){return {position:[...block.position],rotation:[0,0,0]};}
 export function blockRubble(block,index){
   const angle=index*2.399963,radius=1.65+(index%4)*.37;
-  const rotation=index===0?[0,.65,0]:[block.kind==='box'?.95+(index%3)*.2:Math.PI/2,0,((index%5)-2)*.35];
+  const rotation=index===0?[0,.65,0]:block.kind==='box'?[.95+(index%3)*.2,0,((index%5)-2)*.35]:[.08,.8+(index%4)*.5,-.08];
   const [x,y,z]=rotation,a=Math.cos(x),b=Math.sin(x),c=Math.cos(y),d=Math.sin(y),e=Math.cos(z),f=Math.sin(z);
   const halfY=(Math.abs(a*f+b*e*d)*block.size[0]+Math.abs(a*e-b*f*d)*block.size[1]+Math.abs(b*c)*block.size[2])/2;
   return {position:[Math.cos(angle)*radius,halfY+.04+(index%3)*.055,Math.sin(angle)*radius],rotation};

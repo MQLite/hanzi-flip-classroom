@@ -1,4 +1,5 @@
 import {BUILDING_TYPES,createBuildingArt} from './building-art.js';
+import {createBuildingScene} from './building-scene.js';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 function button(id,label,primary=false){const node=el('button',label,primary?'primary':'');node.id=id;return node;}
 function wordText(word,pinyin=false){
@@ -7,7 +8,14 @@ function wordText(word,pinyin=false){
   if(pinyin&&word.pinyin)box.append(el('small',word.pinyin,'builder-pinyin'));return box;
 }
 export function createBuildingView(host,dispatch){
-  const controller=new AbortController();let model;
+  const controller=new AbortController(),sceneHost=el('div',undefined,'builder-scene');sceneHost.id='builder-scene';
+  let model,sceneView,active=false;
+  function nextControl(){return host.querySelector('#builder-confirm:not(:disabled),#builder-draw:not(:disabled),#builder-challenge:not(:disabled),#builder-restore:not(:disabled),#builder-start:not(:disabled)');}
+  function syncAnimationControls(){
+    const state=model?.state,busy=Boolean(sceneView?.isAnimating);
+    for(const [id,disabled]of [['builder-draw',busy||Boolean(state?.pendingId)],['builder-confirm',busy||!state?.pendingId],['builder-challenge',busy||!state?.sentence],['builder-restore',busy]]){const b=host.querySelector(`#${id}`);if(b)b.disabled=disabled;}
+    if(!busy&&active&&!document.hidden&&document.activeElement===sceneHost.querySelector('#builder-motion-status'))nextControl()?.focus();
+  }
   function prepare(){
     const heading=el('div',undefined,'builder-heading');heading.append(el('span','HANZI BUILDERS','builder-kicker'),el('h3','今天想搭什么？'),el('p','读一个本课字词，搭起一部分；读出重点句子，让建筑重新站起来。'));host.append(heading);
     const layout=el('div',undefined,'builder-prep-layout'),left=el('section'),types=el('div',undefined,'builder-types');types.setAttribute('aria-label','选择建筑类型');
@@ -29,7 +37,7 @@ export function createBuildingView(host,dispatch){
   function round(){
     const state=model.state,name=BUILDING_TYPES[state.structure],titles={build:`一起搭${name}`,built:`${name}搭好啦！`,challenge:'随机读词，建筑稳不稳？',collapsed:'哎呀，建筑塌掉了！',restored:'复原成功，重新站起来啦！'};
     const heading=el('div',undefined,'builder-heading');heading.append(el('span','汉字建筑师','builder-kicker'),el('h3',titles[state.phase]),el('p',model.pool.label,'builder-course'));host.append(heading);
-    const layout=el('div',undefined,'builder-round-layout'),scene=el('div',undefined,'builder-scene');scene.id='builder-scene';scene.append(createBuildingArt({structure:state.structure,progress:state.builtIds.length/state.words.length,phase:state.phase}));layout.append(scene);
+    const layout=el('div',undefined,'builder-round-layout');layout.append(sceneHost);
     const desk=el('section',undefined,'builder-desk'),progress=el('p',`已搭建 ${state.builtIds.length} / ${state.words.length} 个词`,'builder-progress');progress.id='builder-progress';progress.setAttribute('role','status');desk.append(progress);
     if(state.phase==='build'||state.phase==='challenge'){
       const word=state.words.find(w=>w.id===state.pendingId),prompt=el('div',undefined,'builder-prompt');
@@ -53,14 +61,18 @@ export function createBuildingView(host,dispatch){
     const b=event.target.closest('button');if(!b||!host.contains(b)||b.disabled)return;
     if(b.dataset.builderChoice){dispatch('choose-word',b.dataset.builderChoice);return;}
     if(b.dataset.builderType){dispatch('structure',b.dataset.builderType);return;}
-    const intent={'builder-start':'start','builder-draw':'draw','builder-confirm':'confirm','builder-challenge':'challenge','builder-restore':'restore','builder-prepare':'prepare','builder-change-lesson':'change-lesson'}[b.id];if(intent)dispatch(intent);
+    const intent={'builder-start':'start','builder-draw':'draw','builder-confirm':'confirm','builder-challenge':'challenge','builder-restore':'restore','builder-prepare':'prepare','builder-change-lesson':'change-lesson'}[b.id];
+    if(sceneView?.isAnimating&&['draw','confirm','challenge','restore'].includes(intent))return;
+    if(intent)dispatch(intent);
   },{signal:controller.signal});
   host.addEventListener('change',event=>{if(event.target.id==='builder-sentence-choice')dispatch('sentence',event.target.value);},{signal:controller.signal});
   return {update(next){
     const active=document.activeElement,focus=host.contains(active)?{id:active.id,choice:active.dataset.builderChoice}:null,scroll=host.querySelector('.builder-choices')?.scrollTop??0;
-    model=next;host.replaceChildren();host.dataset.phase=next.state?.phase??'prepare';if(next.state)round();else prepare();
+    model=next;host.replaceChildren();host.dataset.phase=next.state?.phase??'prepare';
+    if(next.state){round();sceneView??=createBuildingScene(sceneHost,{onBusyChange:syncAnimationControls});sceneView.setActive(active);sceneView.update(next.state);syncAnimationControls();}
+    else{sceneView?.setActive(false);prepare();}
     const choices=host.querySelector('.builder-choices');if(choices)choices.scrollTop=scroll;
     if(focus){let target=focus.id?host.querySelector(`#${focus.id}`):[...host.querySelectorAll('[data-builder-choice]')].find(b=>b.dataset.builderChoice===focus.choice);
-      if(!target||target.disabled)target=host.querySelector('#builder-confirm:not(:disabled),#builder-draw:not(:disabled),#builder-challenge:not(:disabled),#builder-restore,#builder-start:not(:disabled)');target?.focus();}
-  },dispose(){controller.abort();host.replaceChildren();}};
+      if(!target||target.disabled)target=sceneView?.isAnimating?sceneHost.querySelector('#builder-motion-status'):nextControl();target?.focus();}
+  },scene:{setActive(value){active=value;sceneView?.setActive(value&&Boolean(model?.state));}},dispose(){controller.abort();sceneView?.dispose();host.replaceChildren();}};
 }

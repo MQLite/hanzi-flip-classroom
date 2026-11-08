@@ -74,5 +74,5 @@ test('long words fit a projector; normal-motion collapse and restoration animate
   const ids=await page.locator('[data-builder-choice][aria-pressed="true"]').evaluateAll(nodes=>nodes.map(n=>n.dataset.builderChoice));for(const id of ids)await page.locator(`[data-builder-choice="${id}"]`).click();
   await page.locator('[data-builder-choice]').filter({hasText:'玩儿电子游戏'}).click();await page.locator('#builder-start').click();await page.locator('#builder-draw').click();
   expect(await page.locator('#builder-word').evaluate(n=>n.scrollWidth<=n.clientWidth)).toBe(true);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'docs/codex/poison/building-desktop.png',fullPage:true});await page.locator('#builder-confirm').click();await collapse(page,1);
-  expect(await page.locator('#builder-scene svg').evaluate(n=>n.getAnimations({subtree:true}).length)).toBeGreaterThan(0);await page.locator('#builder-restore').click();await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','restored');
+  await expect(page.locator('#builder-scene')).toHaveAttribute('data-motion','collapse');await expect(page.locator('#builder-restore')).toBeEnabled();await page.locator('#builder-restore').click();await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','restored');
 });
