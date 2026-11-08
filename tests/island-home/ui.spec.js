@@ -41,6 +41,20 @@ test('launching a lower island on a phone begins at the top of its game',async({
  await page.setViewportSize({width:390,height:844});await page.goto('/');await page.locator('.island-card[data-mode="train"]').click();
  await expect(page.locator('#mode-train')).toHaveAttribute('aria-pressed','true');expect(await page.evaluate(()=>scrollY)).toBeLessThan(80);
 });
+test('personal grade restoration agrees with the displayed control and launched vocabulary',async({page})=>{
+ const questions=[{id:'one',grade:1,character:'一',pinyin:'yī',words:['一','一'],sentence:'一。'},{id:'wood',grade:4,character:'木',pinyin:'mù',words:['木头','树木'],sentence:'木头。'}];
+ await page.addInitScript(({key,questions})=>localStorage.setItem(key,JSON.stringify({schemaVersion:1,questions})),{key,questions});
+ await page.goto('/');await page.getByLabel('选择年级').selectOption('4');await page.reload();
+ await expect(page.getByLabel('选择年级')).toHaveValue('4');await expect(page.locator('.island-map-course')).toContainText('4年级');
+ await page.locator('.island-card[data-mode="mole"]').click();expect((await page.locator('[data-mole-slot][data-status="up"] .mole-word').allTextContents()).sort()).toEqual(['木','木头','树木']);
+ await page.locator('#open-island-map').click();await page.getByLabel('选择年级').selectOption('1');await page.reload();await expect(page.getByLabel('选择年级')).toHaveValue('1');
+ await page.locator('.island-card[data-mode="mole"]').click();expect(await page.locator('[data-mole-slot][data-status="up"] .mole-word').allTextContents()).toEqual(['一']);
+});
+test('projector island artwork leaves the game names readable below it',async({page})=>{
+ await page.setViewportSize({width:1280,height:720});await page.goto('/');
+ const boxes=await page.locator('.island-card').evaluateAll(cards=>cards.map(card=>({art:Math.max(card.querySelector('.island-art').getBoundingClientRect().bottom,card.querySelector('.island-glyph').getBoundingClientRect().bottom),label:card.querySelector('.island-label').getBoundingClientRect().top})));
+ for(const box of boxes)expect(box.label).toBeGreaterThanOrEqual(box.art);
+});
 for(const viewport of [{width:1280,height:720},{width:1920,height:1080},{width:390,height:844}])test(`homepage islands and launch controls fit ${viewport.width}`,async({page})=>{
  await page.setViewportSize(viewport);await page.goto('/');await expect(page.locator('#island-map')).toBeVisible();await expect(page.getByRole('button',{name:'按顺序闯关',exact:true})).toBeInViewport();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);

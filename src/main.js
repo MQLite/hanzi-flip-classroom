@@ -222,6 +222,7 @@ function refreshTextbookNotice() {
   $('#textbook-notice span').textContent = `可补充 ${missing} 道教材题（含《中文》第一、二册及《汉语乐园》1A–3B），保留已有题目和修改。`;
 }
 function syncSelection() {
+  $('#grade').value=String(grade);
   $('#bank-source').value = selection.source;
   const textbook = textbookForSource(selection.source);
   const zhongwen = selection.source === 'zhongwen';
