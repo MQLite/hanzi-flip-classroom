@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {createPoisonState,beginPoisonHiding,togglePoisonWord,sealPoison,beginPoisonReading,selectPoisonCard,cancelPoisonCard,revealPoisonCard,coverPoisonSecrets,nextPoisonRound} from '../src/poison-core.js';
+import {createPoisonState,beginPoisonHiding,togglePoisonWord,sealPoison,beginPoisonReading,selectPoisonCard,cancelPoisonCard,revealPoisonCard,coverPoisonSecrets,nextPoisonRound,beginPoisonAntidote,finishPoisonAntidote} from '../src/poison-core.js';
 import {getPoisonPool} from '../src/poison-vocabulary.js';
 import {PARADISE_QUESTIONS,ZHONGWEN_QUESTIONS} from '../src/curriculum.js';
 const words=()=>['苹果','香蕉','西瓜','牛奶','面包','饺子'].map((word,i)=>({id:`w${i}`,word,pinyin:'test'}));
@@ -7,6 +7,16 @@ const fresh=(extra={})=>createPoisonState({words:words(),poisonCount:2,random:()
 function reading(state=fresh(),poisons=['w0','w1']){state=beginPoisonHiding(state);for(const id of poisons)state=togglePoisonWord(state,id);return beginPoisonReading(sealPoison(state));}
 const reveal=(state,id)=>revealPoisonCard(selectPoisonCard(state,id));
 describe('witch poison round rules',()=>{
+  it('allows optional sentence rescue only after poison, requires teacher confirmation and resets next round',()=>{
+    const antidote={id:'s1',sentence:'我爱老师。',source:'本课课文'},initial=fresh({antidote});antidote.sentence='改';
+    expect(initial.antidote.sentence).toBe('我爱老师。');expect(beginPoisonAntidote(initial)).toBe(initial);
+    let state=reveal(reading(initial),'w0');expect(state.antidoteStatus).toBe('available');
+    expect(finishPoisonAntidote(state)).toBe(state);state=beginPoisonAntidote(state);expect(state.antidoteStatus).toBe('reading');
+    state=finishPoisonAntidote(state);expect(state.antidoteStatus).toBe('rescued');expect(state.phase).toBe('complete');
+    expect(finishPoisonAntidote(state)).toBe(state);const next=nextPoisonRound(state);expect(next.antidoteStatus).toBe('available');expect(next.antidote.sentence).toBe('我爱老师。');
+    const skipped=nextPoisonRound(reveal(reading(initial),'w0'));expect(skipped.phase).toBe('cover');
+    const without=reveal(reading(),'w0');expect(beginPoisonAntidote(without)).toBe(without);expect(without.antidoteStatus).toBe('unavailable');
+  });
   it('snapshots inputs, validates cards/count and starts behind a cover',()=>{
     const input=words(),state=fresh({words:input});input[0].word='改';
     expect(state.words.find(w=>w.id==='w0').word).toBe('苹果');expect(state.phase).toBe('cover');expect(Object.isFrozen(state.words)).toBe(true);

@@ -22,6 +22,10 @@ export function createPoisonView(host,dispatch){
     side.append(el('p',model.pool.note,'poison-note'));const count=el('p',`已选 ${model.selectedIds.length} 张 · 可选2–16张`,'poison-selection-count');count.setAttribute('role','status');side.append(count);
     const valid=model.selectedIds.length>=2&&model.selectedIds.length>model.poisonCount&&model.selectedIds.length<=16;
     if(!valid)side.append(el('p',`藏${model.poisonCount}个毒药，至少需要${model.poisonCount+1}张词卡，留一张安全卡。`,'poison-note'));
+    const rescueLabel=el('label','可选解药 · 本课重点句子'),rescueSelect=el('select');rescueSelect.id='poison-antidote-choice';rescueSelect.setAttribute('aria-label','本课解药句子');
+    const skip=el('option','不用解药环节');skip.value='';rescueSelect.append(skip);
+    for(const record of model.pool.sentences){const option=el('option',record.sentence);option.value=record.id;rescueSelect.append(option);}rescueSelect.value=model.antidoteId;rescueLabel.append(rescueSelect);side.append(rescueLabel);
+    if(!model.pool.sentences.length)side.append(el('p','本课暂无重点句子，仍可玩读词与变身。','poison-note'));
     const start=button('poison-start','开始本轮 · 请大家闭眼','primary');start.disabled=!valid;side.append(start);layout.append(left,side);host.append(layout);
   }
   function cover(ready){
@@ -45,11 +49,18 @@ export function createPoisonView(host,dispatch){
     }else{
       const magic=el('section',undefined,'poison-magic');magic.id='poison-magic';
       const art=el('div',undefined,'poison-magic-art');art.setAttribute('role','img');art.setAttribute('aria-label','魔法烟雾和小青蛙变身效果');
+      if(state.antidoteStatus==='reading')art.classList.add('is-transformed');
+      if(state.antidoteStatus==='rescued'){art.classList.add('is-rescued');art.setAttribute('aria-label','解药生效，同学恢复笑脸');}
       art.append(el('span','🙂','poison-before'),el('span','🐸','poison-frog'));
       for(let i=0;i<9;i++){const puff=el('i');puff.style.setProperty('--puff',i);art.append(puff);}magic.append(art);
-      const copy=el('div');copy.append(el('span','噗！女巫的魔法出现了','poison-kicker'),el('h3','哎呀，中毒啦！'),el('p','魔法变身，本轮结束。'));
+      const copy=el('div');copy.append(el('span',state.antidoteStatus==='rescued'?'本课句子就是解药':'噗！女巫的魔法出现了','poison-kicker'),el('h3',state.antidoteStatus==='rescued'?'解救成功！同学恢复啦':'哎呀，中毒啦！'),el('p','魔法变身，本轮结束。'));
       const hit=state.words.find(w=>w.id===state.results.at(-1)?.cardId);if(hit)copy.append(el('p',`“${hit.word}”是本轮的毒药词。`));
-      copy.append(button('poison-next','换一位小女巫，再来一轮','primary'),el('small','大家都可以继续参加下一轮。'));magic.append(copy);host.append(magic);
+      if(state.antidoteStatus==='available')copy.append(button('poison-antidote','使用解药 · 读本课重点句子'));
+      if(state.antidoteStatus==='reading'){
+        const panel=el('div',undefined,'poison-antidote-panel'),sentence=el('p',state.antidote.sentence);sentence.id='poison-antidote-sentence';
+        panel.append(el('small','请大声读出解药句子'),sentence,el('small',state.antidote.source),button('poison-rescue','读完了，解救成功','primary'));copy.append(panel);
+      }
+      copy.append(button('poison-next','换一位小女巫，再来一轮','primary'),button('poison-change-lesson','选择其他课','text-button'),el('small','大家都可以继续参加下一轮。'));magic.append(copy);host.append(magic);
     }
     controls.append(button('poison-prepare','调整本轮词语','text-button'));host.append(controls);
     const feedback=el('p',undefined,'poison-feedback');feedback.id='poison-feedback';feedback.setAttribute('role','status');feedback.setAttribute('aria-live','polite');host.append(feedback);
@@ -75,20 +86,20 @@ export function createPoisonView(host,dispatch){
     const b=event.target.closest('button');if(!b||!host.contains(b)||b.disabled)return;
     if(b.dataset.poisonChoice){dispatch('choose-word',b.dataset.poisonChoice);return;}
     if(b.dataset.poisonCard){dispatch('card',b.dataset.poisonCard);return;}
-    const intent={'poison-start':'start','poison-begin-hide':'hide','poison-seal':'seal','poison-read':'read','poison-reveal':'reveal','poison-cancel':'cancel','poison-next':'next-round','poison-prepare':'prepare'}[b.id];
+    const intent={'poison-start':'start','poison-begin-hide':'hide','poison-seal':'seal','poison-read':'read','poison-reveal':'reveal','poison-cancel':'cancel','poison-next':'next-round','poison-prepare':'prepare','poison-antidote':'antidote','poison-rescue':'rescue','poison-change-lesson':'change-lesson'}[b.id];
     if(intent)dispatch(intent);
   },{signal:controller.signal});
-  host.addEventListener('change',event=>{if(event.target.id==='poison-count')dispatch('count',Number(event.target.value));},{signal:controller.signal});
+  host.addEventListener('change',event=>{if(event.target.id==='poison-count')dispatch('count',Number(event.target.value));if(event.target.id==='poison-antidote-choice')dispatch('antidote-choice',event.target.value);},{signal:controller.signal});
   return {
     update(next){
       const previous=model.state,previousPinyin=model.showPinyin;model=next;
       const focused=document.activeElement,focus=host.contains(focused)?{id:focused.id,choice:focused.dataset.poisonChoice}:null;
       if(!next.state){prepare();if(focus?.choice)host.querySelectorAll('[data-poison-choice]').forEach(b=>{if(b.dataset.poisonChoice===focus.choice)b.focus();});else if(focus?.id)host.querySelector(`#${focus.id}`)?.focus();return;}
-      const changed=key!==next.state.words||previous?.phase!==next.state.phase||previousPinyin!==next.showPinyin;
+      const changed=key!==next.state.words||previous?.phase!==next.state.phase||previous?.antidoteStatus!==next.state.antidoteStatus||previousPinyin!==next.showPinyin;
       host.dataset.phase=next.state.phase;
       if(changed){key=next.state.words;if(next.state.phase==='cover'||next.state.phase==='ready')cover(next.state.phase==='ready');else buildBoard();}
       if(['hide','read','complete'].includes(next.state.phase))updateBoard();
-      if(changed&&focus){const target=host.querySelector('#poison-begin-hide,#poison-read,#poison-next,[data-poison-card]:not(:disabled)');target?.focus();}
+      if(changed&&focus){const target=host.querySelector('#poison-rescue,#poison-begin-hide,#poison-read,#poison-antidote,#poison-next,[data-poison-card]:not(:disabled)');target?.focus();}
     },
     dispose(){controller.abort();host.replaceChildren();}
   };

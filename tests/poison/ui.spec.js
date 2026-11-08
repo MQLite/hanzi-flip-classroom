@@ -24,6 +24,22 @@ test('one poison: close eyes, secretly select, read then reveal, magical end and
   await page.locator('#poison-begin-hide').click();await expect(page.locator('.is-secret')).toHaveCount(0);
   expect(await page.evaluate(()=>localStorage.getItem('hanzi-flip.question-bank'))).toBe(saved);
 });
+test('optional lesson antidote rescues after teacher confirmation and can be skipped or changed with a lesson',async({page})=>{
+  await page.locator('#mode-poison').click();
+  const sentenceId=await page.locator('#poison-antidote-choice').inputValue();
+  const sentence=await page.locator('#poison-antidote-choice option:checked').textContent();
+  await page.locator('#poison-start').click();await page.locator('#poison-begin-hide').click();const [id]=await hide(page);
+  await page.locator(`[data-poison-card="${id}"]`).click();await page.locator('#poison-reveal').click();
+  await page.locator('#poison-antidote').click();await expect(page.locator('#poison-antidote-sentence')).toHaveText(sentence);
+  await expect(page.locator('#poison-magic')).not.toContainText('解救成功！');await page.locator('#poison-rescue').click();
+  await expect(page.locator('#poison-magic')).toContainText('解救成功！');await expect(page.locator('.poison-magic-art')).toHaveClass(/is-rescued/);
+  await page.locator('#poison-next').click();await page.locator('#poison-begin-hide').click();const [again]=await hide(page);
+  await page.locator(`[data-poison-card="${again}"]`).click();await page.locator('#poison-reveal').click();await page.locator('#poison-change-lesson').click();
+  await page.getByLabel('选择课次').selectOption('2');await expect(page.locator('.poison-course')).toContainText('第2课');
+  expect(await page.locator('#poison-antidote-choice').inputValue()).not.toBe(sentenceId);
+  await page.locator('#poison-antidote-choice').selectOption('');await page.locator('#poison-start').click();await page.locator('#poison-begin-hide').click();const [skip]=await hide(page);
+  await page.locator(`[data-poison-card="${skip}"]`).click();await page.locator('#poison-reveal').click();await expect(page.locator('#poison-antidote')).toHaveCount(0);await expect(page.locator('#poison-next')).toBeEnabled();
+});
 test('two poisons require two choices, safe cards stay used, and the first poison ends immediately',async({page})=>{
   await prepare(page,2);const all=await page.locator('[data-poison-card]').evaluateAll(nodes=>nodes.map(n=>n.dataset.poisonCard));
   await page.locator(`[data-poison-card="${all[0]}"]`).click();await expect(page.locator('#poison-seal')).toBeDisabled();

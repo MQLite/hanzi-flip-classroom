@@ -4,7 +4,7 @@ function freeze(state){
   Object.freeze(state.poisonIds);Object.freeze(state.feedback);return Object.freeze(state);
 }
 function report(state,kind,message){return freeze({...state,feedback:{kind,message}});}
-export function createPoisonState({words=[],poisonCount=1,round=1,random=Math.random}={}){
+export function createPoisonState({words=[],poisonCount=1,round=1,random=Math.random,antidote=null}={}){
   if(!Array.isArray(words)||words.length<2||words.length>16||![1,2].includes(poisonCount)||words.length<=poisonCount)throw new TypeError('Choose 2–16 cards, 1–2 poisons and at least one safe word');
   const ids=new Set(),terms=new Set(),snapshot=words.map(item=>{
     const id=text(item?.id),word=text(item?.word);if(!id||ids.has(id)||!/^\p{Script=Han}{1,12}$/u.test(word)||terms.has(word))throw new TypeError('Distinct valid words and IDs are required');
@@ -12,7 +12,8 @@ export function createPoisonState({words=[],poisonCount=1,round=1,random=Math.ra
   });
   if(typeof random!=='function'||!Number.isInteger(round)||round<1)throw new TypeError('Invalid round or random source');
   for(let i=snapshot.length-1;i>0;i--){const value=Number(random()),j=Math.floor((Number.isFinite(value)?Math.max(0,Math.min(.999999999,value)):0)*(i+1));[snapshot[i],snapshot[j]]=[snapshot[j],snapshot[i]];}
-  return freeze({phase:'cover',words:snapshot,poisonCount,poisonIds:[],results:[],pendingId:null,round,feedback:{kind:'info',message:'请选一位小女巫，其他同学闭眼。'}});
+  const rescue=antidote&&text(antidote.sentence)&&text(antidote.sentence).length<=160?Object.freeze({id:text(antidote.id),sentence:text(antidote.sentence),source:text(antidote.source)}):null;
+  return freeze({phase:'cover',words:snapshot,poisonCount,poisonIds:[],results:[],pendingId:null,round,antidote:rescue,antidoteStatus:rescue?'available':'unavailable',feedback:{kind:'info',message:'请选一位小女巫，其他同学闭眼。'}});
 }
 export function beginPoisonHiding(state){return state.phase==='cover'?report({...state,phase:'hide'},'info',`小女巫秘密选择${state.poisonCount}个毒药词。`):state;}
 export function togglePoisonWord(state,id){
@@ -34,4 +35,6 @@ export function revealPoisonCard(state){
   return report({...state,results,pendingId:null,phase:poison||results.length===state.words.length?'complete':'read'},poison?'poison':'safe',poison?'哎呀，中毒啦！魔法变身，本轮结束。':'安全！换下一位同学继续读词。');
 }
 export function coverPoisonSecrets(state){return state?.phase==='hide'?report({...state,phase:'cover'},'info','请其他同学再次闭眼，再继续藏毒。'):state;}
-export function nextPoisonRound(state){return state.phase==='complete'?createPoisonState({words:state.words,poisonCount:state.poisonCount,round:state.round+1}):state;}
+export function beginPoisonAntidote(state){return state.phase==='complete'&&state.antidoteStatus==='available'?report({...state,antidoteStatus:'reading'},'info','请读出本课解药句子，再由老师确认解救。'):state;}
+export function finishPoisonAntidote(state){return state.phase==='complete'&&state.antidoteStatus==='reading'?report({...state,antidoteStatus:'rescued'},'safe','解救成功！同学恢复啦，大家继续参加。'):state;}
+export function nextPoisonRound(state){return state.phase==='complete'?createPoisonState({words:state.words,poisonCount:state.poisonCount,round:state.round+1,antidote:state.antidote}):state;}

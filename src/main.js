@@ -38,7 +38,7 @@ import {createMoleState,hitMole,settleMole,finishMoleHits} from './mole-core.js'
 import './poison.css';
 import {createPoisonView} from './poison.js';
 import {getPoisonPool} from './poison-vocabulary.js';
-import {createPoisonState,beginPoisonHiding,togglePoisonWord,sealPoison,beginPoisonReading,selectPoisonCard,cancelPoisonCard,revealPoisonCard,coverPoisonSecrets,nextPoisonRound} from './poison-core.js';
+import {createPoisonState,beginPoisonHiding,togglePoisonWord,sealPoison,beginPoisonReading,selectPoisonCard,cancelPoisonCard,revealPoisonCard,coverPoisonSecrets,nextPoisonRound,beginPoisonAntidote,finishPoisonAntidote} from './poison-core.js';
 import {createSudokuState,collectSudokuWord,placeSudokuWord,clearSudokuCell,undoSudoku,getSudokuProgress} from './sudoku-core.js';
 
 const app = document.querySelector("#app");
@@ -112,11 +112,13 @@ if (selection.source === 'zhongwen') selection.stage = '1';
 let gameMode = 'flip', workshopState = null, workshopCount = 4, workshopRound = 0;
 let sudokuState=null,sudokuPool=null,sudokuSelectedIds=[];
 let moleState=null,molePool=null,moleType='mixed';
-let poisonState=null,poisonPool=null,poisonSelectedIds=[],poisonCount=1;
+let poisonState=null,poisonPool=null,poisonSelectedIds=[],poisonCount=1,poisonAntidoteId='';
+$('#help-dialog').insertAdjacentHTML('beforeend','<p>女巫解药为可选环节：准备时选择本课重点句子，变身后点击“使用解药”，学生朗读，再由老师点击“读完了，解救成功”。可以跳过解药直接换小女巫，也可以点击“选择其他课”更换教材或课次。</p>');
 $('#help-dialog').insertAdjacentHTML('beforeend','<p>女巫的毒药：选好本课2–16张词卡和1–2个毒药，其他同学闭眼后请一位小女巫秘密点选。藏好后大家睁眼，轮流选词、先读再由老师揭晓。安全卡变灰，读到任一毒药就播放魔法烟雾与变身效果，本轮立即结束。换一位小女巫即可重新藏毒，所有同学继续参加；读错先纠正，不会因为读错而中毒。离开藏毒画面时会先遮挡秘密选择。</p>');
 function preparePoison(){
   if(selection.source!=='personal')selection={...selection,scope:'lesson'};
   poisonPool=getPoisonPool({...selection,grade},bank.questions);
+  poisonAntidoteId=poisonPool.sentences[0]?.id??'';
   poisonSelectedIds=poisonPool.words.slice(0,12).map(word=>word.id);poisonState=null;
 }
 $('.lesson-toolbar').insertAdjacentHTML('beforeend','<label id="mole-content-label" hidden>练习内容<select id="mole-content" aria-label="打地鼠练习内容"><option value="mixed">生字＋词语</option><option value="characters">只练生字</option><option value="words">只练词语</option></select></label>');
@@ -273,13 +275,17 @@ function poisonIntent(intent,value){
     else if(poisonSelectedIds.length<16)poisonSelectedIds=[...poisonSelectedIds,value];
     else{notify('每轮最多16张词卡，请先取消一张再替换。');return;}
   }else if(intent==='count')poisonCount=value;
+  else if(intent==='antidote-choice')poisonAntidoteId=value;
+  else if(intent==='change-lesson'){
+    preparePoison();syncSelection();render();$('#lesson').focus();notify('请在上方选择其他课次或教材。');return;
+  }
   else if(intent==='start'){
     if(poisonSelectedIds.length<2||poisonSelectedIds.length<=poisonCount)return;
-    poisonState=createPoisonState({words:poisonSelectedIds.map(id=>poisonPool.words.find(w=>w.id===id)),poisonCount});
+    poisonState=createPoisonState({words:poisonSelectedIds.map(id=>poisonPool.words.find(w=>w.id===id)),poisonCount,antidote:poisonPool.sentences.find(s=>s.id===poisonAntidoteId)});
   }else if(intent==='prepare'){
     if(!mayRestart())return;poisonState=null;
   }else if(poisonState){
-    const actions={hide:()=>beginPoisonHiding(poisonState),card:()=>poisonState.phase==='hide'?togglePoisonWord(poisonState,value):selectPoisonCard(poisonState,value),seal:()=>sealPoison(poisonState),read:()=>beginPoisonReading(poisonState),reveal:()=>revealPoisonCard(poisonState),cancel:()=>cancelPoisonCard(poisonState),'next-round':()=>nextPoisonRound(poisonState)};
+    const actions={hide:()=>beginPoisonHiding(poisonState),card:()=>poisonState.phase==='hide'?togglePoisonWord(poisonState,value):selectPoisonCard(poisonState,value),seal:()=>sealPoison(poisonState),read:()=>beginPoisonReading(poisonState),reveal:()=>revealPoisonCard(poisonState),cancel:()=>cancelPoisonCard(poisonState),'next-round':()=>nextPoisonRound(poisonState),antidote:()=>beginPoisonAntidote(poisonState),rescue:()=>finishPoisonAntidote(poisonState)};
     if(!actions[intent])return;poisonState=actions[intent]();
   }
   render();
@@ -336,11 +342,11 @@ function switchMode(mode, linkedSelection) {
   if(gameMode === 'workshop' && workshopTransition) finishWorkshopTransition(workshopTransition);
   if(gameMode==='mole'){moleView.cancelAnimations();moleState=finishMoleHits(moleState);}
   sudokuView.cancelDrag();
-  modeSnapshots[gameMode] = { session, grade, teamNames: [...teamNames], selectedTeam, showPinyin, selection: {...selection}, extensionOpen, workshopState, sudokuState,sudokuPool,sudokuSelectedIds:[...sudokuSelectedIds],moleState,molePool,moleType,poisonState,poisonPool,poisonSelectedIds:[...poisonSelectedIds],poisonCount };
+  modeSnapshots[gameMode] = { session, grade, teamNames: [...teamNames], selectedTeam, showPinyin, selection: {...selection}, extensionOpen, workshopState, sudokuState,sudokuPool,sudokuSelectedIds:[...sudokuSelectedIds],moleState,molePool,moleType,poisonState,poisonPool,poisonSelectedIds:[...poisonSelectedIds],poisonCount,poisonAntidoteId };
   activeScene()?.setActive(false);
   const saved = modeSnapshots[mode];
   gameMode = mode;
-  if (saved) ({ session, grade, teamNames, selectedTeam, showPinyin, selection, extensionOpen, workshopState,sudokuState,sudokuPool,sudokuSelectedIds,moleState,molePool,moleType,poisonState,poisonPool,poisonSelectedIds,poisonCount } = saved);
+  if (saved) ({ session, grade, teamNames, selectedTeam, showPinyin, selection, extensionOpen, workshopState,sudokuState,sudokuPool,sudokuSelectedIds,moleState,molePool,moleType,poisonState,poisonPool,poisonSelectedIds,poisonCount,poisonAntidoteId } = saved);
   else {
     if(mode==='explore'){
       selection=linkedSelection??(matchingExplorations(selection).length?selection:{source:'zhongwen',stage:'5',scope:'lesson',lesson:9});
@@ -544,7 +550,7 @@ function storageAlert(result) {
 if (!load.ok) storageAlert(load);
 function progressed() {
   return (
-    (gameMode==='poison'&&Boolean(poisonState?.poisonIds.length||poisonState?.results.length)) ||
+    (gameMode==='poison'&&poisonState?.phase!=='complete'&&Boolean(poisonState?.poisonIds.length||poisonState?.results.length)) ||
     (gameMode==='mole'&&Boolean(moleState?.hits.length)) ||
     (gameMode==='sudoku'&&Boolean(sudokuState?.collected.length)) ||
     (gameMode === 'train' && (session.selections.some(a=>a.length)||session.judgments.some(Boolean))) ||
@@ -632,7 +638,7 @@ function render() {
     strokeCleanup?.();strokeCleanup=null;cardStrokeCleanup?.();cardStrokeCleanup=null;cardStrokeKey=null;cardStrokeView=null;
     $('#card-face').replaceChildren();for(const id of ['#extension-toggle','#extension-hint','#extension'])$(id).hidden=true;
     $('#round-caption').textContent='本课词卡 · '+poisonCount+'个毒药';
-    poisonView.update({state:poisonState,pool:poisonPool,selectedIds:poisonSelectedIds,poisonCount,showPinyin});return;
+    poisonView.update({state:poisonState,pool:poisonPool,selectedIds:poisonSelectedIds,poisonCount,antidoteId:poisonAntidoteId,showPinyin});return;
   }
   if(gameMode==='mole'){
     strokeCleanup?.();strokeCleanup=null;cardStrokeCleanup?.();cardStrokeCleanup=null;cardStrokeKey=null;cardStrokeView=null;
