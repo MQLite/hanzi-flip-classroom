@@ -102,6 +102,7 @@ export function createPoisonView(host,dispatch){
   return {
     update(next){
       const previous=model.state,previousPinyin=model.showPinyin;model=next;
+      if(previous&&(!next.state||previous.words!==next.state.words||previous.round!==next.state.round))audio.stop();
       audio.setEnabled(next.soundEnabled!==false);
       if(active&&previous?.phase==='read'&&next.state?.phase==='complete')audio.playPoison();
       if(active&&previous?.antidoteStatus!=='rescued'&&next.state?.antidoteStatus==='rescued')audio.playRescue();

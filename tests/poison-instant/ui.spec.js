@@ -16,3 +16,27 @@ test('cartoon poison and rescue audio produce bounded non-silent sound in a real
     for(const schedule of [schedulePoisonSound,scheduleRescueSound]){const context=new OfflineAudioContext(1,44100,44100);schedule(context);const buffer=await context.startRendering(),samples=buffer.getChannelData(0);let sum=0,peak=0;for(const value of samples){sum+=value*value;peak=Math.max(peak,Math.abs(value));}results.push({rms:Math.sqrt(sum/samples.length),peak});}return results;
   });for(const sound of audio){expect(sound.rms).toBeGreaterThan(.001);expect(sound.peak).toBeLessThan(.3);}
 });
+async function observeNativeAudio(page,hold){
+  await page.addInitScript(hold=>{
+    const Native=window.AudioContext;window.__witchAudio={starts:0,immediateStops:0,hold};
+    window.AudioContext=class extends Native{
+      get state(){return window.__witchAudio.hold?'suspended':super.state;}
+      resume(){const resumed=super.resume();return window.__witchAudio.hold?resumed.then(()=>new Promise(resolve=>{window.__releaseWitchAudio=()=>{window.__witchAudio.hold=false;resolve();};})):resumed;}
+      createOscillator(){const oscillator=super.createOscillator(),context=this,start=oscillator.start.bind(oscillator),stop=oscillator.stop.bind(oscillator);
+        oscillator.start=(...args)=>{window.__witchAudio.starts++;return start(...args);};oscillator.stop=(when)=>{if(when===undefined||when<=context.currentTime+.005)window.__witchAudio.immediateStops++;return stop(when);};return oscillator;}
+    };
+  },hold);
+}
+test('round, preparation and lesson resets stop already-playing native audio sources',async({page})=>{
+  await observeNativeAudio(page,false);
+  for(const reset of ['round','prepare','lesson']){
+    const [id]=await readStage(page);await page.locator(`[data-poison-card="${id}"]`).click();await expect.poll(()=>page.evaluate(()=>window.__witchAudio.starts)).toBe(3);
+    if(reset==='round')await page.locator('#poison-next').click();else if(reset==='prepare')await page.locator('#restart').click();else await page.getByLabel('选择课次').selectOption('2');
+    await expect.poll(()=>page.evaluate(()=>window.__witchAudio.immediateStops),{timeout:1000}).toBeGreaterThanOrEqual(3);
+  }
+});
+test('a delayed real AudioContext resume cannot start the old sound after a new round',async({page})=>{
+  await observeNativeAudio(page,true);const [id]=await readStage(page);await page.locator(`[data-poison-card="${id}"]`).click();await expect.poll(()=>page.evaluate(()=>typeof window.__releaseWitchAudio)).toBe('function');
+  await page.locator('#poison-next').click();await expect(page.locator('#witch-poison')).toHaveAttribute('data-phase','cover');
+  await page.evaluate(async()=>{window.__releaseWitchAudio();await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));});expect(await page.evaluate(()=>window.__witchAudio.starts)).toBe(0);
+});

@@ -44,3 +44,5 @@
 - [x] RED generated-graph/exit/dead-end, legal/read-gated/repeated/complete/snapshot tests; implement core and accessible9×9 view.
 - [x] Integrate ninth mode, lesson selection/snapshots/keyboard guards and three-activity strip/buttons. Verify all lesson boundaries and full continuation flow.159 units,38 new/activity browser cases pass;8 original-mode checks verified after a720p navigation-padding fix. Production helper completes3D→instant witch→maze→next lesson without bank writes/errors.
 - [ ] Run relevant UI regressions, all units, production build/screenshots; one fresh whole-new-scope review, fix material findings once with RED/GREEN, publish and verify public activities/3D.
+
+Review complete: one P2 audio-reset race fixed with active/native and delayed-resume RED/GREEN regressions.15 current poison cases and159 units pass;40 activity cases total covered and original projector regression corrected. Publication/public verification remains pending at this commit.
