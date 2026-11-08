@@ -9,6 +9,7 @@ export function createMoleState({words=[],teamNames=['向日葵组','小树苗�
     seen.add(w.word);return [{id:w.id,word:w.word,pinyin:w.pinyin??''}];
   });
   for(let i=snapshot.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[snapshot[i],snapshot[j]]=[snapshot[j],snapshot[i]];}
+  snapshot.splice(9);
   const teams=teamNames.map((name,i)=>({id:`team-${i+1}`,name}));
   return freeze({words:snapshot,teams,holes:Array.from({length:9},(_,slot)=>snapshot[slot]?{id:snapshot[slot].id,status:'up'}:null),nextIndex:Math.min(9,snapshot.length),hits:[],scores:Object.fromEntries(teams.map(t=>[t.id,0])),phase:snapshot.length?'active':'empty'});
 }

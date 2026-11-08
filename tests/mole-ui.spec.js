@@ -7,6 +7,13 @@ async function personal(page,questions){
 }
 const questions=[{id:'ball',grade:1,character:'球',pinyin:'qiú',words:['篮球','足球'],sentence:'我喜欢打篮球。'}];
 const up=page=>page.locator('[data-mole-slot][data-status="up"]');
+test('a large lesson ends after nine hits and can start a fresh nine-word round',async({page})=>{
+ await page.goto('/');await page.getByLabel('题库来源').selectOption('zhongwen');
+ await page.locator('#mode-mole').click();await expect(page.locator('#mole')).toContainText('0 / 9');
+ for(let i=0;i<9;i++)await up(page).first().click();
+ await expect(page.locator('#mole-celebration')).toBeVisible();await expect(up(page)).toHaveCount(0);
+ await page.getByRole('button',{name:'再玩一轮',exact:true}).click();await expect(up(page)).toHaveCount(9);
+});
 
 test('sixth mode uses current lesson characters and vocabulary without changing the saved bank',async({page})=>{
   await page.goto('/');

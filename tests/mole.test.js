@@ -6,13 +6,19 @@ import {PARADISE_QUESTIONS,ZHONGWEN_QUESTIONS,TEXTBOOK_QUESTIONS} from '../src/c
 const words=Array.from({length:12},(_,i)=>({id:`word-${i}`,word:['一','二','三','四','五','六','七','八','九','十','十一','十二'][i],pinyin:''}));
 const create=()=>createMoleState({words,teamNames:['甲组','乙组'],random:()=>.99});
 describe('teacher-controlled mole round',()=>{
+  it('samples at most nine distinct words and leaves the lesson pool available for another round',()=>{
+    const input=Array.from({length:20},(_,i)=>({id:'w'+i,word:'词'+i}));
+    const state=createMoleState({words:[...input,input[0]],random:()=>.99});
+    expect(state.words).toHaveLength(9);expect(new Set(state.words.map(w=>w.word)).size).toBe(9);
+    expect(input).toHaveLength(20);
+  });
   it('keeps nine readable moles up until the teacher confirms and only credits a hit once',()=>{
     const initial=create();expect(initial.holes.filter(Boolean)).toHaveLength(9);
     const id=initial.holes[2].id;
     const hit=hitMole(initial,{slot:2,wordId:id,teamId:'team-2'});
     expect(hit.holes[2].status).toBe('hit');expect(hit.scores['team-2']).toBe(1);
     expect(hitMole(hit,{slot:2,wordId:id,teamId:'team-1'})).toBe(hit);
-    const settled=settleMole(hit,2,id);expect(settled.holes[2].id).toBe('word-9');
+    const settled=settleMole(hit,2,id);expect(settled.holes[2]).toBe(null);
     expect(hitMole(settled,{slot:2,wordId:id,teamId:'team-1'})).toBe(settled);
     expect(initial.holes[2].status).toBe('up');expect(initial.scores['team-2']).toBe(0);
   });
@@ -22,8 +28,8 @@ describe('teacher-controlled mole round',()=>{
       const slot=state.holes.findIndex(h=>h?.status==='up'),id=state.holes[slot].id;
       state=finishMoleHits(hitMole(state,{slot,wordId:id,teamId:'team-1'}));
     }
-    expect(state.phase).toBe('complete');expect(state.hits).toHaveLength(12);
-    expect(new Set(state.hits.map(h=>h.id)).size).toBe(12);expect(state.scores['team-1']).toBe(12);
+    expect(state.phase).toBe('complete');expect(state.hits).toHaveLength(9);
+    expect(new Set(state.hits.map(h=>h.id)).size).toBe(9);expect(state.scores['team-1']).toBe(9);
     expect(state.holes.every(h=>h===null)).toBe(true);
     expect(hitMole(state,{slot:0,wordId:'word-0',teamId:'team-1'})).toBe(state);
     expect(createMoleState({words:[]}).phase).toBe('empty');

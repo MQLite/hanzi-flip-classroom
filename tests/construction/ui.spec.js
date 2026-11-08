@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 test('site: navigation order, direct links, mode snapshots and unchanged stored bank',async({page})=>{
  await page.goto('/?mode=puzzle');await expect(page.locator('#mode-puzzle')).toHaveAttribute('aria-pressed','true');
- expect(await page.locator('.game-modes button').allTextContents()).toEqual(['识字翻翻乐','汉字拼图','笔画很忙','组词小工坊','句子小火车','汉字数独','情景探索','打地鼠','女巫的毒药','汉字建筑师','汉字迷宫']);
+ expect(await page.locator('.game-modes button').allTextContents()).toEqual(['识字翻翻乐','打地鼠','汉字迷宫','汉字拼图','笔画很忙','组词小工坊','女巫的毒药','汉字建筑师','汉字数独','句子小火车','情景探索']);
  const stored=await page.evaluate(()=>localStorage.getItem('hanzi-flip.question-bank'));
  await page.locator('.parts-palette button').first().click();await expect(page.locator('.parts-tray button')).toHaveCount(1);
  await page.locator('#mode-strokes').click();await expect(page.locator('.writing-grid')).toBeVisible();await page.locator('#mode-puzzle').click();await expect(page.locator('.parts-tray button')).toHaveCount(1);

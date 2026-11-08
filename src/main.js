@@ -1,4 +1,5 @@
 import "./styles.css";
+import {GAME_ORDER} from './game-order.js';
 import './sentence-train.css';
 import {createTrainView} from './sentence-train.js';
 import {mergeTrainQuestionPools,resolveTrainQuestion} from './sentence-train-data.js';
@@ -74,6 +75,7 @@ $('.game-modes').insertAdjacentHTML('beforeend','<button id="mode-building" aria
 $('.play-area').insertAdjacentHTML('beforeend','<div id="hanzi-building" hidden></div>');
 $('.game-modes').insertAdjacentHTML('beforeend','<button id="mode-maze" aria-pressed="false">汉字迷宫</button>');
 $('#mode-flip').insertAdjacentHTML('afterend','<button id="mode-puzzle" aria-pressed="false">汉字拼图</button><button id="mode-strokes" aria-pressed="false">笔画很忙</button>');
+for(const game of GAME_ORDER)$('.game-modes').append($('#mode-'+game.id));
 $('.play-area').insertAdjacentHTML('beforeend','<div id="hanzi-construction" hidden></div>');
 $('.play-area').insertAdjacentHTML('beforeend','<div id="hanzi-maze" hidden></div>');
 $('.play-area').insertAdjacentHTML('beforeend','<div id="reading-pinyin-dock" class="reading-pinyin-dock" hidden></div>');
@@ -176,7 +178,7 @@ function preparePoison(){
   poisonSelectedIds=poisonPool.words.slice(0,12).map(word=>word.id);poisonState=null;
 }
 $('.lesson-toolbar').insertAdjacentHTML('beforeend','<label id="mole-content-label" hidden>练习内容<select id="mole-content" aria-label="打地鼠练习内容"><option value="mixed">生字＋词语</option><option value="characters">只练生字</option><option value="words">只练词语</option></select></label>');
-$('#help-dialog').insertAdjacentHTML('beforeend','<p>打地鼠：使用当前课次已收录的生字和词语，也可只练生字或词语。最多9只地鼠同时展示，学生读对后老师点击对应地鼠，挥锤、加一星并换上还未练的词；没有倒计时，不会自动消失。所有词读对后播放庆祝特效。可开启拼音提示，每词仅计一次分，切换游戏保留本页进度。</p>');
+$('#help-dialog').insertAdjacentHTML('beforeend','<p>打地鼠：使用当前课次已收录的生字和词语，也可只练生字或词语。每轮最多9个不同词，学生读对后老师点击对应地鼠，挥锤、加一星，读完可再玩一轮；没有倒计时，不会自动消失。所有词读对后播放庆祝特效。可开启拼音提示，每词仅计一次分，切换游戏保留本页进度。</p>');
 function prepareMole(){
   moleView.cancelAnimations();
   if(selection.source!=='personal')selection={...selection,scope:'lesson'};
