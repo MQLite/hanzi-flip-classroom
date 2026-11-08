@@ -1,5 +1,13 @@
 import {test, expect} from '@playwright/test';
 
+test('real classroom entry uses left components, middle assembly, right result and bottom introductions',async({page})=>{
+  await page.setViewportSize({width:1280,height:720});await page.goto('/?mode=puzzle');
+  await expect(page.locator('#hanzi-construction .puzzle-workspace')).toBeVisible();
+  const left=await page.locator('.puzzle-choices').boundingBox(),middle=await page.locator('.puzzle-assembly').boundingBox(),right=await page.locator('.puzzle-answers').boundingBox(),intro=await page.locator('.component-introductions').boundingBox();
+  expect(left.x+left.width).toBeLessThanOrEqual(middle.x);expect(middle.x+middle.width).toBeLessThanOrEqual(right.x);expect(intro.y).toBeGreaterThanOrEqual(Math.max(left.y+left.height,middle.y+middle.height,right.y+right.height));
+  await page.getByRole('button',{name:'选择女',exact:true}).click();await page.getByRole('button',{name:'选择子',exact:true}).click();await page.getByRole('button',{name:'合一合',exact:true}).click();await expect(page.locator('.puzzle-reveal')).toContainText('好');const answer=await page.locator('.puzzle-reveal article').boundingBox();expect(answer.y+answer.height).toBeLessThanOrEqual(720);
+});
+
 async function choose(page, name) {
   await page.getByRole('button', {name: `选择${name}`, exact: true}).click();
 }

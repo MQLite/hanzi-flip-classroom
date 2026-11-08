@@ -53,3 +53,12 @@ test('phone touch input completes a trace after the canvas is scrolled into view
  await page.setViewportSize({width:390,height:844});await setup(page);await page.locator('.handwriting-pad').scrollIntoViewIfNeeded();const points=await screenPoints(page,(await geometry(page)).medians[0]);const cdp=await page.context().newCDPSession(page);await cdp.send('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:2});
  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...points[0],id:1}]});for(const p of points.slice(1))await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{...p,id:1}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await expect(page.locator('#handwriting-score')).toBeVisible();await cdp.detach();
 });
+test('window and canvas resizing cancel an active stroke before it can receive credit',async({page})=>{
+ for(const change of ['window','canvas']){
+  await page.setViewportSize({width:1280,height:720});await setup(page);const median=(await geometry(page)).medians[0],middle=Math.floor(median.length/2),first=await screenPoints(page,median);
+  await page.mouse.move(first[0].x,first[0].y);await page.mouse.down();for(const p of first.slice(1,middle+1))await page.mouse.move(p.x,p.y);
+  if(change==='window')await page.setViewportSize({width:1400,height:800});else await page.locator('.handwriting-pad').evaluate(n=>n.style.width='300px');
+  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));const rest=await screenPoints(page,median.slice(middle));for(const p of rest)await page.mouse.move(p.x,p.y);await page.mouse.up();
+  await expect(page.locator('.handwriting-ink path')).toHaveCount(0);await expect(page.locator('#handwriting-score')).toHaveCount(0);await writeMouse(page,median);await expect(page.locator('#handwriting-score')).toBeVisible();
+ }
+});

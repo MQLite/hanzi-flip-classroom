@@ -2,6 +2,8 @@ import {FORM_CATALOG,STROKE_NAMES} from './construction-data.js';
 import {createStrokeAudio} from './stroke-audio.js';
 import {mountHandwritingPad} from './handwriting-pad.js';
 import './handwriting.css';
+import {renderComponentPuzzle} from './component-puzzle.js';
+import './component-puzzle.css';
 
 const NS='http://www.w3.org/2000/svg',cache=new Map();
 const colors=['#e6b857','#79b6c5','#da8f9c','#a3b36e'];
@@ -35,13 +37,6 @@ export function createConstructionView(root,{onAction}){
       if(fit){const b=group.getBBox(),pad=Math.max(b.width,b.height)*.12+15;svg.setAttribute('viewBox',`${b.x-pad} ${900-b.y-b.height-pad} ${b.width+pad*2} ${b.height+pad*2}`);}
     }).catch(()=>{if(!disposed&&token===epoch&&host.isConnected){svg.remove();host.append(node('span','字形暂未载入，请重试','glyph-load-error'));}});
   }
-  function introductions(pool){
-    const details=node('details',undefined,'component-introductions');details.append(node('summary',`${pool.introductionLabel} · ${pool.newComponents.length}`));
-    const list=node('div',undefined,'component-intro-list');
-    for(const c of pool.newComponents){const item=node('article'),shape=node('div',undefined,'intro-glyph');glyph(shape,c.example.character,c.example.indices,{fit:true});item.append(shape,node('strong',c.name),node('p',c.english));list.append(item);}
-    if(!pool.newComponents.length)list.append(node('p','本课使用的这些部件已在此前课次出现，可以复习。'));
-    details.append(list);return details;
-  }
   function coverage(pool){
     const box=node('div',undefined,'construction-coverage');
     if(pool.independent.length&&current.mode==='puzzle')box.append(node('p',`独体字或规范中保留为整体的部件：${pool.independent.join('、')}。这些字不强拆，可到“笔画很忙”练习。`));
@@ -50,25 +45,7 @@ export function createConstructionView(root,{onAction}){
     return box;
   }
   function references(){const d=node('details',undefined,'construction-references');d.append(node('summary','教学资料依据'));const p=node('p','部件参考《现代常用独体字规范》《现代常用字部件及部件名称规范》；笔顺参考《通用规范汉字笔顺规范》，笔名参考教育部书法教育指导纲要。组合部件不等于最小部件，英文说明不作字源推断。');d.append(p);return d;}
-  function renderPuzzle(state,pool){
-    const layout=node('div',undefined,'component-layout'),play=node('section',undefined,'component-play'),aside=node('aside',undefined,'component-side');
-    play.append(node('h3','这些部件能拼出本课哪个字？'),node('p','先选部件，再点“合一合”。同一部件可以多选，部件先后顺序不限。','construction-instruction'));
-    if(!pool.puzzles.length)play.append(empty('本课先练笔画','本课没有可出题的核定分拆。请切换“笔画很忙”，认识整个汉字。'));
-    const palette=node('div',undefined,'parts-palette');
-    for(const c of pool.components){const b=button('', 'part',c.id,'part-card');b.setAttribute('aria-label',`选择${c.name}`);const shape=node('span',undefined,'part-shape');glyph(shape,c.example.character,c.example.indices,{fit:true});b.append(shape,node('span',c.name));palette.append(b);}
-    play.append(palette);
-    const bench=node('div',undefined,'puzzle-bench'),assembly=node('div',undefined,'puzzle-assembly');
-    const tray=node('div',undefined,'parts-tray');tray.setAttribute('aria-label','选中的部件');
-    state.selected.forEach((id,index)=>{const c=FORM_CATALOG.components[id],b=button('', 'remove',index,'selected-part');b.setAttribute('aria-label',`移除第${index+1}个${c.name}`);const shape=node('span',undefined,'part-shape');glyph(shape,c.example.character,c.example.indices,{fit:true});b.append(shape,node('span',c.name+' ×'));tray.append(b);});
-    if(!state.selected.length)tray.append(node('p','点选部件，放进这里。'));assembly.append(tray);
-    const check=button('合一合','check',null,'construction-primary');check.disabled=!state.selected.length;assembly.append(check);
-    const message=state.feedback==='retry'?'这组还没有拼成本课的字，试着换一换部件。':state.feedback==='matched'?'拼出来了！一起读一读，再找下一个。':'可以先观察部件的形状。';assembly.append(status(message));
-    const reveal=node('div',undefined,'puzzle-reveal');reveal.setAttribute('aria-live','polite');
-    for(const ch of state.revealed){const card=node('article'),r=pool.puzzles.find(p=>p.character===ch);glyph(card,ch,null,{parts:r.parts});card.append(node('strong',ch),node('p',r.parts.map(p=>FORM_CATALOG.components[p.id].name).join(' ＋ ')));reveal.append(card);}bench.append(assembly,reveal);play.append(bench);
-    aside.append(node('h3',`本课发现 ${state.found.length} / ${pool.puzzles.length}`));const collected=node('div',undefined,'puzzle-collected');for(const ch of state.found)collected.append(node('span',ch));aside.append(collected);
-    if(pool.puzzles.length&&state.found.length===pool.puzzles.length)aside.append(node('p','✦ 本课拼图全部完成！可以继续做笔画练习。','construction-celebrate'));
-    aside.append(introductions(pool),coverage(pool),references());layout.append(play,aside);root.append(layout);
-  }
+  function renderPuzzle(state,pool){renderComponentPuzzle(root,{state,pool,onAction:action,renderGlyph:glyph});}
   function chooseStroke(name){
     const attempt=++audioAttempt;
     selected=name;root.querySelectorAll('[data-stroke-name]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.strokeName===name)));

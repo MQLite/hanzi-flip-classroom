@@ -36,6 +36,11 @@ export function mountHandwritingPad(svg,{geometry,state,onStroke,onCancel=()=>{}
   },options);
   svg.addEventListener('pointercancel',event=>{if(gesture?.id===event.pointerId)cancel();},options);
   svg.addEventListener('lostpointercapture',event=>{if(gesture?.id===event.pointerId)cancel();},options);
+  function resized(){const active=Boolean(gesture);cancel();if(active)onCancel('画面大小变化，请重新起笔。');}
+  let size=svg.getBoundingClientRect();
+  const resizeObserver=typeof ResizeObserver==='function'?new ResizeObserver(()=>{const next=svg.getBoundingClientRect();if(Math.abs(next.width-size.width)>.5||Math.abs(next.height-size.height)>.5)resized();size=next;}):null;
+  resizeObserver?.observe(svg);
+  window.addEventListener('resize',resized,options);window.addEventListener('scroll',cancel,{...options,capture:true,passive:true});
   window.addEventListener('blur',cancel,options);document.addEventListener('visibilitychange',()=>{if(document.hidden)cancel();},options);
-  return {cancel,dispose(){disposed=true;cancel();controller.abort();}};
+  return {cancel,dispose(){disposed=true;cancel();resizeObserver?.disconnect();controller.abort();}};
 }
