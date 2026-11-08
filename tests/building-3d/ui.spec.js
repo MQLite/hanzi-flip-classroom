@@ -47,5 +47,18 @@ test('four static 3D silhouettes fit projector/mobile and keep the saved bank un
   for(const type of ['house','bridge','tower','building']){
     await page.setViewportSize({width:1280,height:720});await start(page,{type,words:1,motion:'reduce'});const saved=await page.evaluate(()=>localStorage.getItem('hanzi-flip.question-bank'));await build(page,1);await expect(page.locator('#builder-scene canvas')).toBeVisible();await page.screenshot({path:`docs/codex/poison/3d-${type}.png`,fullPage:true});
     await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);expect(await page.locator('#builder-scene canvas').evaluate(n=>n.width>0&&n.height>0)).toBe(true);expect(await page.evaluate(()=>localStorage.getItem('hanzi-flip.question-bank'))).toBe(saved);
+    await collapse(page,1);await page.screenshot({path:`docs/codex/poison/3d-mobile-collapsed-${type}.png`,fullPage:true});
   }await page.screenshot({path:'docs/codex/poison/3d-mobile.png',fullPage:true});
+});
+test('an inactive view settles newly received progress without starting an animation or locking controls',async({page})=>{
+  await page.emulateMedia({reducedMotion:'no-preference'});await page.goto('/?mode=building');
+  const result=await page.evaluate(async()=>{
+    const {createBuildingView}=await import('/src/building.js'),{createBuildingState,drawBuildingWord,confirmBuildingWord}=await import('/src/building-core.js');
+    const fixture=document.createElement('div');fixture.style.width='500px';document.body.append(fixture);
+    const words=[{id:'a',word:'房'},{id:'b',word:'桥'}],pool={words,sentences:[],label:'本课',note:''},view=createBuildingView(fixture,()=>{});
+    let state=createBuildingState({words});view.scene.setActive(false);
+    const model=()=>({state,pool,selectedIds:words.map(w=>w.id),structure:'house',sentenceId:'',showPinyin:false});
+    view.update(model());state=confirmBuildingWord(drawBuildingWord(state));view.update(model());
+    const result={motion:fixture.querySelector('#builder-scene').dataset.motion,disabled:fixture.querySelector('#builder-draw').disabled};view.dispose();fixture.remove();return result;
+  });expect(result).toEqual({motion:'idle',disabled:false});
 });

@@ -67,7 +67,7 @@ export function createBuildingView(host,dispatch){
   },{signal:controller.signal});
   host.addEventListener('change',event=>{if(event.target.id==='builder-sentence-choice')dispatch('sentence',event.target.value);},{signal:controller.signal});
   return {update(next){
-    const active=document.activeElement,focus=host.contains(active)?{id:active.id,choice:active.dataset.builderChoice}:null,scroll=host.querySelector('.builder-choices')?.scrollTop??0;
+    const focused=document.activeElement,focus=host.contains(focused)?{id:focused.id,choice:focused.dataset.builderChoice}:null,scroll=host.querySelector('.builder-choices')?.scrollTop??0;
     model=next;host.replaceChildren();host.dataset.phase=next.state?.phase??'prepare';
     if(next.state){round();sceneView??=createBuildingScene(sceneHost,{onBusyChange:syncAnimationControls});sceneView.setActive(active);sceneView.update(next.state);syncAnimationControls();}
     else{sceneView?.setActive(false);prepare();}

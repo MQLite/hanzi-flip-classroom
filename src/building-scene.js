@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {BUILDING_TYPES,createBuildingArt} from './building-art.js';
 import {buildingBlocks,blockHome,blockRubble,sampleBlockMotion} from './building-models.js';
+import {buildingCameraFrame} from './building-camera.js';
 
 const node=(tag,cls)=>{const el=document.createElement(tag);el.className=cls;return el;};
 export function createBuildingScene(host,{onBusyChange=()=>{}}={}){
@@ -49,9 +50,8 @@ export function createBuildingScene(host,{onBusyChange=()=>{}}={}){
   }catch{available=false;simple=true;}
   function resize(){
     if(disposed||!renderer)return;const width=world.clientWidth,height=world.clientHeight;if(!width||!height)return;
-    renderer.setSize(width,height,false);const h=Math.max(3,...descriptors.map(b=>b.position[1]+b.size[1]/2)),w=Math.max(4,...descriptors.map(b=>Math.abs(b.position[0])*2+b.size[0]));
-    const span=Math.max(5.7,h*1.12+1,w*.75+1.5),aspect=width/height;
-    camera.left=-span*aspect/2;camera.right=span*aspect/2;camera.top=span/2;camera.bottom=-span/2;camera.position.set(9,h*.43+7,11);camera.lookAt(0,h*.43,0);camera.updateProjectionMatrix();draw();
+    renderer.setSize(width,height,false);const fit=buildingCameraFrame(descriptors,width/height,state?.phase);
+    for(const key of ['left','right','top','bottom'])camera[key]=fit[key];camera.position.set(...fit.position);camera.lookAt(...fit.target);camera.updateProjectionMatrix();draw();
   }
   function makeBlock(description){
     const group=new THREE.Group(),size=description.size;assembly.add(group);
