@@ -197,6 +197,7 @@ function syncSelection() {
     const viewWords = el('button','查看教材词语','text-button');
     viewWords.id = 'open-paradise-vocabulary';
     viewWords.onclick = () => {
+      concealPoison();
       const keys = new Set(filterCurriculum(PARADISE_QUESTIONS, {...selection, textbook: PARADISE_ID}).map(q => `${q.book}/${q.lesson}`));
       const courses = coursesForTextbook(PARADISE_ID).filter(c => keys.has(`${c.book}/${c.lesson}`));
       renderZhongwenVocabulary($('#paradise-vocabulary-content'), courses, {paradise:true});

@@ -46,6 +46,17 @@ test('secret selections are covered on mode and help interruptions; reading prog
   await page.locator('#mode-sudoku').click();await expect(page.locator('#sudoku')).toBeVisible();await page.locator('#mode-mole').click();await expect(page.locator('#mole')).toBeVisible();
   await page.locator('#mode-poison').click();await expect(page.locator(`[data-poison-card="${safeId}"]`)).toBeDisabled();await expect(page.locator('#witch-poison')).toHaveAttribute('data-phase','read');
 });
+test('textbook vocabulary dialog covers secret choices before students return',async({page})=>{
+  await prepare(page);await page.locator('[data-poison-card]').first().click();
+  await expect(page.locator('.is-secret')).toHaveCount(1);
+  await page.locator('#open-paradise-vocabulary').click();
+  await expect(page.locator('#paradise-vocabulary-dialog')).toBeVisible();
+  await expect(page.locator('#witch-poison')).toHaveAttribute('data-phase','cover');
+  await expect(page.locator('.is-secret')).toHaveCount(0);
+  await page.locator('#close-paradise-vocabulary').click();
+  await expect(page.locator('[data-poison-card]')).toHaveCount(0);
+  await page.locator('#poison-begin-hide').click();await expect(page.locator('.is-secret')).toHaveCount(1);
+});
 test('hidden page covers setup and keyboard actions never invoke flip shortcuts',async({page})=>{
   await prepare(page);await page.locator('[data-poison-card]').first().focus();await page.keyboard.press('Enter');
   await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'));});
