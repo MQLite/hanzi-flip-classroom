@@ -10,10 +10,11 @@ function wordText(word,pinyin=false){
 export function createBuildingView(host,dispatch){
   const controller=new AbortController(),sceneHost=el('div',undefined,'builder-scene');sceneHost.id='builder-scene';
   let model,sceneView,active=false;
-  function nextControl(){return host.querySelector('#builder-confirm:not(:disabled),#builder-draw:not(:disabled),#builder-challenge:not(:disabled),#builder-restore:not(:disabled),#builder-start:not(:disabled)');}
+  function nextControl(){return host.querySelector('#builder-confirm:not(:disabled),#builder-draw:not(:disabled),[data-builder-card]:not(:disabled),#builder-challenge:not(:disabled),#builder-restore:not(:disabled),#builder-start:not(:disabled)');}
   function syncAnimationControls(){
     const state=model?.state,busy=Boolean(sceneView?.isAnimating);
     for(const [id,disabled]of [['builder-draw',busy||Boolean(state?.pendingId)],['builder-confirm',busy||!state?.pendingId],['builder-challenge',busy||!state?.sentence],['builder-restore',busy]]){const b=host.querySelector(`#${id}`);if(b)b.disabled=disabled;}
+    host.querySelectorAll('[data-builder-card]').forEach(b=>b.disabled=busy||!state?.sentence);
     if(!busy&&active&&!document.hidden&&document.activeElement===sceneHost.querySelector('#builder-motion-status'))nextControl()?.focus();
   }
   function prepare(){
@@ -39,7 +40,12 @@ export function createBuildingView(host,dispatch){
     const heading=el('div',undefined,'builder-heading');heading.append(el('span','汉字建筑师','builder-kicker'),el('h3',titles[state.phase]),el('p',model.pool.label,'builder-course'));host.append(heading);
     const layout=el('div',undefined,'builder-round-layout');layout.append(sceneHost);
     const desk=el('section',undefined,'builder-desk'),progress=el('p',`已搭建 ${state.builtIds.length} / ${state.words.length} 个词`,'builder-progress');progress.id='builder-progress';progress.setAttribute('role','status');desk.append(progress);
-    if(state.phase==='build'||state.phase==='challenge'){
+    if((state.phase==='built'&&state.sentence)||state.phase==='challenge'){
+      desk.append(el('h4','从词卡里挑一个，大声读出来'),el('p',state.checkedIds.length?'安全！读过的词卡已收走，继续挑一张。':'学生先读，老师点选刚读过的词卡，立即检查建筑。','builder-note'));
+      const cards=el('div',undefined,'builder-challenge-cards');cards.setAttribute('role','group');cards.setAttribute('aria-label','挑选已读的本课词卡');
+      for(const word of state.words.filter(w=>!state.checkedIds.includes(w.id))){const card=el('button');card.dataset.builderCard=word.id;card.append(wordText(word,model.showPinyin));cards.append(card);}desk.append(cards);
+      const left=el('p',`还剩 ${state.words.length-state.checkedIds.length} / ${state.words.length} 张词卡`,'builder-note');left.setAttribute('role','status');desk.append(left);
+    }else if(state.phase==='build'){
       const word=state.words.find(w=>w.id===state.pendingId),prompt=el('div',undefined,'builder-prompt');
       prompt.append(el('span',state.phase==='challenge'?`随机挑战 · 已安全读 ${state.checkedIds.length} 个词`:'抽词 → 大声读 → 老师确认','builder-kicker'));
       if(word){const card=wordText(word,model.showPinyin);card.querySelector('strong').id='builder-word';prompt.append(card);}else prompt.append(el('p',state.phase==='challenge'?'建筑站稳了，抽一个词来试试看。':'准备好了吗？抽一个本课字词。'));
@@ -53,6 +59,7 @@ export function createBuildingView(host,dispatch){
       const challenge=button('builder-challenge',state.phase==='restored'?'再来一次随机挑战':'进入随机读词挑战',true);challenge.disabled=!state.sentence;desk.append(challenge);
       if(!state.sentence)desk.append(el('p','本轮未使用重点句子，先练搭建；选择本课拯救句子后再挑战。','builder-note'));
     }
+    if(state.phase==='restored'||(state.phase==='built'&&!state.sentence))desk.append(button('builder-next-activity','下一活动：女巫的毒药',true));
     layout.append(desk);host.append(layout);const actions=el('div',undefined,'builder-bottom-controls');actions.append(button('builder-prepare','重新选择建筑与字词'),button('builder-change-lesson','选择其他课'));host.append(actions);
   }
   // Focus follows the next reading action; a held key must not activate that action too.
@@ -61,7 +68,8 @@ export function createBuildingView(host,dispatch){
     const b=event.target.closest('button');if(!b||!host.contains(b)||b.disabled)return;
     if(b.dataset.builderChoice){dispatch('choose-word',b.dataset.builderChoice);return;}
     if(b.dataset.builderType){dispatch('structure',b.dataset.builderType);return;}
-    const intent={'builder-start':'start','builder-draw':'draw','builder-confirm':'confirm','builder-challenge':'challenge','builder-restore':'restore','builder-prepare':'prepare','builder-change-lesson':'change-lesson'}[b.id];
+    if(b.dataset.builderCard){if(!sceneView?.isAnimating)dispatch('challenge-card',b.dataset.builderCard);return;}
+    const intent={'builder-start':'start','builder-draw':'draw','builder-confirm':'confirm','builder-challenge':'challenge','builder-restore':'restore','builder-prepare':'prepare','builder-change-lesson':'change-lesson','builder-next-activity':'next-activity'}[b.id];
     if(sceneView?.isAnimating&&['draw','confirm','challenge','restore'].includes(intent))return;
     if(intent)dispatch(intent);
   },{signal:controller.signal});

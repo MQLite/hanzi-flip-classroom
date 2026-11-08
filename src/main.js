@@ -38,7 +38,7 @@ import {createMoleState,hitMole,settleMole,finishMoleHits} from './mole-core.js'
 import './poison.css';
 import './building.css';
 import {createBuildingView} from './building.js';
-import {createBuildingState,drawBuildingWord,confirmBuildingWord,beginBuildingChallenge,restoreBuilding} from './building-core.js';
+import {createBuildingState,drawBuildingWord,confirmBuildingWord,beginBuildingChallenge,restoreBuilding,chooseBuildingChallengeWord} from './building-core.js';
 import {createPoisonView} from './poison.js';
 import {getPoisonPool} from './poison-vocabulary.js';
 import {createPoisonState,beginPoisonHiding,togglePoisonWord,sealPoison,beginPoisonReading,selectPoisonCard,cancelPoisonCard,revealPoisonCard,coverPoisonSecrets,nextPoisonRound,beginPoisonAntidote,finishPoisonAntidote} from './poison-core.js';
@@ -280,6 +280,7 @@ const poisonView=createPoisonView($('#witch-poison'),poisonIntent);
 const buildingView=createBuildingView($('#hanzi-building'),buildingIntent);
 function buildingIntent(intent,value){
   if(gameMode!=='building')return;
+  if(intent==='next-activity'){goActivity('poison');return;}
   if(intent==='choose-word'){
     if(buildingSelectedIds.includes(value))buildingSelectedIds=buildingSelectedIds.filter(id=>id!==value);
     else if(buildingSelectedIds.length<16)buildingSelectedIds=[...buildingSelectedIds,value];
@@ -293,6 +294,7 @@ function buildingIntent(intent,value){
     if(!mayRestart())return;buildingState=null;
     if(intent==='change-lesson'){prepareBuilding();syncSelection();render();$(selection.source==='personal'?'#grade':'#lesson').focus();notify('请在上方选择其他课次或教材。');return;}
   }else if(buildingState){
+    if(intent==='challenge-card'){buildingState=chooseBuildingChallengeWord(buildingState,value);render();return;}
     const actions={draw:drawBuildingWord,confirm:confirmBuildingWord,challenge:beginBuildingChallenge,restore:restoreBuilding};if(!actions[intent])return;
     buildingState=actions[intent](buildingState);
   }
@@ -368,6 +370,7 @@ function syncSimpleControl() {
   $('#simplify').textContent = simple ? '立体显示' : '简化显示';
   $('#simplify').setAttribute('aria-pressed', String(simple));
 }
+function goActivity(mode){if(mode===gameMode||!mayRestart())return;switchMode(mode,{...selection,scope:'lesson'});}
 function switchMode(mode, linkedSelection) {
   if (mode === gameMode) return;
   concealPoison();
@@ -378,8 +381,9 @@ function switchMode(mode, linkedSelection) {
   sudokuView.cancelDrag();
   modeSnapshots[gameMode] = { session, grade, teamNames: [...teamNames], selectedTeam, showPinyin, selection: {...selection}, extensionOpen, workshopState, sudokuState,sudokuPool,sudokuSelectedIds:[...sudokuSelectedIds],moleState,molePool,moleType,poisonState,poisonPool,poisonSelectedIds:[...poisonSelectedIds],poisonCount,poisonAntidoteId,buildingState,buildingPool,buildingSelectedIds:[...buildingSelectedIds],buildingStructure,buildingSentenceId };
   activeScene()?.setActive(false);
-  const saved = modeSnapshots[mode];
+  const carried=linkedSelection&&['building','poison','maze'].includes(mode),saved=carried?null:modeSnapshots[mode];
   gameMode = mode;
+  if(carried)selection={...linkedSelection,scope:'lesson'};
   if (saved) ({ session, grade, teamNames, selectedTeam, showPinyin, selection, extensionOpen, workshopState,sudokuState,sudokuPool,sudokuSelectedIds,moleState,molePool,moleType,poisonState,poisonPool,poisonSelectedIds,poisonCount,poisonAntidoteId,buildingState,buildingPool,buildingSelectedIds,buildingStructure,buildingSentenceId } = saved);
   else {
     if(mode==='explore'){

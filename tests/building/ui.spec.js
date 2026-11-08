@@ -11,9 +11,9 @@ async function finishBuild(page,count=3){
   await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','built');
 }
 async function collapse(page,count=3){
-  await page.locator('#builder-challenge').click();
+  if(await page.locator('#builder-challenge').count())await page.locator('#builder-challenge').click();
   for(let i=0;i<count;i++){
-    await page.locator('#builder-draw').click();await expect(page.locator('.is-danger,[data-danger],.builder-danger')).toHaveCount(0);await page.locator('#builder-confirm').click();
+    await expect(page.locator('.is-danger,[data-danger],.builder-danger')).toHaveCount(0);await page.locator('[data-builder-card]').first().click();
     if(await page.locator('#hanzi-building').getAttribute('data-phase')==='collapsed')break;
   }
   await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','collapsed');
@@ -47,8 +47,7 @@ test('holding Enter cannot advance through reading, construction, collapse and r
   await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','build');await expect(page.locator('#builder-progress')).toContainText('0 / 1');
   await expect(page.locator('#builder-word')).toBeVisible();
   await page.keyboard.press('Enter');await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','built');
-  await page.keyboard.press('Enter');await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','challenge');
-  await page.keyboard.press('Enter');await page.keyboard.press('Enter');await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','collapsed');
+  await page.keyboard.press('Enter');await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','collapsed');
   await page.keyboard.press('Enter');await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','restored');
 });
 test('touchscreen reads, collapses and rescues without overflow',async({browser,baseURL})=>{
@@ -56,7 +55,7 @@ test('touchscreen reads, collapses and rescues without overflow',async({browser,
   const ids=await page.locator('[data-builder-choice][aria-pressed="true"]').evaluateAll(nodes=>nodes.map(n=>n.dataset.builderChoice));for(const id of ids.slice(2))await page.locator(`[data-builder-choice="${id}"]`).tap();
   await page.locator('#builder-type-bridge').tap();await page.locator('#builder-start').tap();
   for(let i=0;i<2;i++){await page.locator('#builder-draw').tap();await page.locator('#builder-confirm').tap();}
-  await page.locator('#builder-challenge').tap();for(let i=0;i<2;i++){await page.locator('#builder-draw').tap();await page.locator('#builder-confirm').tap();if(await page.locator('#hanzi-building').getAttribute('data-phase')==='collapsed')break;}
+  for(let i=0;i<2;i++){await page.locator('[data-builder-card]').first().tap();if(await page.locator('#hanzi-building').getAttribute('data-phase')==='collapsed')break;}
   await expect(page.locator('#builder-rescue-sentence')).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'docs/codex/poison/building-mobile.png',fullPage:true});await page.locator('#builder-restore').tap();await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','restored');await context.close();
 });
 test('Zhongwen lesson choices stay scoped and selection is limited to sixteen words',async({page})=>{

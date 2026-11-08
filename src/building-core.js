@@ -35,3 +35,8 @@ export function beginBuildingChallenge(state,{random=Math.random}={}){
   return freeze({...state,phase:'challenge',challengeWords,dangerId:challengeWords[index].id,checkedIds:[],pendingId:null});
 }
 export function restoreBuilding(state){return state.phase==='collapsed'&&state.sentence?freeze({...state,phase:'restored',pendingId:null}):state;}
+export function chooseBuildingChallengeWord(state,id){
+  if(!['built','restored','challenge'].includes(state.phase)||!state.words.some(w=>w.id===id)||state.checkedIds.includes(id))return state;
+  const ready=state.phase==='challenge'?state:beginBuildingChallenge(state);if(ready.phase!=='challenge')return state;
+  return confirmBuildingWord(freeze({...ready,pendingId:id}));
+}
