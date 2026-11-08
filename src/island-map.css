@@ -1,0 +1,92 @@
+#island-map {
+  --island-ink: #174e52;
+  --island-gap: clamp(12px, 1.4vw, 22px);
+  box-sizing: border-box;
+  width: min(1496px, calc(100vw - 48px));
+  height: min(870px, calc(100dvh - 40px));
+  max-width: none;
+  max-height: none;
+  margin: auto;
+  padding: 22px 28px 20px;
+  overflow: hidden;
+  border: 3px solid #28696b;
+  border-radius: 28px;
+  color: var(--island-ink);
+  background: #f8fcf1;
+  box-shadow: 0 24px 80px #092c4b55;
+  font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+}
+#island-map[open] { display: flex; flex-direction: column; }
+#island-map::backdrop { background: #102b43ab; backdrop-filter: blur(5px); }
+#island-map * { box-sizing: border-box; }
+#island-map button { font: inherit; -webkit-tap-highlight-color: transparent; }
+#island-map button:focus-visible { outline: 4px solid #c1651b; outline-offset: 4px; }
+.island-map-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex: none; }
+.island-map-heading { min-width: 0; }
+#island-map-title { margin: 0; color: #174e52; font-size: clamp(26px, 2.2vw, 36px); font-weight: 900; line-height: 1.3; letter-spacing: .025em; }
+#island-map-title span { white-space: nowrap; }
+.island-map-course { margin: 8px 0 0; font-size: clamp(17px, 1.5vw, 22px); font-weight: 650; line-height: 1.4; overflow-wrap: anywhere; }
+#island-map .island-map-close { display: grid; place-content: center; flex: 0 0 44px; width: 44px; height: 44px; padding: 0; border: 2px solid #83b5ad; border-radius: 50%; color: #174e52; background: #fff; font-size: 32px; line-height: 1; cursor: pointer; }
+.island-map-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 13px 2px 12px; flex: none; }
+.island-map-progress { margin: 0; padding: 6px 15px; border-radius: 20px; color: #fff; background: #256b67; font-size: 18px; font-weight: 750; white-space: nowrap; }
+.island-map-hint { margin: 0; font-size: 17px; color: #47716a; }
+.island-map-ocean { position: relative; flex: 1; min-height: 0; padding: clamp(10px, 1.5vh, 18px) 16px; overflow: auto; overscroll-behavior: contain; border: 2px solid #a2d6ce; border-radius: 24px; background-color: #d6f0ed; background-image: radial-gradient(ellipse at 8% 24%, #ffffffa8 0 3px, transparent 4px), radial-gradient(ellipse at 72% 73%, #ffffff9c 0 3px, transparent 4px), linear-gradient(135deg, #e2f5eb 0%, #bce3e7 100%); background-size: 120px 87px, 163px 117px, auto; }
+.island-map-route { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.island-map-route path { fill: none; stroke: #fff; stroke-width: 5px; stroke-linecap: round; stroke-dasharray: 4 12; opacity: .9; }
+.island-map-route .island-map-wave { stroke: #6bb5bc; stroke-width: 3px; stroke-dasharray: none; opacity: .65; }
+.island-map-islands { position: relative; display: flex; flex-direction: column; justify-content: space-around; gap: 10px; min-height: 100%; }
+.island-map-row { display: flex; justify-content: center; align-items: stretch; gap: var(--island-gap); }
+#island-map .island-card { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; flex: 0 0 calc((100% - 4 * var(--island-gap)) / 5); min-width: 0; min-height: clamp(113px, 16.5vh, 160px); margin: 0; padding: 43px 5px 8px; border: 2px solid transparent; border-radius: 26px 26px 19px 19px; color: var(--island-ink); background: #f8fff7df; box-shadow: 0 4px 0 #84b9b44d; cursor: pointer; transition: background .15s, border-color .15s, transform .15s; }
+#island-map .island-card:not(:disabled):hover { transform: translateY(-3px); border-color: #4c9e90; background: #fff; }
+.island-art { position: absolute; top: -9px; left: 50%; width: min(154px, 85%); height: 68px; transform: translateX(-50%); pointer-events: none; }
+.island-water { fill: #70bdc7; opacity: .34; }
+.island-sand { fill: #f4d897; stroke: #c4aa6d; stroke-width: 2px; }
+.island-grass { fill: #83b977; stroke: #54876b; stroke-width: 2px; }
+.island-tree { fill: none; stroke: #477c56; stroke-width: 4px; stroke-linecap: round; }
+.island-rock { fill: #94a99a; stroke: #6e8b7e; stroke-width: 2px; }
+.island-glyph { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); display: grid; place-content: center; width: 36px; height: 36px; border: 2px solid #377760; border-radius: 10px; color: #295e50; background: #fff9dc; font-size: 22px; font-weight: 900; box-shadow: 0 3px 0 #386a4b20; }
+.island-number { position: absolute; top: 5px; left: 6px; display: grid; place-content: center; min-width: 29px; height: 29px; padding: 0 3px; border: 2px solid #8cbbad; border-radius: 50%; color: #326958; background: #fffdf2; font-size: 17px; font-weight: 850; line-height: 1; }
+.island-label { position: relative; margin-top: 11px; font-size: clamp(19px, 1.7vw, 26px); font-weight: 850; line-height: 1.35; white-space: nowrap; }
+.island-status { position: relative; margin-top: 4px; padding: 1px 9px; border-radius: 12px; color: #47716a; font-size: 15px; font-weight: 700; line-height: 1.35; }
+#island-map .island-card.is-current { border-color: #cf972e; background: #fff8db; box-shadow: 0 4px 0 #d7b55e66; }
+.is-current .island-status { color: #7a4b08; background: #f5dea0; }
+.is-current .island-number { border-color: #ba8a2e; background: #ffe49c; }
+.is-completed .island-status { color: #fff; background: #3a7f66; }
+.is-completed .island-status::before { content: "✓ "; }
+#island-map .island-card.is-skipped { color: #5b6c6b; background: #f2f8f2c9; box-shadow: none; cursor: default; }
+.is-skipped .island-art { filter: saturate(.2); opacity: .7; }
+.is-skipped .island-glyph { color: #6c7d73; border-color: #8c9e91; background: #f3f2df; }
+.is-skipped .island-status { color: #64716b; }
+.island-reason { position: relative; max-width: 100%; margin-top: 3px; color: #5b6c65; font-size: 13px; line-height: 1.3; overflow-wrap: anywhere; }
+.island-map-footer { display: flex; flex-direction: column; align-items: center; flex: none; gap: 9px; padding-top: 15px; }
+.island-map-warning { margin: 0; color: #82591d; font-size: 15px; text-align: center; line-height: 1.4; }
+#island-map .island-map-primary { display: block; min-width: 230px; min-height: 53px; padding: 9px 32px; border: 2px solid #1f625d; border-radius: 18px; color: #fff; background: #287b6b; box-shadow: 0 4px 0 #174e52; font-size: 23px; font-weight: 850; line-height: 1.3; cursor: pointer; }
+#island-map .island-map-primary:hover { background: #216b5e; }
+#island-map .island-map-primary:disabled { color: #62716a; border-color: #93a79b; background: #dce6d7; box-shadow: 0 4px 0 #a2b1a4; cursor: default; }
+
+@media (max-width: 700px) {
+  #island-map { width: calc(100vw - 16px); height: calc(100dvh - 16px); padding: 17px 12px 16px; border-radius: 23px; }
+  #island-map-title { font-size: 23px; line-height: 1.4; }
+  #island-map-title span { display: block; font-size: 19px; }
+  .island-map-header { gap: 6px; }
+  .island-map-course { margin-top: 6px; font-size: 16px; }
+  #island-map .island-map-close { flex-basis: 40px; width: 40px; height: 40px; }
+  .island-map-summary { flex-wrap: wrap; gap: 7px; margin: 11px 0; }
+  .island-map-progress { padding: 5px 10px; font-size: 16px; }
+  .island-map-hint { font-size: 14px; }
+  .island-map-ocean { padding: 15px 8px; border-radius: 18px; scrollbar-width: thin; }
+  .island-map-route { display: none; }
+  .island-map-islands { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 20px 9px; }
+  .island-map-row { display: contents; }
+  #island-map .island-card { min-height: 137px; padding: 46px 3px 9px; border-radius: 23px 23px 17px 17px; }
+  .island-label { font-size: 19px; }
+  .island-art { width: 135px; }
+  .island-number { top: 4px; left: 4px; min-width: 26px; height: 26px; font-size: 16px; }
+  .island-reason { font-size: 12px; }
+  .island-map-footer { padding-top: 12px; gap: 8px; }
+  #island-map .island-map-primary { width: 100%; min-height: 52px; font-size: 22px; }
+  .island-map-warning { font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #island-map .island-card { transition: none; }
+}

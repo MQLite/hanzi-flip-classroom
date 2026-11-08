@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>小岛地图视图测试</title>
+    <style>body{margin:0;font-family:system-ui,sans-serif;background:#f1f6ee}#fixture-open{margin:24px;padding:12px}</style>
+  </head>
+  <body>
+    <button id="fixture-open" type="button">打开地图</button>
+    <script type="module">
+      const modes = ['flip','mole','maze','puzzle','strokes','workshop','poison','building','sudoku','train','explore'];
+      window.fixtureEvents = [];
+      window.fixtureOptions = {
+        courseLabel: '中文 · 第一册 · 第1课',
+        availability: modes.map(id => ({id, available:id !== 'explore', reason:id === 'explore' ? '本课暂未设置情景探索' : ''})),
+        state: null,
+        storageWarning: '',
+      };
+      try {
+        const mapModulePath = '/src/island-map.js';
+        const {createIslandMap} = await import(/* @vite-ignore */ mapModulePath);
+        window.fixtureMap = createIslandMap({
+          onStart: () => window.fixtureEvents.push('start'),
+          onResume: () => window.fixtureEvents.push('resume'),
+          onRestart: () => window.fixtureEvents.push('restart'),
+          onChallenge: id => window.fixtureEvents.push(`challenge:${id}`),
+        });
+        document.querySelector('#fixture-open').addEventListener('click', () => window.fixtureMap.open(window.fixtureOptions));
+      } catch (error) {
+        window.fixtureError = error.message;
+      }
+      window.fixtureReady = true;
+    </script>
+  </body>
+</html>

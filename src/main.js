@@ -1,5 +1,7 @@
 import "./styles.css";
 import {GAME_ORDER} from './game-order.js';
+import {createIslandJourney} from './lesson-journey.js';
+import {getJourneyAvailability,journeyQuestions} from './island-journey-data.js';
 import './sentence-train.css';
 import {createTrainView} from './sentence-train.js';
 import {mergeTrainQuestionPools,resolveTrainQuestion} from './sentence-train-data.js';
@@ -324,6 +326,22 @@ const buildingView=createBuildingView($('#hanzi-building'),buildingIntent);
 const mazeView=createMazeView($('#hanzi-maze'),mazeIntent);
 const constructionView=createConstructionView($('#hanzi-construction'),{onAction:constructionIntent});
 constructionView.setVisible(false);
+let journeyContextCache;
+function journeyContext(){
+ const course=selection.source==='personal'?{source:'personal',stage:'',lesson:1,grade}:{source:selection.source,stage:selection.stage,lesson:selection.lesson,grade};
+ const key=JSON.stringify(course);
+ if(journeyContextCache?.key===key&&journeyContextCache.questions===bank.questions)return journeyContextCache.value;
+ const availability=getJourneyAvailability({...selection,scope:'lesson'},bank,grade);
+ const content=JSON.stringify([journeyQuestions(selection,bank.questions,grade),availability.map(a=>a.available)]);
+ let hash=2166136261;for(let i=0;i<content.length;i++)hash=Math.imul(hash^content.charCodeAt(i),16777619);
+ course.revision=(hash>>>0).toString(36);
+ const courseLabel=selection.source==='personal'?`个人题库 · ${grade}年级`:`${selection.source==='zhongwen'?ZHONGWEN_NAME:selection.source==='paradise'?'汉语乐园':'中文乐园'} · ${selection.stage} · 第${selection.lesson}课`;
+ const value={course,availability,courseLabel};journeyContextCache={key,questions:bank.questions,value};return value;
+}
+const journey=createIslandJourney({getContext:journeyContext,onConceal:concealPoison,canLaunch:mayRestart,onLaunch(mode,course,{independent=false}={}){
+ grade=course.grade;switchMode(mode,{...course,scope:'lesson'},true);
+ if(independent){const url=new URL(location.href);url.searchParams.delete('journey');url.searchParams.set('mode',mode);history.replaceState(null,'',url);}
+}});
 function constructionIntent(intent,value){
   if(!isConstruction(gameMode))return;
   if(gameMode==='strokes'&&intent==='input-mode'){if(['drag','write'].includes(value))strokeInputMode=value;render();return;}
@@ -449,8 +467,9 @@ function syncSimpleControl() {
   $('#simplify').setAttribute('aria-pressed', String(simple));
 }
 function goActivity(mode){if(mode===gameMode||!mayRestart())return;switchMode(mode,{...selection,scope:'lesson'});}
-function switchMode(mode, linkedSelection) {
-  if (mode === gameMode) return;
+function switchMode(mode, linkedSelection, journeyTransfer=false) {
+  if (mode === gameMode&&!journeyTransfer) return;
+  if(!journeyTransfer)journey.pause();
   concealPoison();
   if (gameMode === 'train' && session.departure) finishDeparture(session.departure);
   if (gameMode === 'flip' && flipTransition) finishFlipTransition(flipTransition);
@@ -460,7 +479,7 @@ function switchMode(mode, linkedSelection) {
   constructionView.setVisible(false);
   modeSnapshots[gameMode] = { session, grade, teamNames: [...teamNames], selectedTeam, showPinyin, selection: {...selection}, extensionOpen, workshopState, sudokuState,sudokuPool,sudokuSelectedIds:[...sudokuSelectedIds],moleState,molePool,moleType,poisonState,poisonPool,poisonSelectedIds:[...poisonSelectedIds],poisonCount,poisonAntidoteId,buildingState,buildingPool,buildingSelectedIds:[...buildingSelectedIds],buildingStructure,buildingSentenceId,mazeState,mazePool,constructionPool,puzzleState,strokeState,handwritingState,strokeInputMode };
   activeScene()?.setActive(false);
-  const carried=linkedSelection&&['building','poison','maze'].includes(mode),saved=carried?null:modeSnapshots[mode];
+  const carried=linkedSelection&&(journeyTransfer||['building','poison','maze'].includes(mode)),saved=carried?null:modeSnapshots[mode];
   gameMode = mode;
   if(carried)selection={...linkedSelection,scope:'lesson'};
   if (saved) ({ session, grade, teamNames, selectedTeam, showPinyin, selection, extensionOpen, workshopState,sudokuState,sudokuPool,sudokuSelectedIds,moleState,molePool,moleType,poisonState,poisonPool,poisonSelectedIds,poisonCount,poisonAntidoteId,buildingState,buildingPool,buildingSelectedIds,buildingStructure,buildingSentenceId,mazeState,mazePool,constructionPool,puzzleState,strokeState,handwritingState,strokeInputMode } = saved);
@@ -725,6 +744,8 @@ function el(tag, text, className) {
   return e;
 }
 function render() {
+  journey.sync(gameMode,{session,moleState,mazeState,puzzleState,strokeState,handwritingState,strokeInputMode,workshopState,poisonState,buildingState,sudokuState});
+  if(journey.isActive())$('#scope').closest('label').hidden=true;
   syncPinyinLocation();
   $('#activity-flow').hidden=!['building','poison','maze'].includes(gameMode);for(const mode of ['building','poison','maze'])$('#activity-'+mode).setAttribute('aria-current',mode===gameMode?'step':'false');
   $('#pinyin').closest('label').hidden=gameMode!=='train'&&gameMode!=='mole'&&gameMode!=='poison'&&gameMode!=='building'&&gameMode!=='maze';
@@ -1046,6 +1067,7 @@ $("#restart").onclick = () => {
 for (const [id, key] of [['bank-source','source'],['stage','stage'],['scope','scope'],['lesson','lesson']]) {
   $(`#${id}`).onchange = event => {
     if (!mayRestart()) { syncSelection(); return; }
+    journey.pause();
     selection = {...selection, [key]:key === 'lesson' ? Number(event.target.value) : event.target.value};
     if (key === 'source') {
       selection.stage = (gameMode==='explore'?explorationStages:stagesForTextbook)(textbookForSource(selection.source))[0];
@@ -1074,6 +1096,7 @@ $("#grade").onchange = (event) => {
     return;
   }
   grade = Number(event.target.value);
+  journey.pause();
   if(!optionalPinyinModes.has(gameMode))showPinyin = grade <= 2;
   $("#pinyin").checked = showPinyin;
   newRound();
@@ -1161,7 +1184,11 @@ document.addEventListener("keydown", (event) => {
 });
 const entryParams=new URLSearchParams(window.location.search);
 const requestedMode=entryParams.get('mode');
-if(requestedMode==='explore'){
+if(entryParams.has('journey')){
+ const source=entryParams.get('source'),stage=entryParams.get('stage'),lesson=Number(entryParams.get('lesson')),entryGrade=Number(entryParams.get('grade'));
+ if(['personal','textbook','paradise','zhongwen'].includes(source)&&lesson>0&&lesson<=200&&entryGrade>=1&&entryGrade<=4){selection={source,stage,lesson,scope:'lesson'};grade=entryGrade;}
+ if(!journey.restore(entryParams.get('journey')))render();
+}else if(requestedMode==='explore'){
   const linkedSelection={source:entryParams.get('source'),stage:entryParams.get('stage'),scope:'lesson',lesson:Number(entryParams.get('lesson'))};
   switchMode('explore',matchingExplorations(linkedSelection).length?linkedSelection:undefined);
 }else if(requestedMode==='mole')switchMode('mole');
