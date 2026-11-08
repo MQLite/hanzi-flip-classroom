@@ -51,6 +51,13 @@ test('two poisons require two choices, safe cards stay used, and the first poiso
   await page.locator(`[data-poison-card="${all[0]}"]`).click();await page.locator('#poison-reveal').click();await expect(page.locator('#witch-poison')).toHaveAttribute('data-phase','complete');
   await expect(page.locator('#poison-magic')).toContainText('换一位');
 });
+test('held Enter cannot automatically use and confirm the antidote after revealing poison',async({page})=>{
+  await prepare(page);const [id]=await hide(page);await page.locator(`[data-poison-card="${id}"]`).click();await page.locator('#poison-reveal').focus();
+  await page.keyboard.down('Enter');for(let i=0;i<5;i++)await page.keyboard.down('Enter');await page.keyboard.up('Enter');
+  await expect(page.locator('#witch-poison')).toHaveAttribute('data-phase','complete');await expect(page.locator('#poison-antidote')).toBeVisible();
+  await expect(page.locator('#poison-magic')).not.toContainText('解救成功！');await page.keyboard.press('Enter');await expect(page.locator('#poison-antidote-sentence')).toBeVisible();
+  await page.keyboard.press('Enter');await expect(page.locator('#poison-magic')).toContainText('解救成功！');
+});
 test('secret selections are covered on mode and help interruptions; reading progress stays independent',async({page})=>{
   await prepare(page);const id=await page.locator('[data-poison-card]').first().getAttribute('data-poison-card');await page.locator(`[data-poison-card="${id}"]`).click();
   await page.locator('#mode-flip').click();await page.locator('#mode-poison').click();await expect(page.locator('#witch-poison')).toHaveAttribute('data-phase','cover');await expect(page.locator('.is-secret')).toHaveCount(0);

@@ -47,6 +47,8 @@ export function createBuildingView(host,dispatch){
     }
     layout.append(desk);host.append(layout);const actions=el('div',undefined,'builder-bottom-controls');actions.append(button('builder-prepare','重新选择建筑与字词'),button('builder-change-lesson','选择其他课'));host.append(actions);
   }
+  // Focus follows the next reading action; a held key must not activate that action too.
+  host.addEventListener('keydown',event=>{if(event.repeat&&(event.key==='Enter'||event.key===' '))event.preventDefault();},{signal:controller.signal});
   host.addEventListener('click',event=>{
     const b=event.target.closest('button');if(!b||!host.contains(b)||b.disabled)return;
     if(b.dataset.builderChoice){dispatch('choose-word',b.dataset.builderChoice);return;}

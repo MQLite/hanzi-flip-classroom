@@ -41,6 +41,16 @@ test('numbers-only lesson builds without invented sentences; empty bank has a cl
   const count=await page.locator('[data-builder-choice][aria-pressed="true"]').count();await page.locator('#builder-start').click();await finishBuild(page,count);await expect(page.locator('#builder-challenge')).toBeDisabled();
   await page.addInitScript(()=>localStorage.setItem('hanzi-flip.question-bank',JSON.stringify({schemaVersion:1,questions:[]})));await page.reload();await expect(page.locator('#builder-start')).toBeDisabled();await expect(page.locator('#hanzi-building')).toContainText('没有可用词语');
 });
+test('holding Enter cannot advance through reading, construction, collapse and rescue',async({page})=>{
+  await setup(page,'house',1);await page.locator('#builder-draw').focus();await page.keyboard.down('Enter');
+  for(let i=0;i<5;i++)await page.keyboard.down('Enter');await page.keyboard.up('Enter');
+  await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','build');await expect(page.locator('#builder-progress')).toContainText('0 / 1');
+  await expect(page.locator('#builder-word')).toBeVisible();
+  await page.keyboard.press('Enter');await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','built');
+  await page.keyboard.press('Enter');await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','challenge');
+  await page.keyboard.press('Enter');await page.keyboard.press('Enter');await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','collapsed');
+  await page.keyboard.press('Enter');await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','restored');
+});
 test('touchscreen reads, collapses and rescues without overflow',async({browser,baseURL})=>{
   const context=await browser.newContext({baseURL,viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'}),page=await context.newPage();await page.goto('/?mode=building');
   const ids=await page.locator('[data-builder-choice][aria-pressed="true"]').evaluateAll(nodes=>nodes.map(n=>n.dataset.builderChoice));for(const id of ids.slice(2))await page.locator(`[data-builder-choice="${id}"]`).tap();

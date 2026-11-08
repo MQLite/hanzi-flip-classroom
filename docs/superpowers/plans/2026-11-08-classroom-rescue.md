@@ -46,3 +46,5 @@
 - [x] Implement pure transitions, four recognizable SVG shapes, progressive parts, collapse/restore effects, setup/card/teacher controls and mode snapshots without old shortcuts.
 - [x] Browser test all shapes, whole build/challenge/rescue, mode/lesson isolation, sentence provenance, empty data, mobile/touch/keyboard/reduced motion; inspect screenshots, run relevant old regressions, all units and production build. Nine new cases, nineteen regressions and148 units passed; production four-shape helper passed.
 - [ ] Fresh whole-change review, fix material findings, deploy and verify live. Preserve other worktrees.
+
+Review: one P2 held-Enter issue reproduced with native repeat keydowns (one word could auto-progress to restored). Both building and the analogous antidote handoff now prevent repeated Enter/Space keydown activation. RED confirmed for both; all21 combined browser cases and148 units pass, final production build succeeds. Fresh reviewer found no other issues and independently exercised384 core scenarios. Release/live verification remains pending.

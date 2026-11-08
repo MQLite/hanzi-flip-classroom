@@ -82,6 +82,8 @@ export function createPoisonView(host,dispatch){
     const current=host.querySelector('#poison-current');if(current)current.textContent=state.pendingId?`请读：${state.words.find(w=>w.id===state.pendingId).word}`:'请先选一个词';
     const feedback=host.querySelector('#poison-feedback');feedback.textContent=state.feedback.message;feedback.dataset.kind=state.feedback.kind;
   }
+  // Keep the sentence-reading confirmation separate even when Enter is held down.
+  host.addEventListener('keydown',event=>{if(event.repeat&&(event.key==='Enter'||event.key===' '))event.preventDefault();},{signal:controller.signal});
   host.addEventListener('click',event=>{
     const b=event.target.closest('button');if(!b||!host.contains(b)||b.disabled)return;
     if(b.dataset.poisonChoice){dispatch('choose-word',b.dataset.poisonChoice);return;}
