@@ -6,15 +6,16 @@ function freeze(state){
   for(const key of ['words','challengeWords']){state[key].forEach(Object.freeze);Object.freeze(state[key]);}
   for(const key of ['builtIds','checkedIds'])Object.freeze(state[key]);return Object.freeze(state);
 }
-export function createBuildingState({words=[],structure='house',sentence=null,random=Math.random}={}){
+export function createBuildingState({words=[],structure='house',sentence=null,variant=0,random=Math.random}={}){
   if(!Array.isArray(words)||!words.length||words.length>16||!['house','bridge','tower','building'].includes(structure)||typeof random!=='function')throw new TypeError('Choose a building and 1–16 lesson words');
   const ids=new Set(),terms=new Set(),snapshot=words.map(w=>{
     const id=clean(w?.id),word=clean(w?.word);if(!id||ids.has(id)||terms.has(word)||!/^\p{Script=Han}{1,12}$/u.test(word))throw new TypeError('Distinct valid lesson words required');
     ids.add(id);terms.add(word);return {id,word,pinyin:clean(w.pinyin)};
   });
   const rescue=sentence&&clean(sentence.sentence)&&clean(sentence.sentence).length<=160?Object.freeze({id:clean(sentence.id),sentence:clean(sentence.sentence),source:clean(sentence.source)}):null;
-  return freeze({phase:'build',structure,words:shuffle(snapshot,random),sentence:rescue,builtIds:[],checkedIds:[],challengeWords:[],dangerId:null,pendingId:null});
+  return freeze({phase:'build',structure,variant:Number.isInteger(variant)&&variant>=0&&variant<4?variant:0,words:shuffle(snapshot,random),sentence:rescue,builtIds:[],checkedIds:[],challengeWords:[],dangerId:null,pendingId:null});
 }
+export function visibleBuildingWords(state){return state.builtIds.filter(id=>!['challenge','collapsed'].includes(state.phase)||!state.checkedIds.includes(id));}
 export function drawBuildingWord(state){
   if(!['build','challenge'].includes(state.phase)||state.pendingId)return state;
   const words=state.phase==='build'?state.words:state.challengeWords,used=state.phase==='build'?state.builtIds:state.checkedIds;

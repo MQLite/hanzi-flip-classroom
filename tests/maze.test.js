@@ -25,3 +25,14 @@ it('a large personal-grade pool remains playable without truncating or rejecting
   const pool=Array.from({length:200},(_,i)=>({id:`p${i}`,word:String.fromCodePoint(0x4e00+i)})),state=createMazeState({words:pool});
   expect(state.words).toHaveLength(200);expect(route(state).length).toBeGreaterThan(0);expect(state.cells.filter(Boolean)).toHaveLength(state.grid.filter(Boolean).length);
 });
+it('neighbor lessons and restarting a lesson change real passages even with fixed or invalid entropy',()=>{
+  for(const value of [0,.5,1,NaN]){
+    let previous;
+    for(let lesson=1;lesson<=12;lesson++){
+      const state=createMazeState({words:words(),layoutKey:`paradise/1A/${lesson}`,layoutVariant:lesson%4,random:()=>value});
+      if(previous)expect(state.grid).not.toEqual(previous.grid);
+      expect(route(state).length).toBeGreaterThan(2);expect(state.grid.filter((open,i)=>open&&i!==9&&i!==71&&neighbors(i,state.grid).length===1).length).toBeGreaterThanOrEqual(2);
+      const next=createMazeState({words:words(),layoutKey:`paradise/1A/${lesson}`,layoutVariant:lesson%4,previousGrid:state.grid,random:()=>value});expect(next.grid).not.toEqual(state.grid);expect(route(next).length).toBeGreaterThan(2);previous=state;
+    }
+  }
+});
