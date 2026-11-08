@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson celebration fixture</title>
+<style>
+  body { margin: 0; min-height: 180vh; background: #e9eee1; color: #17362e; font-family: sans-serif; }
+  main { padding: 32px; }
+  button { font: inherit; padding: 12px 20px; }
+</style>
+<body style="overflow: auto; padding-right: 7px">
+<main><h1>课堂游戏</h1><button id="start">开始庆祝</button><button id="underlying">游戏操作</button></main>
+<script type="module">
+const fixture = window.fixture = {loadError: null, closes: 0, keys: [], handles: []};
+document.addEventListener('keydown', event => fixture.keys.push(event.key));
+try {
+  const modulePath = '/src/lesson-celebration.js';
+  const {showLessonCelebration} = await import(/* @vite-ignore */ modulePath);
+  // Instrument only the fixture's production-owned resources, after Vite/module setup.
+  const native = {
+    setTimeout: window.setTimeout.bind(window), clearTimeout: window.clearTimeout.bind(window),
+    requestAnimationFrame: window.requestAnimationFrame.bind(window), cancelAnimationFrame: window.cancelAnimationFrame.bind(window),
+    addEventListener: window.addEventListener.bind(window), removeEventListener: window.removeEventListener.bind(window),
+  };
+  const timers = new Set(), frames = new Set(), listeners = new Map();
+  const trackedEvents = new Set(['keydown', 'keyup', 'keypress', 'resize', 'pagehide']);
+  window.setTimeout = (callback, delay, ...args) => {
+    const id = native.setTimeout(() => { timers.delete(id); callback(...args); }, delay);
+    timers.add(id); return id;
+  };
+  window.clearTimeout = id => { timers.delete(id); native.clearTimeout(id); };
+  window.requestAnimationFrame = callback => {
+    const id = native.requestAnimationFrame(time => { frames.delete(id); callback(time); });
+    frames.add(id); return id;
+  };
+  window.cancelAnimationFrame = id => { frames.delete(id); native.cancelAnimationFrame(id); };
+  window.addEventListener = (type, listener, options) => {
+    if (trackedEvents.has(type)) {
+      if (!listeners.has(type)) listeners.set(type, new Set());
+      listeners.get(type).add(listener);
+    }
+    native.addEventListener(type, listener, options);
+  };
+  window.removeEventListener = (type, listener, options) => {
+    listeners.get(type)?.delete(listener);
+    native.removeEventListener(type, listener, options);
+  };
+  fixture.resources = () => ({timers: timers.size, frames: frames.size, listeners: [...listeners.values()].reduce((sum, set) => sum + set.size, 0)});
+  fixture.show = () => {
+    const handle = showLessonCelebration({onClose: () => { fixture.closes++; }});
+    fixture.handles.push(handle);
+    return handle;
+  };
+  document.querySelector('#start').addEventListener('click', fixture.show);
+} catch (error) {
+  fixture.loadError = error.message;
+}
+fixture.ready = true;
+</script></body></html>

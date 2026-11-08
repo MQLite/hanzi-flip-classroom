@@ -39,3 +39,22 @@ test('mobile map and journey controls fit and blocked storage does not break gam
  await expect(page.locator('#island-journey-strip')).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await page.locator('#journey-map').click();await expect(page.locator('#island-map')).toContainText('本页');
 });
+test('a full available lesson traverses five native games and celebrates on the main classroom page',async({page})=>{
+ test.setTimeout(60000);
+ await page.addInitScript(key=>localStorage.setItem(key,JSON.stringify({schemaVersion:1,questions:[{id:'one',grade:1,character:'一',pinyin:'yī',words:['一','一'],sentence:'一。'}]})),key);
+ await page.goto('/');const before=await page.evaluate(k=>localStorage.getItem(k),key);
+ await page.locator('#open-island-map').click();await page.getByRole('button',{name:'按顺序闯关',exact:true}).click();
+ await finishFlip(page);await page.locator('#journey-next').click();await page.locator('[data-mole-slot][data-status="up"]').click();await expect(page.locator('#journey-next')).toBeEnabled();await page.locator('#journey-next').click();
+ await page.locator('#maze-start').click();
+ const route=await page.locator('[data-maze-cell]').evaluateAll(nodes=>{const open=new Set(nodes.map(n=>Number(n.dataset.mazeCell))),queue=[[9]],seen=new Set([9]);while(queue.length){const p=queue.shift(),last=p.at(-1);if(last===71)return p;for(const n of [last-9,last+9,last-1,last+1])if(open.has(n)&&!seen.has(n)&&Math.abs(Math.floor(n/9)-Math.floor(last/9))+Math.abs(n%9-last%9)===1){seen.add(n);queue.push([...p,n]);}}return [];});
+ expect(route.length).toBeGreaterThan(2);for(const index of route.slice(1)){await page.locator(`[data-maze-cell="${index}"]`).click();await page.locator('#maze-confirm').click();}
+ await page.locator('#journey-next').click();await expect(page.locator('#mode-strokes')).toHaveAttribute('aria-pressed','true');
+ await page.getByRole('button',{name:'选择横',exact:true}).click();await page.locator('.glyph-shadow path[role="button"]').focus();await page.keyboard.press('Enter');
+ await expect(page.locator('#journey-next')).toBeEnabled();
+ for(const viewport of [{width:1280,height:720},{width:1920,height:1080},{width:390,height:844}]){await page.setViewportSize(viewport);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:`docs/codex/journey-main-${viewport.width}.png`,fullPage:true});}
+ await page.setViewportSize({width:1280,height:720});await page.locator('#journey-next').click();await expect(page.locator('#mode-building')).toHaveAttribute('aria-pressed','true');
+ await page.locator('#builder-start').click();await page.locator('#builder-draw').click();await page.locator('#builder-confirm').click();await page.locator('[data-builder-card]').click();await page.locator('#builder-restore').click();
+ await expect(page.locator('#lesson-celebration')).toBeVisible();await expect(page.locator('#lesson-celebration')).toContainText('太牛啦');
+ await page.getByRole('button',{name:'关闭庆祝',exact:true}).click();await expect(page.locator('#island-journey-strip')).toContainText('5 / 5 岛');
+ expect(await page.evaluate(k=>localStorage.getItem(k),key)).toBe(before);await page.locator('#mode-flip').click();await expect(page.locator('#island-journey-strip')).toBeHidden();
+});

@@ -2,6 +2,8 @@ import "./styles.css";
 import {GAME_ORDER} from './game-order.js';
 import {createIslandJourney} from './lesson-journey.js';
 import {getJourneyAvailability,journeyQuestions} from './island-journey-data.js';
+import {scenarioJourneyUrl} from './island-exploration.js';
+import {showLessonCelebration} from './lesson-celebration.js';
 import './sentence-train.css';
 import {createTrainView} from './sentence-train.js';
 import {mergeTrainQuestionPools,resolveTrainQuestion} from './sentence-train-data.js';
@@ -338,7 +340,7 @@ function journeyContext(){
  const courseLabel=selection.source==='personal'?`个人题库 · ${grade}年级`:`${selection.source==='zhongwen'?ZHONGWEN_NAME:selection.source==='paradise'?'汉语乐园':'中文乐园'} · ${selection.stage} · 第${selection.lesson}课`;
  const value={course,availability,courseLabel};journeyContextCache={key,questions:bank.questions,value};return value;
 }
-const journey=createIslandJourney({getContext:journeyContext,onConceal:concealPoison,canLaunch:mayRestart,onLaunch(mode,course,{independent=false}={}){
+const journey=createIslandJourney({getContext:journeyContext,onConceal:concealPoison,canLaunch:mayRestart,onCelebrate:()=>showLessonCelebration(),onLaunch(mode,course,{independent=false}={}){
  grade=course.grade;switchMode(mode,{...course,scope:'lesson'},true);
  if(independent){const url=new URL(location.href);url.searchParams.delete('journey');url.searchParams.set('mode',mode);history.replaceState(null,'',url);}
 }});
@@ -762,7 +764,7 @@ function render() {
     for(const id of ['#extension-toggle','#extension-hint','#extension'])$(id).hidden=true;
     $('#round-caption').textContent='观察 · 阅读 · 推理';
     $('footer > span').textContent='情景进度自动保存在当前浏览器，可随时继续。';
-    renderExplorations($('#exploration-catalog'),selection);return;
+    renderExplorations($('#exploration-catalog'),selection,{urlForScenario:s=>scenarioJourneyUrl(s,journey.getState())});return;
   }
   const q = getCurrentQuestion(session),
     active = session.phase === "active",
@@ -1187,7 +1189,7 @@ const requestedMode=entryParams.get('mode');
 if(entryParams.has('journey')){
  const source=entryParams.get('source'),stage=entryParams.get('stage'),lesson=Number(entryParams.get('lesson')),entryGrade=Number(entryParams.get('grade'));
  if(['personal','textbook','paradise','zhongwen'].includes(source)&&lesson>0&&lesson<=200&&entryGrade>=1&&entryGrade<=4){selection={source,stage,lesson,scope:'lesson'};grade=entryGrade;}
- if(!journey.restore(entryParams.get('journey')))render();
+ if(!journey.restore(entryParams.get('journey'))){if(requestedMode==='explore')switchMode('explore',matchingExplorations(selection).length?selection:undefined);else render();}
 }else if(requestedMode==='explore'){
   const linkedSelection={source:entryParams.get('source'),stage:entryParams.get('stage'),scope:'lesson',lesson:Number(entryParams.get('lesson'))};
   switchMode('explore',matchingExplorations(linkedSelection).length?linkedSelection:undefined);
@@ -1197,3 +1199,4 @@ else if(requestedMode==='building')switchMode('building');
 else if(requestedMode==='maze')switchMode('maze');
 else if(isConstruction(requestedMode))switchMode(requestedMode);
 else render();
+if(entryParams.get('islandMap')==='1')journey.open();

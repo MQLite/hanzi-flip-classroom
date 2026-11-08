@@ -29,7 +29,7 @@ export function explorationCourses(textbook){
   }
   return courses;
 }
-export function renderExplorations(root,selection){
+export function renderExplorations(root,selection,{urlForScenario}={}){
   root.replaceChildren();
   const scenarios=matchingExplorations(selection);
   if(!scenarios.length){
@@ -45,7 +45,7 @@ export function renderExplorations(root,selection){
     const title=document.createElement('h3');title.textContent=scenario.title;
     const description=document.createElement('p');description.textContent=scenario.description;
     const tags=document.createElement('p');tags.className='exploration-tags';
-    const link=document.createElement('a');link.className='primary exploration-enter';link.href=scenario.href;link.textContent='进入情景';
+    const link=document.createElement('a');link.className='primary exploration-enter';link.href=urlForScenario?.(scenario)??scenario.href;link.textContent='进入情景';
     content.append(meta,title,description,tags,link);
     const art=document.createElement('div');art.className='exploration-cover';art.setAttribute('aria-hidden','true');
     if(scenario.cityScene){

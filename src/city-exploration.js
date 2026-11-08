@@ -2,6 +2,9 @@ import scenes from './city-scenes.json';
 import {ruby, gloss} from './ruby.js';
 import {renderRoute} from './city-route.js';
 import './city-exploration.css';
+import {bindExplorationJourney} from './island-exploration.js';
+const islandJourney=bindExplorationJourney('city-mission');
+islandJourney.decorate();
 
 const byId = id => document.getElementById(id);
 const choices = byId('choices');
@@ -88,6 +91,7 @@ function showAnswer() {
     answer.replaceChildren(speaker, speech, ending);
     answer.hidden = false;
     label(next, '再玩一次', 'Zài wán yí cì', 'Play again');
+    islandJourney.reportComplete();
   } else {
     label(next, '下一关 →', 'Xià yì guān', 'Next level');
   }

@@ -3,6 +3,8 @@ import {createQuest,inspectObject,solvePuzzle,deliverLetter,requestHint,restoreQ
 import {PUZZLES,POEMS,WORDS,ITEMS} from './poetry-quest-content.js';
 import {roomArt,itemIcon} from './poetry-quest-art.js';
 import {createExplorationMusic} from './exploration-music.js';
+import {bindExplorationJourney} from './island-exploration.js';
+const islandJourney=bindExplorationJourney('two-letters');
 
 const root=document.querySelector('#quest-app');
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -24,6 +26,7 @@ function persist(){
   saved=state;
   try{window.localStorage.setItem(QUEST_STORAGE_KEY,JSON.stringify(state));}
   catch{saveNote='此浏览器暂时不能保存进度，本次仍可继续。离开页面后需重新开始。';}
+  if(getProgress(state).complete)islandJourney.reportComplete();
 }
 function header(playing){return `<header class="quest-header">
   <a class="quest-home" href="./?mode=explore" aria-label="返回情景探索"><span class="quest-brand">字</span><span>汉字奇遇岛 <small> / 情景探索</small></span></a>
@@ -130,6 +133,7 @@ function render(){
     target?.focus({preventScroll:true});
   }
   renderedPanelKey=key;
+  islandJourney.decorate(root);
 }
 function scrollPanel(){if(window.innerWidth<=760)requestAnimationFrame(()=>document.getElementById('quest-inspector')?.scrollIntoView({block:'start',behavior:'instant'}));}
 function focusFeedback(){requestAnimationFrame(()=>{const node=document.getElementById('quest-feedback');if(node){node.setAttribute('tabindex','-1');node.focus({preventScroll:true});node.scrollIntoView({block:'nearest',behavior:'instant'});}});}

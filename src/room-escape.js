@@ -2,6 +2,8 @@ import {CAT_TRAIL,CHEST_CARD_SPOT,CLUES,KEY_SPOT,PAINTING_SPOT,RUG_CENTER,TRAY_S
 import {createRoomScene} from './room-escape-scene.js';
 import {createExplorationMusic} from './exploration-music.js';
 import './room-escape.css';
+import {bindExplorationJourney} from './island-exploration.js';
+const islandJourney=bindExplorationJourney('room-escape');
 
 const root=document.querySelector('#room-app');
 const fireworkDelays=[0,250,540];
@@ -216,6 +218,8 @@ function render({focus=false,redraw=true}={}){
   const escaped=state.phase==='escaped';
   const fireworks=$('fireworks');
   const celebrating=escaped&&!moving;
+  islandJourney.decorate(root);
+  if(celebrating)islandJourney.reportComplete();
   const startingCelebration=celebrating&&fireworks.hasAttribute('hidden');
   const matching=state.phase==='match'&&!moving;
   const questioning=started&&state.phase==='clue'&&!moving;
