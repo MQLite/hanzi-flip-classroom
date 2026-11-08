@@ -2,45 +2,46 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans inline, task by task. Steps use checkbox syntax for tracking.
 
-**Goal:** Add the user-approved student-hides-poison reading game with per-round elimination and next-round restoration.
+**Goal:** Add the approved student-hides-poison reading game: any poison shows a magical effect and ends this round; everyone plays again with a new witch.
 
-**Architecture:** A pure immutable state machine owns players, secret card IDs and round transitions. A small adapter reuses the existing same-lesson vocabulary. A DOM view handles setup/covers/cards/roster; main owns mode snapshots and privacy interruption hooks.
+**Architecture:** Pure immutable round state, existing single-lesson vocabulary adapter, native DOM/CSS view, main-owned mode snapshots and privacy interruption hooks.
 
-**Tech Stack:** Existing Vite, vanilla JavaScript/CSS, Vitest and Playwright; no dependencies or bank-schema changes.
+**Tech Stack:** Existing Vite, JavaScript/CSS, Vitest and Playwright. No new dependencies or bank changes.
 
-**Spec:** docs/superpowers/specs/2026-11-08-witch-poison-design.md (flow explicitly approved).
+**Spec:** docs/superpowers/specs/2026-11-08-witch-poison-design.md (latest flow explicitly approved).
 
 ## Global Constraints
 
-- 1–2 poisons; 2–16 unique cards with at least one safe card; 2–30 named students with one witch excluded from reading.
-- Card selection and teacher reveal are separate. An eliminated reader cannot act again this round; next round restores everyone.
-- Only hide can reveal secret selections; public stages have no secret-card attributes/labels/styles. Mode/focus/page interruptions cover the hide phase.
-- Preserve all existing modes, content, local banks, flags, sounds and exploration links; use single-lesson words and optional known pinyin.
+- 1–2 poisons; 2–16 unique cards and at least one safe card. No roster or elimination state.
+- Selection and teacher reveal are separate. Any poison immediately completes the round, including two-poison rounds.
+- Secret markings exist only during hide; interruptions cover the hide phase. Public stages expose only revealed outcomes.
+- Next round clears secret/used/pending state and prompts a new witch; preserve words and poison count.
+- Keep all existing games, content, fonts, flags, sounds and bank persistence. Words stay within current lesson.
 
 ## Review Focus
 
-- Last active reader is poisoned before every poison has been found: round must end, no stuck turn.
-- Double reveal or queued click from a past turn: a card and a student must be settled at most once.
-- Returning from a hidden tab/mode/dialog must not expose the setup markings.
-- Invalid/duplicate names, insufficient words and two-poison selection limits must be explained without data loss.
-- Mode snapshots, touch/keyboard controls and short projector/mobile layouts must remain usable.
+- A first poison in a two-poison round must end immediately, and repeated reveal must do nothing.
+- Teacher can correct/re-read before reveal without changing secret poison selection.
+- Returning from a tab/mode/dialog must not reveal secret markings.
+- Too few words, invalid count and maximum selection need clear feedback.
+- Snapshots, touch/keyboard controls and short projector/mobile layouts must work.
 
 ### Task 1: Round rules and lesson pool
 
 **Files:** Create src/poison-core.js, src/poison-vocabulary.js, tests/poison.test.js.
 
-**Interfaces:** createPoisonState({words,playerNames,witchIndex,poisonCount,round=1,random}); beginPoisonHiding(state); togglePoisonWord(state,id); sealPoison(state); beginPoisonReading(state); selectPoisonReader(state,id); selectPoisonCard(state,id); cancelPoisonCard(state); revealPoisonCard(state); coverPoisonSecrets(state); nextPoisonRound(state). State exposes phase, words, players, witchId, poisonCount, poisonIds, used/results/outIds, currentPlayerId, pendingId, feedback, round. getPoisonPool(selection,bankQuestions) returns {words,label,note}.
+**Interfaces:** createPoisonState({words,poisonCount,round=1,random}); beginPoisonHiding(state); togglePoisonWord(state,id); sealPoison(state); beginPoisonReading(state); selectPoisonCard(state,id); cancelPoisonCard(state); revealPoisonCard(state); coverPoisonSecrets(state); nextPoisonRound(state). State: phase, words, poisonCount, poisonIds, results[{cardId,poison}], pendingId, feedback, round. getPoisonPool(selection,bankQuestions): {words,label,note}.
 
-- [ ] Write failing tests for validation, private phases, reveal gating, count limits, attribution, elimination/turn skipping, completion, double action, next round, immutability and exact lesson pools; run RED.
-- [ ] Implement pure transitions and the same-lesson adapter; run GREEN and full unit suite; commit.
+- [ ] Write failing tests for validation, phases, poison count, reveal gating, first-poison completion, double actions, next round, privacy covering, immutability and exact lesson pools; observe RED.
+- [ ] Implement pure transitions and vocabulary adapter; run GREEN/full unit suite; commit.
 
-### Task 2: Setup, secret covers and mode integration
+### Task 2: Covers, cards, effects and mode integration
 
 **Files:** Create src/poison.js, src/poison.css, tests/poison/ui.spec.js; modify src/main.js, README.md.
 
-**Interfaces:** createPoisonView(host,dispatch).update({state,pool,selectedIds,setup,showPinyin,error}); actions: choose-word, setup, start, hide, card, seal, read, reader, reveal, cancel, next-round, prepare. Main uses all state actions, stores independent snapshots, forces book scope to lesson, and calls coverPoisonSecrets on interruptions.
+**Interfaces:** createPoisonView(host,dispatch).update({state,pool,selectedIds,poisonCount,showPinyin}); intents choose-word, count, start, hide, card, seal, read, reveal, cancel, next-round, prepare. Main owns state, snapshots, lesson scope and coverPoisonSecrets hooks.
 
-- [ ] Add failing browser scenarios for close-eyes → hide → sealed public board → teacher reveal → elimination/next round, secret cleanup, source/old-mode isolation, mobile and touch; observe RED.
-- [ ] Implement readable green/beige/purple cards and roster, setup validation, focus-preserving native buttons and explicit reveal control; integrate mode and interruption hooks.
-- [ ] Run new browser scenarios, targeted existing-mode regressions, all unit tests and production-path build; inspect screenshots.
-- [ ] Request one fresh whole-branch review, fix material findings with regression checks, commit and publish via existing Pages workflow. Verify live game and clean status.
+- [ ] Add failing browser cases for secret setup, no public hints, separate reveal, magical end state, new witch reset, interruptions, source/old-mode isolation, mobile and touch; observe RED.
+- [ ] Implement readable green/beige/purple cards, explicit teacher controls and reduced-motion effects; integrate without old-game shortcut interference.
+- [ ] Run browser regressions, all units, production build and screenshot inspection.
+- [ ] Fresh whole-branch review; fix material findings, commit, publish through Pages and verify live.
