@@ -1,7 +1,11 @@
 import {it,expect} from 'vitest';
-import {buildingBlueprint} from '../src/building-blueprint.js';
+import {buildingBlueprint,brickTextLayout} from '../src/building-blueprint.js';
 import {createBuildingState,drawBuildingWord,confirmBuildingWord,beginBuildingChallenge,chooseBuildingChallengeWord,restoreBuilding,visibleBuildingWords} from '../src/building-core.js';
 const words=n=>Array.from({length:n},(_,i)=>({id:`w${i}`,word:String.fromCodePoint(0x4e00+i)}));
+it('long labels wrap to the actual face while wide bricks keep large characters on one line',()=>{
+  expect(brickTextLayout('澳大利亚',4.4,1).lines).toEqual(['澳大利亚']);expect(brickTextLayout('澳大利亚',1,1).lines).toEqual(['澳大','利亚']);
+  for(const [width,height]of [[1,1],[4.4,1],[.85,.67]]){const layout=brickTextLayout('一二三四五六七八九十中华',width,height);expect(layout.lines.join('')).toBe('一二三四五六七八九十中华');expect(Math.max(...layout.lines.map(l=>[...l].length))*layout.fontSize).toBeLessThanOrEqual(width*.88);expect(layout.lines.length*layout.fontSize*1.13).toBeLessThanOrEqual(height*.8+.0001);}
+});
 it('every selected word owns exactly one complete front-facing brick at sparse and full counts',()=>{
   for(const type of ['house','bridge','tower','building'])for(const variant of [0,1,2,3])for(const n of [1,3,9,16]){
     const input=words(n),model=buildingBlueprint(type,{words:input,variant}),bricks=model.blocks.filter(b=>b.wordId);
@@ -15,6 +19,12 @@ it('each building type has four geometrically different silhouettes, not only di
   for(const type of ['house','bridge','tower','building']){
     const models=[0,1,2,3].map(variant=>buildingBlueprint(type,{words:words(9),variant}));
     expect(new Set(models.map(m=>JSON.stringify(m.blocks.map(b=>[b.kind,b.size,b.position])))).size).toBe(4);expect(new Set(models.map(m=>m.name)).size).toBe(4);
+  }
+});
+it('roof decorations rest on the building rather than floating above the silhouette',()=>{
+  for(const type of ['house','tower'])for(const variant of [0,1,2,3]){
+    const blocks=buildingBlueprint(type,{words:words(16),variant}).blocks;
+    for(const b of blocks.filter(b=>b.reveal==='finish'&&!b.rotation))expect(blocks.some(other=>other!==b&&other.position[1]<b.position[1]&&b.position[1]-b.size[1]/2<=other.position[1]+other.size[1]/2+.09&&[0,2].every(axis=>Math.abs(b.position[axis]-other.position[axis])<(b.size[axis]+other.size[axis])/2)),`${type}/${variant} ${b.kind} ${b.position}`).toBe(true);
   }
 });
 it('safe or dangerous reads remove only their own brick, restoration puts all bricks back, and new challenges start whole',()=>{

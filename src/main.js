@@ -41,6 +41,7 @@ import './maze.css';
 import {createMazeView} from './maze.js';
 import {createMazeState,selectMazeCell,confirmMazeStep,cancelMazeStep} from './maze-core.js';
 import {createBuildingView} from './building.js';
+import {lessonAppearance} from './lesson-appearance.js';
 import {createBuildingState,drawBuildingWord,confirmBuildingWord,beginBuildingChallenge,restoreBuilding,chooseBuildingChallengeWord} from './building-core.js';
 import {createPoisonView} from './poison.js';
 import {getPoisonPool} from './poison-vocabulary.js';
@@ -135,14 +136,14 @@ function prepareMaze(){
   const pool=getMolePool({...selection,grade,type:'characters'},bank.questions);
   mazePool={...pool,words:pool.words.map(word=>({...word,id:word.id.replace('mole/','maze/')}))};mazeState=null;
 }
-$('#help-dialog').insertAdjacentHTML('beforeend','<p>汉字迷宫：先观察立体墙和岔路，再选上下左右相邻的汉字。学生认读，老师点击“读对了，前进一步”，小人才迈步走一格；读错先重读，死路可以退回来。小人抵达出口后跳跃挥手、飞出彩纸庆祝，结束后可选下一课。可切换平面，减少动态效果时静态显示。汉字来自本课，会重复出现。活动导航按“搭建挑战 → 女巫毒药 → 汉字迷宫”携带当前教材课次；原导航保留各自本页进度。</p>');
+$('#help-dialog').insertAdjacentHTML('beforeend','<p>汉字迷宫：每课变换通路，同课“再走一张”也会换路线。先观察立体墙和岔路，再选上下左右相邻的汉字。学生认读，老师点击“读对了，前进一步”，小人才迈步走一格；读错先重读，死路可以退回来。小人抵达出口后跳跃挥手、飞出彩纸庆祝，结束后可选下一课。可切换平面，减少动态效果时静态显示。汉字来自本课，会重复出现。活动导航按“搭建挑战 → 女巫毒药 → 汉字迷宫”携带当前教材课次；原导航保留各自本页进度。</p>');
 function prepareBuilding(){
   if(selection.source!=='personal')selection={...selection,scope:'lesson'};
   const pool=getPoisonPool({...selection,grade},bank.questions);
   buildingPool={...pool,words:pool.words.map(word=>({...word,id:word.id.replace(/^poison\//u,'building/')}))};
   buildingSelectedIds=buildingPool.words.slice(0,12).map(word=>word.id);buildingSentenceId=buildingPool.sentences[0]?.id??'';buildingState=null;
 }
-$('#help-dialog').insertAdjacentHTML('beforeend','<p>汉字建筑师：每课可选房、桥、塔、楼，以及1–16个本课字词。先抽词，学生朗读后老师确认，3D积木逐块落下。搭好后右侧展示本轮全部词卡，学生挑选朗读，老师点卡立即检查；安全卡消失，危险卡让建筑翻转散落。读出本课重点句子，老师确认后积木飞回复原，再继续女巫活动。没有重点句子的课仍可搭建并进入下一活动。</p>');
+$('#help-dialog').insertAdjacentHTML('beforeend','<p>汉字建筑师：每课可选房、桥、塔、楼，以及1–16个本课字词；四类建筑各有不同款式，换课变外形。每个词写在对应词砖上，学生朗读后老师确认，词砖逐块落下。搭好后从右侧挑词朗读，老师点卡；安全词会移走对应砖块和词卡，危险词让剩余建筑翻转散落。读出本课重点句子，老师确认后全部词砖飞回复原，再继续女巫活动。没有重点句子的课仍可搭建并进入下一活动。</p>');
 $('#help-dialog').insertAdjacentHTML('beforeend','<p>女巫解药为可选环节：准备时选择本课重点句子，变身后点击“使用解药”，学生朗读，再由老师点击“读完了，解救成功”。可以跳过解药直接换小女巫，也可以点击“选择其他课”更换教材或课次。</p>');
 $('#help-dialog').insertAdjacentHTML('beforeend','<p>女巫的毒药：选本课2–16张词卡和1–2个毒药，其他同学闭眼，小女巫秘密点选。藏好后睁眼，学生先读，老师点刚读过的词卡，立即给结果。安全卡变灰；毒药立刻触发烟雾、青蛙变身和卡通音效，结束本轮并询问是否使用解药。可读本课句子解救，也可跳过后进入迷宫。音效可关闭，所有同学仍可继续参加。离开藏毒画面先遮挡秘密选择。</p>');
 function preparePoison(){
@@ -301,7 +302,7 @@ function mazeIntent(intent,value){
   if(intent==='next-activity'){goActivity('building');$(selection.source==='personal'?'#grade':'#lesson').focus();notify('请先在上方选择下一课，再开始新一组活动。');return;}
   if(intent==='previous-activity'){goActivity('poison');return;}
   if(intent==='start'||intent==='restart'){
-    if(!mazePool.words.length||(intent==='restart'&&!mayRestart()))return;mazeState=createMazeState({words:mazePool.words});
+    if(!mazePool.words.length||(intent==='restart'&&!mayRestart()))return;const look=lessonAppearance(selection,grade);mazeState=createMazeState({words:mazePool.words,layoutKey:look.key,layoutVariant:look.variant,previousGrid:mazeState?.grid});
   }else if(mazeState){const actions={cell:()=>selectMazeCell(mazeState,value),confirm:()=>confirmMazeStep(mazeState),cancel:()=>cancelMazeStep(mazeState)};if(!actions[intent])return;mazeState=actions[intent]();}
   render();
 }
@@ -316,7 +317,7 @@ function buildingIntent(intent,value){
   else if(intent==='sentence')buildingSentenceId=value;
   else if(intent==='start'){
     if(!buildingSelectedIds.length)return;
-    buildingState=createBuildingState({words:buildingSelectedIds.map(id=>buildingPool.words.find(w=>w.id===id)),structure:buildingStructure,sentence:buildingPool.sentences.find(s=>s.id===buildingSentenceId)});
+    buildingState=createBuildingState({words:buildingSelectedIds.map(id=>buildingPool.words.find(w=>w.id===id)),structure:buildingStructure,sentence:buildingPool.sentences.find(s=>s.id===buildingSentenceId),variant:lessonAppearance(selection,grade).variant});
   }else if(intent==='prepare'||intent==='change-lesson'){
     if(!mayRestart())return;buildingState=null;
     if(intent==='change-lesson'){prepareBuilding();syncSelection();render();$(selection.source==='personal'?'#grade':'#lesson').focus();notify('请在上方选择其他课次或教材。');return;}
@@ -724,7 +725,7 @@ function render() {
     strokeCleanup?.();strokeCleanup=null;cardStrokeCleanup?.();cardStrokeCleanup=null;cardStrokeKey=null;cardStrokeView=null;
     $('#card-face').replaceChildren();for(const id of ['#extension-toggle','#extension-hint','#extension'])$(id).hidden=true;
     $('#round-caption').textContent='本课字词 · 搭建与拯救';
-    buildingView.update({state:buildingState,pool:buildingPool,selectedIds:buildingSelectedIds,structure:buildingStructure,sentenceId:buildingSentenceId,showPinyin});return;
+    buildingView.update({state:buildingState,pool:buildingPool,selectedIds:buildingSelectedIds,structure:buildingStructure,sentenceId:buildingSentenceId,showPinyin,variant:lessonAppearance(selection,grade).variant});return;
   }
   if(gameMode==='poison'){
     strokeCleanup?.();strokeCleanup=null;cardStrokeCleanup?.();cardStrokeCleanup=null;cardStrokeKey=null;cardStrokeView=null;

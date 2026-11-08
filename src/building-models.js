@@ -23,7 +23,7 @@ for(let row=0;row<4;row++)for(let col=0;col<3;col++)building.push(block([1.12,1.
 building.push(block([3.75,.2,2.85],[0,4.52,0],'#527e73'),block([.68,1.1,.15],[0,.77,1.35],'#526f71','door'),block([.7,.7,.7],[.85,4.97,-.5],'#cdb471'));
 const models=Object.freeze({house:Object.freeze(house),bridge:Object.freeze(bridge),tower:Object.freeze(tower),building:Object.freeze(building)});
 export function buildingBlocks(type){return models[type]??models.house;}
-export function blockHome(block){return {position:[...block.position],rotation:[0,0,0]};}
+export function blockHome(block){return {position:[...block.position],rotation:[...(block.rotation??[0,0,0])]};}
 export function blockRubble(block,index){
   const angle=index*2.399963,radius=1.65+(index%4)*.37;
   const rotation=index===0?[0,.65,0]:block.kind==='box'?[.95+(index%3)*.2,0,((index%5)-2)*.35]:[.08,.8+(index%4)*.5,-.08];

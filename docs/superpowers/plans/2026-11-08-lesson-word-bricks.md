@@ -25,13 +25,13 @@
 ### Task 1: Lesson identity, blueprint and maze contracts
 **Files:** create src/lesson-appearance.js, src/building-blueprint.js, tests/lesson-appearance.test.js, tests/building-blueprint.test.js; modify building-core.js, maze-core.js, tests/maze.test.js.
 **Interfaces:** lessonAppearance(selection,grade)->{key,variant}; buildingBlueprint(type,{words,variant})->{name,blocks}; block descriptors include wordId/word for one brick per selected word; visibleBuildingWords(state)->word ids (restored resets); createBuildingState accepts variant0–3; createMazeState accepts layoutKey, previousGrid and layoutVariant.
-- [ ] RED real geometry/unique ownership, sparse/full counts, visible words after arbitrary safe/danger/restoration, neighbor lesson variants and maze topology even with constant RNG.
-- [ ] Implement pure contracts and seeded generation with bounded retries, run focused tests and all units. Expected all pass. Commit.
+- [x] RED real geometry/unique ownership, sparse/full counts, visible words after arbitrary safe/danger/restoration, neighbor lesson variants and maze topology even with constant RNG.
+- [x] Implement pure contracts and seeded generation with bounded retries, run focused tests and all units. Expected all pass. Commit.
 
 ### Task 2: Persistent word-brick scene and lesson integration
 **Files:** modify building-scene.js/building.js/building.css/building-camera.js/main.js/README; create src/building-blueprint-art.js, tests/word-bricks/ui.spec.js.
 **Interfaces:** scene uses blueprint descriptors, one canvas glyph texture per word; remove animation slides/shrinks exact word group to hidden endpoint. Flat SVG shares blueprint and visibility. Main passes lesson appearance to state/previews and maze generation; previousGrid prevents same restart.
-- [ ] RED browser cases for labeled brick counts/pixels, arbitrary safe removal, danger→full rescue/new challenge, mode/reduce/context/flat boundaries and real lesson/maze changes.
-- [ ] Implement scene/flat/view integration; retain native controls and correct busy locks. Expected browser cases pass.
-- [ ] All units/build, existing building/maze/witch flow regressions and real production preview/screenshots. Expected green, bank unchanged.
+- [x] RED browser cases for labeled brick counts/pixels, arbitrary safe removal, danger→full rescue/new challenge, mode/reduce/context/flat boundaries and real lesson/maze changes.
+- [x] Implement scene/flat/view integration; retain native controls and correct busy locks. Expected browser cases pass.
+- [x] All units/build, existing building/maze/witch flow regressions and real production preview/screenshots. Expected green, bank unchanged.
 - [ ] One fresh whole-change read-only review, fix material findings once RED→GREEN; prepare reviewable result before release authorization. Publish only after authorization and verify public flow.

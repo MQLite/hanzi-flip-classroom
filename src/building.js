@@ -1,4 +1,7 @@
-import {BUILDING_TYPES,createBuildingArt} from './building-art.js';
+import {BUILDING_TYPES} from './building-art.js';
+import {buildingBlueprint} from './building-blueprint.js';
+import {createBlueprintArt} from './building-blueprint-art.js';
+import {visibleBuildingWords} from './building-core.js';
 import {createBuildingScene} from './building-scene.js';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 function button(id,label,primary=false){const node=el('button',label,primary?'primary':'');node.id=id;return node;}
@@ -22,12 +25,12 @@ export function createBuildingView(host,dispatch){
     const layout=el('div',undefined,'builder-prep-layout'),left=el('section'),types=el('div',undefined,'builder-types');types.setAttribute('aria-label','选择建筑类型');
     for(const [type,name]of Object.entries(BUILDING_TYPES)){
       const b=button(`builder-type-${type}`,undefined);b.dataset.builderType=type;b.setAttribute('aria-pressed',String(type===model.structure));
-      const art=createBuildingArt({structure:type,progress:1});art.setAttribute('aria-hidden','true');b.append(art,el('strong',name));types.append(b);
+      const words=Array.from({length:9},(_,i)=>({id:`preview${i}`,word:''})),blueprint=buildingBlueprint(type,{words,variant:model.variant}),art=createBlueprintArt(blueprint,{phase:'built',words,builtIds:words.map(w=>w.id),checkedIds:[]});art.setAttribute('aria-hidden','true');b.append(art,el('strong',name),el('small',blueprint.name,'builder-shape-name'));types.append(b);
     }
     left.append(types,el('p',model.pool.label,'builder-course'));const choices=el('div',undefined,'builder-choices');choices.setAttribute('role','group');choices.setAttribute('aria-label','选择本轮搭建字词');
     for(const word of model.pool.words){const b=el('button');b.dataset.builderChoice=word.id;b.setAttribute('aria-pressed',String(model.selectedIds.includes(word.id)));b.append(wordText(word,model.showPinyin));choices.append(b);}left.append(choices);
     if(!model.pool.words.length)left.append(el('p','当前范围没有可用词语，请换课或打开题库管理。','builder-note'));
-    const side=el('aside',undefined,'builder-guide'),list=el('ol');for(const text of ['选建筑和本课字词。','抽一个词，学生大声读，老师确认后搭建。','搭好后随机读词，某个词会让建筑塌掉。','读出本课重点句子，老师确认后复原。'])list.append(el('li',text));side.append(list);
+    const side=el('aside',undefined,'builder-guide'),list=el('ol');for(const text of ['选建筑和本课字词，每课有不同外形。','抽一个词，学生大声读，老师确认后搭一块词砖。','搭好后挑词朗读，每读一词移走一砖；危险词会让建筑塌掉。','读出本课重点句子，老师确认后复原全部词砖。'])list.append(el('li',text));side.append(list);
     const label=el('label','本课拯救句子'),select=el('select');select.id='builder-sentence-choice';select.setAttribute('aria-label','本课拯救句子');
     const empty=el('option','只练搭建，暂不用拯救句子');empty.value='';select.append(empty);
     for(const record of model.pool.sentences){const option=el('option',record.sentence);option.value=record.id;select.append(option);}select.value=model.sentenceId;label.append(select);side.append(label);
@@ -37,11 +40,11 @@ export function createBuildingView(host,dispatch){
   }
   function round(){
     const state=model.state,name=BUILDING_TYPES[state.structure],titles={build:`一起搭${name}`,built:`${name}搭好啦！`,challenge:'随机读词，建筑稳不稳？',collapsed:'哎呀，建筑塌掉了！',restored:'复原成功，重新站起来啦！'};
-    const heading=el('div',undefined,'builder-heading');heading.append(el('span','汉字建筑师','builder-kicker'),el('h3',titles[state.phase]),el('p',model.pool.label,'builder-course'));host.append(heading);
+    const heading=el('div',undefined,'builder-heading');heading.append(el('span',buildingBlueprint(state.structure,{words:state.words,variant:state.variant}).name,'builder-kicker'),el('h3',titles[state.phase]),el('p',model.pool.label,'builder-course'));host.append(heading);
     const layout=el('div',undefined,'builder-round-layout');layout.append(sceneHost);
-    const desk=el('section',undefined,'builder-desk'),progress=el('p',`已搭建 ${state.builtIds.length} / ${state.words.length} 个词`,'builder-progress');progress.id='builder-progress';progress.setAttribute('role','status');desk.append(progress);
+    const desk=el('section',undefined,'builder-desk'),progress=el('p',['challenge','collapsed'].includes(state.phase)?`已认读 ${state.checkedIds.length} 个词 · 剩余 ${visibleBuildingWords(state).length} / ${state.words.length} 块词砖`:`已搭建 ${state.builtIds.length} / ${state.words.length} 块词砖`,'builder-progress');progress.id='builder-progress';progress.setAttribute('role','status');desk.append(progress);
     if((state.phase==='built'&&state.sentence)||state.phase==='challenge'){
-      desk.append(el('h4','从词卡里挑一个，大声读出来'),el('p',state.checkedIds.length?'安全！读过的词卡已收走，继续挑一张。':'学生先读，老师点选刚读过的词卡，立即检查建筑。','builder-note'));
+      desk.append(el('h4','从词卡里挑一个，大声读出来'),el('p',state.checkedIds.length?'安全！对应词砖和词卡已移走，继续挑一张。':'学生先读，老师点选刚读过的词卡；每读一词，移走一砖。','builder-note'));
       const cards=el('div',undefined,'builder-challenge-cards');cards.setAttribute('role','group');cards.setAttribute('aria-label','挑选已读的本课词卡');
       for(const word of state.words.filter(w=>!state.checkedIds.includes(w.id))){const card=el('button');card.dataset.builderCard=word.id;card.append(wordText(word,model.showPinyin));cards.append(card);}desk.append(cards);
       const left=el('p',`还剩 ${state.words.length-state.checkedIds.length} / ${state.words.length} 张词卡`,'builder-note');left.setAttribute('role','status');desk.append(left);
@@ -50,7 +53,7 @@ export function createBuildingView(host,dispatch){
       prompt.append(el('span',state.phase==='challenge'?`随机挑战 · 已安全读 ${state.checkedIds.length} 个词`:'抽词 → 大声读 → 老师确认','builder-kicker'));
       if(word){const card=wordText(word,model.showPinyin);card.querySelector('strong').id='builder-word';prompt.append(card);}else prompt.append(el('p',state.phase==='challenge'?'建筑站稳了，抽一个词来试试看。':'准备好了吗？抽一个本课字词。'));
       desk.append(prompt);const controls=el('div',undefined,'builder-read-controls'),draw=button('builder-draw',state.phase==='challenge'?'随机抽词':'抽下一个词',true),confirm=button('builder-confirm',state.phase==='challenge'?'读完了，检查建筑':'读完了，搭一部分',true);
-      draw.disabled=Boolean(state.pendingId);confirm.disabled=!state.pendingId;controls.append(draw,confirm);desk.append(controls,el('p','读错先纠正、再重读，由老师确认。','builder-note'));
+      confirm.textContent='读对了，搭一块词砖';draw.disabled=Boolean(state.pendingId);confirm.disabled=!state.pendingId;controls.append(draw,confirm);desk.append(controls,el('p','读错先纠正、再重读，由老师确认。','builder-note'));
     }else if(state.phase==='collapsed'){
       const hit=state.words.find(w=>w.id===state.checkedIds.at(-1));desk.append(el('p',`读到“${hit?.word??''}”，触发了倒塌。`,'builder-note'),el('h4','本课重点句子，就是拯救办法'));
       const sentence=el('p',state.sentence.sentence,'builder-rescue-sentence');sentence.id='builder-rescue-sentence';desk.append(sentence,el('p',state.sentence.source,'builder-note'),button('builder-restore','句子读完了，复原建筑',true));

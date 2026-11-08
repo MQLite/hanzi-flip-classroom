@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {blockHome,blockRubble,sampleBlockMotion} from './building-models.js';
 
 export function buildingCameraFrame(blocks,aspect,phase){
-  const direction=new THREE.Vector3(9,7,11).normalize(),right=new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0),direction).normalize(),up=new THREE.Vector3().crossVectors(direction,right);
+  const direction=new THREE.Vector3(3,5,13).normalize(),right=new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0),direction).normalize(),up=new THREE.Vector3().crossVectors(direction,right);
   let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
   function include(block,pose){
     const rotation=new THREE.Euler(...pose.rotation),position=new THREE.Vector3(...pose.position);

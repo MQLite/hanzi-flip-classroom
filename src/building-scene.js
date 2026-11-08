@@ -1,6 +1,8 @@
 import * as THREE from 'three';
-import {BUILDING_TYPES,createBuildingArt} from './building-art.js';
-import {buildingBlocks,blockHome,blockRubble,sampleBlockMotion} from './building-models.js';
+import {blockHome,blockRubble,sampleBlockMotion} from './building-models.js';
+import {buildingBlueprint,brickTextLayout} from './building-blueprint.js';
+import {createBlueprintArt,blueprintBlockVisible} from './building-blueprint-art.js';
+import {visibleBuildingWords} from './building-core.js';
 import {buildingCameraFrame} from './building-camera.js';
 
 const node=(tag,cls)=>{const el=document.createElement(tag);el.className=cls;return el;};
@@ -10,7 +12,7 @@ export function createBuildingScene(host,{onBusyChange=()=>{}}={}){
   toggle.id='builder-scene-mode';toggle.type='button';host.append(world,flat,toggle,caption);
   const media=matchMedia('(prefers-reduced-motion: reduce)'),scene=new THREE.Scene(),camera=new THREE.OrthographicCamera(-5,5,4,-4,.1,80);
   const assembly=new THREE.Group(),river=new THREE.Group(),particles=new THREE.Group();scene.add(assembly,river,particles);
-  const geometries={box:new THREE.BoxGeometry(1,1,1),stud:new THREE.CylinderGeometry(.5,.5,1,12),roof:new THREE.CylinderGeometry(.045,.5,1,8),spire:new THREE.ConeGeometry(.5,1,8),dust:new THREE.SphereGeometry(1,7,5)};
+  const geometries={box:new THREE.BoxGeometry(1,1,1),stud:new THREE.CylinderGeometry(.5,.5,1,12),roof:new THREE.CylinderGeometry(.045,.5,1,8),spire:new THREE.ConeGeometry(.5,1,8),dust:new THREE.SphereGeometry(1,7,5),label:new THREE.PlaneGeometry(1,1)};
   const shape=new THREE.Shape();shape.moveTo(-.5,-.5);shape.lineTo(.5,-.5);shape.lineTo(0,.5);shape.closePath();
   geometries.gable=new THREE.ExtrudeGeometry(shape,{depth:1,bevelEnabled:false});geometries.gable.translate(0,0,-.5);
   const materials=new Map();
@@ -22,13 +24,14 @@ export function createBuildingScene(host,{onBusyChange=()=>{}}={}){
   scene.add(new THREE.HemisphereLight('#fff9e8','#a5b9ac',2.1),sun);
   const dustMaterial=new THREE.MeshBasicMaterial({color:'#e4cca1',transparent:true,opacity:0,depthWrite:false});
   for(let i=0;i<20;i++){const puff=new THREE.Mesh(geometries.dust,dustMaterial);puff.scale.setScalar(.07+(i%4)*.025);particles.add(puff);}particles.visible=false;
-  let renderer,state,blocks=[],descriptors=[],motion=null,frame=0,active=false,simple=false,available=true,disposed=false,partCount=0;
+  let renderer,state,blueprint,blocks=[],descriptors=[],motion=null,frame=0,active=false,simple=false,available=true,disposed=false;
+  const labels=[];
   function setPose(group,pose){group.position.set(...pose.position);group.rotation.set(...pose.rotation);}
   function currentPose(group){return {position:group.position.toArray(),rotation:[group.rotation.x,group.rotation.y,group.rotation.z]};}
   function captionText(){
     host.dataset.renderMode=simple||!available?'flat':'3d';host.dataset.motion=motion?.kind??'idle';host.setAttribute('aria-busy',String(Boolean(motion)));
-    const moving={drop:'积木逐块落下，正在就位…',collapse:'轰隆！积木翻转，散落到地面…',restore:'魔法复原！积木正飞回原位…'};
-    const settled={build:'大声读词，让积木一块块搭起来',built:'建筑搭好啦，准备随机读词挑战',challenge:'随机读词，看看建筑稳不稳',collapsed:'建筑倒塌了，读出本课句子来拯救',restored:'复原完成！建筑重新站起来啦'};
+    const moving={drop:'词砖逐块落下，正在就位…',remove:'读对了！对应词砖正在移出…',collapse:'轰隆！剩下的积木翻转，散落到地面…',restore:'魔法复原！全部词砖正飞回原位…'};
+    const settled={build:'大声读词，让对应词砖一块块搭起来',built:'建筑搭好啦，挑词朗读，每读一词移走一砖',challenge:`安全！还剩${state?visibleBuildingWords(state).length:0}块词砖，继续挑选`,collapsed:'建筑倒塌了，读出本课句子来拯救',restored:'复原完成！所有词砖重新回来了'};
     caption.textContent=(host.dataset.renderMode==='3d'?'3D积木 · ':'平面显示 · ')+(motion?moving[motion.kind]:settled[state?.phase]??'准备搭建');
     toggle.textContent=host.dataset.renderMode==='3d'?'平面显示':'立体显示';toggle.disabled=!available;toggle.setAttribute('aria-label',host.dataset.renderMode==='3d'?'切换平面显示':'切换立体显示');
   }
@@ -38,8 +41,8 @@ export function createBuildingScene(host,{onBusyChange=()=>{}}={}){
   }
   function finish(){
     cancelAnimationFrame(frame);frame=0;const wasBusy=Boolean(motion);
-    if(motion){for(const item of motion.items){item.group.visible=true;setPose(item.group,item.to);}motion=null;}
-    assembly.position.set(0,0,0);particles.visible=false;captionText();if(wasBusy)onBusyChange(false);draw();
+    if(motion){for(const item of motion.items){item.group.visible=item.visibleEnd;item.group.scale.setScalar(1);setPose(item.group,item.to);}motion=null;}
+    assembly.position.set(0,0,0);particles.visible=false;captionText();if(wasBusy)onBusyChange(false);resize();
   }
   function fallback(){available=false;simple=true;finish();captionText();}
   function lost(event){event.preventDefault();fallback();}
@@ -50,7 +53,7 @@ export function createBuildingScene(host,{onBusyChange=()=>{}}={}){
   }catch{available=false;simple=true;}
   function resize(){
     if(disposed||!renderer)return;const width=world.clientWidth,height=world.clientHeight;if(!width||!height)return;
-    renderer.setSize(width,height,false);const fit=buildingCameraFrame(descriptors,width/height,state?.phase);
+    renderer.setSize(width,height,false);const fit=buildingCameraFrame(descriptors,width/height,motion?.kind==='restore'?'restored':state?.phase==='restored'?'built':state?.phase);
     for(const key of ['left','right','top','bottom'])camera[key]=fit[key];camera.position.set(...fit.position);camera.lookAt(...fit.target);camera.updateProjectionMatrix();draw();
   }
   function makeBlock(description){
@@ -67,27 +70,34 @@ export function createBuildingScene(host,{onBusyChange=()=>{}}={}){
     }
     if(description.detail==='door')mesh(geometries.dust,'#f4d078',[.065,.065,.065],[size[0]*.3,0,size[2]/2+.07],group);
     if(description.detail==='rail')for(const x of [-size[0]*.43,size[0]*.43])mesh(geometries.box,description.color,[.13,.27,.2],[x,-size[1]/2-.13,0],group);
+    if(description.word){
+      const canvas=document.createElement('canvas'),unit=512/(size[0]*.9),text=brickTextLayout(description.word,size[0],size[1]);canvas.width=512;canvas.height=Math.ceil(size[1]*.82*unit);const context=canvas.getContext('2d');
+      context.fillStyle='#fff5dc';context.fillRect(0,0,canvas.width,canvas.height);context.strokeStyle='#cbbd94';context.lineWidth=3;context.strokeRect(2,2,canvas.width-4,canvas.height-4);context.fillStyle='#264f3d';context.textAlign='center';context.textBaseline='middle';context.font=`600 ${text.fontSize*unit}px KaiTi, STKaiti, serif`;
+      text.lines.forEach((line,i)=>context.fillText(line,256,canvas.height/2+(i-(text.lines.length-1)/2)*text.fontSize*1.13*unit,498));
+      const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;const labelMaterial=new THREE.MeshBasicMaterial({map:texture}),label=new THREE.Mesh(geometries.label,labelMaterial);label.scale.set(size[0]*.9,size[1]*.82,1);label.position.set(0,0,size[2]/2+.018);group.add(label);labels.push({texture,material:labelMaterial});
+    }
     return group;
   }
+  function clearLabels(){for(const label of labels){label.texture.dispose();label.material.dispose();}labels.length=0;}
   function tick(now){
     frame=0;if(disposed||!active||document.hidden||simple||!available){finish();return;}
     if(!motion){draw();return;}let done=true;
     for(const item of motion.items){
       const progress=Math.max(0,Math.min(1,(now-item.start)/item.duration));item.group.visible=now>=item.start;
-      setPose(item.group,sampleBlockMotion({...item,kind:motion.kind,progress}));if(progress<1)done=false;
+      setPose(item.group,sampleBlockMotion({...item,kind:motion.kind,progress}));item.group.scale.setScalar(motion.kind==='remove'?1-progress*.85:1);if(progress<1)done=false;
     }
     const t=Math.max(0,Math.min(1,(now-motion.start)/motion.duration));
     if(motion.kind==='collapse'&&t<.25)assembly.position.x=Math.sin(t*120)*.09*(1-t*4);else assembly.position.x=0;
-    particles.visible=motion.kind!=='drop'&&t>0&&t<1;dustMaterial.color.set(motion.kind==='restore'?'#e7bd5d':'#d2bb92');dustMaterial.opacity=Math.sin(Math.PI*t)*.55;
+    particles.visible=['collapse','restore'].includes(motion.kind)&&t>0&&t<1;dustMaterial.color.set(motion.kind==='restore'?'#e7bd5d':'#d2bb92');dustMaterial.opacity=Math.sin(Math.PI*t)*.55;
     particles.children.forEach((p,i)=>{const angle=i*2.399963,r=(motion.kind==='restore'?1-t:t)*3.1;p.position.set(Math.cos(angle)*r,.25+Math.sin(Math.PI*t)*(1+(i%4)*.33),Math.sin(angle)*r);});
-    draw();if(done)finish();else frame=requestAnimationFrame(tick);
+    draw();if(!motion||disposed)return;if(done)finish();else frame=requestAnimationFrame(tick);
   }
   function animate(kind,indices){
-    finish();const start=performance.now(),duration=kind==='drop'?620:kind==='collapse'?1350:1250,stagger=kind==='drop'?85:24;
+    finish();const start=performance.now(),duration=kind==='drop'?620:kind==='remove'?720:kind==='collapse'?1350:1250,stagger=kind==='drop'?85:kind==='remove'?0:24;
     const items=indices.map((index,order)=>{
-      const group=blocks[index],home=blockHome(descriptors[index]),to=kind==='collapse'?blockRubble(descriptors[index],index):home;
+      const group=blocks[index],home=blockHome(descriptors[index]),to=kind==='collapse'?blockRubble(descriptors[index],index):kind==='remove'?{position:[home.position[0]+1.4,home.position[1]+.5,home.position[2]+2.5],rotation:[0,.6,-.25]}:home;
       const from=kind==='drop'?{position:[home.position[0],home.position[1]+4.4,home.position[2]],rotation:[0,(index%2?1:-1)*.35,0]}:currentPose(group);
-      setPose(group,from);group.visible=kind!=='drop';return {group,from,to,index,start:start+order*stagger,duration};
+      group.scale.setScalar(1);setPose(group,from);group.visible=kind!=='drop';return {group,from,to,index,start:start+order*stagger,duration,visibleEnd:kind!=='remove'};
     });
     if(!items.length)return;
     motion={kind,items,start,duration:duration+(items.length-1)*stagger};captionText();onBusyChange(true);
@@ -100,19 +110,25 @@ export function createBuildingScene(host,{onBusyChange=()=>{}}={}){
   toggle.onclick=()=>api.setSimple(!simple);
   const api={
     update(next){
-      const fresh=state?.words!==next.words||state?.structure!==next.structure,previous=state,count=Math.ceil(16*next.builtIds.length/next.words.length);
-      if(fresh){finish();assembly.clear();descriptors=buildingBlocks(next.structure);blocks=descriptors.map(makeBlock);}
-      state=next;river.visible=next.structure==='bridge';host.setAttribute('aria-label',`${next.phase==='collapsed'?'已倒塌的':count===16?'完整的':'正在搭建的'}${BUILDING_TYPES[next.structure]}`);
-      flat.replaceChildren(createBuildingArt({structure:next.structure,progress:count/16,phase:next.phase}));
-      if(fresh){blocks.forEach((group,index)=>{group.visible=index<count;setPose(group,next.phase==='collapsed'?blockRubble(descriptors[index],index):blockHome(descriptors[index]));});}
-      else if(next.phase==='collapsed'&&previous.phase!=='collapsed')animate('collapse',blocks.map((_,i)=>i));
-      else if(next.phase==='restored'&&previous.phase==='collapsed')animate('restore',blocks.map((_,i)=>i));
-      else if(count>partCount)animate('drop',Array.from({length:count-partCount},(_,i)=>i+partCount));
-      partCount=count;host.dataset.parts=String(count);captionText();resize();
+      const fresh=state?.words!==next.words||state?.structure!==next.structure||state?.variant!==next.variant,previous=state;
+      if(fresh){finish();clearLabels();assembly.clear();blueprint=buildingBlueprint(next.structure,{words:next.words,variant:next.variant});descriptors=blueprint.blocks;blocks=descriptors.map(makeBlock);}
+      state=next;river.visible=next.structure==='bridge';const visible=visibleBuildingWords(next);host.dataset.wordBricks=String(visible.length);host.dataset.parts=String(visible.length);host.dataset.blueprint=blueprint.name;host.setAttribute('aria-label',`${blueprint.name}，${next.phase==='collapsed'?'已倒塌，':''}剩余${visible.length}块词砖：${next.words.filter(w=>visible.includes(w.id)).map(w=>w.word).join('、')}`);
+      flat.replaceChildren(createBlueprintArt(blueprint,next));
+      const wanted=index=>blueprintBlockVisible(descriptors[index],next),indices=blocks.map((_,i)=>i);
+      if(fresh){blocks.forEach((group,index)=>{group.visible=wanted(index);setPose(group,next.phase==='collapsed'?blockRubble(descriptors[index],index):blockHome(descriptors[index]));});}
+      else if(next.phase==='collapsed'&&previous.phase!=='collapsed'){
+        finish();blocks.forEach((group,index)=>{if(!wanted(index))group.visible=false;});animate('collapse',indices.filter(wanted));
+      }else if(next.phase==='restored'&&previous.phase==='collapsed'){
+        finish();blocks.forEach((group,index)=>{if(!group.visible)setPose(group,blockRubble(descriptors[index],index));group.visible=true;});animate('restore',indices);
+      }else{
+        const added=indices.filter(i=>wanted(i)&&!blueprintBlockVisible(descriptors[i],previous)),removed=indices.filter(i=>!wanted(i)&&blueprintBlockVisible(descriptors[i],previous));
+        if(removed.length)animate('remove',removed);else if(added.length)animate('drop',added);
+      }
+      captionText();resize();
     },
     get isAnimating(){return Boolean(motion);},
     setActive(value){active=value;if(!value)finish();else{resize();draw();}},
     setSimple(value){simple=Boolean(value)||!available;finish();captionText();resize();},
-    dispose(){disposed=true;active=false;finish();observer.disconnect();document.removeEventListener('visibilitychange',visibility);media.removeEventListener('change',preference);renderer?.domElement.removeEventListener('webglcontextlost',lost);renderer?.domElement.removeEventListener('webglcontextrestored',restored);Object.values(geometries).forEach(g=>g.dispose());materials.forEach(m=>m.dispose());dustMaterial.dispose();sun.shadow.dispose();renderer?.dispose();host.replaceChildren();},
+    dispose(){disposed=true;active=false;finish();observer.disconnect();document.removeEventListener('visibilitychange',visibility);media.removeEventListener('change',preference);renderer?.domElement.removeEventListener('webglcontextlost',lost);renderer?.domElement.removeEventListener('webglcontextrestored',restored);clearLabels();Object.values(geometries).forEach(g=>g.dispose());materials.forEach(m=>m.dispose());dustMaterial.dispose();sun.shadow.dispose();renderer?.dispose();host.replaceChildren();},
   };captionText();return api;
 }
