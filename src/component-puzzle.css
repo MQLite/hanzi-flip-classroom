@@ -1,0 +1,46 @@
+.component-puzzle{min-width:0;--puzzle-line:#cbd6c5;--puzzle-muted:#586e61}
+.component-puzzle *{box-sizing:border-box}
+.component-puzzle .puzzle-heading h3{font-size:23px;margin:0 0 5px}
+.component-puzzle .puzzle-heading p{margin:0 0 14px;font-size:14px}
+.component-puzzle .puzzle-workspace{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr) minmax(0,1fr);align-items:stretch;gap:18px}
+.component-puzzle .puzzle-choices,.component-puzzle .puzzle-assembly,.component-puzzle .puzzle-answers{min-width:0;padding:14px;border:1px solid var(--puzzle-line);border-radius:16px;background:#fafbf2}
+.component-puzzle .puzzle-assembly{background:#eff3e6}
+.component-puzzle .puzzle-answers{background:#f3f6ec}
+.component-puzzle h4{font-size:17px;line-height:1.4;margin:0 0 10px;color:#315a4b}
+.component-puzzle .parts-palette{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));align-content:start;gap:9px;margin:0;max-height:clamp(240px,calc(100dvh - 420px),460px);overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+.construction-game .component-puzzle .part-card{display:flex;flex-direction:column;justify-content:flex-start;align-items:center;width:100%;min-width:0;min-height:105px;padding:7px 4px;gap:5px;border-radius:11px}
+.component-puzzle .part-shape{display:block;flex:none;width:64px;height:64px}
+.component-puzzle .part-card>span:last-child,.component-puzzle .selected-part>span:last-child{font-size:13px;line-height:1.35;overflow-wrap:anywhere}
+.component-puzzle .parts-tray{display:flex;flex-wrap:wrap;align-content:center;align-items:center;justify-content:center;gap:8px;min-height:170px;margin:0 0 12px;padding:10px;border:2px dashed #a9bda3;border-radius:13px;background:#fffdf4;overflow-wrap:anywhere}
+.component-puzzle .parts-tray>p{font-size:15px;text-align:center;color:var(--puzzle-muted);margin:0;max-width:13em}
+.construction-game .component-puzzle .selected-part{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-width:0;width:calc(50% - 4px);max-width:112px;padding:7px 3px;gap:4px}
+.component-puzzle .selected-part .part-shape{width:58px;height:58px}
+.construction-game .component-puzzle .construction-primary{display:block;width:100%;min-width:0;min-height:46px;font-size:20px;padding:7px 12px}
+.component-puzzle .construction-status{font-size:15px;line-height:1.55;min-height:47px;margin:10px 0 0}
+.component-puzzle .puzzle-reveal,.component-puzzle .puzzle-reveal:has(article:nth-child(2)){display:grid;grid-template-columns:minmax(0,1fr);gap:9px;margin:0}
+.component-puzzle .puzzle-reveal:empty{display:none}
+.component-puzzle .puzzle-reveal article,.component-puzzle .puzzle-reveal:has(article:nth-child(2)) article{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:8px;min-width:0;width:100%;padding:10px;border-radius:13px;background:#335f50;text-align:center}
+.component-puzzle .puzzle-reveal svg{display:block;width:100%;height:142px;grid-row:1/3}
+.component-puzzle .puzzle-reveal strong,.component-puzzle .puzzle-reveal:has(article:nth-child(2)) strong{font-size:34px}
+.component-puzzle .puzzle-reveal p,.component-puzzle .puzzle-reveal:has(article:nth-child(2)) p{font-size:12px;line-height:1.45;margin:3px 0;max-width:7em;overflow-wrap:anywhere}
+.component-puzzle .puzzle-reveal:has(article:nth-child(2)) svg{height:100px}
+.component-puzzle .puzzle-answer-placeholder{min-height:162px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px dashed #c1d0b8;border-radius:13px;background:#e6eddd;color:#71836d}
+.component-puzzle .puzzle-answer-placeholder>span{font-size:68px;line-height:1}
+.component-puzzle .puzzle-answer-placeholder p{font-size:14px;margin:6px 0 0}
+.component-puzzle .puzzle-collection-label{font-size:15px;margin:12px 0 7px}
+.component-puzzle .puzzle-collected{display:flex;flex-wrap:wrap;gap:6px;margin:0;max-height:116px;overflow-y:auto}
+.component-puzzle .puzzle-collected span{font-size:27px;line-height:1.35;padding:2px 9px;border-radius:8px;background:#e1eaca}
+.component-puzzle .puzzle-collected p{font-size:13px;color:var(--puzzle-muted);margin:0}
+.component-puzzle .construction-celebrate{font-size:14px;line-height:1.5;margin:10px 0 0}
+.component-puzzle .component-introductions{margin-top:16px;padding:10px 14px;border:1px solid var(--puzzle-line);border-radius:12px;background:#f7f8ef}
+.component-puzzle .component-introductions summary{font-size:15px}
+.component-puzzle .component-intro-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));column-gap:20px}
+.component-puzzle .component-intro-list article{grid-template-columns:50px minmax(0,1fr);align-content:start;padding:12px 0;gap:8px;min-width:0}
+.component-puzzle .intro-glyph{display:block;width:50px;height:50px}
+.component-puzzle .component-intro-list p{font-size:14px;margin:0;overflow-wrap:anywhere}
+.component-puzzle .construction-coverage{margin-top:10px}
+.component-puzzle .construction-coverage p{font-size:12px;line-height:1.6;margin:5px 0}
+.component-puzzle .construction-references{margin-top:8px;font-size:12px}
+.component-puzzle .construction-empty{margin-bottom:14px;padding:18px}
+@media(min-width:1600px){.component-puzzle .parts-palette{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}.construction-game .component-puzzle .part-card{min-height:115px}.component-puzzle .part-shape{width:72px;height:72px}.component-puzzle .puzzle-reveal svg{height:180px}.component-puzzle .puzzle-answer-placeholder{min-height:200px}}
+@media(max-width:850px){.component-puzzle .puzzle-workspace{grid-template-columns:minmax(0,1fr);gap:14px}.component-puzzle .puzzle-heading h3{font-size:21px}.component-puzzle .parts-palette{max-height:300px;grid-template-columns:repeat(auto-fill,minmax(83px,1fr))}.component-puzzle .puzzle-choices,.component-puzzle .puzzle-assembly,.component-puzzle .puzzle-answers{padding:12px}.component-puzzle .parts-tray{min-height:140px}.component-puzzle .puzzle-reveal article{max-width:360px;margin:0 auto}.component-puzzle .puzzle-reveal svg{height:165px}.component-puzzle .puzzle-collected{max-height:none}.component-puzzle .component-intro-list{grid-template-columns:minmax(0,1fr)}}

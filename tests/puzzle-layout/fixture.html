@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Component puzzle layout fixture</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f5f4e9; }
+  #fixture { margin: 170px 28px 24px; background: #fffdf4; border-radius: 18px; }
+  @media (max-width: 700px) { #fixture { margin: 24px 12px; } }
+</style>
+<body><main id="fixture" class="construction-game"></main>
+<script type="module">
+import '/src/construction.css';
+import '/src/component-puzzle.css';
+import {renderComponentPuzzle} from '/src/component-puzzle.js';
+import {createPuzzleState, selectPuzzlePart, removePuzzlePart, checkPuzzle} from '/src/construction-core.js';
+import {FORM_CATALOG, getConstructionPool} from '/src/construction-data.js';
+import {DEFAULT_QUESTIONS} from '/src/data.js';
+import {PARADISE_QUESTIONS, TEXTBOOK_QUESTIONS, ZHONGWEN_QUESTIONS} from '/src/curriculum.js';
+
+const scenario = new URLSearchParams(location.search).get('scenario') || 'default';
+const all = [...DEFAULT_QUESTIONS, ...PARADISE_QUESTIONS, ...TEXTBOOK_QUESTIONS, ...ZHONGWEN_QUESTIONS];
+const customCharacters = scenario === 'long' ? Object.keys(FORM_CATALOG.characters) : scenario === 'empty' ? ['中', '龘'] : ['林', '叶', '古', '好', '中', '老', '龘'];
+const questions = customCharacters.map((character, index) => ({id: `fixture/${index}`, character, grade: 1}));
+const pool = scenario === 'default' ? getConstructionPool({source:'paradise', stage:'1A', lesson:1}, all, 1) : getConstructionPool({source:'personal'}, questions, 1);
+const original = JSON.stringify({all, pool});
+let state = createPuzzleState(pool.puzzles);
+const root = document.querySelector('#fixture');
+function onAction(action, value) {
+  if (action === 'part') state = selectPuzzlePart(state, value);
+  if (action === 'remove') state = removePuzzlePart(state, value);
+  if (action === 'check') state = checkPuzzle(state);
+  draw();
+}
+const NS = 'http://www.w3.org/2000/svg', cache = new Map();
+function svgNode(tag, attributes) {
+  const element = document.createElementNS(NS, tag);
+  for (const [key, value] of Object.entries(attributes)) element.setAttribute(key, value);
+  return element;
+}
+function renderGlyph(host, character, indices, {fit=false, parts=null}={}) {
+  const svg = svgNode('svg', {viewBox:'0 0 1024 1024', 'aria-hidden':'true'});
+  host.append(svg);
+  if (!cache.has(character)) cache.set(character, fetch(`/strokes/${encodeURIComponent(character)}.json`).then(response => response.json()));
+  cache.get(character).then(data => {
+    if (!host.isConnected) return;
+    const group = svgNode('g', {transform:'translate(0 900) scale(1 -1)'});
+    svg.append(group);
+    for (const index of indices ?? data.strokes.map((_, i) => i)) {
+      const colors = ['#e6b857', '#79b6c5', '#da8f9c', '#a3b36e'];
+      const fill = parts ? colors[Math.max(0, parts.findIndex(part => part.indices.includes(index))) % colors.length] : 'currentColor';
+      group.append(svgNode('path', {d:data.strokes[index], fill}));
+    }
+    if (fit) {
+      const bounds = group.getBBox(), padding = Math.max(bounds.width, bounds.height) * .12 + 15;
+      svg.setAttribute('viewBox', `${bounds.x - padding} ${900 - bounds.y - bounds.height - padding} ${bounds.width + padding * 2} ${bounds.height + padding * 2}`);
+    }
+  });
+}
+function draw() {
+  root.replaceChildren();
+  renderComponentPuzzle(root, {state, pool, onAction, renderGlyph});
+  window.state = state;
+}
+window.fixture = {pool, original, unchanged: () => JSON.stringify({all, pool}) === original};
+draw();
+</script></body></html>

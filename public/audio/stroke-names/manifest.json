@@ -1,4 +1,8 @@
 {
+  "schemaVersion": 2,
+  "assetVersion": "mandarin-pie3-v1",
+  "voice": "Microsoft Huihui Desktop",
+  "culture": "zh-CN",
   "rate": -2,
   "names": [
     "点",
@@ -31,8 +35,359 @@
     "竖折撇",
     "横斜钩"
   ],
-  "voice": "Microsoft Huihui Desktop",
-  "generator": "Windows System.Speech",
+  "generator": "Windows System.Speech / SpeakSsml",
   "purpose": "Mandarin stroke-name classroom recordings",
-  "culture": "zh-CN"
+  "pronunciation": {
+    "method": "SSML phoneme override for every occurrence of 撇",
+    "alphabet": "x-microsoft-sapi",
+    "characterOverrides": [
+      {
+        "text": "撇",
+        "phonemes": "pie 3",
+        "pinyin": "piě",
+        "tone": 3
+      }
+    ],
+    "affectedNames": [
+      "撇",
+      "横撇",
+      "撇折",
+      "撇点",
+      "横折折撇",
+      "横撇弯钩",
+      "竖折撇"
+    ],
+    "sources": [
+      {
+        "title": "System.Speech SpeakSsml",
+        "url": "https://learn.microsoft.com/en-us/dotnet/api/system.speech.synthesis.speechsynthesizer.speakssml?view=netframework-4.8.1"
+      },
+      {
+        "title": "Microsoft zh-CN SAPI phonetic alphabet and numbered tones",
+        "url": "https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-ssml-phonetic-sets#zh-cn"
+      }
+    ]
+  },
+  "recordings": [
+    {
+      "name": "点",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">点</voice></speak>",
+      "validation": {
+        "durationSeconds": 1.428344671201814,
+        "rms": 0.011616853523534027,
+        "peak": 0.126708984375
+      },
+      "sha256": "98cf4a61ba5fe47ef10bb1406f7603bb4c726acc19a66d3c888e942afe7282dd",
+      "bytes": 63036
+    },
+    {
+      "name": "横",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">横</voice></speak>",
+      "validation": {
+        "durationSeconds": 1.5533333333333332,
+        "rms": 0.02154417618626376,
+        "peak": 0.287994384765625
+      },
+      "sha256": "d677aa9c52e51363782ae2ed5ceda44f0d8b136bf07e5be28bb5d09d42722c89",
+      "bytes": 68548
+    },
+    {
+      "name": "竖",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">竖</voice></speak>",
+      "validation": {
+        "durationSeconds": 1.435328798185941,
+        "rms": 0.01414164622470744,
+        "peak": 0.16339111328125
+      },
+      "sha256": "467fd999597fe58d8de88cf6048ec93a9144d4e0c08888f12d4261d0dc2f4f01",
+      "bytes": 63344
+    },
+    {
+      "name": "撇",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\"><phoneme alphabet=\"x-microsoft-sapi\" ph=\"pie 3\">撇</phoneme></voice></speak>",
+      "validation": {
+        "durationSeconds": 1.4913378684807257,
+        "rms": 0.014260456914167314,
+        "peak": 0.16302490234375
+      },
+      "sha256": "368db974aa8fa473f1b6db974fa96376847dff4ce2ec7a0d745e9a3e7531d09b",
+      "bytes": 65814
+    },
+    {
+      "name": "捺",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">捺</voice></speak>",
+      "validation": {
+        "durationSeconds": 1.389342403628118,
+        "rms": 0.053055493819006136,
+        "peak": 0.618255615234375
+      },
+      "sha256": "e73fea5fb3744ce77c0233a6a93561e95be4d5499685da148fedc732ef25d994",
+      "bytes": 61316
+    },
+    {
+      "name": "提",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">提</voice></speak>",
+      "validation": {
+        "durationSeconds": 1.5263492063492063,
+        "rms": 0.009250119016802633,
+        "peak": 0.0936279296875
+      },
+      "sha256": "12159e2378d90d3bd59097c5cc14bd331ba841b25b91c7b49d80f73e1c9614fd",
+      "bytes": 67358
+    },
+    {
+      "name": "竖钩",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">竖钩</voice></speak>",
+      "validation": {
+        "durationSeconds": 1.7243083900226757,
+        "rms": 0.0306300904312649,
+        "peak": 0.30120849609375
+      },
+      "sha256": "16f77790519d4b84a5446c7ada07dfa12a7749931c58283e6eb19013474dd5b6",
+      "bytes": 76088
+    },
+    {
+      "name": "弯钩",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">弯钩</voice></speak>",
+      "validation": {
+        "durationSeconds": 1.703219954648526,
+        "rms": 0.05336470838858437,
+        "peak": 0.568359375
+      },
+      "sha256": "7b3fbe4017a635eaa76d62108a0dff11be0ec251bf0c1c978be41eb4c8b60c0d",
+      "bytes": 75158
+    },
+    {
+      "name": "斜钩",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">斜钩</voice></speak>",
+      "validation": {
+        "durationSeconds": 1.766122448979592,
+        "rms": 0.03602683278761102,
+        "peak": 0.29974365234375
+      },
+      "sha256": "7808b158fa01d7db9d9f2f523c64ea152d4aa50cc1a406162949033a5e9c98ea",
+      "bytes": 77932
+    },
+    {
+      "name": "卧钩",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">卧钩</voice></speak>",
+      "validation": {
+        "durationSeconds": 1.6721995464852608,
+        "rms": 0.043198265935788294,
+        "peak": 0.4342041015625
+      },
+      "sha256": "60ad86494b3b37e155a1a169a2d43bc24dd26c429fee459b345f30084a4b4c35",
+      "bytes": 73790
+    },
+    {
+      "name": "竖弯",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">竖弯</voice></speak>",
+      "validation": {
+        "durationSeconds": 1.7131519274376417,
+        "rms": 0.055194111390785595,
+        "peak": 0.55242919921875
+      },
+      "sha256": "d9df2d4b1f41c3687e4918445ff7ea45e617bbe5e0f869821b1ed5552e7f2cc7",
+      "bytes": 75596
+    },
+    {
+      "name": "竖弯钩",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">竖弯钩</voice></speak>",
+      "validation": {
+        "durationSeconds": 1.953015873015873,
+        "rms": 0.04954687600599769,
+        "peak": 0.567657470703125
+      },
+      "sha256": "928922d0b7a28ac3599a24b9174a3e5d58114edbfc27c40098b6f29d58990313",
+      "bytes": 86174
+    },
+    {
+      "name": "横折提",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">横折提</voice></speak>",
+      "validation": {
+        "durationSeconds": 1.9870748299319727,
+        "rms": 0.01976183877293675,
+        "peak": 0.2308349609375
+      },
+      "sha256": "cb2deb5f6333f79984820f0fda9954c23dd09742f7f607ca76d6837e0414d854",
+      "bytes": 87676
+    },
+    {
+      "name": "横折弯",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">横折弯</voice></speak>",
+      "validation": {
+        "durationSeconds": 1.951156462585034,
+        "rms": 0.054607962575150014,
+        "peak": 0.629302978515625
+      },
+      "sha256": "1328977ba2ad61a71d3c029c6b40d270e4a7a7db8099f6b475d440187ea8a2d9",
+      "bytes": 86092
+    },
+    {
+      "name": "竖提",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">竖提</voice></speak>",
+      "validation": {
+        "durationSeconds": 1.771201814058957,
+        "rms": 0.018195518036608373,
+        "peak": 0.18896484375
+      },
+      "sha256": "eeef0994a8078b3861c135d96c23be147f86216419b6f5c01b6fe71b2ab689c4",
+      "bytes": 78156
+    },
+    {
+      "name": "横钩",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">横钩</voice></speak>",
+      "validation": {
+        "durationSeconds": 1.712154195011338,
+        "rms": 0.031223299810682757,
+        "peak": 0.2886962890625
+      },
+      "sha256": "7a9592edac0b5ea325d3badda5758efc55470bba2b7dafb1e32d17d18da41de9",
+      "bytes": 75552
+    },
+    {
+      "name": "横折",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">横折</voice></speak>",
+      "validation": {
+        "durationSeconds": 1.785124716553288,
+        "rms": 0.020517448416914413,
+        "peak": 0.262969970703125
+      },
+      "sha256": "467cc67c891925696705ba015d67b702ca953751e0f9afaeabc926d56c1ddea6",
+      "bytes": 78770
+    },
+    {
+      "name": "横折钩",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">横折钩</voice></speak>",
+      "validation": {
+        "durationSeconds": 1.946031746031746,
+        "rms": 0.03176022360940267,
+        "peak": 0.296722412109375
+      },
+      "sha256": "149e9b36758a5d1a39497bf8d02a2419282a1843254adfb71eb0e90d656e41fe",
+      "bytes": 85866
+    },
+    {
+      "name": "横撇",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">横<phoneme alphabet=\"x-microsoft-sapi\" ph=\"pie 3\">撇</phoneme></voice></speak>",
+      "validation": {
+        "durationSeconds": 1.7461678004535148,
+        "rms": 0.015562638759212774,
+        "peak": 0.260009765625
+      },
+      "sha256": "4fd27f198ddb5e080f6b7d29f3451166436bdab47bc66351f9a3a0805c9a9629",
+      "bytes": 77052
+    },
+    {
+      "name": "撇折",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\"><phoneme alphabet=\"x-microsoft-sapi\" ph=\"pie 3\">撇</phoneme>折</voice></speak>",
+      "validation": {
+        "durationSeconds": 1.7681632653061226,
+        "rms": 0.022197210282396258,
+        "peak": 0.207977294921875
+      },
+      "sha256": "07c9a5534d36bea95df1bb59e68b7700837fce74d8ca4f4c3ad7358ae60e1c51",
+      "bytes": 78022
+    },
+    {
+      "name": "撇点",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\"><phoneme alphabet=\"x-microsoft-sapi\" ph=\"pie 3\">撇</phoneme>点</voice></speak>",
+      "validation": {
+        "durationSeconds": 1.7191836734693877,
+        "rms": 0.01905810551500417,
+        "peak": 0.22515869140625
+      },
+      "sha256": "85f63069e106c8e81a1b04a8cb99dda3796a6311b84b0ed99f8e22cdfe21c62b",
+      "bytes": 75862
+    },
+    {
+      "name": "横折弯钩",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">横折弯钩</voice></speak>",
+      "validation": {
+        "durationSeconds": 2.1909750566893424,
+        "rms": 0.04789764972615622,
+        "peak": 0.610748291015625
+      },
+      "sha256": "4e472cb1785819ef91b242625d323b677820507cdbc3b129b883225459781dfa",
+      "bytes": 96668
+    },
+    {
+      "name": "竖折",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">竖折</voice></speak>",
+      "validation": {
+        "durationSeconds": 1.7541950113378684,
+        "rms": 0.02349090733223892,
+        "peak": 0.21173095703125
+      },
+      "sha256": "a4eff564b01e57fa601301541b720c34cd7c11330438fd1cad71fd3091878a32",
+      "bytes": 77406
+    },
+    {
+      "name": "竖折折钩",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">竖折折钩</voice></speak>",
+      "validation": {
+        "durationSeconds": 2.1718367346938776,
+        "rms": 0.03379922204827324,
+        "peak": 0.309356689453125
+      },
+      "sha256": "c29f269ec2717a198ef53f2eef4d2716d6fb374421b373a8770112a5d11258cf",
+      "bytes": 95824
+    },
+    {
+      "name": "横折折撇",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">横折折<phoneme alphabet=\"x-microsoft-sapi\" ph=\"pie 3\">撇</phoneme></voice></speak>",
+      "validation": {
+        "durationSeconds": 2.1979138321995464,
+        "rms": 0.02556230559154856,
+        "peak": 0.267578125
+      },
+      "sha256": "bf3e461908bb524d043932c058bde5bc85879900d035e69356778a6443e83d7a",
+      "bytes": 96974
+    },
+    {
+      "name": "横撇弯钩",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">横<phoneme alphabet=\"x-microsoft-sapi\" ph=\"pie 3\">撇</phoneme>弯钩</voice></speak>",
+      "validation": {
+        "durationSeconds": 2.2740589569161,
+        "rms": 0.048922850577893896,
+        "peak": 0.63836669921875
+      },
+      "sha256": "42ec9f92a614e158740c073c76b35cc7841de2a98e2bbf62ebff57e0f994fcfd",
+      "bytes": 100332
+    },
+    {
+      "name": "横折折折钩",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">横折折折钩</voice></speak>",
+      "validation": {
+        "durationSeconds": 2.480907029478458,
+        "rms": 0.037558732578740164,
+        "peak": 0.292510986328125
+      },
+      "sha256": "ac1a021a900241c777ac292a5fb65fe308115f44b04355615d83896a0e84d408",
+      "bytes": 109454
+    },
+    {
+      "name": "竖折撇",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">竖折<phoneme alphabet=\"x-microsoft-sapi\" ph=\"pie 3\">撇</phoneme></voice></speak>",
+      "validation": {
+        "durationSeconds": 1.9659410430839002,
+        "rms": 0.02420332883836426,
+        "peak": 0.221038818359375
+      },
+      "sha256": "69eed5068cfd57c866f4010319123f3194b2072f236296d2828c6e9936490bca",
+      "bytes": 86744
+    },
+    {
+      "name": "横斜钩",
+      "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"zh-CN\"><voice name=\"Microsoft Huihui Desktop\">横斜钩</voice></speak>",
+      "validation": {
+        "durationSeconds": 1.986984126984127,
+        "rms": 0.03155218420570478,
+        "peak": 0.297760009765625
+      },
+      "sha256": "c9217e09f45a58e8f92f6087d7ca566e98f38c0b957744bf566dcd84e99dd3df",
+      "bytes": 87672
+    }
+  ],
+  "voiceId": "TTS_MS_ZH-CN_HUIHUI_11.0"
 }
