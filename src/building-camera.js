@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {blockHome,blockRubble,sampleBlockMotion} from './building-models.js';
 
 export function buildingCameraFrame(blocks,aspect,phase){
-  const direction=new THREE.Vector3(3,5,13).normalize(),right=new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0),direction).normalize(),up=new THREE.Vector3().crossVectors(direction,right);
+  const direction=new THREE.Vector3(2,3.6,14).normalize(),right=new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0),direction).normalize(),up=new THREE.Vector3().crossVectors(direction,right);
   let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
   function include(block,pose){
     const rotation=new THREE.Euler(...pose.rotation),position=new THREE.Vector3(...pose.position);
@@ -19,7 +19,7 @@ export function buildingCameraFrame(blocks,aspect,phase){
     }
   });
   if(!blocks.length){minX=minY=-2;maxX=maxY=2;}
-  const ratio=Number.isFinite(aspect)&&aspect>0?aspect:1,span=Math.max(3.2,maxY-minY,(maxX-minX)/ratio)*1.16;
+  const ratio=Number.isFinite(aspect)&&aspect>0?aspect:1,span=Math.max(3.2,maxY-minY,(maxX-minX)/ratio)*1.06;
   const target=right.clone().multiplyScalar((minX+maxX)/2).addScaledVector(up,(minY+maxY)/2),position=target.clone().addScaledVector(direction,18);
   return {left:-span*ratio/2,right:span*ratio/2,top:span/2,bottom:-span/2,target:target.toArray(),position:position.toArray()};
 }

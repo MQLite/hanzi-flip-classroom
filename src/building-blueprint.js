@@ -7,8 +7,8 @@ export function brickTextLayout(word,width,height){
 export function buildingBlueprint(type,{words=[],variant=0}={}){
   if(!names[type])type='house';variant=((Math.trunc(variant)||0)%4+4)%4;
   const blocks=[],add=(size,position,color,kind='box',extra={})=>blocks.push(Object.freeze({kind,size:Object.freeze(size),position:Object.freeze(position),color,detail:'',...extra}));
-  const n=Math.max(1,words.length),columns=type==='bridge'?Math.min(8,n):type==='tower'?Math.min(3,Math.ceil(Math.sqrt(n/1.5))):Math.min(4,Math.ceil(Math.sqrt(n))),rows=Math.ceil(n/columns);
-  const span=type==='bridge'?7.4:type==='tower'?3.3:4.4,step=span/columns,height=type==='bridge'?.72:type==='tower'?.95:1.0,depth=type==='bridge'?2.0:type==='tower'?1.75:2.4,base=type==='bridge'?1.25:.24;
+  const n=Math.max(1,words.length),columns=type==='bridge'?Math.min(8,n):type==='tower'?Math.min(4,Math.ceil(Math.sqrt(n/1.5))):Math.min(4,Math.ceil(Math.sqrt(n))),rows=Math.ceil(n/columns);
+  const span=type==='bridge'?7.4:type==='tower'&&columns<4?3.3:4.4,step=span/columns,height=type==='bridge'?.72:type==='tower'?.95:1.0,depth=type==='bridge'?2.0:type==='tower'?1.75:2.4,base=type==='bridge'?1.25:.24;
   const tops=[];
   add([span+.5,.22,depth+.6],[0,.11,0],'#8ba38b','box',{reveal:'base'});
   for(let index=0;index<n;index++){

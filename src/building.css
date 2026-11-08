@@ -19,3 +19,29 @@
 .builder-challenge-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:12px 0}.builder-challenge-cards button{min-width:0;min-height:60px;padding:8px 4px;background:#fffaf0;border:1px solid #cbd5b6;border-bottom:3px solid #b5c7a2}.builder-challenge-cards .builder-term{font-size:min(var(--word-size),25px)}.builder-challenge-cards .builder-pinyin{font-size:10px}.builder-challenge-cards button:hover:not(:disabled){background:#e8edda;transform:translateY(-2px)}#builder-next-activity{margin-top:13px;font-size:12px}
 .builder-shape-name{font-size:10px;line-height:1.5;margin-top:4px;color:#7b8669}.builder-scene[data-motion="remove"] .builder-motion-status{background:#e6ecd0;color:#62794e}.builder-flat text{font-weight:600}
 .builder-inspect{position:absolute;left:10px;top:9px;padding:5px 9px;font-size:10px;background:#fffcf1e8;border:1px solid #d6d9c3;border-radius:8px;color:#6c7e60;z-index:1}.builder-world,.builder-flat [data-word-brick]{cursor:zoom-in}.builder-inspect-dialog{width:380px;max-width:calc(100vw - 28px);padding:22px;text-align:center}.builder-inspect-title{font-size:20px;color:#456b53;margin:0 0 16px}.builder-inspect-label{display:flex;flex-direction:column;gap:7px;font-size:12px;text-align:left}.builder-inspect-choice{width:100%;font-size:16px;min-width:0}.builder-inspect-word{display:block;font:600 clamp(42px,9vw,64px)/1.45 'KaiTi','STKaiti',serif;color:#2e5c44;overflow-wrap:anywhere;margin:22px 0}.builder-inspect-hint{font-size:12px;line-height:1.7;color:#7a856b}.builder-inspect-close{margin-top:12px;padding:10px 16px;font-size:13px}
+@media(min-width:1000px){
+  .building-mode:has(.builder-round-layout){--builder-drawing-height:clamp(360px,calc(100dvh - 240px),820px)}
+  .building-mode:has(.builder-round-layout) main{max-width:1900px;padding:4px 12px 0}
+  .building-mode:has(.builder-round-layout) .site-header{position:absolute;top:4px;right:12px;z-index:4;width:auto;padding:0;border:0}
+  .building-mode:has(.builder-round-layout) .site-header .brand,.building-mode:has(.builder-round-layout) .teacher-badge{display:none}
+  .building-mode:has(.builder-round-layout) .site-header nav{gap:6px}
+  .building-mode:has(.builder-round-layout) .site-header nav button{padding:4px 8px;font-size:11px}
+  .building-mode:has(.builder-round-layout) .lesson-heading{display:block;margin-bottom:4px}
+  .building-mode:has(.builder-round-layout) .lesson-heading>div,.building-mode:has(.builder-round-layout) .curriculum-note{display:none}
+  .building-mode:has(.builder-round-layout) .game-modes{justify-content:center;width:calc(100% - 200px);margin-right:200px;padding:2px;gap:3px}
+  .building-mode:has(.builder-round-layout) .game-modes button{padding:6px 10px;font-size:11px}
+  .building-mode:has(.builder-round-layout) .lesson-toolbar{padding:4px 10px;gap:8px}
+  .building-mode:has(.builder-round-layout) .activity-flow{margin:4px 0;padding:2px 6px}
+  .building-mode:has(.builder-round-layout) .activity-flow button{padding:3px 8px;font-size:10px;line-height:14px}
+  .building-mode:has(.builder-round-layout) .play-area{padding:6px 12px}
+  .building-mode:has(.builder-round-layout) .builder-heading{display:flex;align-items:center;justify-content:center;gap:14px;margin:0 0 7px}
+  .building-mode:has(.builder-round-layout) .builder-heading h3{font-size:20px;line-height:1.2;margin:0}
+  .building-mode:has(.builder-round-layout) .builder-heading p{margin:0}
+  .building-mode:has(.builder-round-layout) .builder-round-layout{grid-template-columns:minmax(0,1fr) clamp(240px,22vw,320px);gap:16px;max-width:none;align-items:center}
+  .building-mode:has(.builder-round-layout) .builder-world,.building-mode:has(.builder-round-layout) .builder-flat svg{height:var(--builder-drawing-height)}
+  .building-mode:has(.builder-round-layout) .builder-motion-status{min-height:24px;padding:4px 10px;font-size:10px;line-height:16px}
+  .building-mode:has(.builder-round-layout) .builder-desk{max-height:calc(var(--builder-drawing-height) + 32px);overflow-y:auto;padding:4px 3px;overscroll-behavior:contain}
+  .building-mode:has(.builder-round-layout) .builder-challenge-cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .building-mode:has(.builder-round-layout) .builder-bottom-controls{margin-top:6px;gap:10px}
+  .building-mode:has(.builder-round-layout) .builder-bottom-controls button{padding:6px 12px}
+}
