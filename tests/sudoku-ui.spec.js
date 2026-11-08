@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 
-test.beforeEach(async({page})=>{await page.goto('/');});
+test.beforeEach(async({page})=>{await page.goto('/?mode=flip');});
 async function startNumbers(page){
   await page.locator('#mode-sudoku').click();
   await page.getByLabel('选择课次').selectOption('3');
@@ -154,7 +154,7 @@ test('a cancelled drag cannot collect into another mode or leave a floating card
 });
 test('touchscreen can collect and fill with taps',async({browser,baseURL})=>{
   const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,baseURL});
-  const page=await context.newPage();await page.goto('/');await page.locator('#mode-sudoku').tap();await page.getByLabel('选择课次').selectOption('3');await page.locator('#sudoku-start').tap();
+  const page=await context.newPage();await page.goto('/?mode=flip');await page.locator('#mode-sudoku').tap();await page.getByLabel('选择课次').selectOption('3');await page.locator('#sudoku-start').tap();
   const {values,solution}=await solutionFromClues(page);
   const clues=await page.locator('[data-sudoku-cell][data-word-id]').evaluateAll(nodes=>{const ids=new Set();return nodes.flatMap(n=>ids.has(n.dataset.wordId)?[]:(ids.add(n.dataset.wordId),[n.dataset.sudokuCell]));});
   for(const cell of clues){await page.locator(`[data-sudoku-cell="${cell}"]`).tap();await page.locator('#sudoku-collect').tap();}

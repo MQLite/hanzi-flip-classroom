@@ -142,7 +142,7 @@ let load = store.load(),
 let cardStrokeKey = null, cardStrokeView = null, cardStrokeCleanup = null;
 let selection = {source: bank.questions.some(q=>q.textbook === PARADISE_ID) ? 'paradise' : bank.questions.some(q=>q.textbook === TEXTBOOK_ID) ? 'textbook' : bank.questions.some(q=>q.textbook === ZHONGWEN_ID) ? 'zhongwen' : 'personal', stage:'1A', scope:'stage', lesson:1};
 if (selection.source === 'zhongwen') selection.stage = '1';
-let gameMode = 'flip', workshopState = null, workshopCount = 4, workshopRound = 0;
+let gameMode = 'flip', workshopState = null, workshopCount = 4, workshopRound = 0, homeMode=false,gameHasBeenShown=false;
 let sudokuState=null,sudokuPool=null,sudokuSelectedIds=[];
 let moleState=null,molePool=null,moleType='mixed';
 let poisonState=null,poisonPool=null,poisonSelectedIds=[],poisonCount=1,poisonAntidoteId='';
@@ -225,27 +225,27 @@ function syncSelection() {
   $('#bank-source').value = selection.source;
   const textbook = textbookForSource(selection.source);
   const zhongwen = selection.source === 'zhongwen';
-  const explore=gameMode==='explore';
-  $('#stage').replaceChildren(...(explore?explorationStages(textbook):stagesForTextbook(textbook)).map(stage => {
+  const explore=gameMode==='explore',browseAll=homeMode||explore;
+  $('#stage').replaceChildren(...(browseAll?explorationStages(textbook):stagesForTextbook(textbook)).map(stage => {
     const option = document.createElement('option');
     option.value = stage;
     option.textContent = zhongwen ? ZHONGWEN_BOOK_LABELS[stage] : stage;
     return option;
   }));
-  $('#stage-label').textContent = zhongwen ? '册数' : '阶段';
-  $('#stage').setAttribute('aria-label', zhongwen ? '选择册数' : '学习阶段');
+  $('#stage-label').textContent = zhongwen||homeMode ? '册数' : '阶段';
+  $('#stage').setAttribute('aria-label', zhongwen||homeMode ? '选择册数' : '学习阶段');
   $('#scope option[value="stage"]').textContent = zhongwen ? '全册' : '整个阶段';
   $('#stage').value = selection.stage;
   $('#scope').value = selection.scope;
-  $('#lesson').replaceChildren(...(explore?explorationCourses(textbook):coursesForTextbook(textbook)).filter(c=>c.stage===selection.stage).map(c=>{
+  $('#lesson').replaceChildren(...(browseAll?explorationCourses(textbook):coursesForTextbook(textbook)).filter(c=>c.stage===selection.stage).map(c=>{
     const option = document.createElement('option');
     option.value = c.lesson;
     option.textContent = `第${c.lesson}课 ${c.title}`;
     return option;
   }));
   $('#lesson').value = selection.lesson;
-  $('#lesson').disabled = !explore && selection.scope === 'stage';
-  $('.grade-label').hidden = explore || selection.source !== 'personal';
+  $('#lesson').disabled = !browseAll && selection.scope === 'stage';
+  $('.grade-label').hidden = !homeMode&&explore || selection.source !== 'personal';
   document.querySelectorAll('.textbook-field').forEach(e=>e.hidden=selection.source === 'personal');
   if(isConstruction(gameMode)||gameMode==='sudoku'||gameMode==='mole'||gameMode==='poison'||gameMode==='building'||gameMode==='maze'||explore)$('#scope').closest('label').hidden=true;
   $('#curriculum-note').textContent = selection.source !== 'personal'
@@ -293,6 +293,7 @@ const editor = createEditor({
     bankLoaded = true;
     $("#storage-alert").hidden = true;
     refreshTextbookNotice();
+    if(homeMode)journey.refresh();
   },
   defaults: allDefaults,
   notify,
@@ -340,7 +341,19 @@ function journeyContext(){
  const courseLabel=selection.source==='personal'?`个人题库 · ${grade}年级`:`${selection.source==='zhongwen'?ZHONGWEN_NAME:selection.source==='paradise'?'汉语乐园':'中文乐园'} · ${selection.stage} · 第${selection.lesson}课`;
  const value={course,availability,courseLabel};journeyContextCache={key,questions:bank.questions,value};return value;
 }
-const journey=createIslandJourney({getContext:journeyContext,onConceal:concealPoison,canLaunch:mayRestart,onCelebrate:()=>showLessonCelebration(),onLaunch(mode,course,{independent=false}={}){
+const journey=createIslandJourney({getContext:journeyContext,onConceal:concealPoison,canLaunch:mayRestart,onCelebrate:()=>showLessonCelebration(),onHomeChange(visible){
+ homeMode=visible;document.body.classList.toggle('island-home-mode',visible);
+ if(visible){
+  if(gameMode==='train'&&session.departure)finishDeparture(session.departure);
+  if(gameMode==='flip'&&flipTransition)finishFlipTransition(flipTransition);
+  if(gameMode==='workshop'&&workshopTransition)finishWorkshopTransition(workshopTransition);
+  if(gameMode==='mole'){moleView.cancelAnimations();moleState=finishMoleHits(moleState);}
+  if(gameHasBeenShown)modeSnapshots[gameMode]=snapshotMode();
+  sudokuView.cancelDrag();constructionView.setVisible(false);activeScene()?.setActive(false);selection={...selection,scope:'lesson'};
+ }else{constructionView.setVisible(isConstruction(gameMode));activeScene()?.setActive(true);}
+ $('#bank-source').parentElement.firstChild.textContent=visible?'教材':'题库';
+ syncSelection();render();window.scrollTo({top:0,left:0,behavior:'instant'});
+},onLaunch(mode,course,{independent=false}={}){
  grade=course.grade;switchMode(mode,{...course,scope:'lesson'},true);
  if(independent){const url=new URL(location.href);url.searchParams.delete('journey');url.searchParams.set('mode',mode);history.replaceState(null,'',url);}
 }});
@@ -468,6 +481,7 @@ function syncSimpleControl() {
   $('#simplify').textContent = simple ? '立体显示' : '简化显示';
   $('#simplify').setAttribute('aria-pressed', String(simple));
 }
+function snapshotMode(){return { session, grade, teamNames: [...teamNames], selectedTeam, showPinyin, selection: {...selection}, extensionOpen, workshopState, sudokuState,sudokuPool,sudokuSelectedIds:[...sudokuSelectedIds],moleState,molePool,moleType,poisonState,poisonPool,poisonSelectedIds:[...poisonSelectedIds],poisonCount,poisonAntidoteId,buildingState,buildingPool,buildingSelectedIds:[...buildingSelectedIds],buildingStructure,buildingSentenceId,mazeState,mazePool,constructionPool,puzzleState,strokeState,handwritingState,strokeInputMode };}
 function goActivity(mode){if(mode===gameMode||!mayRestart())return;switchMode(mode,{...selection,scope:'lesson'});}
 function switchMode(mode, linkedSelection, journeyTransfer=false) {
   if (mode === gameMode&&!journeyTransfer) return;
@@ -479,7 +493,7 @@ function switchMode(mode, linkedSelection, journeyTransfer=false) {
   if(gameMode==='mole'){moleView.cancelAnimations();moleState=finishMoleHits(moleState);}
   sudokuView.cancelDrag();
   constructionView.setVisible(false);
-  modeSnapshots[gameMode] = { session, grade, teamNames: [...teamNames], selectedTeam, showPinyin, selection: {...selection}, extensionOpen, workshopState, sudokuState,sudokuPool,sudokuSelectedIds:[...sudokuSelectedIds],moleState,molePool,moleType,poisonState,poisonPool,poisonSelectedIds:[...poisonSelectedIds],poisonCount,poisonAntidoteId,buildingState,buildingPool,buildingSelectedIds:[...buildingSelectedIds],buildingStructure,buildingSentenceId,mazeState,mazePool,constructionPool,puzzleState,strokeState,handwritingState,strokeInputMode };
+  if(!homeMode&&gameHasBeenShown)modeSnapshots[gameMode]=snapshotMode();
   activeScene()?.setActive(false);
   const carried=linkedSelection&&(journeyTransfer||['building','poison','maze'].includes(mode)),saved=carried?null:modeSnapshots[mode];
   gameMode = mode;
@@ -746,6 +760,8 @@ function el(tag, text, className) {
   return e;
 }
 function render() {
+  if(homeMode){journey.sync(gameMode,{});return;}
+  gameHasBeenShown=true;
   journey.sync(gameMode,{session,moleState,mazeState,puzzleState,strokeState,handwritingState,strokeInputMode,workshopState,workshopTransition,poisonState,buildingState,sudokuState});
   if(journey.isActive())$('#scope').closest('label').hidden=true;
   syncPinyinLocation();
@@ -1068,19 +1084,20 @@ $("#restart").onclick = () => {
 };
 for (const [id, key] of [['bank-source','source'],['stage','stage'],['scope','scope'],['lesson','lesson']]) {
   $(`#${id}`).onchange = event => {
-    if (!mayRestart()) { syncSelection(); return; }
-    journey.pause();
+    if (!homeMode&&!mayRestart()) { syncSelection(); return; }
+    if(!homeMode)journey.pause();
     selection = {...selection, [key]:key === 'lesson' ? Number(event.target.value) : event.target.value};
     if (key === 'source') {
-      selection.stage = (gameMode==='explore'?explorationStages:stagesForTextbook)(textbookForSource(selection.source))[0];
-      selection.lesson = 1;
+      selection.stage = (homeMode||gameMode==='explore'?explorationStages:stagesForTextbook)(textbookForSource(selection.source))[0];
+      selection.lesson = (homeMode||gameMode==='explore'?explorationCourses:coursesForTextbook)(textbookForSource(selection.source)).find(c=>c.stage===selection.stage)?.lesson??1;
     }
-    if (key === 'stage') selection.lesson = (gameMode==='explore'?explorationCourses:coursesForTextbook)(textbookForSource(selection.source)).find(c=>c.stage===selection.stage)?.lesson??1;
+    if (key === 'stage') selection.lesson = (homeMode||gameMode==='explore'?explorationCourses:coursesForTextbook)(textbookForSource(selection.source)).find(c=>c.stage===selection.stage)?.lesson??1;
     if ((key === 'stage' || key === 'source')&&!optionalPinyinModes.has(gameMode)) {
       showPinyin = (selection.source !== 'personal' ? Number(selection.stage[0]) : grade) <= 2;
       $('#pinyin').checked = showPinyin;
     }
     syncSelection();
+    if(homeMode){journey.refresh();return;}
     newRound();
   };
 }
@@ -1093,6 +1110,7 @@ $('#add-textbook').onclick = () => {
   });
 };
 $("#grade").onchange = (event) => {
+  if(homeMode){grade=Number(event.target.value);syncSelection();journey.refresh();return;}
   if (!mayRestart()) {
     event.target.value = grade;
     return;
@@ -1162,6 +1180,7 @@ $("#apply-teams").onclick = () => {
   newRound();
 };
 document.addEventListener("keydown", (event) => {
+  if(homeMode)return;
   if(isConstruction(gameMode))return;
   if(gameMode==='sudoku'||gameMode==='explore'||gameMode==='mole'||gameMode==='poison'||gameMode==='building'||gameMode==='maze')return;
   if (
@@ -1186,17 +1205,15 @@ document.addEventListener("keydown", (event) => {
 });
 const entryParams=new URLSearchParams(window.location.search);
 const requestedMode=entryParams.get('mode');
-if(entryParams.has('journey')){
- const source=entryParams.get('source'),stage=entryParams.get('stage'),lesson=Number(entryParams.get('lesson')),entryGrade=Number(entryParams.get('grade'));
- if(['personal','textbook','paradise','zhongwen'].includes(source)&&lesson>0&&lesson<=200&&entryGrade>=1&&entryGrade<=4){selection={source,stage,lesson,scope:'lesson'};grade=entryGrade;}
- if(!journey.restore(entryParams.get('journey'))){if(requestedMode==='explore')switchMode('explore',matchingExplorations(selection).length?selection:undefined);else render();}
-}else if(requestedMode==='explore'){
-  const linkedSelection={source:entryParams.get('source'),stage:entryParams.get('stage'),scope:'lesson',lesson:Number(entryParams.get('lesson'))};
-  switchMode('explore',matchingExplorations(linkedSelection).length?linkedSelection:undefined);
-}else if(requestedMode==='mole')switchMode('mole');
-else if(requestedMode==='poison')switchMode('poison');
-else if(requestedMode==='building')switchMode('building');
-else if(requestedMode==='maze')switchMode('maze');
-else if(isConstruction(requestedMode))switchMode(requestedMode);
-else render();
+const linkedSelection={source:entryParams.get('source'),stage:entryParams.get('stage'),scope:'lesson',lesson:Number(entryParams.get('lesson'))};
+const linkedGrade=Number(entryParams.get('grade'));
+const validLinked=['personal','textbook','paradise','zhongwen'].includes(linkedSelection.source)&&(linkedSelection.source==='personal'||explorationCourses(textbookForSource(linkedSelection.source)).some(c=>c.stage===linkedSelection.stage&&c.lesson===linkedSelection.lesson));
+if(validLinked){selection=linkedSelection;if(linkedGrade>=1&&linkedGrade<=4)grade=linkedGrade;}
+function openEntryGame(){
+ if(requestedMode==='explore')switchMode('explore',validLinked?linkedSelection:undefined);
+ else if(GAME_ORDER.some(g=>g.id===requestedMode)){if(validLinked)switchMode(requestedMode,selection,true);else if(requestedMode==='flip')render();else switchMode(requestedMode);}
+ else journey.open();
+}
+if(entryParams.has('journey')){if(!journey.restore(entryParams.get('journey')))openEntryGame();}
+else openEntryGame();
 if(entryParams.get('islandMap')==='1')journey.open();

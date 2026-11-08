@@ -2,7 +2,7 @@ import { PARADISE_COURSES, PARADISE_QUESTIONS, ZHONGWEN_QUESTIONS } from '../src
 const DEFAULT_BANK_SIZE = 156 + PARADISE_QUESTIONS.length + ZHONGWEN_QUESTIONS.length;
 import { test, expect } from "@playwright/test";
 test.beforeEach(async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/?mode=flip");
 });
 
 test('Hanyu Paradise 1A and 1B show the verified textbook words without mixing illustrative examples', async ({page}) => {

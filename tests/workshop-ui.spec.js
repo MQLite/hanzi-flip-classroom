@@ -5,7 +5,7 @@ const questions=[
 ];
 async function openWorkshop(page,bank=questions){
  await page.addInitScript(bank=>localStorage.setItem('hanzi-flip.question-bank',JSON.stringify({schemaVersion:1,questions:bank})),bank);
- await page.goto('/');
+ await page.goto('/?mode=flip');
  await page.getByRole('button',{name:'组词小工坊',exact:true}).click();
 }
 async function choose(page,word){

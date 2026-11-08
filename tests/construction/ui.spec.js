@@ -62,7 +62,7 @@ test('fixture: a cancelled old audio promise cannot overwrite the next selection
  await page.evaluate(()=>window._pending[0]());await expect(page.locator('.selected-stroke-label')).not.toContainText('未能播放');
 });
 test('site: an expanded textbook list stays hidden during discovery and is preserved on return',async({page})=>{
- await page.goto('/');await page.locator('#bank-source').selectOption('zhongwen');await page.locator('#scope').selectOption('lesson');await page.locator('#lesson').selectOption('3');await page.locator('#zhongwen-vocabulary summary').click();
+ await page.goto('/?mode=flip');await page.locator('#bank-source').selectOption('zhongwen');await page.locator('#scope').selectOption('lesson');await page.locator('#lesson').selectOption('3');await page.locator('#zhongwen-vocabulary summary').click();
  await expect(page.locator('#zhongwen-vocabulary')).toHaveAttribute('open','');await page.locator('#mode-puzzle').click();await expect(page.locator('#zhongwen-vocabulary')).toBeHidden();await expect(page.locator('.puzzle-reveal svg')).toHaveCount(0);
  await page.locator('#mode-flip').click();await expect(page.locator('#zhongwen-vocabulary')).toBeVisible();await expect(page.locator('#zhongwen-vocabulary')).toHaveAttribute('open','');
 });

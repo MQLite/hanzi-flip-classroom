@@ -11,7 +11,7 @@ test('antidote can be used immediately and mute stays available without restarti
   const [id]=await readStage(page);await page.locator('#poison-sound').uncheck();await page.locator(`[data-poison-card="${id}"]`).click();await page.locator('#poison-antidote').click();await expect(page.locator('#poison-antidote-sentence')).toBeVisible();await page.locator('#poison-rescue').click();await expect(page.locator('.poison-magic-art.is-rescued')).toBeVisible();await expect(page.locator('#poison-next-activity')).toBeVisible();await expect(page.locator('#poison-sound')).not.toBeChecked();
 });
 test('cartoon poison and rescue audio produce bounded non-silent sound in a real offline audio engine',async({page})=>{
-  await page.goto('/');const audio=await page.evaluate(async()=>{
+  await page.goto('/?mode=flip');const audio=await page.evaluate(async()=>{
     const {schedulePoisonSound,scheduleRescueSound}=await import('/src/poison-sound.js'),results=[];
     for(const schedule of [schedulePoisonSound,scheduleRescueSound]){const context=new OfflineAudioContext(1,44100,44100);schedule(context);const buffer=await context.startRendering(),samples=buffer.getChannelData(0);let sum=0,peak=0;for(const value of samples){sum+=value*value;peak=Math.max(peak,Math.abs(value));}results.push({rms:Math.sqrt(sum/samples.length),peak});}return results;
   });for(const sound of audio){expect(sound.rms).toBeGreaterThan(.001);expect(sound.peak).toBeLessThan(.3);}

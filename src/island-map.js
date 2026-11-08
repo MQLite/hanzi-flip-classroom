@@ -11,8 +11,9 @@ const islandArt = `<svg class="island-art" viewBox="0 0 200 96" aria-hidden="tru
 </svg>`;
 
 /** A presentation-only map. Journey decisions and storage belong to its caller. */
-export function createIslandMap({onStart,onResume,onRestart,onChallenge} = {}) {
-  const dialog = document.createElement('dialog');
+export function createIslandMap({onStart,onResume,onRestart,onChallenge,embedded=false,host=document.body} = {}) {
+  const dialog = document.createElement(embedded?'section':'dialog');
+  if(embedded){dialog.className='island-map-home';dialog.hidden=true;}
   dialog.id = 'island-map';
   dialog.setAttribute('aria-labelledby','island-map-title');
   dialog.innerHTML = `
@@ -38,7 +39,8 @@ export function createIslandMap({onStart,onResume,onRestart,onChallenge} = {}) {
       <p class="island-map-warning" role="status" hidden></p>
       <button class="island-map-primary" type="button"></button>
     </footer>`;
-  document.body.append(dialog);
+  host.append(dialog);
+  if(embedded){dialog.querySelector('.island-map-close').hidden=true;dialog.querySelector('.island-map-summary').append(dialog.querySelector('.island-map-footer'));}
 
   const course = dialog.querySelector('.island-map-course');
   const progress = dialog.querySelector('.island-map-progress');
@@ -51,19 +53,22 @@ export function createIslandMap({onStart,onResume,onRestart,onChallenge} = {}) {
   let primaryAction = onStart;
 
   function close() {
-    if (dialog.open) dialog.close();
+    if(embedded)dialog.hidden=true;
+    else if (dialog.open) dialog.close();
   }
 
   function activatePrimary() {
-    close();
-    primaryAction?.();
+    if(!embedded)close();
+    const accepted=primaryAction?.();
+    if(embedded&&accepted!==false)close();
   }
 
   function activateIsland(event) {
     const card = event.target.closest('.island-card');
     if (!card || card.disabled) return;
-    close();
-    onChallenge?.(card.dataset.mode);
+    if(!embedded)close();
+    const accepted=onChallenge?.(card.dataset.mode);
+    if(embedded&&accepted!==false)close();
   }
 
   closeButton.addEventListener('click',close);
@@ -125,7 +130,8 @@ export function createIslandMap({onStart,onResume,onRestart,onChallenge} = {}) {
       }
       row.append(card);
     });
-    if (!dialog.open) dialog.showModal();
+    if(embedded)dialog.hidden=false;
+    else if (!dialog.open) dialog.showModal();
   }
 
   function dispose() {
@@ -138,5 +144,5 @@ export function createIslandMap({onStart,onResume,onRestart,onChallenge} = {}) {
     dialog.remove();
   }
 
-  return {open,close,dispose,isOpen:() => dialog.open};
+  return {open,close,dispose,isOpen:() => embedded?!dialog.hidden:dialog.open};
 }

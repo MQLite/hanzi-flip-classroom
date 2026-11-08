@@ -16,7 +16,7 @@ async function fourMemories(page){
 }
 
 test('fifth classroom mode routes only the matching textbook lesson to its scenario',async({page})=>{
-  await page.goto('/');
+  await page.goto('/?mode=flip');
   await expect(page.locator('#mode-flip')).toBeVisible();
   await expect(page.locator('#mode-sudoku')).toBeVisible();
   const originalCharacter=await page.locator('.hanzi').innerText();

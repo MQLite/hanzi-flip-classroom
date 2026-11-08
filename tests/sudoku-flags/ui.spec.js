@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 
 test('Paradise 2A lesson 1 uses flag images for the three country names and keeps complete collected cards',async({page})=>{
-  await page.goto('/');await page.locator('#mode-sudoku').click();
+  await page.goto('/?mode=flip');await page.locator('#mode-sudoku').click();
   await page.getByLabel('学习阶段',{exact:true}).selectOption('2A');
   await page.locator('#sudoku-start').click();
   for(const word of ['中国','加拿大','澳大利亚']){
@@ -51,7 +51,7 @@ test('Paradise 2A lesson 1 uses flag images for the three country names and keep
 });
 
 test('the flag replacement stays scoped to Paradise 2A lesson 1',async({page})=>{
-  await page.goto('/');await page.getByLabel('题库来源').selectOption('zhongwen');
+  await page.goto('/?mode=flip');await page.getByLabel('题库来源').selectOption('zhongwen');
   await page.locator('#mode-sudoku').click();await page.getByLabel('选择册数').selectOption('2');
   await page.getByLabel('选择课次').selectOption('12');await page.locator('#sudoku-start').click();
   await expect(page.locator('[data-sudoku-cell] img.sudoku-flag')).toHaveCount(0);

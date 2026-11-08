@@ -3,7 +3,7 @@ import {PARADISE_TRAIN_CONTENT} from '../src/paradise-train-content.js';
 const questions=[{id:'train-one',grade:1,character:'师',pinyin:'shī',words:['老师','教师'],sentence:'老师在看书。',sentenceTrain:{tokens:['老师','在','看书'],punctuation:'。',alternatives:[]}}];
 async function open(page,{bank=questions,webgl=true}={}){
  await page.addInitScript(({bank,webgl})=>{localStorage.setItem('hanzi-flip.question-bank',JSON.stringify({schemaVersion:1,questions:bank}));if(!webgl){const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return /webgl/.test(type)?null:original.call(this,type,...args)}}},{bank,webgl});
- await page.goto('/');await page.getByRole('button',{name:'句子小火车',exact:true}).click();
+ await page.goto('/?mode=flip');await page.getByRole('button',{name:'句子小火车',exact:true}).click();
 }
 async function choose(page,tokens){for(const word of tokens)await page.locator('#train-palette button:not([aria-pressed="true"])').filter({hasText:word}).first().click();}
 const score=page=>page.locator('[data-score="team-1"]');
@@ -120,7 +120,7 @@ test('two natural word blocks form a short sentence without splitting a textbook
 for (const legacy of [false, true]) test(`Zhongwen train source and feedback fit a projector with ${legacy ? 'a legacy bank notice' : 'the default bank'}`, async ({page}) => {
  await page.setViewportSize({width:1280,height:720});
  if (legacy) await page.addInitScript(bank=>localStorage.setItem('hanzi-flip.question-bank',JSON.stringify({schemaVersion:1,questions:bank})), questions);
- await page.goto('/');
+ await page.goto('/?mode=flip');
  await page.locator('#bank-source').selectOption('zhongwen');
  await page.locator('#stage').selectOption('2');
  await page.locator('#scope').selectOption('lesson');
@@ -181,7 +181,7 @@ test('native focus follows a selected carriage instead of dropping to the docume
  }
 });
 test('default textbook station screenshot and viewport controls',async({page})=>{
- await page.goto('/');await page.getByRole('button',{name:'句子小火车',exact:true}).click();for(const b of (await page.locator('#train-palette button').all()).slice(0,3))await b.click();
+ await page.goto('/?mode=flip');await page.getByRole('button',{name:'句子小火车',exact:true}).click();for(const b of (await page.locator('#train-palette button').all()).slice(0,3))await b.click();
  for(const[width,height]of [[1920,1080],[1280,720]]){await page.setViewportSize({width,height});await page.waitForTimeout(200);await page.screenshot({path:`docs/codex/sentence-train-world/train-default-${width}.png`,fullPage:false});const box=await page.locator('#train-check').boundingBox();expect(box.y+box.height).toBeLessThanOrEqual(height)}
 });
 test('long projector error and revealed feedback remain in the viewport',async({page})=>{
