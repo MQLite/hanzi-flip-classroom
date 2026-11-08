@@ -35,6 +35,10 @@ import './mole.css';
 import {createMoleView} from './mole.js';
 import {getMolePool} from './mole-vocabulary.js';
 import {createMoleState,hitMole,settleMole,finishMoleHits} from './mole-core.js';
+import './poison.css';
+import {createPoisonView} from './poison.js';
+import {getPoisonPool} from './poison-vocabulary.js';
+import {createPoisonState,beginPoisonHiding,togglePoisonWord,sealPoison,beginPoisonReading,selectPoisonCard,cancelPoisonCard,revealPoisonCard,coverPoisonSecrets,nextPoisonRound} from './poison-core.js';
 import {createSudokuState,collectSudokuWord,placeSudokuWord,clearSudokuCell,undoSudoku,getSudokuProgress} from './sudoku-core.js';
 
 const app = document.querySelector("#app");
@@ -50,7 +54,8 @@ app.innerHTML = `<header class="site-header"><a class="brand" href="./" aria-lab
 <dialog id="settings-dialog" aria-labelledby="settings-title"><div class="dialog-heading"><div><span class="eyebrow">OUR LITTLE TEAMS</span><h2 id="settings-title">为小组起个名字</h2></div><button class="close-dialog icon-button" aria-label="关闭小组设置">×</button></div><p>应用设置会开始新一轮，清空本轮得分。</p><label>小组数量<select id="team-count"><option value="2">2 个小组</option><option value="3">3 个小组</option><option value="4">4 个小组</option></select></label><div id="team-fields"></div><button id="apply-teams" class="primary">应用并开始新一轮</button></dialog>
 <dialog id="help-dialog" aria-labelledby="help-title"><div class="dialog-heading"><h2 id="help-title">欢迎来到汉字奇遇岛</h2><button class="close-dialog icon-button" aria-label="关闭帮助">×</button></div><ol class="help-steps"><li>选择年级，认读屏幕上的汉字。</li><li>翻牌揭晓汉字、拼音和词语；句子练习请使用“句子小火车”。</li><li>选中小组，再点“答对了”，就会沿踏石走到下一座小岛，自动换字；想巩固的字点“再练一次”。每字只结算一次。</li><li>一轮结束后，带着需要巩固的字再出发。</li></ol><p>跳过的字记为未作答；回看不会重复加分。多音字以本题拼音为参考，老师可结合词语判断其他读音。</p><p>题库自动保存在此设备的此浏览器中，请定期导出备份。课堂得分、小组和进度不会在刷新后恢复。</p><p>年级是难度建议，不对应特定教材。打开面板或输入文字时，课堂快捷键会暂停。</p><p>立体显示不流畅时，可随时切换“简化显示”，本轮进度保留。</p></dialog>`;
 const $ = (s) => document.querySelector(s);
-$('.lesson-heading').insertAdjacentHTML('beforeend', '<nav class="game-modes" aria-label="游戏模式"><button id="mode-flip" aria-pressed="true">识字翻翻乐</button><button id="mode-workshop" aria-pressed="false">组词小工坊</button><button id="mode-train" aria-pressed="false">句子小火车</button><button id="mode-sudoku" aria-pressed="false">汉字数独</button><button id="mode-explore" aria-pressed="false">情景探索</button><button id="mode-mole" aria-pressed="false">打地鼠</button></nav>');
+$('.lesson-heading').insertAdjacentHTML('beforeend', '<nav class="game-modes" aria-label="游戏模式"><button id="mode-flip" aria-pressed="true">识字翻翻乐</button><button id="mode-workshop" aria-pressed="false">组词小工坊</button><button id="mode-train" aria-pressed="false">句子小火车</button><button id="mode-sudoku" aria-pressed="false">汉字数独</button><button id="mode-explore" aria-pressed="false">情景探索</button><button id="mode-mole" aria-pressed="false">打地鼠</button><button id="mode-poison" aria-pressed="false">女巫的毒药</button></nav>');
+$('.play-area').insertAdjacentHTML('beforeend','<div id="witch-poison" hidden></div>');
 $('.classroom').insertAdjacentHTML('afterend','<section id="exploration-catalog" aria-label="本课情景探索" hidden></section>');
 $('#scene').insertAdjacentHTML('afterend', '<div id="workshop" hidden></div><div id="sentence-train" hidden></div><div id="sudoku" hidden></div><div id="mole" hidden></div>');
 $('.practice-box').insertAdjacentHTML('beforebegin', '<div id="workshop-collection-panel" hidden><h4>收集到的词语 <span>✦</span></h4><div id="workshop-collection" aria-live="polite"></div></div>');
@@ -107,6 +112,13 @@ if (selection.source === 'zhongwen') selection.stage = '1';
 let gameMode = 'flip', workshopState = null, workshopCount = 4, workshopRound = 0;
 let sudokuState=null,sudokuPool=null,sudokuSelectedIds=[];
 let moleState=null,molePool=null,moleType='mixed';
+let poisonState=null,poisonPool=null,poisonSelectedIds=[],poisonCount=1;
+$('#help-dialog').insertAdjacentHTML('beforeend','<p>女巫的毒药：选好本课2–16张词卡和1–2个毒药，其他同学闭眼后请一位小女巫秘密点选。藏好后大家睁眼，轮流选词、先读再由老师揭晓。安全卡变灰，读到任一毒药就播放魔法烟雾与变身效果，本轮立即结束。换一位小女巫即可重新藏毒，所有同学继续参加；读错先纠正，不会因为读错而中毒。离开藏毒画面时会先遮挡秘密选择。</p>');
+function preparePoison(){
+  if(selection.source!=='personal')selection={...selection,scope:'lesson'};
+  poisonPool=getPoisonPool({...selection,grade},bank.questions);
+  poisonSelectedIds=poisonPool.words.slice(0,12).map(word=>word.id);poisonState=null;
+}
 $('.lesson-toolbar').insertAdjacentHTML('beforeend','<label id="mole-content-label" hidden>练习内容<select id="mole-content" aria-label="打地鼠练习内容"><option value="mixed">生字＋词语</option><option value="characters">只练生字</option><option value="words">只练词语</option></select></label>');
 $('#help-dialog').insertAdjacentHTML('beforeend','<p>打地鼠：使用当前课次已收录的生字和词语，也可只练生字或词语。最多9只地鼠同时展示，学生读对后老师点击对应地鼠，挥锤、加一星并换上还未练的词；没有倒计时，不会自动消失。所有词读对后播放庆祝特效。可开启拼音提示，每词仅计一次分，切换游戏保留本页进度。</p>');
 function prepareMole(){
@@ -125,7 +137,7 @@ function prepareSudoku(){
 }
 $('.lesson-toolbar').insertAdjacentHTML('beforeend', '<label id="workshop-count-label" hidden>每盘词数<select id="workshop-count" aria-label="每盘词数"><option value="2">2 个词</option><option value="3">3 个词</option><option value="4" selected>4 个词</option></select></label>');
 function currentSession() {
-  if(gameMode==='sudoku'||gameMode==='explore'||gameMode==='mole')return createSession({questions:[],teamNames});
+  if(gameMode==='sudoku'||gameMode==='explore'||gameMode==='mole'||gameMode==='poison')return createSession({questions:[],teamNames});
   const questions = selection.source !== 'personal'
     ? filterCurriculum(bank.questions, {...selection, textbook: textbookForSource(selection.source)})
     : bank.questions.filter(q=>!q.textbook);
@@ -173,7 +185,7 @@ function syncSelection() {
   $('#lesson').disabled = !explore && selection.scope === 'stage';
   $('.grade-label').hidden = explore || selection.source !== 'personal';
   document.querySelectorAll('.textbook-field').forEach(e=>e.hidden=selection.source === 'personal');
-  if(gameMode==='sudoku'||gameMode==='mole'||explore)$('#scope').closest('label').hidden=true;
+  if(gameMode==='sudoku'||gameMode==='mole'||gameMode==='poison'||explore)$('#scope').closest('label').hidden=true;
   $('#curriculum-note').textContent = selection.source !== 'personal'
     ? zhongwen
       ? `《中文》（暨南大学华文学院 · 第三版）${ZHONGWEN_BOOK_LABELS[selection.stage]} · ${selection.scope === 'cumulative' ? `第一册第1课至${ZHONGWEN_BOOK_LABELS[selection.stage]}第${selection.lesson}课` : selection.scope === 'lesson' ? `第${selection.lesson}课` : '全册'} · ${gameMode === 'train' ? '课文与阅读重点句' : '全部生字与教材词语'}`
@@ -193,7 +205,7 @@ function syncSelection() {
     $('#curriculum-note').append(viewWords);
   }
   $('.teacher-badge').textContent = zhongwen ? `${ZHONGWEN_NAME} · ${ZHONGWEN_BOOK_LABELS[selection.stage]}` : selection.source === 'paradise' ? '汉语乐园 · 1A–3B' : selection.source === 'textbook' ? '中文乐园（新版）' : '教师课堂 · 个人题库';
-  $('#zhongwen-vocabulary').hidden = !zhongwen || explore || gameMode === 'mole' || gameMode === 'train' || gameMode === 'sudoku';
+  $('#zhongwen-vocabulary').hidden = !zhongwen || explore || gameMode === 'mole' || gameMode === 'poison' || gameMode === 'train' || gameMode === 'sudoku';
   if (zhongwen&&!explore&&gameMode!=='mole') {
     const keys = new Set(filterCurriculum(ZHONGWEN_QUESTIONS, {...selection, textbook: ZHONGWEN_ID}).map(q => `${q.book}/${q.lesson}`));
     const courses = coursesForTextbook(ZHONGWEN_ID).filter(c => keys.has(`${c.book}/${c.lesson}`));
@@ -248,6 +260,31 @@ let workshopScene;
 const trainView = createTrainView($('#sentence-train'), trainIntent, message=>{notify(message);if(gameMode==='train')syncSimpleControl()});
 const sudokuView=createSudokuView($('#sudoku'),sudokuIntent);
 const moleView=createMoleView($('#mole'),moleIntent);
+const poisonView=createPoisonView($('#witch-poison'),poisonIntent);
+function concealPoison(){
+  if(gameMode!=='poison'||!poisonState)return;
+  const next=coverPoisonSecrets(poisonState);if(next!==poisonState){poisonState=next;render();}
+}
+function poisonIntent(intent,value){
+  if(gameMode!=='poison')return;
+  if(intent==='choose-word'){
+    if(poisonSelectedIds.includes(value))poisonSelectedIds=poisonSelectedIds.filter(id=>id!==value);
+    else if(poisonSelectedIds.length<16)poisonSelectedIds=[...poisonSelectedIds,value];
+    else{notify('每轮最多16张词卡，请先取消一张再替换。');return;}
+  }else if(intent==='count')poisonCount=value;
+  else if(intent==='start'){
+    if(poisonSelectedIds.length<2||poisonSelectedIds.length<=poisonCount)return;
+    poisonState=createPoisonState({words:poisonSelectedIds.map(id=>poisonPool.words.find(w=>w.id===id)),poisonCount});
+  }else if(intent==='prepare'){
+    if(!mayRestart())return;poisonState=null;
+  }else if(poisonState){
+    const actions={hide:()=>beginPoisonHiding(poisonState),card:()=>poisonState.phase==='hide'?togglePoisonWord(poisonState,value):selectPoisonCard(poisonState,value),seal:()=>sealPoison(poisonState),read:()=>beginPoisonReading(poisonState),reveal:()=>revealPoisonCard(poisonState),cancel:()=>cancelPoisonCard(poisonState),'next-round':()=>nextPoisonRound(poisonState)};
+    if(!actions[intent])return;poisonState=actions[intent]();
+  }
+  render();
+}
+window.addEventListener('blur',concealPoison);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)concealPoison();});
 function moleIntent(intent,value){
   if(gameMode!=='mole')return;
   if(intent==='restart'){newRound();return;}
@@ -282,26 +319,27 @@ function sudokuIntent(intent,value){
   }
   render();
 }
-function activeScene() { return gameMode==='sudoku'||gameMode==='explore'||gameMode==='mole'?null:gameMode === 'train' ? trainView.scene : gameMode === 'workshop' ? workshopScene : scene; }
+function activeScene() { return gameMode==='sudoku'||gameMode==='explore'||gameMode==='mole'||gameMode==='poison'?null:gameMode === 'train' ? trainView.scene : gameMode === 'workshop' ? workshopScene : scene; }
 function syncSimpleControl() {
-  $('#simplify').hidden=gameMode==='sudoku'||gameMode==='explore'||gameMode==='mole';
-  if(gameMode==='sudoku'||gameMode==='explore'||gameMode==='mole')return;
+  $('#simplify').hidden=gameMode==='sudoku'||gameMode==='explore'||gameMode==='mole'||gameMode==='poison';
+  if(gameMode==='sudoku'||gameMode==='explore'||gameMode==='mole'||gameMode==='poison')return;
   const simple = $(gameMode === 'train' ? '#train-scene' : gameMode === 'workshop' ? '#workshop-scene' : '#scene').dataset.mode === 'simple';
   $('#simplify').textContent = simple ? '立体显示' : '简化显示';
   $('#simplify').setAttribute('aria-pressed', String(simple));
 }
 function switchMode(mode, linkedSelection) {
   if (mode === gameMode) return;
+  concealPoison();
   if (gameMode === 'train' && session.departure) finishDeparture(session.departure);
   if (gameMode === 'flip' && flipTransition) finishFlipTransition(flipTransition);
   if(gameMode === 'workshop' && workshopTransition) finishWorkshopTransition(workshopTransition);
   if(gameMode==='mole'){moleView.cancelAnimations();moleState=finishMoleHits(moleState);}
   sudokuView.cancelDrag();
-  modeSnapshots[gameMode] = { session, grade, teamNames: [...teamNames], selectedTeam, showPinyin, selection: {...selection}, extensionOpen, workshopState, sudokuState,sudokuPool,sudokuSelectedIds:[...sudokuSelectedIds],moleState,molePool,moleType };
+  modeSnapshots[gameMode] = { session, grade, teamNames: [...teamNames], selectedTeam, showPinyin, selection: {...selection}, extensionOpen, workshopState, sudokuState,sudokuPool,sudokuSelectedIds:[...sudokuSelectedIds],moleState,molePool,moleType,poisonState,poisonPool,poisonSelectedIds:[...poisonSelectedIds],poisonCount };
   activeScene()?.setActive(false);
   const saved = modeSnapshots[mode];
   gameMode = mode;
-  if (saved) ({ session, grade, teamNames, selectedTeam, showPinyin, selection, extensionOpen, workshopState,sudokuState,sudokuPool,sudokuSelectedIds,moleState,molePool,moleType } = saved);
+  if (saved) ({ session, grade, teamNames, selectedTeam, showPinyin, selection, extensionOpen, workshopState,sudokuState,sudokuPool,sudokuSelectedIds,moleState,molePool,moleType,poisonState,poisonPool,poisonSelectedIds,poisonCount } = saved);
   else {
     if(mode==='explore'){
       selection=linkedSelection??(matchingExplorations(selection).length?selection:{source:'zhongwen',stage:'5',scope:'lesson',lesson:9});
@@ -319,12 +357,15 @@ function switchMode(mode, linkedSelection) {
   }
   if(mode==='sudoku'&&!saved)prepareSudoku();
   if(mode==='mole'&&!saved){showPinyin=false;prepareMole();}
+  if(mode==='poison'&&!saved)preparePoison();
   gameMode = mode;
   document.body.classList.toggle('workshop-mode', mode === 'workshop');
   document.body.classList.toggle('train-mode',mode === 'train');
   document.body.classList.toggle('sudoku-mode',mode === 'sudoku');
   document.body.classList.toggle('explore-mode',mode === 'explore');
   document.body.classList.toggle('mole-mode',mode === 'mole');
+  document.body.classList.toggle('poison-mode',mode === 'poison');
+  $('#witch-poison').hidden=mode!=='poison';$('#mode-poison').setAttribute('aria-pressed',String(mode==='poison'));
   $('#mole').hidden=mode!=='mole';$('#mole-content-label').hidden=mode!=='mole';$('#mole-content').value=moleType;
   $('#mode-mole').setAttribute('aria-pressed',String(mode==='mole'));
   $('.classroom').hidden=mode==='explore';
@@ -343,11 +384,11 @@ function switchMode(mode, linkedSelection) {
   $('#workshop').hidden = mode !== 'workshop';
   $('#workshop-collection-panel').hidden = mode !== 'workshop';
   $('#workshop-count-label').hidden = mode !== 'workshop';
-  $('.game-controls').hidden = mode === 'workshop' || mode === 'sudoku' || mode === 'explore' || mode === 'mole';
+  $('.game-controls').hidden = mode === 'workshop' || mode === 'sudoku' || mode === 'explore' || mode === 'mole' || mode === 'poison';
   $('#mode-flip').setAttribute('aria-pressed',String(mode === 'flip'));
   $('#mode-workshop').setAttribute('aria-pressed',String(mode === 'workshop'));
-  $('.lesson-heading h2').textContent = mode==='mole'?'打地鼠':mode==='explore'?'情景探索':mode==='sudoku'?'汉字数独':mode === 'train' ? '句子小火车' : mode === 'workshop' ? '组词小工坊' : '识字翻翻乐';
-  $('.lesson-heading > p').textContent = mode==='mole'?'读生字 · 认词语 · 快乐挥锤':mode==='explore'?'观察情景 · 寻找线索 · 读懂中文':mode==='sudoku'?'认词整理 · 九宫格填空':mode === 'train' ? '接车厢 · 排句子 · 快乐出发' : mode === 'workshop' ? '挑活字 · 排词语 · 融合木质印版' : '看一看 · 读一读 · 说一说';
+  $('.lesson-heading h2').textContent = mode==='poison'?'女巫的毒药':mode==='mole'?'打地鼠':mode==='explore'?'情景探索':mode==='sudoku'?'汉字数独':mode === 'train' ? '句子小火车' : mode === 'workshop' ? '组词小工坊' : '识字翻翻乐';
+  $('.lesson-heading > p').textContent = mode==='poison'?'闭眼藏毒 · 大声读词 · 魔法变身':mode==='mole'?'读生字 · 认词语 · 快乐挥锤':mode==='explore'?'观察情景 · 寻找线索 · 读懂中文':mode==='sudoku'?'认词整理 · 九宫格填空':mode === 'train' ? '接车厢 · 排句子 · 快乐出发' : mode === 'workshop' ? '挑活字 · 排词语 · 融合木质印版' : '看一看 · 读一读 · 说一说';
   $('#reveal').textContent = mode === 'workshop' ? '揭晓参考词' : '翻牌揭晓';
   $('#reveal').setAttribute('aria-label',mode === 'workshop' ? '揭晓参考词' : '翻牌揭晓');
   const shortcutLabel = $('footer > span');
@@ -366,6 +407,7 @@ $('#mode-train').onclick = () => switchMode('train');
 $('#mode-sudoku').onclick = () => switchMode('sudoku');
 $('#mode-explore').onclick = () => switchMode('explore');
 $('#mode-mole').onclick = () => switchMode('mole');
+$('#mode-poison').onclick = () => switchMode('poison');
 
 function renderWorkshop() {
   if (gameMode !== 'workshop') return;
@@ -501,6 +543,7 @@ function storageAlert(result) {
 if (!load.ok) storageAlert(load);
 function progressed() {
   return (
+    (gameMode==='poison'&&Boolean(poisonState?.poisonIds.length||poisonState?.results.length)) ||
     (gameMode==='mole'&&Boolean(moleState?.hits.length)) ||
     (gameMode==='sudoku'&&Boolean(sudokuState?.collected.length)) ||
     (gameMode === 'train' && (session.selections.some(a=>a.length)||session.judgments.some(Boolean))) ||
@@ -520,6 +563,7 @@ function newRound() {
   session = currentSession();
   if(gameMode==='sudoku'){prepareSudoku();syncSelection();}
   if(gameMode==='mole'){prepareMole();syncSelection();}
+  if(gameMode==='poison'){preparePoison();syncSelection();}
   if (gameMode === 'workshop') { workshopState = createWorkshopState(session,{wordCount:workshopCount}); workshopRound++; }
   selectedTeam = "team-1";
   extensionOpen = false;
@@ -532,7 +576,7 @@ function el(tag, text, className) {
   return e;
 }
 function render() {
-  $('#pinyin').closest('label').hidden=gameMode!=='train'&&gameMode!=='mole';
+  $('#pinyin').closest('label').hidden=gameMode!=='train'&&gameMode!=='mole'&&gameMode!=='poison';
   if(gameMode==='explore'){
     strokeCleanup?.();strokeCleanup=null;
     cardStrokeCleanup?.();cardStrokeCleanup=null;cardStrokeKey=null;cardStrokeView=null;
@@ -582,7 +626,13 @@ function render() {
       return b;
     }),
   );
-  $('#pinyin').closest('label').hidden = gameMode !== 'train'&&gameMode!=='mole';
+  $('#pinyin').closest('label').hidden = gameMode !== 'train'&&gameMode!=='mole'&&gameMode!=='poison';
+  if(gameMode==='poison'){
+    strokeCleanup?.();strokeCleanup=null;cardStrokeCleanup?.();cardStrokeCleanup=null;cardStrokeKey=null;cardStrokeView=null;
+    $('#card-face').replaceChildren();for(const id of ['#extension-toggle','#extension-hint','#extension'])$(id).hidden=true;
+    $('#round-caption').textContent='本课词卡 · '+poisonCount+'个毒药';
+    poisonView.update({state:poisonState,pool:poisonPool,selectedIds:poisonSelectedIds,poisonCount,showPinyin});return;
+  }
   if(gameMode==='mole'){
     strokeCleanup?.();strokeCleanup=null;cardStrokeCleanup?.();cardStrokeCleanup=null;cardStrokeKey=null;cardStrokeView=null;
     for(const id of ['#extension-toggle','#extension-hint','#extension'])$(id).hidden=true;
@@ -863,8 +913,8 @@ $("#pinyin").onchange = (event) => {
   showPinyin = event.target.checked;
   render();
 };
-$("#open-bank").onclick = () => editor.open();
-$("#open-help").onclick = () => $("#help-dialog").showModal();
+$("#open-bank").onclick = () => {concealPoison();editor.open();};
+$("#open-help").onclick = () => {concealPoison();$("#help-dialog").showModal();};
 document
   .querySelectorAll(".close-dialog")
   .forEach((b) => (b.onclick = () => b.closest("dialog").close()));
@@ -918,7 +968,7 @@ $("#apply-teams").onclick = () => {
   newRound();
 };
 document.addEventListener("keydown", (event) => {
-  if(gameMode==='sudoku'||gameMode==='explore'||gameMode==='mole')return;
+  if(gameMode==='sudoku'||gameMode==='explore'||gameMode==='mole'||gameMode==='poison')return;
   if (
     event.repeat || event.isComposing || event.keyCode === 229 ||
     document.querySelector("dialog[open]") ||
@@ -945,4 +995,5 @@ if(requestedMode==='explore'){
   const linkedSelection={source:entryParams.get('source'),stage:entryParams.get('stage'),scope:'lesson',lesson:Number(entryParams.get('lesson'))};
   switchMode('explore',matchingExplorations(linkedSelection).length?linkedSelection:undefined);
 }else if(requestedMode==='mole')switchMode('mole');
+else if(requestedMode==='poison')switchMode('poison');
 else render();
