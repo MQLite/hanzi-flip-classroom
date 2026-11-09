@@ -159,7 +159,7 @@ function prepareConstruction(){
   if(gameMode==='puzzle')puzzleState=createPuzzleState(constructionPool.puzzles);
   else {strokeState=createStrokeState(constructionPool.characters);handwritingState=createHandwritingState(constructionPool.characters);}
 }
-$('#help-dialog').insertAdjacentHTML('beforeend','<p>汉字拼图：先只给部件，学生发现能组成的本课汉字；同一部件可多选，点“合一合”后才揭晓。独体字不强拆，尚不确定的分拆不出题。展开“本课新部件”可看英文介绍。笔画很忙：学生说名称，老师选笔听读音，再拖到大田字格的白色字影位置；也可选笔后点位置，或用键盘聚焦字影后回车。按规范笔顺逐笔完成，支持撤回和关闭读音；触屏描写沿细虚线写，不必描满粗字影，写完一字会全屏显示描写参考分，关闭后继续；课末可进入基础笔画复习与预习。切换游戏保留本页进度，刷新重置。两个游戏使用当前课次，不改变个人题库。</p>');
+$('#help-dialog').insertAdjacentHTML('beforeend','<p>汉字拼图：先只给部件，学生发现能组成的本课汉字；同一部件可多选，点“合一合”后才揭晓。独体字不强拆，尚不确定的分拆不出题。展开“本课新部件”可看英文介绍。笔画很忙：学生说名称，老师选笔听读音，再拖到大田字格的白色字影位置；也可选笔后点位置，或用键盘聚焦字影后回车。两种练习共用“笔顺提示”开关，上新课时可看编号和箭头，复习时可关闭。按规范笔顺逐笔完成，支持撤回和关闭读音；触屏描写写完一字会全屏显示描写参考分，关闭后继续；课末可进入基础笔画复习与预习。切换游戏保留本页进度，刷新重置。两个游戏使用当前课次，不改变个人题库。</p>');
 function prepareMaze(){
   if(selection.source!=='personal')selection={...selection,scope:'lesson'};
   const pool=getMolePool({...selection,grade,type:'characters'},bank.questions);
@@ -772,7 +772,7 @@ function render() {
     strokeCleanup?.();strokeCleanup=null;cardStrokeCleanup?.();cardStrokeCleanup=null;cardStrokeKey=null;cardStrokeView=null;$('#card-face').replaceChildren();
     for(const id of ['#extension-toggle','#extension-hint','#extension'])$(id).hidden=true;
     $('#round-caption').textContent=gameMode==='puzzle'?'本课部件 · 自己发现汉字':'本课生字 · 规范笔顺';
-    $('footer > span').textContent=gameMode==='puzzle'?'先选部件，再合一合；每个汉字只收集一次。':strokeInputMode==='write'?'沿细线描写，不必描满粗字影；写完一字，全屏看看参考分。':'学生说名称，老师拖笔画；按笔顺完成后进入总复习。';
+    $('footer > span').textContent=gameMode==='puzzle'?'先选部件，再合一合；每个汉字只收集一次。':strokeInputMode==='write'?'按笔顺逐笔描写，写完一字可看全屏参考分。':'学生说名称，老师拖笔画；按笔顺完成后进入总复习。';
     constructionView.update({mode:gameMode,state:gameMode==='puzzle'?puzzleState:strokeInputMode==='write'?handwritingState:strokeState,pool:constructionPool,inputMode:strokeInputMode});return;
   }
   if(gameMode==='explore'){

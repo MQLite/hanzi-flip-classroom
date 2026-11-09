@@ -21,3 +21,31 @@ test('score popup covers a phone without scrolling and closes back to the comple
  const box=await popup.boundingBox();expect(Math.round(box.width)).toBe(390);expect(Math.round(box.height)).toBe(844);await expect(popup.getByRole('button',{name:'关闭',exact:true})).toBeInViewport();
  await popup.getByRole('button',{name:'关闭',exact:true}).click();await expect(page.locator('#handwriting-score')).toContainText('100');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
+test('stroke hints switch applies to both practice modes and preserves each mode’s progress',async({page})=>{
+ await page.goto('/?mode=strokes');await expect(page.locator('.writing-stage h3')).toContainText('好');
+ const toggle=page.getByRole('switch',{name:'笔顺提示'}),grid=page.locator('.writing-grid');
+ const guides=grid.locator('.stroke-guides'),active=guides.locator('.is-current .stroke-guide-number');
+ await expect(toggle).toBeChecked();await expect(active).toHaveText('1');
+ await page.getByRole('button',{name:'选择撇点',exact:true}).click();
+ await grid.getByRole('button',{name:'字影位置1',exact:true}).press('Enter');
+ await expect(active).toHaveText('2');
+ await toggle.press('Space');await expect(toggle).toBeFocused();await expect(toggle).not.toBeChecked();
+ await expect(guides).toHaveCount(0);await expect(grid.locator('.glyph-written path')).toHaveCount(1);
+ await expect(page.locator('.stroke-variant-note')).toHaveCount(0);
+ const data=await (await page.request.get('/strokes/'+encodeURIComponent('好')+'.json')).json();
+ const targets=grid.locator('.glyph-shadow path[role="button"]');
+ await expect(targets.first()).toHaveAttribute('d',data.strokes[3]);
+ await expect(targets.last()).toHaveAttribute('d',data.strokes[1]);
+ await page.getByRole('button',{name:'选择撇',exact:true}).click();
+ await targets.last().press('Enter');await expect(grid.locator('.glyph-written path')).toHaveCount(2);
+
+ await page.getByRole('button',{name:'触屏描写',exact:true}).click();
+ await expect(toggle).not.toBeChecked();await expect(grid.locator('.glyph-shadow path')).toHaveCount(6);
+ await expect(guides).toHaveCount(0);await expect(grid.locator('.glyph-shadow .is-next')).toHaveCount(0);
+ await draw(page,[...data.medians[0]].reverse());await expect(grid.locator('.handwriting-ink path')).toHaveCount(0);
+ await draw(page,data.medians[0]);await expect(grid.locator('.handwriting-ink path')).toHaveCount(1);
+ await expect(guides).toHaveCount(0);
+ await toggle.click();await expect(toggle).toBeChecked();await expect(active).toHaveText('2');
+ await page.getByRole('button',{name:'拖动笔画',exact:true}).click();
+ await expect(grid.locator('.glyph-written path')).toHaveCount(2);await expect(active).toHaveText('3');
+});

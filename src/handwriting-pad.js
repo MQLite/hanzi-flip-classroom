@@ -5,13 +5,21 @@ function svgNode(tag,attributes={}){const n=document.createElementNS(NS,tag);for
 const pathFor=points=>points.map((p,i)=>`${i?'L':'M'}${p[0].toFixed(2)} ${p[1].toFixed(2)}`).join(' ');
 
 /** One mounted pad owns one gesture. Context changes dispose its listeners. */
-export function mountHandwritingPad(svg,{geometry,state,onStroke,onCancel=()=>{}}){
+export function mountHandwritingPad(svg,{geometry,state,showStrokeHints=true,onStroke,onCancel=()=>{}}){
   const controller=new AbortController(),options={signal:controller.signal};let gesture=null,disposed=false;
-  const transform='translate(0 900) scale(1 -1)',shadow=svgNode('g',{transform,class:'glyph-shadow'}),ink=svgNode('g',{transform,class:'handwriting-ink'}),draft=svgNode('g',{transform,class:'handwriting-draft'});
-  geometry.strokes.forEach((d,i)=>shadow.append(svgNode('path',{d,class:i===state.placed?'is-next':''})));
+  const transform = 'translate(0 900) scale(1 -1)';
+  const shadow = svgNode('g', {transform, class: showStrokeHints ? 'glyph-shadow' : 'glyph-shadow is-unmarked'});
+  const ink = svgNode('g', {transform, class: 'handwriting-ink'});
+  const draft = svgNode('g', {transform, class: 'handwriting-draft'});
+  geometry.strokes.forEach((d, index) => {
+    const active = showStrokeHints && index === state.placed;
+    shadow.append(svgNode('path', {d, class: active ? 'is-next' : ''}));
+  });
   for(const points of state.drawings[state.index])ink.append(svgNode('path',{d:pathFor(points)}));
   if(state.lastAttempt.length)draft.append(svgNode('path',{d:pathFor(state.lastAttempt),class:'handwriting-rejected'}));
-  svg.append(shadow,ink,createStrokeGuides(geometry.medians,state.placed),draft);
+  svg.append(shadow,ink);
+  if(showStrokeHints)svg.append(createStrokeGuides(geometry.medians,state.placed));
+  svg.append(draft);
   function point(event){const matrix=svg.getScreenCTM();if(!matrix)return null;const p=new DOMPoint(event.clientX,event.clientY).matrixTransform(matrix.inverse());return [p.x,900-p.y];}
   function inside(event){const box=svg.getBoundingClientRect();return event.clientX>=box.left&&event.clientX<=box.right&&event.clientY>=box.top&&event.clientY<=box.bottom;}
   function release(id){try{if(svg.hasPointerCapture(id))svg.releasePointerCapture(id);}catch{/* The browser may already have released a cancelled pointer. */}}

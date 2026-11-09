@@ -20,6 +20,7 @@ async function loadGlyph(character){
 
 export function createConstructionView(root,{onAction}){
   const audio=createStrokeAudio();let current=null,epoch=0,audioAttempt=0,visible=true,disposed=false,selected='',muted=false,drag=null,suppressUntil=0,pad=null,scorePopup=null;
+  let showStrokeHints = true;
   function dismissScore(){scorePopup?.dispose();scorePopup=null;}
   function scoreMetrics(state){const results=state.strokeScores[state.index];return Object.fromEntries(['shape','position','length'].map(key=>[key,Math.round(results.reduce((sum,r)=>sum+r.metrics[key],0)/results.length)]));}
   function cancelDrag(){if(drag){drag.ghost?.remove();drag=null;}window.removeEventListener('pointermove',pointerMove);window.removeEventListener('pointerup',pointerUp);window.removeEventListener('pointercancel',pointerCancel);}
@@ -81,13 +82,23 @@ export function createConstructionView(root,{onAction}){
     const record=state.characters[state.index],layout=node('div',undefined,'writing-layout handwriting-layout'),stage=node('section',undefined,'writing-stage'),side=node('aside',undefined,'writing-side handwriting-side');
     stage.append(node('h3',`写一写：${record.character}`),node('p',`已完成 ${state.placed} / ${record.names.length} 笔 · 本课完成 ${state.completed.length} / ${pool.characters.length} 字`,'stroke-progress'));
     const grid=svgNode('svg',{viewBox:'0 0 1024 1024',class:'writing-grid handwriting-pad',role:'group','aria-label':`${record.character}的触屏描写田字格`});grid.append(svgNode('path',{d:'M512 0V1024M0 512H1024',class:'grid-cross'}),svgNode('path',{d:'M0 0L1024 1024M1024 0L0 1024',class:'grid-diagonal'}));stage.append(grid);
-    const messages={ready:'从当前编号旁的小圆点起笔，沿虚线和箭头写完一笔后抬手。',accepted:`写对了：${state.lastName??''}。继续下一笔。`,complete:'✦ 这个字写完了！看看你的描写参考分。','wrong-order':'请按笔顺描写亮起的这一笔。','wrong-direction':'这一笔方向反了，请从小圆点重新起笔。',retry:'再试一次，连续写完这一笔，注意细虚线的方向和位置。'};
+    const messages={
+      ready: showStrokeHints ? '从当前编号旁的小圆点起笔，沿虚线和箭头写完一笔后抬手。' : '观察字影，按笔顺逐笔描写。',
+      accepted: `写对了：${state.lastName??''}。继续下一笔。`,
+      complete: '✦ 这个字写完了！看看你的描写参考分。',
+      'wrong-order': '请按笔顺写下一笔。',
+      'wrong-direction': '这一笔方向反了，请重新起笔。',
+      retry: '再试一次，连续写完这一笔，注意位置和方向。',
+    };
     const feedback=status(messages[state.feedback]??messages.ready);feedback.classList.add('handwriting-status');stage.append(feedback);
     const token=epoch;loadGlyph(record.character).then(data=>{
       if(disposed||!visible||token!==epoch||!grid.isConnected)return;if(data.strokes.length!==record.names.length)throw Error('count');current.geometry=data;
-      pad=mountHandwritingPad(grid,{geometry:data,state,onStroke:points=>action('trace',{points,geometry:data}),onCancel:message=>{if(token===epoch)feedback.textContent=message;}});
+      pad=mountHandwritingPad(grid,{geometry:data,state,showStrokeHints,onStroke:points=>action('trace',{points,geometry:data}),onCancel:message=>{if(token===epoch)feedback.textContent=message;}});
     }).catch(()=>{if(token===epoch&&grid.isConnected)feedback.textContent='字形暂未载入，请切换本字后重试。';});
-    side.append(node('h3','沿细线，自己写'),node('p','用手指、触屏笔或鼠标沿细虚线写，不必描满粗字影；写对一笔，自动读出笔画名。','construction-instruction'));
+    const instruction = showStrokeHints
+      ? '沿细虚线写，不必描满粗字影。写对一笔，自动读出笔画名。'
+      : '看字影，按笔顺逐笔写。写对一笔，自动读出笔画名。';
+    side.append(node('h3','自己写'),node('p',instruction,'construction-instruction'));
     if(state.scores[state.index]!==null){
       const score=node('section',undefined,'handwriting-score');score.id='handwriting-score';score.dataset.score=state.scores[state.index];score.setAttribute('aria-live','polite');const number=node('strong',String(state.scores[state.index]));number.append(node('small',' / 100'));score.append(node('h4','描写相似度参考分'),number);
       const results=state.strokeScores[state.index],metrics=node('div',undefined,'handwriting-score-metrics');for(const [key,label] of [['shape','形状'],['position','位置'],['length','长短']])metrics.append(node('span',`${label} ${Math.round(results.reduce((sum,r)=>sum+r.metrics[key],0)/results.length)}`));score.append(metrics,node('p','按完成的笔画比较；写得慢、重试不扣分。'));side.append(score);
@@ -104,7 +115,18 @@ export function createConstructionView(root,{onAction}){
     const controls=node('div',undefined,'construction-actions');const prev=button('← 上一字','next',-1),next=button('下一字 →','next',1);prev.disabled=state.index===0;next.disabled=state.index===state.characters.length-1;
     controls.append(prev,node('span',`${state.index+1} / ${state.characters.length}`),next,button('撤回一笔','undo'),button('笔画总复习 / 预习','review',true));
     if(inputMode==='write')controls.append(button('重写本字','rewrite'));
-    const mute=node('button',muted?'读音：关闭':'读音：开启');mute.type='button';mute.setAttribute('aria-pressed',String(!muted));mute.onclick=()=>{audioAttempt++;muted=!muted;audio.setMuted(muted);mute.textContent=muted?'读音：关闭':'读音：开启';mute.setAttribute('aria-pressed',String(!muted));};controls.append(mute);top.append(controls);root.append(top);
+    const mute=node('button',muted?'读音：关闭':'读音：开启');mute.type='button';mute.setAttribute('aria-pressed',String(!muted));mute.onclick=()=>{audioAttempt++;muted=!muted;audio.setMuted(muted);mute.textContent=muted?'读音：关闭':'读音：开启';mute.setAttribute('aria-pressed',String(!muted));};
+    const hints = node('button', showStrokeHints ? '笔顺提示：开启' : '笔顺提示：关闭', 'stroke-hints-toggle');
+    hints.type = 'button';
+    hints.setAttribute('role', 'switch');
+    hints.setAttribute('aria-label', '笔顺提示');
+    hints.setAttribute('aria-checked', String(showStrokeHints));
+    hints.onclick = () => {
+      showStrokeHints = !showStrokeHints;
+      render();
+      root.querySelector('.stroke-hints-toggle')?.focus({preventScroll:true});
+    };
+    controls.append(mute,hints);top.append(controls);root.append(top);
     if(state.review){renderReview(state,pool);return;}
     if(inputMode==='write'){renderHandwriting(state,pool);return;}
     const layout=node('div',undefined,'writing-layout'),stage=node('section',undefined,'writing-stage'),side=node('aside',undefined,'writing-side');
@@ -116,16 +138,41 @@ export function createConstructionView(root,{onAction}){
       if(disposed||!visible||epoch!==token||!grid.isConnected)return;
       if(data.strokes.length!==record.names.length)throw Error('count');current.geometry=data;
       const shadow=svgNode('g',{transform:'translate(0 900) scale(1 -1)',class:'glyph-shadow'}),ink=svgNode('g',{transform:'translate(0 900) scale(1 -1)',class:'glyph-written'});grid.append(shadow,ink);
-      data.strokes.forEach((d,i)=>{const path=svgNode('path',{d});if(i>=state.placed){path.setAttribute('tabindex','0');path.setAttribute('role','button');path.setAttribute('aria-label',`字影位置${i+1}`);path.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();const median=data.medians[i];action('place',{name:selected,point:median[Math.floor(median.length/2)],geometry:data});}};}shadow.append(path);if(i<state.placed)ink.append(svgNode('path',{d,class:i===state.placed-1?'new-stroke':''}));});
-      grid.append(createStrokeGuides(data.medians,state.placed));
+      const targets = data.strokes.map((d, index) => {
+        const median = data.medians[index];
+        return {d, index, point: median[Math.floor(median.length / 2)]};
+      });
+      // In review, keyboard focus follows positions from top to bottom.
+      if (!showStrokeHints) targets.sort((a, b) => b.point[1] - a.point[1] || a.point[0] - b.point[0]);
+      for (const [position, {d, index, point}] of targets.entries()) {
+        const path = svgNode('path', {d});
+        if (index >= state.placed) {
+          path.setAttribute('tabindex', '0');
+          path.setAttribute('role', 'button');
+          path.setAttribute('aria-label', `字影位置${position + 1}`);
+          path.onkeydown = event => {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            event.preventDefault();
+            action('place', {name: selected, point, geometry: data});
+          };
+        }
+        shadow.append(path);
+      }
+      for (let index = 0; index < state.placed; index++) {
+        ink.append(svgNode('path', {d: data.strokes[index], class: index === state.placed - 1 ? 'new-stroke' : ''}));
+      }
+      if(showStrokeHints)grid.append(createStrokeGuides(data.medians,state.placed));
     }).catch(()=>{if(epoch===token&&grid.isConnected)stage.append(status('字形暂未载入，请重新选择本字重试。'));});
     grid.onclick=event=>placeAt(event.clientX,event.clientY);
     const messages={'wrong-name':'笔画名称还不对应下一笔，请按规范笔顺再选。','wrong-position':'这是别的位置。观察字影，按顺序放入下一笔。',complete:'✦ 这个字完成了！读一读，再练下一个字。',placed:'放对了！请说出下一笔的名称。',ready:'学生先说笔画名称，老师再选择并拖入。'};
     stage.append(status(messages[state.feedback]??messages.ready));
     side.append(node('h3','笔画工具箱'),node('p','选笔画听读音，再拖到田字格。','construction-instruction'),node('p',selected?`已选：${selected}`:'先选一笔','selected-stroke-label'));
     const palette=node('div',undefined,'stroke-palette');const names=new Set(record.names);Object.values(record.aliases??{}).flat().forEach(n=>names.add(n));for(const name of STROKE_NAMES.filter(n=>names.has(n)))palette.append(strokeButton(name));side.append(palette);
-    if(Object.keys(record.aliases??{}).length)side.append(node('p',record.aliases[2]?.includes('提')?'女字旁末笔在本字形中称“横”，也接受书写教学中的“提”。':'本字末笔显示为“竖钩”，也接受课堂上使用的“弯钩”。','stroke-variant-note'));
-    side.append(node('p','数字标出笔顺，箭头指示行笔方向。每放对一笔，字影就会亮起来。','construction-instruction'),coverage(pool),references());layout.append(stage,side);root.append(layout);
+    if(showStrokeHints&&Object.keys(record.aliases??{}).length)side.append(node('p',record.aliases[2]?.includes('提')?'女字旁末笔在本字形中称“横”，也接受书写教学中的“提”。':'本字末笔显示为“竖钩”，也接受课堂上使用的“弯钩”。','stroke-variant-note'));
+    const instruction = showStrokeHints
+      ? '数字标出笔顺，箭头指示行笔方向。每放对一笔，字影就会亮起来。'
+      : '按笔顺放入笔画。每放对一笔，字影就会亮起来。';
+    side.append(node('p',instruction,'construction-instruction'),coverage(pool),references());layout.append(stage,side);root.append(layout);
   }
   function render(){
     if(!current||!visible||disposed)return;epoch++;pad?.dispose();pad=null;current.geometry=null;cancelDrag();root.replaceChildren();root.classList.add('construction-game');root.dataset.activity=current.mode;root.dataset.inputMode=current.inputMode??'drag';
