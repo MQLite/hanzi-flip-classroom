@@ -8,6 +8,7 @@ import {renderComponentPuzzle} from './component-puzzle.js';
 import './component-puzzle.css';
 
 const NS='http://www.w3.org/2000/svg',cache=new Map();
+const STROKE_HINTS_KEY = 'hanzi-flip.stroke-hints';
 const colors=['#e6b857','#79b6c5','#da8f9c','#a3b36e'];
 function node(tag,text,className){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(className)n.className=className;return n;}
 function svgNode(tag,attributes={}){const n=document.createElementNS(NS,tag);for(const [key,value] of Object.entries(attributes))n.setAttribute(key,value);return n;}
@@ -18,9 +19,14 @@ async function loadGlyph(character){
   return cache.get(character);
 }
 
-export function createConstructionView(root,{onAction}){
+export function createConstructionView(root,{onAction,storage}){
   const audio=createStrokeAudio();let current=null,epoch=0,audioAttempt=0,visible=true,disposed=false,selected='',muted=false,drag=null,suppressUntil=0,pad=null,scorePopup=null;
   let showStrokeHints = true;
+  try {
+    showStrokeHints = storage?.getItem(STROKE_HINTS_KEY) !== 'off';
+  } catch {
+    // Keep the default when the browser blocks storage reads.
+  }
   function dismissScore(){scorePopup?.dispose();scorePopup=null;}
   function scoreMetrics(state){const results=state.strokeScores[state.index];return Object.fromEntries(['shape','position','length'].map(key=>[key,Math.round(results.reduce((sum,r)=>sum+r.metrics[key],0)/results.length)]));}
   function cancelDrag(){if(drag){drag.ghost?.remove();drag=null;}window.removeEventListener('pointermove',pointerMove);window.removeEventListener('pointerup',pointerUp);window.removeEventListener('pointercancel',pointerCancel);}
@@ -110,7 +116,12 @@ export function createConstructionView(root,{onAction}){
   function renderStrokes(state,pool){
     if(!pool.characters.length){root.append(empty('本课暂无核定笔画','请选择其他课次，或补充核定的汉字资料。'),coverage(pool));return;}
     const inputMode=current.inputMode??'drag',switcher=node('div',undefined,'stroke-input-switch');switcher.setAttribute('role','group');switcher.setAttribute('aria-label','练习方式');switcher.append(node('span','练习方式'));
-    for(const [value,label] of [['drag','拖动笔画'],['write','触屏描写']]){const b=button(label,'input-mode',value);b.setAttribute('aria-pressed',String(inputMode===value));switcher.append(b);}root.append(switcher);
+    for (const [value, label] of [['write', '触屏描写'], ['drag', '拖动笔画']]) {
+      const option = button(label, 'input-mode', value);
+      option.setAttribute('aria-pressed', String(inputMode === value));
+      switcher.append(option);
+    }
+    root.append(switcher);
     const top=node('div',undefined,'writing-top'),record=state.characters[state.index];
     const controls=node('div',undefined,'construction-actions');const prev=button('← 上一字','next',-1),next=button('下一字 →','next',1);prev.disabled=state.index===0;next.disabled=state.index===state.characters.length-1;
     controls.append(prev,node('span',`${state.index+1} / ${state.characters.length}`),next,button('撤回一笔','undo'),button('笔画总复习 / 预习','review',true));
@@ -123,6 +134,11 @@ export function createConstructionView(root,{onAction}){
     hints.setAttribute('aria-checked', String(showStrokeHints));
     hints.onclick = () => {
       showStrokeHints = !showStrokeHints;
+      try {
+        storage?.setItem(STROKE_HINTS_KEY, showStrokeHints ? 'on' : 'off');
+      } catch {
+        // The switch still works in this page if the setting cannot be saved.
+      }
       render();
       root.querySelector('.stroke-hints-toggle')?.focus({preventScroll:true});
     };

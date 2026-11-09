@@ -151,7 +151,8 @@ $('.lesson-toolbar').insertAdjacentHTML('beforeend','<label id="poison-sound-lab
 $('#poison-sound').onchange=event=>{poisonSoundEnabled=event.target.checked;render();};
 let buildingState=null,buildingPool=null,buildingSelectedIds=[],buildingStructure='house',buildingSentenceId='';
 let mazeState=null,mazePool=null;
-let constructionPool=null,puzzleState=null,strokeState=null,handwritingState=null,strokeInputMode='drag';
+let constructionPool=null,puzzleState=null,strokeState=null,handwritingState=null;
+let strokeInputMode = 'write';
 const isConstruction=mode=>mode==='puzzle'||mode==='strokes';
 function prepareConstruction(){
   if(selection.source!=='personal')selection={...selection,scope:'lesson'};
@@ -328,7 +329,7 @@ const moleView=createMoleView($('#mole'),moleIntent);
 const poisonView=createPoisonView($('#witch-poison'),poisonIntent);
 const buildingView=createBuildingView($('#hanzi-building'),buildingIntent);
 const mazeView=createMazeView($('#hanzi-maze'),mazeIntent);
-const constructionView=createConstructionView($('#hanzi-construction'),{onAction:constructionIntent});
+const constructionView=createConstructionView($('#hanzi-construction'),{onAction:constructionIntent,storage});
 constructionView.setVisible(false);
 let journeyContextCache;
 function journeyContext(){

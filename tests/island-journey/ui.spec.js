@@ -49,6 +49,8 @@ test('a full available lesson traverses five native games and celebrates on the 
  const route=await page.locator('[data-maze-cell]').evaluateAll(nodes=>{const open=new Set(nodes.map(n=>Number(n.dataset.mazeCell))),queue=[[9]],seen=new Set([9]);while(queue.length){const p=queue.shift(),last=p.at(-1);if(last===71)return p;for(const n of [last-9,last+9,last-1,last+1])if(open.has(n)&&!seen.has(n)&&Math.abs(Math.floor(n/9)-Math.floor(last/9))+Math.abs(n%9-last%9)===1){seen.add(n);queue.push([...p,n]);}}return [];});
  expect(route.length).toBeGreaterThan(2);for(const index of route.slice(1)){await page.locator(`[data-maze-cell="${index}"]`).click();await page.locator('#maze-confirm').click();}
  await page.locator('#journey-next').click();await expect(page.locator('#mode-strokes')).toHaveAttribute('aria-pressed','true');
+ await expect(page.getByRole('button',{name:'触屏描写',exact:true})).toHaveAttribute('aria-pressed','true');
+ await page.getByRole('button',{name:'拖动笔画',exact:true}).click();
  await page.getByRole('button',{name:'选择横',exact:true}).click();await page.locator('.glyph-shadow path[role="button"]').focus();await page.keyboard.press('Enter');
  await expect(page.locator('#journey-next')).toBeEnabled();
  for(const viewport of [{width:1280,height:720},{width:1920,height:1080},{width:390,height:844}]){await page.setViewportSize(viewport);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:`docs/codex/journey-main-${viewport.width}.png`,fullPage:true});}

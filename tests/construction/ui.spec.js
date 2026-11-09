@@ -40,7 +40,7 @@ test('fixture: pointer dragging places only the next stroke and lesson completio
  await expect(page.locator('.stroke-review')).toBeVisible();await expect(page.locator('.stroke-review-grid button')).toHaveCount(29);
 });
 test('site: lesson changes replace vocabulary and classroom/mobile layouts stay within width',async({page})=>{
- await page.goto('/?mode=strokes');await page.locator('#bank-source').selectOption('zhongwen');await expect(page.locator('.writing-stage h3')).toContainText('一');await page.locator('#lesson').selectOption('2');await expect(page.locator('.writing-stage h3')).toContainText('人');
+ await page.goto('/?mode=strokes');await page.getByRole('button',{name:'拖动笔画',exact:true}).click();await page.locator('#bank-source').selectOption('zhongwen');await expect(page.locator('.writing-stage h3')).toContainText('一');await page.locator('#lesson').selectOption('2');await expect(page.locator('.writing-stage h3')).toContainText('人');
  for(const viewport of [{width:1280,height:720},{width:1920,height:1080},{width:390,height:844}]){
   await page.setViewportSize(viewport);await expect(page.locator('.writing-grid .glyph-shadow path').first()).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
@@ -52,7 +52,7 @@ test('site: late old glyph loads cannot replace a new lesson and real audio stop
  await page.addInitScript(()=>{const Native=window.Audio;window._clips=[];window.Audio=class extends Native{constructor(url){super(url);window._clips.push(this);}};});
  let release,blocked=false;const gate=new Promise(resolve=>release=resolve);
  await page.route('**/strokes/*.json',async route=>{if(decodeURIComponent(route.request().url()).endsWith('/好.json')){blocked=true;await gate;}await route.continue();});
- await page.goto('/?mode=strokes');await expect.poll(()=>blocked).toBe(true);await page.locator('#bank-source').selectOption('zhongwen');
+ await page.goto('/?mode=strokes');await page.getByRole('button',{name:'拖动笔画',exact:true}).click();await expect.poll(()=>blocked).toBe(true);await page.locator('#bank-source').selectOption('zhongwen');
  await expect(page.locator('.writing-grid')).toHaveAttribute('aria-label','一的大田字格');release();await expect(page.locator('.writing-grid .glyph-shadow path')).toHaveCount(1);
  await page.getByRole('button',{name:'选择横',exact:true}).click();await expect.poll(()=>page.evaluate(()=>window._clips.some(a=>!a.paused))).toBe(true);
  await page.locator('#mode-flip').click();expect(await page.evaluate(()=>window._clips.every(a=>a.paused))).toBe(true);await expect(page.locator('.stroke-drag-ghost')).toHaveCount(0);

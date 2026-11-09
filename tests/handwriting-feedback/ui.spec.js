@@ -23,6 +23,7 @@ test('score popup covers a phone without scrolling and closes back to the comple
 });
 test('stroke hints switch applies to both practice modes and preserves each mode’s progress',async({page})=>{
  await page.goto('/?mode=strokes');await expect(page.locator('.writing-stage h3')).toContainText('好');
+ await page.getByRole('button',{name:'拖动笔画',exact:true}).click();
  const toggle=page.getByRole('switch',{name:'笔顺提示'}),grid=page.locator('.writing-grid');
  const guides=grid.locator('.stroke-guides'),active=guides.locator('.is-current .stroke-guide-number');
  await expect(toggle).toBeChecked();await expect(active).toHaveText('1');
@@ -48,4 +49,29 @@ test('stroke hints switch applies to both practice modes and preserves each mode
  await toggle.click();await expect(toggle).toBeChecked();await expect(active).toHaveText('2');
  await page.getByRole('button',{name:'拖动笔画',exact:true}).click();
  await expect(grid.locator('.glyph-written path')).toHaveCount(2);await expect(active).toHaveText('3');
+});
+
+test('stroke hints remember both choices after reload and reopen', async ({page, context}) => {
+  const path = '/?mode=strokes';
+  await page.goto(path);
+  await expect(page.locator('.stroke-input-switch button')).toHaveText(['触屏描写', '拖动笔画']);
+  await expect(page.getByRole('button', {name: '触屏描写', exact: true})).toHaveAttribute('aria-pressed', 'true');
+  const toggle = page.getByRole('switch', {name: '笔顺提示'});
+  await expect(toggle).toBeChecked();
+  await toggle.click();
+  await page.reload();
+  await expect(toggle).not.toBeChecked();
+
+  const reopened = await context.newPage();
+  await page.close();
+  await reopened.goto(path);
+  const reopenedToggle = reopened.getByRole('switch', {name: '笔顺提示'});
+  await expect(reopenedToggle).not.toBeChecked();
+  await expect(reopened.locator('.handwriting-pad .glyph-shadow path')).toHaveCount(6);
+  await expect(reopened.locator('.stroke-guides')).toHaveCount(0);
+
+  await reopenedToggle.click();
+  await reopened.reload();
+  await expect(reopenedToggle).toBeChecked();
+  await expect(reopened.locator('.stroke-guides')).toBeVisible();
 });
