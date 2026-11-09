@@ -28,6 +28,7 @@ test('fixture: pointer dragging places only the next stroke and lesson completio
   const geometry=await (await page.request.get('/strokes/'+encodeURIComponent(record.character)+'.json')).json();
   for(let i=0;i<record.names.length;i++){
    const grid=page.locator('.writing-grid');await expect(grid.locator('.glyph-shadow path')).toHaveCount(record.names.length);
+   await expect(grid.locator('.stroke-guide.is-current .stroke-guide-number')).toHaveText(String(i+1));
    const palette=page.getByRole('button',{name:'选择'+record.names[i],exact:true});await palette.scrollIntoViewIfNeeded();const source=await palette.boundingBox();
    const median=geometry.medians[i],point=median[Math.floor(median.length/2)];
    const target=await grid.evaluate((svg,p)=>{const q=new DOMPoint(p[0],900-p[1]).matrixTransform(svg.getScreenCTM());return {x:q.x,y:q.y};},point);

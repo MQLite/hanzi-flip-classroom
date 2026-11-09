@@ -37,7 +37,20 @@ test('handwriting grid and score controls fit projector and phone widths',async(
 test('multi-bend character traces speak all six names only on acceptance and keep a single score',async({page})=>{
  await page.addInitScript(()=>{const Native=window.Audio;window._writingClips=[];window.Audio=class extends Native{constructor(url){super(url);window._writingClips.push(this);}};});
  await page.goto('/?mode=strokes');await page.getByRole('button',{name:'触屏描写',exact:true}).click();await expect(page.locator('.writing-stage h3')).toContainText('好');const data=await geometry(page,'好');await expect(page.locator('.handwriting-pad .glyph-shadow path')).toHaveCount(6);
- for(let i=0;i<data.medians.length;i++){await writeMouse(page,data.medians[i]);await expect(page.locator('.handwriting-ink path')).toHaveCount(i+1);}
+ await expect(page.locator('.stroke-guide-number')).toHaveCount(6);
+ expect((await page.locator('.stroke-guide-number').allTextContents()).sort()).toEqual(['1','2','3','4','5','6']);
+ const directions=await page.locator('.stroke-guide-head').evaluateAll(arrows=>Object.fromEntries(arrows.map(arrow=>{
+  const tip=arrow.points.getItem(0),left=arrow.points.getItem(1),right=arrow.points.getItem(2);
+  const number=arrow.parentElement.querySelector('.stroke-guide-number').textContent;
+  return [number,[tip.x-(left.x+right.x)/2,tip.y-(left.y+right.y)/2]];
+ })));
+ expect(directions[3][0]).toBeGreaterThan(0); // The horizontal stroke goes right.
+ expect(directions[5][1]).toBeLessThan(0); // The hook finishes upwards on screen.
+ for(let i=0;i<data.medians.length;i++){
+  await expect(page.locator('.stroke-guide.is-current .stroke-guide-number')).toHaveText(String(i+1));
+  await writeMouse(page,data.medians[i]);await expect(page.locator('.handwriting-ink path')).toHaveCount(i+1);
+ }
+ await expect(page.locator('.stroke-guide.is-current')).toHaveCount(0);
  const names=await page.evaluate(()=>window._writingClips.map(a=>decodeURIComponent(a.src).split('/').at(-1).split('.wav')[0]));expect(names).toEqual(['撇点','撇','横','横撇','弯钩','横']);await expect(page.locator('#handwriting-score')).toBeVisible();await expect(page.locator('.handwriting-result-list [data-character="好"]')).toHaveCount(1);
 });
 test('the final character score stays visible until the teacher opens the optional review',async({page})=>{

@@ -1,6 +1,7 @@
 import {FORM_CATALOG,STROKE_NAMES} from './construction-data.js';
 import {createStrokeAudio} from './stroke-audio.js';
 import {mountHandwritingPad} from './handwriting-pad.js';
+import {createStrokeGuides} from './stroke-guides.js';
 import {showHandwritingScore} from './handwriting-score-dialog.js';
 import './handwriting.css';
 import {renderComponentPuzzle} from './component-puzzle.js';
@@ -80,7 +81,7 @@ export function createConstructionView(root,{onAction}){
     const record=state.characters[state.index],layout=node('div',undefined,'writing-layout handwriting-layout'),stage=node('section',undefined,'writing-stage'),side=node('aside',undefined,'writing-side handwriting-side');
     stage.append(node('h3',`写一写：${record.character}`),node('p',`已完成 ${state.placed} / ${record.names.length} 笔 · 本课完成 ${state.completed.length} / ${pool.characters.length} 字`,'stroke-progress'));
     const grid=svgNode('svg',{viewBox:'0 0 1024 1024',class:'writing-grid handwriting-pad',role:'group','aria-label':`${record.character}的触屏描写田字格`});grid.append(svgNode('path',{d:'M512 0V1024M0 512H1024',class:'grid-cross'}),svgNode('path',{d:'M0 0L1024 1024M1024 0L0 1024',class:'grid-diagonal'}));stage.append(grid);
-    const messages={ready:'从小圆点起笔，沿细虚线写完一笔后抬手。',accepted:`写对了：${state.lastName??''}。继续下一笔。`,complete:'✦ 这个字写完了！看看你的描写参考分。','wrong-order':'请按笔顺描写亮起的这一笔。','wrong-direction':'这一笔方向反了，请从小圆点重新起笔。',retry:'再试一次，连续写完这一笔，注意细虚线的方向和位置。'};
+    const messages={ready:'从当前编号旁的小圆点起笔，沿虚线和箭头写完一笔后抬手。',accepted:`写对了：${state.lastName??''}。继续下一笔。`,complete:'✦ 这个字写完了！看看你的描写参考分。','wrong-order':'请按笔顺描写亮起的这一笔。','wrong-direction':'这一笔方向反了，请从小圆点重新起笔。',retry:'再试一次，连续写完这一笔，注意细虚线的方向和位置。'};
     const feedback=status(messages[state.feedback]??messages.ready);feedback.classList.add('handwriting-status');stage.append(feedback);
     const token=epoch;loadGlyph(record.character).then(data=>{
       if(disposed||!visible||token!==epoch||!grid.isConnected)return;if(data.strokes.length!==record.names.length)throw Error('count');current.geometry=data;
@@ -116,6 +117,7 @@ export function createConstructionView(root,{onAction}){
       if(data.strokes.length!==record.names.length)throw Error('count');current.geometry=data;
       const shadow=svgNode('g',{transform:'translate(0 900) scale(1 -1)',class:'glyph-shadow'}),ink=svgNode('g',{transform:'translate(0 900) scale(1 -1)',class:'glyph-written'});grid.append(shadow,ink);
       data.strokes.forEach((d,i)=>{const path=svgNode('path',{d});if(i>=state.placed){path.setAttribute('tabindex','0');path.setAttribute('role','button');path.setAttribute('aria-label',`字影位置${i+1}`);path.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();const median=data.medians[i];action('place',{name:selected,point:median[Math.floor(median.length/2)],geometry:data});}};}shadow.append(path);if(i<state.placed)ink.append(svgNode('path',{d,class:i===state.placed-1?'new-stroke':''}));});
+      grid.append(createStrokeGuides(data.medians,state.placed));
     }).catch(()=>{if(epoch===token&&grid.isConnected)stage.append(status('字形暂未载入，请重新选择本字重试。'));});
     grid.onclick=event=>placeAt(event.clientX,event.clientY);
     const messages={'wrong-name':'笔画名称还不对应下一笔，请按规范笔顺再选。','wrong-position':'这是别的位置。观察字影，按顺序放入下一笔。',complete:'✦ 这个字完成了！读一读，再练下一个字。',placed:'放对了！请说出下一笔的名称。',ready:'学生先说笔画名称，老师再选择并拖入。'};
@@ -123,7 +125,7 @@ export function createConstructionView(root,{onAction}){
     side.append(node('h3','笔画工具箱'),node('p','选笔画听读音，再拖到田字格。','construction-instruction'),node('p',selected?`已选：${selected}`:'先选一笔','selected-stroke-label'));
     const palette=node('div',undefined,'stroke-palette');const names=new Set(record.names);Object.values(record.aliases??{}).flat().forEach(n=>names.add(n));for(const name of STROKE_NAMES.filter(n=>names.has(n)))palette.append(strokeButton(name));side.append(palette);
     if(Object.keys(record.aliases??{}).length)side.append(node('p',record.aliases[2]?.includes('提')?'女字旁末笔在本字形中称“横”，也接受书写教学中的“提”。':'本字末笔显示为“竖钩”，也接受课堂上使用的“弯钩”。','stroke-variant-note'));
-    side.append(node('p','按规范笔顺完成；每放对一笔，白色字影就会亮起来。','construction-instruction'),coverage(pool),references());layout.append(stage,side);root.append(layout);
+    side.append(node('p','数字标出笔顺，箭头指示行笔方向。每放对一笔，字影就会亮起来。','construction-instruction'),coverage(pool),references());layout.append(stage,side);root.append(layout);
   }
   function render(){
     if(!current||!visible||disposed)return;epoch++;pad?.dispose();pad=null;current.geometry=null;cancelDrag();root.replaceChildren();root.classList.add('construction-game');root.dataset.activity=current.mode;root.dataset.inputMode=current.inputMode??'drag';
