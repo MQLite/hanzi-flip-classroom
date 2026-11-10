@@ -4,8 +4,8 @@ const DURATION = 10000;
 const COLORS = ['#ffd66d', '#ff8fb4', '#80edff', '#b8ffa7', '#c3a4ff', '#fff5c4'];
 let activeCelebration = null;
 
-/** Show the end-of-lesson celebration. The caller owns any once-per-run guard. */
-export function showLessonCelebration({onClose} = {}) {
+/** Show fireworks. The caller decides when to celebrate a completed round. */
+export function showLessonCelebration({onClose, title = '太牛啦', durationMs = DURATION} = {}) {
   activeCelebration?.dispose();
   const previousFocus = document.activeElement;
   const dialog = document.createElement('dialog');
@@ -14,9 +14,12 @@ export function showLessonCelebration({onClose} = {}) {
   dialog.setAttribute('aria-labelledby', 'lesson-celebration-title');
   dialog.innerHTML = `
     <canvas class="lesson-celebration__fireworks" aria-hidden="true"></canvas>
-    <h2 id="lesson-celebration-title" class="lesson-celebration__title">太牛啦</h2>
+    <h2 id="lesson-celebration-title" class="lesson-celebration__title"></h2>
     <button type="button" class="lesson-celebration__close" autofocus>关闭庆祝</button>
   `;
+  const heading = dialog.querySelector('h2');
+  heading.textContent = title;
+  heading.style.setProperty('--celebration-title-limit', `${88 / Math.max(1, [...title].length)}vw`);
   document.body.append(dialog);
   const canvas = dialog.querySelector('canvas');
   const context = canvas.getContext('2d');
@@ -167,6 +170,6 @@ export function showLessonCelebration({onClose} = {}) {
   dialog.showModal();
   resize();
   if (!reducedMotion && context) frameId = window.requestAnimationFrame(animate);
-  timerId = window.setTimeout(close, DURATION);
+  timerId = window.setTimeout(close, durationMs);
   return handle;
 }

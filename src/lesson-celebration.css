@@ -42,7 +42,7 @@ dialog.lesson-celebration {
   border: 0;
   color: #fff1a8;
   font-family: 'Microsoft YaHei', 'PingFang SC', system-ui, sans-serif;
-  font-size: clamp(5.6rem, 16vw, 15rem);
+  font-size: min(clamp(5.6rem, 16vw, 15rem), var(--celebration-title-limit, 100vw));
   font-weight: 900;
   line-height: 1.2;
   letter-spacing: 0.06em;

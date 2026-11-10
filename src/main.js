@@ -162,6 +162,7 @@ let selection = {source: bank.questions.some(q=>q.textbook === PARADISE_ID) ? 'p
 if (selection.source === 'zhongwen') selection.stage = '1';
 let gameMode = 'flip', workshopState = null, workshopCount = 4, workshopRound = 0, homeMode=false,gameHasBeenShown=false;
 let sudokuState=null,sudokuPool=null,sudokuSelectedIds=[];
+const celebratedSudokuBoards=new WeakSet();
 let moleState=null,molePool=null,moleType='mixed';
 let poisonState=null,poisonPool=null,poisonSelectedIds=[],poisonCount=1,poisonAntidoteId='';
 let poisonSoundEnabled=true;
@@ -467,6 +468,7 @@ document.addEventListener('visibilitychange',()=>{
 });
 function sudokuIntent(intent,value){
   if(gameMode!=='sudoku')return;
+  const previousPhase=sudokuState?.phase;
   if(intent==='choose-word'){
     if(sudokuSelectedIds.includes(value))sudokuSelectedIds=sudokuSelectedIds.filter(id=>id!==value);
     else if(sudokuSelectedIds.length<9)sudokuSelectedIds=[...sudokuSelectedIds,value];
@@ -487,6 +489,11 @@ function sudokuIntent(intent,value){
     else if(intent==='undo')sudokuState=undoSudoku(sudokuState);
   }
   render();
+  if(intent==='place'&&previousPhase!=='complete'&&sudokuState?.phase==='complete'&&!celebratedSudokuBoards.has(sudokuState.givens)){
+    celebratedSudokuBoards.add(sudokuState.givens);
+    // If Sudoku also finishes the island journey, use its existing celebration.
+    if(!$('#lesson-celebration[open]'))showLessonCelebration({title:'数独完成啦！',durationMs:4000});
+  }
 }
 function activeScene() { return isConstruction(gameMode)?null:gameMode==='building'?buildingView.scene:gameMode==='poison'?poisonView.scene:gameMode==='maze'?mazeView.scene:gameMode==='sudoku'||gameMode==='explore'||gameMode==='mole'?null:gameMode === 'train' ? trainView.scene : gameMode === 'workshop' ? workshopScene : scene; }
 function syncSimpleControl() {

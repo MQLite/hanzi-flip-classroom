@@ -85,10 +85,33 @@ test('clues copy into complete reusable cards; filling, undo and clear never awa
   await expect(target).not.toHaveAttribute('data-word-id');
   await correct.click();await target.click();
   await expect(page.locator('[data-score="team-1"]')).toHaveText('1');
-  for(let i=0;i<81;i++)if(values[i]===null&&i!==cell){await page.locator(`[data-sudoku-card][data-word-id="${solution[i]}"]`).click();await page.locator(`[data-sudoku-cell="${i}"]`).click();}
+  const remaining=values.flatMap((value,index)=>value===null&&index!==cell?[index]:[]);
+  const place=async index=>{
+    await page.locator(`[data-sudoku-card][data-word-id="${solution[index]}"]`).click();
+    await page.locator(`[data-sudoku-cell="${index}"]`).click();
+  };
+  for(const index of remaining.slice(0,-1))await place(index);
+  const celebration=page.getByRole('dialog',{name:'数独完成啦！'});
+  await expect(celebration).toHaveCount(0);
+  await place(remaining.at(-1));
+  await expect(celebration).toBeVisible();
+  await expect(celebration.locator('canvas')).toBeVisible();
+  const desktopViewport=page.viewportSize();
+  await page.setViewportSize({width:390,height:844});
+  expect(await celebration.getByRole('heading').evaluate(heading=>{
+    const title=heading.getBoundingClientRect(),dialog=heading.closest('dialog').getBoundingClientRect();
+    return title.left>=dialog.left&&title.right<=dialog.right;
+  })).toBe(true);
+  await celebration.getByRole('button',{name:'关闭庆祝'}).click();
+  await page.setViewportSize(desktopViewport);
+  await expect(celebration).toHaveCount(0);
   await expect(page.locator('#sudoku')).toHaveAttribute('data-phase','complete');
   await expect(page.locator('[data-score="team-1"]')).toHaveText('12');
   await expect(page.locator('[data-sudoku-card]')).toHaveCount(9);
+  await page.locator('#sudoku-undo').click();
+  await place(remaining.at(-1));
+  await expect(page.locator('#sudoku')).toHaveAttribute('data-phase','complete');
+  await expect(celebration).toHaveCount(0);
 });
 test('four modes retain separate progress and Sudoku owns its keyboard navigation',async({page})=>{
   await page.locator('#reveal').click();const flip=(await page.locator('.hanzi').textContent())[0];
