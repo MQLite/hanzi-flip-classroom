@@ -113,6 +113,60 @@ test('clues copy into complete reusable cards; filling, undo and clear never awa
   await expect(page.locator('#sudoku')).toHaveAttribute('data-phase','complete');
   await expect(celebration).toHaveCount(0);
 });
+
+test('the Sudoku celebration plays a brief quiet chime and remembers when it is muted',async({page})=>{
+  const peak=await page.evaluate(async()=>{
+    const {scheduleSudokuChime}=await import('/src/sudoku-sound.js');
+    const context=new OfflineAudioContext(1,44100,44100);
+    scheduleSudokuChime(context);
+    const samples=(await context.startRendering()).getChannelData(0);
+    return samples.reduce((max,sample)=>Math.max(max,Math.abs(sample)),0);
+  });
+  expect(peak).toBeGreaterThan(0.01);
+  expect(peak).toBeLessThan(0.07);
+
+  await page.addInitScript(()=>{
+    const Audio=window.AudioContext;
+    window.chime={starts:0,closes:0};
+    window.AudioContext=class extends Audio {
+      createOscillator(){
+        const note=super.createOscillator(),start=note.start.bind(note);
+        note.start=(...args)=>{window.chime.starts++;return start(...args);};
+        // Only the modal dismissal can close this test's audio context.
+        Object.defineProperty(note,'onended',{set(){}});
+        return note;
+      }
+      close(){window.chime.closes++;return super.close();}
+    };
+  });
+  await page.reload();
+  const toggle=page.getByRole('checkbox',{name:'庆祝音效'});
+  const celebration=page.getByRole('dialog',{name:'数独完成啦！'});
+  async function solveBoard(){
+    const {values,solution}=await solutionFromClues(page);
+    await collectAll(page);
+    for(const [index,value] of values.entries()){
+      if(value!==null)continue;
+      await page.locator(`[data-sudoku-card][data-word-id="${solution[index]}"]`).click();
+      await page.locator(`[data-sudoku-cell="${index}"]`).click();
+    }
+    await expect(celebration).toBeVisible();
+  }
+  await startNumbers(page);
+  await expect(toggle).toBeChecked();
+  await solveBoard();
+  await expect.poll(()=>page.evaluate(()=>window.chime.starts)).toBeGreaterThan(0);
+  await celebration.getByRole('button',{name:'关闭庆祝'}).click();
+  await expect.poll(()=>page.evaluate(()=>window.chime.closes)).toBe(1);
+
+  await toggle.uncheck();
+  await page.reload();
+  await startNumbers(page);
+  await expect(toggle).not.toBeChecked();
+  await solveBoard();
+  expect(await page.evaluate(()=>window.chime)).toEqual({starts:0,closes:0});
+});
+
 test('four modes retain separate progress and Sudoku owns its keyboard navigation',async({page})=>{
   await page.locator('#reveal').click();const flip=(await page.locator('.hanzi').textContent())[0];
   await startNumbers(page);await collectAll(page);

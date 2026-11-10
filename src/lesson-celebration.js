@@ -5,7 +5,7 @@ const COLORS = ['#ffd66d', '#ff8fb4', '#80edff', '#b8ffa7', '#c3a4ff', '#fff5c4'
 let activeCelebration = null;
 
 /** Show fireworks. The caller decides when to celebrate a completed round. */
-export function showLessonCelebration({onClose, title = '太牛啦', durationMs = DURATION} = {}) {
+export function showLessonCelebration({onClose, title = '太牛啦', durationMs = DURATION, playSound} = {}) {
   activeCelebration?.dispose();
   const previousFocus = document.activeElement;
   const dialog = document.createElement('dialog');
@@ -31,6 +31,7 @@ export function showLessonCelebration({onClose, title = '太牛啦', durationMs 
   let frameId = 0;
   let timerId = 0;
   let closed = false;
+  let stopSound;
 
   function drawBackground() {
     context.clearRect(0, 0, width, height);
@@ -125,6 +126,10 @@ export function showLessonCelebration({onClose, title = '太牛啦', durationMs 
     frameId = window.requestAnimationFrame(animate);
   }
 
+  function stopSoundWhenHidden() {
+    if (document.hidden) stopSound?.();
+  }
+
   function close() {
     if (closed) return;
     closed = true;
@@ -132,6 +137,8 @@ export function showLessonCelebration({onClose, title = '太牛啦', durationMs 
     window.cancelAnimationFrame(frameId);
     window.removeEventListener('resize', resize);
     window.removeEventListener('pagehide', close);
+    document.removeEventListener('visibilitychange', stopSoundWhenHidden);
+    stopSound?.();
     for (const type of ['keydown', 'keyup', 'keypress']) window.removeEventListener(type, isolateKeyboard, true);
     closeButton.removeEventListener('click', close);
     dialog.removeEventListener('cancel', cancel);
@@ -169,6 +176,8 @@ export function showLessonCelebration({onClose, title = '太牛啦', durationMs 
   for (const type of ['keydown', 'keyup', 'keypress']) window.addEventListener(type, isolateKeyboard, true);
   dialog.showModal();
   resize();
+  stopSound = playSound?.();
+  if (stopSound) document.addEventListener('visibilitychange', stopSoundWhenHidden);
   if (!reducedMotion && context) frameId = window.requestAnimationFrame(animate);
   timerId = window.setTimeout(close, durationMs);
   return handle;

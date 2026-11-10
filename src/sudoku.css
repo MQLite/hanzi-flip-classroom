@@ -65,3 +65,10 @@
 @media (max-height: 800px) and (min-width: 1000px) {
   .sudoku-mode #sudoku { --sudoku-cell: 44px; }
 }
+#sudoku-sound-label {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  white-space: nowrap;
+}

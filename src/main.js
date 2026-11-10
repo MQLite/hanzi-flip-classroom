@@ -4,6 +4,7 @@ import {createIslandJourney} from './lesson-journey.js';
 import {getJourneyAvailability,journeyQuestions} from './island-journey-data.js';
 import {scenarioJourneyUrl} from './island-exploration.js';
 import {showLessonCelebration} from './lesson-celebration.js';
+import {playSudokuChime} from './sudoku-sound.js';
 import './sentence-train.css';
 import {createTrainView} from './sentence-train.js';
 import {mergeTrainQuestionPools,resolveTrainQuestion} from './sentence-train-data.js';
@@ -163,6 +164,14 @@ if (selection.source === 'zhongwen') selection.stage = '1';
 let gameMode = 'flip', workshopState = null, workshopCount = 4, workshopRound = 0, homeMode=false,gameHasBeenShown=false;
 let sudokuState=null,sudokuPool=null,sudokuSelectedIds=[];
 const celebratedSudokuBoards=new WeakSet();
+const sudokuSoundKey='hanzi-flip.sudoku-celebration-sound';
+$('.lesson-toolbar').insertAdjacentHTML('beforeend','<label id="sudoku-sound-label" hidden><input id="sudoku-sound" type="checkbox" checked> 庆祝音效</label>');
+const sudokuSoundToggle=$('#sudoku-sound');
+try{sudokuSoundToggle.checked=storage.getItem(sudokuSoundKey)!=='off';}catch{/* Keep the in-page setting if storage is blocked. */}
+sudokuSoundToggle.onchange=()=>{
+  try{storage.setItem(sudokuSoundKey,sudokuSoundToggle.checked?'on':'off');}catch{/* The toggle still works on this page. */}
+};
+const playOptionalSudokuChime=()=>sudokuSoundToggle.checked?playSudokuChime():undefined;
 let moleState=null,molePool=null,moleType='mixed';
 let poisonState=null,poisonPool=null,poisonSelectedIds=[],poisonCount=1,poisonAntidoteId='';
 let poisonSoundEnabled=true;
@@ -362,7 +371,9 @@ function journeyContext(){
  const courseLabel=selection.source==='personal'?`个人题库 · ${grade}年级`:`${selection.source==='zhongwen'?ZHONGWEN_NAME:selection.source==='paradise'?'汉语乐园':'中文乐园'} · ${selection.stage} · 第${selection.lesson}课`;
  const value={course,availability,courseLabel};journeyContextCache={key,questions:bank.questions,value};return value;
 }
-const journey=createIslandJourney({getContext:journeyContext,onConceal:concealPoison,canLaunch:mayRestart,onCelebrate:()=>showLessonCelebration(),onHomeChange(visible){
+const journey=createIslandJourney({getContext:journeyContext,onConceal:concealPoison,canLaunch:mayRestart,onCelebrate:()=>showLessonCelebration({
+  playSound:gameMode==='sudoku'?playOptionalSudokuChime:undefined,
+}),onHomeChange(visible){
  homeMode=visible;document.body.classList.toggle('island-home-mode',visible);
  if(visible){
   if(gameMode==='train'&&session.departure)finishDeparture(session.departure);
@@ -492,7 +503,7 @@ function sudokuIntent(intent,value){
   if(intent==='place'&&previousPhase!=='complete'&&sudokuState?.phase==='complete'&&!celebratedSudokuBoards.has(sudokuState.givens)){
     celebratedSudokuBoards.add(sudokuState.givens);
     // If Sudoku also finishes the island journey, use its existing celebration.
-    if(!$('#lesson-celebration[open]'))showLessonCelebration({title:'数独完成啦！',durationMs:4000});
+    if(!$('#lesson-celebration[open]'))showLessonCelebration({title:'数独完成啦！',durationMs:4000,playSound:playOptionalSudokuChime});
   }
 }
 function activeScene() { return isConstruction(gameMode)?null:gameMode==='building'?buildingView.scene:gameMode==='poison'?poisonView.scene:gameMode==='maze'?mazeView.scene:gameMode==='sudoku'||gameMode==='explore'||gameMode==='mole'?null:gameMode === 'train' ? trainView.scene : gameMode === 'workshop' ? workshopScene : scene; }
@@ -566,6 +577,7 @@ function switchMode(mode, linkedSelection, journeyTransfer=false) {
   $('#restart').hidden=mode==='explore';
   $('#mode-explore').setAttribute('aria-pressed',String(mode==='explore'));
   $('#sudoku').hidden=mode!=='sudoku';
+  $('#sudoku-sound-label').hidden=mode!=='sudoku';
   $('#mode-sudoku').setAttribute('aria-pressed',String(mode==='sudoku'));
   $('#sentence-train').hidden=mode!=='train';
   $('.train-ledger-panel').hidden=mode!=='train';
