@@ -5,6 +5,7 @@ import {createBlueprintArt,blueprintBlockVisible} from './building-blueprint-art
 import {visibleBuildingWords} from './building-core.js';
 import {buildingCameraFrame} from './building-camera.js';
 import {buildingBlockFallen} from './building-support.js';
+import {withEnglishInstruction} from './english-instructions.js';
 
 const node=(tag,cls)=>{const el=document.createElement(tag);el.className=cls;return el;};
 export function createBuildingScene(host,{onBusyChange=()=>{}}={}){
@@ -13,6 +14,10 @@ export function createBuildingScene(host,{onBusyChange=()=>{}}={}){
   toggle.id='builder-scene-mode';toggle.type='button';host.append(world,flat,toggle,caption);
   const controller=new AbortController(),inspect=node('button','builder-inspect'),dialog=node('dialog','builder-inspect-dialog'),title=node('h4','builder-inspect-title'),choiceLabel=node('label','builder-inspect-label'),choice=node('select','builder-inspect-choice'),bigWord=node('strong','builder-inspect-word'),hint=node('p','builder-inspect-hint'),close=node('button','builder-inspect-close');
   inspect.id='builder-inspect';inspect.type='button';inspect.textContent='放大词砖';dialog.id='builder-inspect-dialog';title.id='builder-inspect-title';title.textContent='看清词砖，大声读';dialog.setAttribute('aria-labelledby',title.id);choice.id='builder-inspect-choice';choiceLabel.textContent='选择要放大的词砖';choiceLabel.append(choice);bigWord.id='builder-inspect-word';hint.textContent='可以直接点建筑上的词砖放大。读对后，关闭这里，再点右侧对应词卡拆砖。';close.type='button';close.textContent='关闭，回到建筑';dialog.append(title,choiceLabel,bigWord,hint,close);host.append(inspect,dialog);
+  withEnglishInstruction(inspect,'Enlarge a word brick');
+  withEnglishInstruction(title,'Look at the word and read it aloud.');
+  withEnglishInstruction(hint,'Tap a brick to enlarge it. Read it, close this window, then tap its card to remove the brick.');
+  withEnglishInstruction(close,'Close and return to the building');
   const media=matchMedia('(prefers-reduced-motion: reduce)'),scene=new THREE.Scene(),camera=new THREE.OrthographicCamera(-5,5,4,-4,.1,80);
   const assembly=new THREE.Group(),river=new THREE.Group(),particles=new THREE.Group();scene.add(assembly,river,particles);
   const geometries={box:new THREE.BoxGeometry(1,1,1),stud:new THREE.CylinderGeometry(.5,.5,1,12),roof:new THREE.CylinderGeometry(.045,.5,1,8),spire:new THREE.ConeGeometry(.5,1,8),dust:new THREE.SphereGeometry(1,7,5),label:new THREE.PlaneGeometry(1,1)};

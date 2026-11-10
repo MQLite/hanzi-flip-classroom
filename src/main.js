@@ -44,6 +44,7 @@ import './poison.css';
 import './building.css';
 import './maze.css';
 import './reading-pinyin.css';
+import {syncEnglishInstructions} from './english-instructions.js';
 import {createMazeView} from './maze.js';
 import {createMazeState,selectMazeCell,confirmMazeStep,cancelMazeStep} from './maze-core.js';
 import {createBuildingView} from './building.js';
@@ -82,11 +83,29 @@ $('#mode-flip').insertAdjacentHTML('afterend','<button id="mode-puzzle" aria-pre
 for(const game of GAME_ORDER)$('.game-modes').append($('#mode-'+game.id));
 $('.play-area').insertAdjacentHTML('beforeend','<div id="hanzi-construction" hidden></div>');
 $('.play-area').insertAdjacentHTML('beforeend','<div id="hanzi-maze" hidden></div>');
-$('.play-area').insertAdjacentHTML('beforeend','<div id="reading-pinyin-dock" class="reading-pinyin-dock" hidden></div>');
+$('.play-area').insertAdjacentHTML('beforeend',`
+  <div id="reading-pinyin-dock" class="reading-pinyin-dock" hidden>
+    <label class="switch-label" hidden><input type="checkbox" id="english-instructions"><span class="switch"></span>英文指令</label>
+  </div>`);
 const optionalPinyinModes=new Set(['building','maze','poison']);
-function syncPinyinLocation(){
+function englishInstructionHost(){
+  if(gameMode==='building')return $('#hanzi-building');
+  if(gameMode==='poison')return $('#witch-poison');
+  return null;
+}
+const englishInstructionToggle=$('#english-instructions');
+englishInstructionToggle.onchange=()=>{
+  const host=englishInstructionHost();
+  if(!host)return;
+  host.classList.toggle('show-english-instructions',englishInstructionToggle.checked);
+  syncEnglishInstructions(host);
+};
+function syncReadingHintControls(){
   const local=optionalPinyinModes.has(gameMode),dock=$('#reading-pinyin-dock'),label=$('#pinyin').closest('label'),parent=local?dock:$('.lesson-toolbar');dock.hidden=!local;
   if(label.parentElement!==parent){if(local)parent.append(label);else $('#restart').before(label);}
+  const englishHost=englishInstructionHost();
+  englishInstructionToggle.closest('label').hidden=!englishHost;
+  englishInstructionToggle.checked=Boolean(englishHost?.classList.contains('show-english-instructions'));
 }
 $('.classroom').insertAdjacentHTML('afterend','<section id="exploration-catalog" aria-label="本课情景探索" hidden></section>');
 $('#scene').insertAdjacentHTML('afterend', '<div id="workshop" hidden></div><div id="sentence-train" hidden></div><div id="sudoku" hidden></div><div id="mole" hidden></div>');
@@ -759,7 +778,7 @@ function render() {
   gameHasBeenShown=true;
   journey.sync(gameMode,{session,moleState,mazeState,puzzleState,strokeState,handwritingState,strokeInputMode,workshopState,workshopTransition,poisonState,buildingState,sudokuState});
   if(journey.isActive())$('#scope').closest('label').hidden=true;
-  syncPinyinLocation();
+  syncReadingHintControls();
   $('#pinyin').closest('label').hidden=gameMode!=='train'&&gameMode!=='mole'&&gameMode!=='poison'&&gameMode!=='building'&&gameMode!=='maze';
   if(isConstruction(gameMode)){
     strokeCleanup?.();strokeCleanup=null;cardStrokeCleanup?.();cardStrokeCleanup=null;cardStrokeKey=null;cardStrokeView=null;$('#card-face').replaceChildren();
@@ -827,13 +846,17 @@ function render() {
     strokeCleanup?.();strokeCleanup=null;cardStrokeCleanup?.();cardStrokeCleanup=null;cardStrokeKey=null;cardStrokeView=null;
     $('#card-face').replaceChildren();for(const id of ['#extension-toggle','#extension-hint','#extension'])$(id).hidden=true;
     $('#round-caption').textContent='本课字词 · 搭建与拯救';
-    buildingView.update({state:buildingState,pool:buildingPool,selectedIds:buildingSelectedIds,structure:buildingStructure,sentenceId:buildingSentenceId,showPinyin,variant:lessonAppearance(selection,grade).variant});return;
+    buildingView.update({state:buildingState,pool:buildingPool,selectedIds:buildingSelectedIds,structure:buildingStructure,sentenceId:buildingSentenceId,showPinyin,variant:lessonAppearance(selection,grade).variant});
+    syncEnglishInstructions($('#hanzi-building'));
+    return;
   }
   if(gameMode==='poison'){
     strokeCleanup?.();strokeCleanup=null;cardStrokeCleanup?.();cardStrokeCleanup=null;cardStrokeKey=null;cardStrokeView=null;
     $('#card-face').replaceChildren();for(const id of ['#extension-toggle','#extension-hint','#extension'])$(id).hidden=true;
     $('#round-caption').textContent='本课词卡 · '+poisonCount+'个毒药';
-    poisonView.update({state:poisonState,pool:poisonPool,selectedIds:poisonSelectedIds,poisonCount,antidoteId:poisonAntidoteId,soundEnabled:poisonSoundEnabled,showPinyin});return;
+    poisonView.update({state:poisonState,pool:poisonPool,selectedIds:poisonSelectedIds,poisonCount,antidoteId:poisonAntidoteId,soundEnabled:poisonSoundEnabled,showPinyin});
+    syncEnglishInstructions($('#witch-poison'));
+    return;
   }
   if(gameMode==='mole'){
     strokeCleanup?.();strokeCleanup=null;cardStrokeCleanup?.();cardStrokeCleanup=null;cardStrokeKey=null;cardStrokeView=null;
