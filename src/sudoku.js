@@ -1,10 +1,10 @@
 import {getSudokuProgress} from './sudoku-core.js';
-import {countryFlagForWord} from './sudoku-country-flags.js';
+import {lessonPictureForWord} from './sudoku-lesson-pictures.js';
 
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 function pictureView(picture){
   if(picture.url){
-    const img=node('img',undefined,'sudoku-picture sudoku-flag');
+    const img=node('img',undefined,`sudoku-picture ${picture.style}`);
     img.src=picture.url;img.alt=picture.label;img.draggable=false;
     return img;
   }
@@ -14,9 +14,8 @@ function pictureView(picture){
   else wrap.textContent=picture.glyph;
   return wrap;
 }
-function wordView(word,complete=false,form='word'){
+function wordView(word,complete=false,form='word',picture=lessonPictureForWord(word)??word.picture){
   const wrap=node('span',undefined,'sudoku-word');
-  const picture=countryFlagForWord(word)??word.picture;
   if(complete||form==='word'){
     const han=node('strong',word.word);han.dataset.length=word.word.length;wrap.append(han);
   }
@@ -111,17 +110,19 @@ export function createSudokuView(host,dispatch){
       const value=state.values[index],given=state.givens[index]!==null;
       button.classList.toggle('sudoku-given',given);button.classList.toggle('sudoku-filled',!given&&value!==null);
       button.classList.toggle('sudoku-conflict',state.feedback.conflicts.includes(index)||state.feedback.kind==='error'&&state.feedback.cell===index);
-      const word=value===null?null:state.words[value],flag=countryFlagForWord(word);
+      const word=value===null?null:state.words[value];
+      const lessonPicture=lessonPictureForWord(word);
+      const picture=lessonPicture??word?.picture;
       let form=given?state.presentations[index]:'word';
-      if(flag&&form==='word')form='picture';
+      if(lessonPicture&&form==='word')form='picture';
       const renderKey=value===null?'empty':`${value}/${form}`;
       if(button.dataset.renderKey!==renderKey){
         button.replaceChildren();button.dataset.renderKey=renderKey;
-        if(value!==null){const word=state.words[value];button.dataset.wordId=word.id;button.append(wordView(word,false,form));}
+        if(word){button.dataset.wordId=word.id;button.append(wordView(word,false,form,picture));}
         else{delete button.dataset.wordId;button.append(node('span','＋','sudoku-empty'));}
       }
       button.dataset.form=value===null?'empty':form;
-      const clue=value===null?'空格':form==='word'?word.word:form==='pinyin'?word.pinyin:(flag??word.picture).label;
+      const clue=value===null?'空格':form==='word'?word.word:form==='pinyin'?word.pinyin:picture.label;
       button.setAttribute('aria-label',`第${Math.floor(index/9)+1}行第${index%9+1}列，${clue}${given?'，原有线索':''}`);
     });
     const key=state.collected.join('|')+`/${state.phase==='collect'}`;

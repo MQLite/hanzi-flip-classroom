@@ -57,3 +57,38 @@ test('the flag replacement stays scoped to Paradise 2A lesson 1',async({page})=>
   await expect(page.locator('[data-sudoku-cell] img.sudoku-flag')).toHaveCount(0);
   expect(await page.locator('[data-sudoku-cell][data-word-id$="/中国"] strong').count()).toBeGreaterThan(0);
 });
+
+test('Paradise 2A lesson 2 shows the three illustrations and collects each as its word',async({page})=>{
+  await page.goto('/?mode=sudoku');
+  await page.getByLabel('学习阶段',{exact:true}).selectOption('2A');
+  await page.getByLabel('选择课次').selectOption('2');
+  await page.locator('#sudoku-start').click();
+
+  const clues=[['看','手搭在眼睛上方向前看'],['长','箭头指向较长的线'],['巴黎','埃菲尔铁塔']];
+  for(const [word,label] of clues){
+    const cells=page.locator(`[data-sudoku-cell][data-word-id$="/${word}"]`);
+    const picture=cells.getByRole('img',{name:label,exact:true}).first();
+    await expect(picture).toBeVisible();
+    await expect.poll(()=>picture.evaluate(img=>img.complete&&img.naturalWidth>0)).toBe(true);
+    await expect(cells.locator('strong')).toHaveCount(0);
+    await expect(cells.locator('.sudoku-pinyin').first()).toBeVisible();
+    await picture.click();
+    await page.locator('#sudoku-collect').click();
+    const card=page.locator(`[data-sudoku-card][data-word-id$="/${word}"]`);
+    await expect(card.locator('strong')).toHaveText(word);
+    await expect(card.getByRole('img',{name:label,exact:true})).toBeVisible();
+  }
+
+  await page.setViewportSize({width:390,height:844});
+  const images=page.locator('[data-sudoku-cell] img.sudoku-illustration');
+  expect(await images.count()).toBeGreaterThanOrEqual(clues.length);
+  expect(await images.evaluateAll(nodes=>nodes.every(img=>{
+    const picture=img.getBoundingClientRect(),cell=img.closest('[data-sudoku-cell]').getBoundingClientRect();
+    return picture.width>0&&picture.left>=cell.left&&picture.right<=cell.right&&picture.top>=cell.top&&picture.bottom<=cell.bottom;
+  }))).toBe(true);
+
+  page.once('dialog',dialog=>dialog.accept());
+  await page.getByLabel('选择课次').selectOption('1');
+  await page.locator('#sudoku-start').click();
+  await expect(images).toHaveCount(0);
+});

@@ -15,6 +15,18 @@
 #sudoku .sudoku-cell[data-form="picture"] { padding: 2px; }
 .sudoku-picture.sudoku-flag { width: 28px; height: 21px; max-width: 100%; object-fit: contain; }
 #sudoku .sudoku-cell .sudoku-flag { width: 32px; height: 24px; flex-shrink: 1; }
+.sudoku-picture.sudoku-illustration {
+  width: 28px;
+  height: 28px;
+  max-width: 100%;
+  object-fit: contain;
+}
+#sudoku .sudoku-cell .sudoku-illustration {
+  width: 36px;
+  height: 36px;
+  max-height: 100%;
+  flex-shrink: 1;
+}
 #sudoku .sudoku-cell strong {
   min-width: 0;
   max-width: 100%;
