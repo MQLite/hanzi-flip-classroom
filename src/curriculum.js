@@ -93,7 +93,7 @@ export function mergeAllTextbookQuestions(questions) {
 }
 
 export function stagesForTextbook(textbook) {
-  return textbook === ZHONGWEN_ID ? ['1', '2'] : STAGES
+  return textbook === ZHONGWEN_ID ? [...new Set(ZHONGWEN_COURSES.map(course => course.stage))] : STAGES
 }
 
 export function textbookForSource(source) {

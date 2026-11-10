@@ -6,7 +6,7 @@
 
 - [GF0013-2009 现代常用独体字规范（教育部门完整扫描）](https://edu.sh.gov.cn/cmsres/cc/cc76a4a1bbf44271bbc8cf8b47b29289/50476d9ab398dd13a7459af90778d693.pdf)：独体字保护，不为了拼图强拆“我、中、木、果、本”等。
 - [GF0014-2009 现代常用字部件及部件名称规范（Unicode IRG完整扫描）](https://www.unicode.org/irg/docs/n2739-GF0014-2009.pdf)，[教育部发布页](https://www.moe.gov.cn/jyb_sjzl/ziliao/A19/201001/t20100115_75696.html)：部件下限、名称、形体变体和组合部件。图形以实际笔画子集展示；围字框的封口笔画可以不连续。可使用较大的组合部件，不声称每张卡都是最小部件。
-- [GF0023-2020 通用规范汉字笔顺规范（北京市教委教育部文件镜像）](https://jw.beijing.gov.cn/language/bzgf/202105/P020210512414220837538.pdf)：498个现收录字均与官方文件的笔画数及五类笔顺数字串核对一致。五类序列相同不能单独证明精细笔画名称或同类相邻笔画的身份。
+- [GF0023-2020 通用规范汉字笔顺规范（北京市教委教育部文件镜像）](https://jw.beijing.gov.cn/language/bzgf/202105/P020210512414220837538.pdf)：641个现收录字均与官方文件的笔画数及五类笔顺数字串核对一致。五类序列相同不能单独证明精细笔画名称或同类相邻笔画的身份。
 - [教育部2013《中小学书法教育指导纲要》](https://hudong.moe.gov.cn/srcsite/A26/s8001/201301/t20130125_147389.html)及[附录1汉字笔画名称](https://hudong.moe.gov.cn/ewebeditor/uploadfile/2013/02/06/20130206145800854.jpg)：常用教学笔名；并参考[GF2001-2001折笔规范](https://hudong.moe.gov.cn/ewebeditor/uploadfile/2015/01/12/20150112170016626.pdf)的横斜钩等名称。复习页提供28种教学笔名与横斜钩，不把“折”或“钩”泛称为一笔。
 - 字形路径及顺序沿用 `hanzi-writer-data@2.0.1`，已存在本项目的 Arphic 许可另见 `public/licenses/`。卡片不依赖电脑字体显示罕见部件。
 
@@ -20,6 +20,6 @@
 
 ## 更新和读音
 
-可编辑源是 `scripts/data/character-forms-review.json`，包含逐字笔名、规范五类串、审校通过的分组、例字和来源。修改后运行 `node scripts/prepare-construction-data.mjs`，编译器拒绝缺笔、重叠或未知部件。新增课本的未审校字会提示覆盖范围，不自动推断。
+可编辑源是 `scripts/data/character-forms-review.json`，包含逐字笔名、规范五类串、审校通过的分组、例字和来源。修改后运行 `node scripts/prepare-construction-data.mjs`，编译器拒绝缺笔、重叠或未知部件。第五册的生字全部覆盖笔画练习。各课拼图选用已逐笔核对部件分组的生字，未经审校的拆分不自动推断。
 
 运行 `powershell -File scripts/prepare-stroke-audio.ps1` 制作静态普通话WAV（Microsoft Huihui Desktop，zh-CN，语速-2），生成记录见 `public/audio/stroke-names/manifest.json`。网页直接播放站点内的录音，不向外部语音服务上传学生信息。

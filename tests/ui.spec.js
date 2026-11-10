@@ -85,8 +85,16 @@ test('upgrading a legacy bank adds Zhongwen while preserving an edited old textb
   const questions = await page.evaluate(() => JSON.parse(localStorage.getItem('hanzi-flip.question-bank')).questions);
   expect(questions.find(q => q.id === old.id)).toEqual(old);
   expect(questions.find(q => q.id === personal.id)).toEqual(personal);
-  expect(questions.filter(q => q.textbook === 'zhongwen-primary-2023')).toHaveLength(285);
+  expect(questions.filter(q => q.textbook === 'zhongwen-primary-2023')).toHaveLength(ZHONGWEN_QUESTIONS.length);
   await expect(page.getByRole('button', {name:'补充教材题库',exact:true})).toBeHidden();
+  await page.getByRole('button', {name:'题库管理',exact:true}).click();
+  await page.getByLabel('筛选学习阶段').selectOption('zhongwen:5');
+  await page.locator('.question-row').first().click();
+  await expect(page.locator('#question-form select[name="grade"]')).toHaveValue('5');
+  await page.locator('#question-form textarea[name="sentence"]').fill('我们周末一起去超市。');
+  await expect(page.locator('#save-status')).toContainText('已保存');
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('hanzi-flip.question-bank')).questions);
+  expect(saved.find(q => q.book === 5 && q.sentence === '我们周末一起去超市。')).toMatchObject({grade:5,textbook:'zhongwen-primary-2023'});
 });
 test("classroom reveal, one settlement, back navigation and review", async ({
   page,

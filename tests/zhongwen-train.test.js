@@ -6,7 +6,7 @@ import { resolveTrainQuestion, validateSentenceTrain } from '../src/sentence-tra
 import { createTrainSession } from '../src/sentence-train-core.js'
 
 describe('Zhongwen textbook sentence train', () => {
-  it('provides naturally segmented textbook excerpts in all 24 lessons with traceable sources', () => {
+  it('provides naturally segmented textbook excerpts for every imported lesson with traceable sources', () => {
     expect(new Set(ZHONGWEN_TRAIN_CONTENT.map(q => q.id)).size).toBe(ZHONGWEN_TRAIN_CONTENT.length)
     for (const course of ZHONGWEN_COURSES) {
       const records = ZHONGWEN_TRAIN_CONTENT.filter(q => q.book === course.book && q.lesson === course.lesson)
@@ -30,6 +30,10 @@ describe('Zhongwen textbook sentence train', () => {
     const book2 = getZhongwenTrainQuestions({stage: '2', lesson: 1, scope: 'stage'})
     expect(new Set(book2.map(q => q.lesson)).size).toBe(12)
     expect(book2.every(q => q.book === 2)).toBe(true)
+    const book5 = getZhongwenTrainQuestions({stage: '5', lesson: 9, scope: 'lesson'})
+    expect(book5.length).toBeGreaterThanOrEqual(2)
+    expect(book5.every(q => q.book === 5 && q.lesson === 9)).toBe(true)
+    expect(book5.map(q => q.sentence)).toContain('临行密密缝。')
     const cumulative = getZhongwenTrainQuestions({stage: '2', lesson: 1, scope: 'cumulative'})
     expect(cumulative.some(q => q.book === 1 && q.lesson === 12)).toBe(true)
     expect(cumulative.every(q => q.book === 1 || q.lesson === 1)).toBe(true)

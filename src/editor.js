@@ -98,6 +98,13 @@ export function createEditor({ store, getBank, onBank, defaults, notify, canEdit
     pendingSuccess = null;
     form.hidden = false;
     $("#editor-empty").hidden = true;
+    const gradeField = form.elements.grade;
+    gradeField.querySelector('[data-textbook-grade]')?.remove();
+    if (q.textbook && q.grade > 4) {
+      const bookOption = new Option(ZHONGWEN_BOOK_LABELS[q.book] ?? `第${q.book}册`, String(q.grade));
+      bookOption.dataset.textbookGrade = '';
+      gradeField.add(bookOption);
+    }
     for (const name of [
       "grade",
       "character",
@@ -200,6 +207,10 @@ export function createEditor({ store, getBank, onBank, defaults, notify, canEdit
     if (textbookAssignment && ['character','grade'].includes(event.target.name)) {
       textbookAssignment = null;
       $('#question-origin').textContent = '个人 / 通用题库 · 已移除原教材归属';
+      const gradeField = form.elements.grade;
+      const needsPersonalGrade = Number(gradeField.value) > 4;
+      gradeField.querySelector('[data-textbook-grade]')?.remove();
+      if (needsPersonalGrade) gradeField.value = '';
     }
     if (event.target.name === "character") {
       for (const key of ["strokeCount", "radical", "structure", "components"])
@@ -336,7 +347,11 @@ export function createEditor({ store, getBank, onBank, defaults, notify, canEdit
       box.hidden = false;
       box.replaceChildren();
       const p = document.createElement("p");
-      p.textContent = `共 ${result.total} 题 · ${[1, 2, 3, 4].map((g) => `${g} 年级 ${result.countsByGrade[g] || 0} 题`).join(" / ")}。确认后替换整个题库；当前课堂不变。`;
+      const counts = Object.entries(result.countsByGrade).map(([grade, count]) => {
+        const label = Number(grade) <= 4 ? `${grade} 年级` : ZHONGWEN_BOOK_LABELS[grade] ?? `第${grade}册`;
+        return `${label} ${count} 题`;
+      });
+      p.textContent = `共 ${result.total} 题 · ${counts.join(" / ")}。确认后替换整个题库；当前课堂不变。`;
       box.append(p);
       for (const [label, action] of [
         ["先导出当前题库", () => downloadText(exportBank(getBank()))],

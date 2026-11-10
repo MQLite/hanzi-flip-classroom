@@ -57,6 +57,8 @@ describe('existing lesson vocabulary',()=>{
     expect(getMolePool({source:'textbook',stage:'1A',lesson:1},TEXTBOOK_QUESTIONS).words.some(w=>w.word.length>1)).toBe(true);
     const personal=[{id:'p',character:'球',pinyin:'qiú',grade:1,words:['篮球','足球']},{id:'x',character:'马',pinyin:'mǎ',grade:2,words:['白马']}];
     expect(getMolePool({source:'personal',grade:1},personal).words.map(w=>w.word)).toEqual(['球','篮球','足球']);
-    expect(getMolePool({source:'zhongwen',stage:'5',lesson:9},ZHONGWEN_QUESTIONS).words).toEqual([]);
+    const poems=getMolePool({source:'zhongwen',stage:'5',lesson:9},ZHONGWEN_QUESTIONS);
+    expect(poems.words.map(w=>w.word)).toEqual(expect.arrayContaining(['慈','缝','童']));
+    expect(poems.label).toContain('第五册');
   });
 });

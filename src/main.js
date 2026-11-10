@@ -113,7 +113,7 @@ $('#scene').insertAdjacentHTML('afterend', '<div id="workshop" hidden></div><div
 $('.practice-box').insertAdjacentHTML('beforebegin', '<div id="workshop-collection-panel" hidden><h4>收集到的词语 <span>✦</span></h4><div id="workshop-collection" aria-live="polite"></div></div>');
 $('#help-dialog').insertAdjacentHTML('beforeend', '<p>活字组词工坊：每盘随机选择 2–4 个参考词，默认 4 个，拆成一盘共享活字。按顺序点选 2–8 字，点击“融合印版”。匹配参考词时收走对应活字、记 1 星；其他词请老师判断。教师判对收集青绿色印版并归还活字，返回重试则归还活字且不记分。每个词只能得星一次。教师判断记给提交时的小组，切换模式保留待判词和进度；新一轮或刷新会清空。</p>');
 $('.practice-box').insertAdjacentHTML('beforebegin', '<div class="train-ledger-panel" hidden><h4>旅程记录</h4><div id="train-ledger" aria-live="polite"></div></div>');
-$('#help-dialog').insertAdjacentHTML('beforeend', '<p>句子小火车：点击词语车厢，从左到右排列句子。全部接齐后发车；未命中可调整或由老师判对。看过参考句后须由老师判对才计分。再练一次只加入明确标记的句子；跳过的句子不算错。三种游戏独立保存本页进度，刷新重置。题库中的“句子小火车设置”可用 / 分隔词语。每句支持2–7节车厢；《中文》第一、二册选用课文及阅读重点句，显示栏目、篇名和教材页码，部分短句摘自分句并统一句尾标点。《汉语乐园》1A–3B选用课本对话、歌曲和故事原句，老师手工切分句仍可练习；1A第3课仅作数字认读。</p>');
+$('#help-dialog').insertAdjacentHTML('beforeend', '<p>句子小火车：点击词语车厢，从左到右排列句子。全部接齐后发车；未命中可调整或由老师判对。看过参考句后须由老师判对才计分。再练一次只加入明确标记的句子；跳过的句子不算错。三种游戏独立保存本页进度，刷新重置。题库中的“句子小火车设置”可用 / 分隔词语。每句支持2–7节车厢；《中文》第一、二、五册选用课文及阅读重点句，显示栏目、篇名和教材页码，部分短句摘自分句并统一句尾标点。《汉语乐园》1A–3B选用课本对话、歌曲和故事原句，老师手工切分句仍可练习；1A第3课仅作数字认读。</p>');
 const allDefaults = [...DEFAULT_QUESTIONS, ...TEXTBOOK_QUESTIONS, ...PARADISE_QUESTIONS, ...ZHONGWEN_QUESTIONS];
 $('#help-dialog').insertAdjacentHTML('beforeend','<p>情景探索：按教材、册数、课次选择。中文（暨南大学版）第一册第3课可跟猫咪读线索、找钥匙、逃出密室。第五册第9课可探索《古诗二首》。汉语乐园 2A 第2课可读线索、猜城市。</p>');
 $('.teacher-badge').textContent = '汉语乐园 · 1A–3B';
@@ -122,7 +122,7 @@ $('.lesson-toolbar').insertAdjacentHTML('afterend', '<p id="curriculum-note" cla
 $('#textbook-notice').insertAdjacentHTML('afterend', '<details id="zhongwen-vocabulary" class="zhongwen-vocabulary" hidden><summary>教材生字与词语</summary><p class="muted">按教材栏目和原顺序列出。组词工坊使用完整词表中的2–8字词语与短语；单字在识字翻翻乐练习。</p><div id="zhongwen-vocabulary-content"></div></details>');
 document.body.insertAdjacentHTML('beforeend', '<dialog id="paradise-vocabulary-dialog" class="textbook-vocabulary-dialog" aria-labelledby="paradise-vocabulary-title"><div class="dialog-heading"><h2 id="paradise-vocabulary-title">汉语乐园教材词语</h2><button id="close-paradise-vocabulary" class="icon-button" aria-label="关闭教材词语">×</button></div><p class="muted">1A、1B按课本New Words词表收录，另标出正文核心复习词。辅助例词不混入教材词库；单字保留供识字翻牌，2–8字教材词语进入组词工坊。</p><div id="paradise-vocabulary-content"></div></dialog>');
 $('#close-paradise-vocabulary').onclick = () => $('#paradise-vocabulary-dialog').close();
-$('#help-dialog').insertAdjacentHTML('beforeend', '<p>《中文》暨南大学版为独立教材系列，后续第三册、第四册等均归入同一系列。目前已收录第一、二册，按整册及原课次选择，收录每课全部生字、词语和“读一读”，展开“教材生字与词语”可核对原序及教材页码。识字卡的两个例词和简单例句是辅助教学内容；组词工坊使用独立保存的完整教材词表。旧题库可点击“补充教材题库”，只追加缺失题目，保留已有题目及个人修改。</p>');
+$('#help-dialog').insertAdjacentHTML('beforeend', '<p>《中文》（暨南大学版）已收录第一、二、五册，可按原课次或整册选择。展开“教材生字与词语”可查看每课生字、词语和“读一读”的原序及教材页码。识字卡的两个例词和简单例句是辅助教学内容；组词工坊使用独立保存的教材词表。旧题库可点击“补充教材题库”，追加缺失题目并保留个人修改。</p>');
 $('#help-dialog .help-steps li').textContent = '选择教材阶段和练习范围，或切换到个人 / 通用题库按年级练习。';
 $('#help-dialog').insertAdjacentHTML('beforeend', '<p>《汉语乐园》按原书1A–3B分册：A为第1–6课，B为第7–12课。题目覆盖核心词汇中的汉字及学写字栏目；参考词优先采用本课教材词，补充例词和例句为配编。与新版题库分开选择。</p><p>新版《中文乐园》课本1–3：A为第1–6课，B为第7–12课。A/B是游戏学习阶段，不是出版社分册。教材字表按官方教学大纲；组词、读音语境和例句由本项目配编，可由老师修改。</p>');
 let toastTimer;
@@ -248,7 +248,7 @@ function currentSession() {
 function refreshTextbookNotice() {
   const missing = mergeTextbookQuestions(bank.questions).length - bank.questions.length;
   $('#textbook-notice').hidden = !bankLoaded || missing === 0;
-  $('#textbook-notice span').textContent = `可补充 ${missing} 道教材题（含《中文》第一、二册及《汉语乐园》1A–3B），保留已有题目和修改。`;
+  $('#textbook-notice span').textContent = `可补充 ${missing} 道教材题（含《中文》第一、二、五册及《汉语乐园》1A–3B），保留已有题目和修改。`;
 }
 function syncSelection() {
   $('#grade').value=String(grade);
@@ -280,7 +280,7 @@ function syncSelection() {
   if(isConstruction(gameMode)||gameMode==='sudoku'||gameMode==='mole'||gameMode==='poison'||gameMode==='building'||gameMode==='maze'||explore)$('#scope').closest('label').hidden=true;
   $('#curriculum-note').textContent = selection.source !== 'personal'
     ? zhongwen
-      ? `《中文》（暨南大学华文学院 · 第三版）${ZHONGWEN_BOOK_LABELS[selection.stage]} · ${selection.scope === 'cumulative' ? `第一册第1课至${ZHONGWEN_BOOK_LABELS[selection.stage]}第${selection.lesson}课` : selection.scope === 'lesson' ? `第${selection.lesson}课` : '全册'} · ${gameMode === 'train' ? '课文与阅读重点句' : '全部生字与教材词语'}`
+      ? `《中文》（暨南大学华文学院 · 第三版）${ZHONGWEN_BOOK_LABELS[selection.stage]} · ${selection.scope === 'cumulative' ? `${selection.stage === '5' ? '已收录课次累计至' : '第一册第1课至'}${ZHONGWEN_BOOK_LABELS[selection.stage]}第${selection.lesson}课` : selection.scope === 'lesson' ? `第${selection.lesson}课` : '全册'} · ${gameMode === 'train' ? '课文与阅读重点句' : '全部生字与教材词语'}`
       : selection.source === 'paradise'
       ? `《汉语乐园》${selection.stage} · 原书分册及课次 · ${selection.scope === 'cumulative' ? `1A第1课至${selection.stage}第${selection.lesson}课` : selection.scope === 'lesson' ? `第${selection.lesson}课` : '全册'} · ${gameMode === 'train' ? '课本对话、歌曲与故事重点句' : '核心词汇识字与学写字'}`
       : `《中文乐园》课本1–3 · A/B为游戏分组（A：第1–6课，B：第7–12课） · ${selection.scope === 'cumulative' ? `课本1第1课至课本${selection.stage[0]}第${selection.lesson}课` : selection.scope === 'lesson' ? `${selection.stage} 第${selection.lesson}课` : `${selection.stage} 全阶段`} · 例词例句为配编`

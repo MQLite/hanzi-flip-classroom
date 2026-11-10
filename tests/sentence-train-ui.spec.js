@@ -86,7 +86,7 @@ test('manual segmentation survives unrelated edits and invalid drafts do not sav
  await page.getByRole('button',{name:'清除手动切分',exact:true}).click();await expect(page.locator('#save-status')).toContainText('已保存');
 });
 
-for (const book of [1, 2]) test(`Zhongwen book ${book} has textbook trains in all twelve lessons without replacing the saved bank`, async ({page}) => {
+for (const book of [1, 2, 5]) test(`Zhongwen book ${book} has textbook trains in all twelve lessons without replacing the saved bank`, async ({page}) => {
  test.setTimeout(60000);
  await open(page, {bank: questions});
  const saved = await page.evaluate(() => localStorage.getItem('hanzi-flip.question-bank'));

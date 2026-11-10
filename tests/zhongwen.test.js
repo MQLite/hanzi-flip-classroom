@@ -4,6 +4,7 @@ import { DEFAULT_QUESTIONS } from '../src/data.js'
 import { createSession } from '../src/core.js'
 import { createWorkshopState, remainingWorkshopWords } from '../src/workshop-core.js'
 import { validateBank, exportBank, previewImport } from '../src/storage.js'
+import { getSudokuCandidates } from '../src/sudoku-vocabulary.js'
 import { readFileSync } from 'node:fs'
 
 const textbook = 'zhongwen-primary-2023'
@@ -11,12 +12,36 @@ const selected = (questions, stage, lesson, scope = 'lesson') =>
   curriculum.filterCurriculum(questions, { textbook, stage, lesson, scope })
 
 describe('Zhongwen primary textbooks', () => {
-  it('offers the 24 actual lessons by complete book rather than artificial A/B stages', () => {
+  it('offers all three imported books by complete book rather than artificial A/B stages', () => {
     const courses = curriculum.coursesForTextbook(textbook)
-    expect(courses).toHaveLength(24)
+    expect(courses).toHaveLength(36)
+    expect(curriculum.stagesForTextbook(textbook)).toEqual(['1', '2', '5'])
     expect(courses.find(c => c.book === 1 && c.lesson === 1)?.title).toBe('识字（一）')
     expect(courses.find(c => c.book === 2 && c.lesson === 1)?.title).toBe('在中文学校')
     expect(courses.filter(c => c.stage === '2').map(c => c.lesson)).toEqual([1,2,3,4,5,6,7,8,9,10,11,12])
+    const fifth = courses.filter(c => c.stage === '5')
+    expect(fifth.map(c => c.lesson)).toEqual([1,2,3,4,5,6,7,8,9,10,11,12])
+    expect(fifth[0].title).toBe('去超市')
+    expect(fifth[11].title).toBe('李时珍')
+  })
+
+  it('makes every fifth-book lesson usable for textbook games and round-trips the new attribution', () => {
+    const fifth = curriculum.ZHONGWEN_COURSES.filter(course => course.stage === '5')
+    const questions = curriculum.mergeAllTextbookQuestions([])
+    expect(fifth).toHaveLength(12)
+    for (const {lesson, characters} of fifth) {
+      expect(selected(questions, '5', lesson).map(q => q.character)).toEqual([...characters])
+      const sudoku = getSudokuCandidates({source:'zhongwen',stage:'5',lesson})
+      expect(sudoku.words.length, String(lesson)).toBeGreaterThanOrEqual(9)
+      expect(sudoku.words.every(word => word.source.book === 5 && word.source.lesson === lesson)).toBe(true)
+    }
+    const first = selected(questions, '5', 1)[0]
+    expect(first).toMatchObject({book:5,grade:5})
+    const preview = previewImport(exportBank([first]))
+    expect(preview).toMatchObject({ok:true,countsByGrade:{5:1}})
+    expect(preview.bank.questions).toEqual([first])
+    const {textbook: _textbook, book: _book, lesson: _lesson, ...personal} = first
+    expect(validateBank({schemaVersion:1,questions:[personal]})).toMatchObject({ok:false,errors:[{code:'invalid-grade'}]})
   })
 
   it('keeps a book, a lesson and cumulative practice in the selected series', () => {
@@ -74,9 +99,9 @@ describe('Zhongwen primary textbooks', () => {
     }
   })
 
-  it('supplies usable character examples and local stroke vectors for all 285 lesson characters', () => {
+  it('supplies usable character examples and local stroke vectors for the imported lessons', () => {
     const questions = curriculum.mergeAllTextbookQuestions([]).filter(q => q.textbook === textbook)
-    expect(questions).toHaveLength(285)
+    expect(questions.filter(q => q.book !== 5)).toHaveLength(285)
     for (const q of questions) {
       expect(q.words).toHaveLength(2)
       expect(q.words.every(w => w.includes(q.character) && /^[\p{Script=Han}]{2,8}$/u.test(w)), q.id).toBe(true)

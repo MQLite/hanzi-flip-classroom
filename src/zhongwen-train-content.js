@@ -1,5 +1,7 @@
 // Selected textbook excerpts, checked against the supplied scanned PDFs.
 // Source wording and excerpt/punctuation notes are retained for auditing; see docs/zhongwen-sentence-train-sources.md.
+import bookFive from './data/zhongwen-book5.json' with {type: 'json'}
+
 export const ZHONGWEN_TRAIN_CONTENT = [
   {
     "id": "zw-train-1-1-1",
@@ -1736,5 +1738,6 @@ export const ZHONGWEN_TRAIN_CONTENT = [
     "punctuation": "。",
     "alternatives": [],
     "notes": "原文中小溪说的完整句，汉字与标点不变。"
-  }
+  },
+  ...bookFive.train,
 ]

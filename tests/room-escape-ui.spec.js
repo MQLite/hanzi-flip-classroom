@@ -13,12 +13,14 @@ test('first-book lesson three offers the room and the return link restores the s
   await expect(page.getByRole('link',{name:'进入情景',exact:true})).toHaveCount(0);
 });
 
-test('a scenario-only book does not become the active practice book',async({page})=>{
+test('the fifth-book poetry scenario and classroom activities use the same lesson',async({page})=>{
   await page.goto('/?mode=explore&source=zhongwen&stage=5&lesson=9');
   await expect(page.getByLabel('选择册数',{exact:true})).toHaveValue('5');
   await expect(page.locator('#exploration-catalog')).toContainText('旧屋里的两封信');
   await page.locator('#mode-flip').click();
-  await expect(page.locator('#stage')).not.toHaveValue('5');
+  await expect(page.locator('#stage')).toHaveValue('5');
+  await expect(page.locator('#lesson')).toHaveValue('9');
+  await expect(page.locator('#reveal')).toBeEnabled();
 });
 
 test('the locked room takes twelve clues, allows retries, and exits after collecting the key',async({page},testInfo)=>{

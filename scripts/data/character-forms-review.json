@@ -17940,6 +17940,4211 @@
       },
       "review": "逐行检查分色整字、独立子集形状及索引；部件身份可辨认，满足本游戏现代字形拼合用途。",
       "geometrySha256": "d4ea62098daa9cec0968708bea4f1a2bb1bc73111617b8a844f1b7b3898667df"
+    },
+    "周": {
+      "names": [
+        "撇",
+        "横折钩",
+        "横",
+        "竖",
+        "横",
+        "竖",
+        "横折",
+        "横"
+      ],
+      "numericOrder": "35121251",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "35121251",
+        "page": 97,
+        "index": "1192"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "3e8e8d503dee8b0faa1bb634f9704007c693ea53e5fc1ac6513e16e61e4aba9b"
+    },
+    "末": {
+      "names": [
+        "横",
+        "横",
+        "竖",
+        "撇",
+        "捺"
+      ],
+      "numericOrder": "11234",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "11234",
+        "page": 17,
+        "index": "0193"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "f50b26f9a96488dbdcd99d0f74717b2c1432f5783945beee35b07a990225159f"
+    },
+    "列": {
+      "names": [
+        "横",
+        "撇",
+        "横撇",
+        "点",
+        "竖",
+        "竖钩"
+      ],
+      "numericOrder": "135422",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "135422",
+        "page": 28,
+        "index": "0399"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "628016c249301f1a1e343d4c4f9556cc80dc3d4b92d854ca6a97ee3181264ef9"
+    },
+    "购": {
+      "names": [
+        "竖",
+        "横折",
+        "撇",
+        "点",
+        "撇",
+        "横折钩",
+        "撇折",
+        "点"
+      ],
+      "numericOrder": "25343554",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "25343554",
+        "page": 86,
+        "index": "1117"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "ca82a073e2ed40574cdbe2bbc9ae4579e23326fe9c4da68c024f09a9f5a3c0c0"
+    },
+    "单": {
+      "names": [
+        "点",
+        "撇",
+        "竖",
+        "横折",
+        "横",
+        "横",
+        "横",
+        "竖"
+      ],
+      "numericOrder": "43251112",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "43251112",
+        "page": 101,
+        "index": "1232"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "ac08c8bd39f8b5dc615c5e8122fbb810a8f69f8d486119c2d104ff94873f5f67"
+    },
+    "品": {
+      "names": [
+        "竖",
+        "横折",
+        "横",
+        "竖",
+        "横折",
+        "横",
+        "竖",
+        "横折",
+        "横"
+      ],
+      "numericOrder": "251251251",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "251251251",
+        "page": 144,
+        "index": "1503"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "78f2ca1221979d9aa5a3ff1ce30bbb341703bb5fc91a7e50320a578ce57fe8c2"
+    },
+    "挑": {
+      "names": [
+        "横",
+        "竖钩",
+        "提",
+        "撇",
+        "点",
+        "提",
+        "竖弯钩",
+        "撇",
+        "点"
+      ],
+      "numericOrder": "121341534",
+      "parts": [
+        {
+          "id": "gf0014-334",
+          "indices": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "id": "gf0014-483",
+          "indices": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "121341534",
+        "page": 124,
+        "index": "1387"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "841eaec37da46f3008f28526c2039cf91530470c0bf548dd84d73050cc26564c"
+    },
+    "选": {
+      "names": [
+        "撇",
+        "横",
+        "竖",
+        "横",
+        "撇",
+        "竖弯钩",
+        "点",
+        "横折折撇",
+        "捺"
+      ],
+      "numericOrder": "312135454",
+      "parts": [
+        {
+          "id": "gf0014-513",
+          "indices": [
+            6,
+            7,
+            8
+          ]
+        },
+        {
+          "id": "candidate-glyph-5148",
+          "indices": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "312135454",
+        "page": 151,
+        "index": "1545"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "c794fdcce820cbf89671492e39898dbc9e03340cb3adf51b45da9fde9a8566e8"
+    },
+    "折": {
+      "names": [
+        "横",
+        "竖钩",
+        "提",
+        "撇",
+        "撇",
+        "横",
+        "竖"
+      ],
+      "numericOrder": "1213312",
+      "parts": [
+        {
+          "id": "gf0014-334",
+          "indices": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "id": "gf0014-179",
+          "indices": [
+            3,
+            4,
+            5,
+            6
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "1213312",
+        "page": 41,
+        "index": "0632"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "023894154d190a77a41cc5bfc8948db8833dc48d6bc1b16a728ca596dd7bde63"
+    },
+    "错": {
+      "names": [
+        "撇",
+        "横",
+        "横",
+        "横",
+        "竖提",
+        "横",
+        "竖",
+        "竖",
+        "横",
+        "竖",
+        "横折",
+        "横",
+        "横"
+      ],
+      "numericOrder": "3111512212511",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "3111512212511",
+        "page": 387,
+        "index": "2936"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "845d596f7330c6945ca3d079972630a1ffd62c9accffa14d04f6603a7eeb64a1"
+    },
+    "露": {
+      "names": [
+        "横",
+        "点",
+        "横钩",
+        "竖",
+        "点",
+        "点",
+        "点",
+        "点",
+        "竖",
+        "横折",
+        "横",
+        "竖",
+        "横",
+        "竖",
+        "提",
+        "撇",
+        "横撇",
+        "捺",
+        "竖",
+        "横折",
+        "横"
+      ],
+      "numericOrder": "145244442512121354251",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "145244442512121354251",
+        "page": 570,
+        "index": "3490"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "be18cf231ae67d734b80bb086ee7b30c784b6d1f17ef11c69f59885aa8ba466e"
+    },
+    "营": {
+      "names": [
+        "横",
+        "竖",
+        "竖",
+        "点",
+        "横钩",
+        "竖",
+        "横折",
+        "横",
+        "竖",
+        "横折",
+        "横"
+      ],
+      "numericOrder": "12245251251",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "12245251251",
+        "page": 256,
+        "index": "2214"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "935ff7d1b9b358997b5958a99ec4c84147552bcf47dadf8b630ab018a09e838e"
+    },
+    "滩": {
+      "names": [
+        "点",
+        "点",
+        "提",
+        "横撇",
+        "点",
+        "撇",
+        "竖",
+        "点",
+        "横",
+        "横",
+        "横",
+        "竖",
+        "横"
+      ],
+      "numericOrder": "4415432411121",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "4415432411121",
+        "page": 405,
+        "index": "3022"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "b4be5c08b3517896322ba344887eb3f3fbcfd776fc0214559a8d95c7e3f8cf09"
+    },
+    "搭": {
+      "names": [
+        "横",
+        "竖钩",
+        "提",
+        "横",
+        "竖",
+        "竖",
+        "撇",
+        "捺",
+        "横",
+        "竖",
+        "横折",
+        "横"
+      ],
+      "numericOrder": "121122341251",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "121122341251",
+        "page": 309,
+        "index": "2511"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "67f00b60009fa129f55782112799387f1b20d91234c310f9bf0c9b74c102c124"
+    },
+    "油": {
+      "names": [
+        "点",
+        "点",
+        "提",
+        "竖",
+        "横折",
+        "横",
+        "竖",
+        "横"
+      ],
+      "numericOrder": "44125121",
+      "parts": [
+        {
+          "id": "gf0014-350",
+          "indices": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "id": "gf0014-458",
+          "indices": [
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "44125121",
+        "page": 103,
+        "index": "1248"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "7b7f32a2a5026ec959cc2f598c3e6171e5c95b63ecd575ba3a7e3a79df990ff7"
+    },
+    "换": {
+      "names": [
+        "横",
+        "竖钩",
+        "提",
+        "撇",
+        "横撇",
+        "竖",
+        "横折",
+        "横",
+        "撇",
+        "捺"
+      ],
+      "numericOrder": "1213525134",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "1213525134",
+        "page": 189,
+        "index": "1806"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "14d53b7e375127ad2c60846c5f7b1c46cca286f966e2fb92cdd9815df4d71549"
+    },
+    "聊": {
+      "names": [
+        "横",
+        "竖",
+        "竖",
+        "横",
+        "横",
+        "提",
+        "撇",
+        "竖提",
+        "撇",
+        "横折钩",
+        "竖"
+      ],
+      "numericOrder": "12211135352",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "12211135352",
+        "page": 252,
+        "index": "2196"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "dc9b9c58da6c4e1eddf5a8bd43820492c8f59cebc47a422262bcc547f74fad73"
+    },
+    "烤": {
+      "names": [
+        "点",
+        "撇",
+        "撇",
+        "点",
+        "横",
+        "竖",
+        "横",
+        "撇",
+        "横",
+        "竖折折钩"
+      ],
+      "numericOrder": "4334121315",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "4334121315",
+        "page": 229,
+        "index": "2057"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "5df1197daa9acf19210fc1850b75389863c2ee0529d35694d767dee8d85f9126"
+    },
+    "躺": {
+      "names": [
+        "撇",
+        "竖",
+        "横折钩",
+        "横",
+        "横",
+        "横",
+        "撇",
+        "竖",
+        "点",
+        "撇",
+        "竖",
+        "横折钩",
+        "竖",
+        "横折",
+        "横"
+      ],
+      "numericOrder": "325111324325251",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "325111324325251",
+        "page": 471,
+        "index": "3270"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "db08424240f868f7cb3dbe7f7a37fd5bfa60c784000c4eb769e9a051dbc78e09"
+    },
+    "浪": {
+      "names": [
+        "点",
+        "点",
+        "提",
+        "点",
+        "横折",
+        "横",
+        "横",
+        "竖提",
+        "撇",
+        "捺"
+      ],
+      "numericOrder": "4414511534",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "4414511534",
+        "page": 234,
+        "index": "2084"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "fa678ad73c56ff1a32ff6e95830bc25a91ec0a5754747c2515e8677217c1d4c1"
+    },
+    "梦": {
+      "names": [
+        "横",
+        "竖",
+        "撇",
+        "点",
+        "横",
+        "竖",
+        "撇",
+        "捺",
+        "撇",
+        "横撇",
+        "点"
+      ],
+      "numericOrder": "12341234354",
+      "parts": [
+        {
+          "id": "candidate-glyph-6797",
+          "indices": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        },
+        {
+          "id": "gf0014-392",
+          "indices": [
+            8,
+            9,
+            10
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "12341234354",
+        "page": 257,
+        "index": "2221"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "82a2a6b76ffd5a501ef9bbb0a8974eb77d18370acbb28c242b93d31dc39b42b3"
+    },
+    "者": {
+      "names": [
+        "横",
+        "竖",
+        "横",
+        "撇",
+        "竖",
+        "横折",
+        "横",
+        "横"
+      ],
+      "numericOrder": "12132511",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "12132511",
+        "page": 67,
+        "index": "0969"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "15dfe2875bdf6e2aace528fb36253bd1844c0571b3f8bad7e652f832d8fea971"
+    },
+    "始": {
+      "names": [
+        "撇点",
+        "撇",
+        "横",
+        "撇折",
+        "点",
+        "竖",
+        "横折",
+        "横"
+      ],
+      "numericOrder": "53154251",
+      "parts": [
+        {
+          "id": "gf0014-263",
+          "indices": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "id": "candidate-glyph-53f0",
+          "indices": [
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "53154251",
+        "page": 115,
+        "index": "1329"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "99a6880c2b940c69ca131a16b073b0b4766b2c9679d9c1b7b472dadb02277465"
+    },
+    "族": {
+      "names": [
+        "点",
+        "横",
+        "横折钩",
+        "撇",
+        "撇",
+        "横",
+        "撇",
+        "横",
+        "横",
+        "撇",
+        "捺"
+      ],
+      "numericOrder": "41533131134",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "41533131134",
+        "page": 288,
+        "index": "2392"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "b7ff5442aca80550c98d346bb71414ef84cebe31826474bdee34bd7471fc2280"
+    },
+    "功": {
+      "names": [
+        "横",
+        "竖",
+        "提",
+        "横折钩",
+        "撇"
+      ],
+      "numericOrder": "12153",
+      "parts": [
+        {
+          "id": "gf0014-121",
+          "indices": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "id": "gf0014-208",
+          "indices": [
+            3,
+            4
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "12153",
+        "page": 18,
+        "index": "0202"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "2c61abd376aa7b025b689796d48c1b1647005193ba27c5242d5eccb1695416c3"
+    },
+    "捏": {
+      "names": [
+        "横",
+        "竖钩",
+        "提",
+        "竖",
+        "横折",
+        "横",
+        "横",
+        "横",
+        "竖",
+        "横"
+      ],
+      "numericOrder": "1212511121",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "1212511121",
+        "page": 187,
+        "index": "1793"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "12fa0ed50deaba44255175ae5d3a0404f0c5c7bfde13a8487246baab6398a099"
+    },
+    "统": {
+      "names": [
+        "撇折",
+        "撇折",
+        "提",
+        "点",
+        "横",
+        "撇折",
+        "点",
+        "撇",
+        "竖弯钩"
+      ],
+      "numericOrder": "551415435",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "551415435",
+        "page": 182,
+        "index": "1765"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "e9ce8d3b4111349b9a8d2acac5cd7e7f7945ef2f026e6cf6f51c17d70a4eaf77"
+    },
+    "响": {
+      "names": [
+        "竖",
+        "横折",
+        "横",
+        "撇",
+        "竖",
+        "横折钩",
+        "竖",
+        "横折",
+        "横"
+      ],
+      "numericOrder": "251325251",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "251325251",
+        "page": 145,
+        "index": "1509"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "398bf78ec9f777e39ffd4eac26ee097f18ef2ad803b9999f3a8b077556a2ea7b"
+    },
+    "艺": {
+      "names": [
+        "横",
+        "竖",
+        "竖",
+        "横折弯钩"
+      ],
+      "numericOrder": "1225",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "1225",
+        "page": 12,
+        "index": "0086"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "983c613f4d76448ed7a308fb3cca3199c7c8869381dbdb9ef45543488d99be81"
+    },
+    "彩": {
+      "names": [
+        "撇",
+        "点",
+        "点",
+        "撇",
+        "横",
+        "竖",
+        "撇",
+        "点",
+        "撇",
+        "撇",
+        "撇"
+      ],
+      "numericOrder": "34431234333",
+      "parts": [
+        {
+          "id": "candidate-glyph-91c7",
+          "indices": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        },
+        {
+          "id": "gf0014-307",
+          "indices": [
+            8,
+            9,
+            10
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "34431234333",
+        "page": 282,
+        "index": "2353"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "1f64358f619abc85f011127dba7d52052f34aaf0780bfb0b2827280892cc6799"
+    },
+    "总": {
+      "names": [
+        "点",
+        "撇",
+        "竖",
+        "横折",
+        "横",
+        "点",
+        "卧钩",
+        "点",
+        "点"
+      ],
+      "numericOrder": "432514544",
+      "parts": [
+        {
+          "id": "gf0014-6",
+          "indices": [
+            0,
+            1
+          ]
+        },
+        {
+          "id": "gf0014-200",
+          "indices": [
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "id": "gf0014-406",
+          "indices": [
+            5,
+            6,
+            7,
+            8
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "432514544",
+        "page": 166,
+        "index": "1654"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "1f4ff45876ad46f7f43d3cd848663b9965ff45f6b0fa0af26fd7c53223e1dd0c"
+    },
+    "脏": {
+      "names": [
+        "撇",
+        "横折钩",
+        "横",
+        "横",
+        "点",
+        "横",
+        "撇",
+        "横",
+        "竖",
+        "横"
+      ],
+      "numericOrder": "3511413121",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "3511413121",
+        "page": 221,
+        "index": "1998"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "af366c4e7ca5f041fff62ea00bd29b6699d658ad11cb336f0912530f883490b6"
+    },
+    "害": {
+      "names": [
+        "点",
+        "点",
+        "横钩",
+        "横",
+        "横",
+        "横",
+        "竖",
+        "竖",
+        "横折",
+        "横"
+      ],
+      "numericOrder": "4451112251",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "4451112251",
+        "page": 236,
+        "index": "2097"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "7f4166b62b6d11d651e989e465e85fa0da9a4a8622f8acece640f9edaa4260f0"
+    },
+    "惊": {
+      "names": [
+        "点",
+        "点",
+        "竖",
+        "点",
+        "横",
+        "竖",
+        "横折",
+        "横",
+        "竖钩",
+        "撇",
+        "点"
+      ],
+      "numericOrder": "44241251234",
+      "parts": [
+        {
+          "id": "gf0014-408",
+          "indices": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "id": "gf0014-184",
+          "indices": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "44241251234",
+        "page": 296,
+        "index": "2445"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "650ecd89de5520929f8b2048b5fc6314db162ff01a995f5162b9c0ad7d1daba8"
+    },
+    "轻": {
+      "names": [
+        "横",
+        "撇折",
+        "竖",
+        "提",
+        "横撇",
+        "点",
+        "横",
+        "竖",
+        "横"
+      ],
+      "numericOrder": "152154121",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "152154121",
+        "page": 138,
+        "index": "1463"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "a670166a0d04ef769ff321d6fd94bba68b104f5fab9da45e3d885e50160427ef"
+    },
+    "算": {
+      "names": [
+        "撇",
+        "横",
+        "点",
+        "撇",
+        "横",
+        "点",
+        "竖",
+        "横折",
+        "横",
+        "横",
+        "横",
+        "横",
+        "撇",
+        "竖"
+      ],
+      "numericOrder": "31431425111132",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "31431425111132",
+        "page": 430,
+        "index": "3121"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "3ed47da62cc232d3197988c6d43a5c24e3433b4e8a92d7b1e272266293c76d8a"
+    },
+    "坏": {
+      "names": [
+        "横",
+        "竖",
+        "提",
+        "横",
+        "撇",
+        "竖",
+        "点"
+      ],
+      "numericOrder": "1211324",
+      "parts": [
+        {
+          "id": "gf0014-368",
+          "indices": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "id": "gf0014-29",
+          "indices": [
+            3,
+            4,
+            5,
+            6
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "1211324",
+        "page": 40,
+        "index": "0616"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "039ecc86ede8b3d69c671bc33087b2af5361139f9b5c53629533ed321666896d"
+    },
+    "近": {
+      "names": [
+        "撇",
+        "撇",
+        "横",
+        "竖",
+        "点",
+        "横折折撇",
+        "捺"
+      ],
+      "numericOrder": "3312454",
+      "parts": [
+        {
+          "id": "gf0014-513",
+          "indices": [
+            4,
+            5,
+            6
+          ]
+        },
+        {
+          "id": "gf0014-179",
+          "indices": [
+            0,
+            1,
+            2,
+            3
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "3312454",
+        "page": 52,
+        "index": "0791"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "074eab3b6088c7161a461ae1b83b2f8ab23173b708b26a3fe4522cd8beb0d131"
+    },
+    "反": {
+      "names": [
+        "撇",
+        "撇",
+        "横撇",
+        "捺"
+      ],
+      "numericOrder": "3354",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "3354",
+        "page": 15,
+        "index": "0139"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "771c859cdfc9921fd9b612d0d706ce9a091462ffc21623c64bff7df7ad834bb1"
+    },
+    "狐": {
+      "names": [
+        "撇",
+        "弯钩",
+        "撇",
+        "撇",
+        "撇",
+        "竖提",
+        "点",
+        "捺"
+      ],
+      "numericOrder": "35333544",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "35333544",
+        "page": 97,
+        "index": "1196"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "2d4909e9ec61a70bb28b26a68a3af173019ea18405dcb9f92c14ca880238b824"
+    },
+    "葡": {
+      "names": [
+        "横",
+        "竖",
+        "竖",
+        "撇",
+        "横折钩",
+        "横",
+        "竖",
+        "横折钩",
+        "横",
+        "横",
+        "竖",
+        "点"
+      ],
+      "numericOrder": "122351251124",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "122351251124",
+        "page": 316,
+        "index": "2552"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "5838883df87db6dcc9ae612327ccda53816eae419d5bace20b1dfaba94451ad9"
+    },
+    "萄": {
+      "names": [
+        "横",
+        "竖",
+        "竖",
+        "撇",
+        "横折钩",
+        "撇",
+        "横",
+        "横",
+        "竖",
+        "竖折",
+        "竖"
+      ],
+      "numericOrder": "12235311252",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "12235311252",
+        "page": 255,
+        "index": "2208"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "9ecb5582b535f3296220cfbffe91f772eaa7d7eb9667648d9e2dfb2fb724bbc0"
+    },
+    "照": {
+      "names": [
+        "竖",
+        "横折",
+        "横",
+        "横",
+        "横折钩",
+        "撇",
+        "竖",
+        "横折",
+        "横",
+        "点",
+        "点",
+        "点",
+        "点"
+      ],
+      "numericOrder": "2511532514444",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "2511532514444",
+        "page": 382,
+        "index": "2911"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "e71eedb5892ecf54b9022b55494f90e2a8365746c9578edc224c3bf32d6733d8"
+    },
+    "架": {
+      "names": [
+        "横折钩",
+        "撇",
+        "竖",
+        "横折",
+        "横",
+        "横",
+        "竖",
+        "撇",
+        "捺"
+      ],
+      "numericOrder": "532511234",
+      "parts": [
+        {
+          "id": "candidate-glyph-52a0",
+          "indices": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "id": "gf0014-246",
+          "indices": [
+            5,
+            6,
+            7,
+            8
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "532511234",
+        "page": 180,
+        "index": "1743"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "1a09de59fbabca1462c53876a7ec424e695a56205e5948c620d0ae840aa9e54c"
+    },
+    "甜": {
+      "names": [
+        "撇",
+        "横",
+        "竖",
+        "竖",
+        "横折",
+        "横",
+        "横",
+        "竖",
+        "竖",
+        "横",
+        "横"
+      ],
+      "numericOrder": "31225112211",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "31225112211",
+        "page": 275,
+        "index": "2311"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "9822843e9a2d4d274f66e6f4b7afdfecabc9204d6c541c2384382af35464ef82"
+    },
+    "准": {
+      "names": [
+        "点",
+        "提",
+        "撇",
+        "竖",
+        "点",
+        "横",
+        "横",
+        "横",
+        "竖",
+        "横"
+      ],
+      "numericOrder": "4132411121",
+      "parts": [
+        {
+          "id": "gf0014-214",
+          "indices": [
+            0,
+            1
+          ]
+        },
+        {
+          "id": "gf0014-508",
+          "indices": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "4132411121",
+        "page": 225,
+        "index": "2024"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "c99620dc37e39d496c11dda75027c1bb6b3d5ce433a849b4b46a2c6d8950817f"
+    },
+    "摘": {
+      "names": [
+        "横",
+        "竖钩",
+        "提",
+        "点",
+        "横",
+        "点",
+        "撇",
+        "竖",
+        "横折钩",
+        "横",
+        "竖",
+        "竖",
+        "横折",
+        "横"
+      ],
+      "numericOrder": "12141432512251",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "12141432512251",
+        "page": 415,
+        "index": "3062"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "16392c414c29730322ecb98452514ccb5ab4a01339cf0e48977db4cd00e8d779"
+    },
+    "够": {
+      "names": [
+        "撇",
+        "横折钩",
+        "竖",
+        "横折",
+        "横",
+        "撇",
+        "横撇",
+        "点",
+        "撇",
+        "横撇",
+        "点"
+      ],
+      "numericOrder": "35251354354",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "35251354354",
+        "page": 283,
+        "index": "2362"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "224f9fe039fb1f2fdb2337dc9691d1e2b5dc783ecc84d10ee6f1e331b81a7aff"
+    },
+    "垂": {
+      "names": [
+        "撇",
+        "横",
+        "竖",
+        "横",
+        "竖",
+        "竖",
+        "横",
+        "横"
+      ],
+      "numericOrder": "31212211",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "31212211",
+        "page": 88,
+        "index": "1125"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "bfb3e4e09a78a6af48f8b7a1eab74bd1ce291bc73b69325b0569618216d26495"
+    },
+    "丧": {
+      "names": [
+        "横",
+        "竖",
+        "点",
+        "撇",
+        "横",
+        "竖提",
+        "撇",
+        "捺"
+      ],
+      "numericOrder": "12431534",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "12431534",
+        "page": 75,
+        "index": "1034"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "04c12d0a77acaf9479b20c6655db1a010f64aeeba95b943c0a5431e917e5906b"
+    },
+    "励": {
+      "names": [
+        "横",
+        "撇",
+        "横",
+        "横折钩",
+        "撇",
+        "横折钩",
+        "撇"
+      ],
+      "numericOrder": "1315353",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "1315353",
+        "page": 46,
+        "index": "0702"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "3ebb06b7782c5832f6354db47f96db8b8bd153a852e85ce9c70ac02e4eabe665"
+    },
+    "晨": {
+      "names": [
+        "竖",
+        "横折",
+        "横",
+        "横",
+        "横",
+        "撇",
+        "横",
+        "横",
+        "竖提",
+        "撇",
+        "捺"
+      ],
+      "numericOrder": "25111311534",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "25111311534",
+        "page": 264,
+        "index": "2260"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "6d0e297a46d1cdfbfd69d46b3633f40b95c54d2da3cb310cfedc49de200db6b8"
+    },
+    "断": {
+      "names": [
+        "点",
+        "撇",
+        "横",
+        "竖",
+        "撇",
+        "点",
+        "竖折",
+        "撇",
+        "撇",
+        "横",
+        "竖"
+      ],
+      "numericOrder": "43123453312",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "43123453312",
+        "page": 290,
+        "index": "2405"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "11f06e79e4e1ad02ee5b01028a4e40dc1e6ebc702478d0756950d19339f5da9e"
+    },
+    "武": {
+      "names": [
+        "横",
+        "横",
+        "竖",
+        "横",
+        "竖",
+        "提",
+        "斜钩",
+        "点"
+      ],
+      "numericOrder": "11212154",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "11212154",
+        "page": 63,
+        "index": "0946"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "61a53c78ae771bfcb5070745b5ba661293520f7081c425ec3797f5e83f09a2a7"
+    },
+    "章": {
+      "names": [
+        "点",
+        "横",
+        "点",
+        "撇",
+        "横",
+        "竖",
+        "横折",
+        "横",
+        "横",
+        "横",
+        "竖"
+      ],
+      "numericOrder": "41431251112",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "41431251112",
+        "page": 287,
+        "index": "2389"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "70eec9d3c120925196792fdff95aa6c59062c8b7ae1794f4cb2172bffce469a0"
+    },
+    "效": {
+      "names": [
+        "点",
+        "横",
+        "撇",
+        "点",
+        "撇",
+        "点",
+        "撇",
+        "横",
+        "撇",
+        "捺"
+      ],
+      "numericOrder": "4134343134",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "4134343134",
+        "page": 226,
+        "index": "2034"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "bf6293b6fced8e2891d25e9f946387008a31994c978134180ebe7b5033c00432"
+    },
+    "但": {
+      "names": [
+        "撇",
+        "竖",
+        "竖",
+        "横折",
+        "横",
+        "横",
+        "横"
+      ],
+      "numericOrder": "3225111",
+      "parts": [
+        {
+          "id": "gf0014-293",
+          "indices": [
+            0,
+            1
+          ]
+        },
+        {
+          "id": "reviewed-word-65e6",
+          "indices": [
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "3225111",
+        "page": 51,
+        "index": "0774"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "4a8ccfb01019b2f50272b70cc06ee35a2bcc90a24d9bb28933631f61055c9ef7"
+    },
+    "补": {
+      "names": [
+        "点",
+        "横撇",
+        "竖",
+        "撇",
+        "点",
+        "竖",
+        "点"
+      ],
+      "numericOrder": "4523424",
+      "parts": [
+        {
+          "id": "gf0014-442",
+          "indices": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "id": "gf0014-27",
+          "indices": [
+            5,
+            6
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "4523424",
+        "page": 59,
+        "index": "0888"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "83069f4a279e9f85ffcade1243031ad541db66ff3e235338b429d5bf520e62e6"
+    },
+    "拒": {
+      "names": [
+        "横",
+        "竖钩",
+        "提",
+        "横",
+        "横折",
+        "横",
+        "竖折"
+      ],
+      "numericOrder": "1211515",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "1211515",
+        "page": 40,
+        "index": "0620"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "ac1aa30a025349042d0f92bbbcac7c119b474cd4512e5421adb58dcdf0ad8194"
+    },
+    "绝": {
+      "names": [
+        "撇折",
+        "撇折",
+        "提",
+        "撇",
+        "横撇",
+        "横折",
+        "竖",
+        "横",
+        "竖弯钩"
+      ],
+      "numericOrder": "551355215",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "551355215",
+        "page": 182,
+        "index": "1762"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "026fe4c94763410656e5f2318aa3c8edfdf202bb94a9178b9dbbb108f2293fdf"
+    },
+    "信": {
+      "names": [
+        "撇",
+        "竖",
+        "点",
+        "横",
+        "横",
+        "横",
+        "竖",
+        "横折",
+        "横"
+      ],
+      "numericOrder": "324111251",
+      "parts": [
+        {
+          "id": "gf0014-293",
+          "indices": [
+            0,
+            1
+          ]
+        },
+        {
+          "id": "gf0014-426",
+          "indices": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "324111251",
+        "page": 154,
+        "index": "1570"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "aa7d3f952c8c5d545ac1c07e178de05de6f2d40a6efec16f3dbf3cd4be69aae3"
+    },
+    "求": {
+      "names": [
+        "横",
+        "竖钩",
+        "点",
+        "提",
+        "撇",
+        "捺",
+        "点"
+      ],
+      "numericOrder": "1241344",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "1241344",
+        "page": 45,
+        "index": "0690"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "7253c8bc2c6fa6944c5695481bf2c3d8b6a2f8738a78961496a618ac0793736e"
+    },
+    "提": {
+      "names": [
+        "横",
+        "竖钩",
+        "提",
+        "竖",
+        "横折",
+        "横",
+        "横",
+        "横",
+        "竖",
+        "横",
+        "撇",
+        "捺"
+      ],
+      "numericOrder": "121251112134",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "121251112134",
+        "page": 310,
+        "index": "2520"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "7a7eb08ec67e2bb9e98084e1134c5e561da6fae57313446f01e9f9569994e22d"
+    },
+    "驾": {
+      "names": [
+        "横折钩",
+        "撇",
+        "竖",
+        "横折",
+        "横",
+        "横折",
+        "竖折折钩",
+        "横"
+      ],
+      "numericOrder": "53251551",
+      "parts": [
+        {
+          "id": "candidate-glyph-52a0",
+          "indices": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "id": "gf0014-230",
+          "indices": [
+            5,
+            6,
+            7
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "53251551",
+        "page": 115,
+        "index": "1332"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "690559ff0049ac88e205f08cc27ce01f56653f96d3c2d936f653e557fb204e71"
+    },
+    "繁": {
+      "names": [
+        "撇",
+        "横",
+        "竖折",
+        "横折钩",
+        "点",
+        "横",
+        "点",
+        "撇",
+        "横",
+        "撇",
+        "捺",
+        "撇折",
+        "撇折",
+        "点",
+        "竖钩",
+        "撇",
+        "点"
+      ],
+      "numericOrder": "31554143134554234",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "31554143134554234",
+        "page": 531,
+        "index": "3419"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "266051f912c480f53babe07d5b38409f64f14c5e035571cd3e60385059bd0b5d"
+    },
+    "荣": {
+      "names": [
+        "横",
+        "竖",
+        "竖",
+        "点",
+        "横钩",
+        "横",
+        "竖",
+        "撇",
+        "捺"
+      ],
+      "numericOrder": "122451234",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "122451234",
+        "page": 129,
+        "index": "1415"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "750647f9ebe018d158c5aba4d6db9ec92521f0b53654563ada5288a1becc3150"
+    },
+    "强": {
+      "names": [
+        "横折",
+        "横",
+        "竖折折钩",
+        "竖",
+        "横折",
+        "横",
+        "竖",
+        "横折",
+        "横",
+        "竖",
+        "横",
+        "点"
+      ],
+      "numericOrder": "515251251214",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "515251251214",
+        "page": 359,
+        "index": "2802"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "e06f0c223825967a8033f51e7305ff4fe71bb0cb9b59e23eb153c4b9eef54c8c"
+    },
+    "所": {
+      "names": [
+        "撇",
+        "撇",
+        "横折",
+        "横",
+        "撇",
+        "撇",
+        "横",
+        "竖"
+      ],
+      "numericOrder": "33513312",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "33513312",
+        "page": 93,
+        "index": "1164"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "a5242bbcb48b32d63294b172d66dcdf11880e93a8cf60598d4105b6aaeb67c02"
+    },
+    "侨": {
+      "names": [
+        "撇",
+        "竖",
+        "撇",
+        "横",
+        "撇",
+        "捺",
+        "撇",
+        "竖"
+      ],
+      "numericOrder": "32313432",
+      "parts": [
+        {
+          "id": "gf0014-293",
+          "indices": [
+            0,
+            1
+          ]
+        },
+        {
+          "id": "candidate-glyph-4e54",
+          "indices": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "32313432",
+        "page": 91,
+        "index": "1149"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "7176bfce50625a8b81691a8d653657e636c2109021d141d17d73159e029ceccb"
+    },
+    "集": {
+      "names": [
+        "撇",
+        "竖",
+        "点",
+        "横",
+        "横",
+        "横",
+        "竖",
+        "横",
+        "横",
+        "竖",
+        "撇",
+        "捺"
+      ],
+      "numericOrder": "324111211234",
+      "parts": [
+        {
+          "id": "gf0014-508",
+          "indices": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        },
+        {
+          "id": "gf0014-246",
+          "indices": [
+            8,
+            9,
+            10,
+            11
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "324111211234",
+        "page": 341,
+        "index": "2694"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "9cc2f1440d9d91dd74e76f64837322f4bf4d98916e3f20c39a1208e304c62347"
+    },
+    "旧": {
+      "names": [
+        "竖",
+        "竖",
+        "横折",
+        "横",
+        "横"
+      ],
+      "numericOrder": "22511",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "22511",
+        "page": 19,
+        "index": "0232"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "ecaa0eb4ff71b904cba0b9baed26bebf8a0c36cf8b1df68e8fc331cfe983718a"
+    },
+    "岸": {
+      "names": [
+        "竖",
+        "竖折",
+        "竖",
+        "横",
+        "撇",
+        "横",
+        "横",
+        "竖"
+      ],
+      "numericOrder": "25213112",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "25213112",
+        "page": 84,
+        "index": "1105"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "c74e2fea4a0277789bea18911723f178b245596d5a99ac69409dcd84ac85ebc8"
+    },
+    "独": {
+      "names": [
+        "撇",
+        "弯钩",
+        "撇",
+        "竖",
+        "横折",
+        "横",
+        "竖",
+        "横",
+        "点"
+      ],
+      "numericOrder": "353251214",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "353251214",
+        "page": 159,
+        "index": "1602"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "b2e4c1f7dca13e39e8e00118db4bec2cc3b35f98fa3f40dccade7ee171bae8c6"
+    },
+    "卖": {
+      "names": [
+        "横",
+        "竖",
+        "横钩",
+        "点",
+        "点",
+        "横",
+        "撇",
+        "点"
+      ],
+      "numericOrder": "12544134",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "12544134",
+        "page": 76,
+        "index": "1042"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "443a50d5b7d9df9b9a2ed6097bc0fbef4dd48cad59a714ea2da219421d269742"
+    },
+    "越": {
+      "names": [
+        "横",
+        "竖",
+        "横",
+        "竖",
+        "横",
+        "撇",
+        "捺",
+        "横",
+        "竖提",
+        "斜钩",
+        "撇",
+        "点"
+      ],
+      "numericOrder": "121213415534",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "121213415534",
+        "page": 310,
+        "index": "2514"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "161caea8bd64438af5cd86312a8747bac94e125c51492bb9f4cbbc868f80c431"
+    },
+    "贴": {
+      "names": [
+        "竖",
+        "横折",
+        "撇",
+        "点",
+        "竖",
+        "横",
+        "竖",
+        "横折",
+        "横"
+      ],
+      "numericOrder": "253421251",
+      "parts": [
+        {
+          "id": "gf0014-15",
+          "indices": [
+            0,
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "id": "candidate-glyph-5360",
+          "indices": [
+            4,
+            5,
+            6,
+            7,
+            8
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "253421251",
+        "page": 148,
+        "index": "1521"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "b52dc19fafd228c74f194b78c1b4ea0ea6632138814c181921f96aca3d8a159c"
+    },
+    "联": {
+      "names": [
+        "横",
+        "竖",
+        "竖",
+        "横",
+        "横",
+        "提",
+        "点",
+        "撇",
+        "横",
+        "横",
+        "撇",
+        "捺"
+      ],
+      "numericOrder": "122111431134",
+      "parts": [
+        {
+          "id": "gf0014-90",
+          "indices": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "id": "candidate-glyph-5173",
+          "indices": [
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "122111431134",
+        "page": 314,
+        "index": "2544"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "14792a85ac450aacec5f87112a0e6d312c9ad2f49ec2ca5843d7da5e530e8497"
+    },
+    "笼": {
+      "names": [
+        "撇",
+        "横",
+        "点",
+        "撇",
+        "横",
+        "点",
+        "横",
+        "撇",
+        "竖弯钩",
+        "撇",
+        "点"
+      ],
+      "numericOrder": "31431413534",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "31431413534",
+        "page": 276,
+        "index": "2318"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "84dd3327975730089a9cbce533648e6e21b9330b539740b273f3d29a40850378"
+    },
+    "艘": {
+      "names": [
+        "撇",
+        "撇",
+        "横折钩",
+        "点",
+        "横",
+        "点",
+        "撇",
+        "竖",
+        "横",
+        "横折",
+        "横",
+        "横",
+        "竖",
+        "横撇",
+        "捺"
+      ],
+      "numericOrder": "335414321511254",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "335414321511254",
+        "page": 471,
+        "index": "3273"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "60e556e5cbe181a4a39f9b7a4c4d921673eabc0db2735a89e33ddd51c18fd453"
+    },
+    "载": {
+      "names": [
+        "横",
+        "竖",
+        "横",
+        "横",
+        "撇折",
+        "竖",
+        "提",
+        "斜钩",
+        "撇",
+        "点"
+      ],
+      "numericOrder": "1211521534",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "1211521534",
+        "page": 186,
+        "index": "1787"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "8ba6c23c0cdb4c42aa01ef3de13d6e8a4ab5403cf51001ac3d525af4c3b559cd"
+    },
+    "航": {
+      "names": [
+        "撇",
+        "撇",
+        "横折钩",
+        "点",
+        "横",
+        "点",
+        "点",
+        "横",
+        "撇",
+        "横折弯钩"
+      ],
+      "numericOrder": "3354144135",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "3354144135",
+        "page": 218,
+        "index": "1981"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "415e252aafc93a4a5e4a0c05c91446a23771e794e8b1be6fe5b798f50b039ea0"
+    },
+    "射": {
+      "names": [
+        "撇",
+        "竖",
+        "横折钩",
+        "横",
+        "横",
+        "横",
+        "撇",
+        "横",
+        "竖钩",
+        "点"
+      ],
+      "numericOrder": "3251113124",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "3251113124",
+        "page": 217,
+        "index": "1971"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "7a57162c4b951c54f2d16f51a8a09eb6ea6a15d0fd1a6efc728f746987806e58"
+    },
+    "升": {
+      "names": [
+        "撇",
+        "横",
+        "撇",
+        "竖"
+      ],
+      "numericOrder": "3132",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "3132",
+        "page": 14,
+        "index": "0125"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "57af7d38f63da8cb131323653068963d4a701612ce16d0d504f51329e8d5ba12"
+    },
+    "钟": {
+      "names": [
+        "撇",
+        "横",
+        "横",
+        "横",
+        "竖提",
+        "竖",
+        "横折",
+        "横",
+        "竖"
+      ],
+      "numericOrder": "311152512",
+      "parts": [
+        {
+          "id": "gf0014-182",
+          "indices": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "id": "gf0014-495",
+          "indices": [
+            5,
+            6,
+            7,
+            8
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "311152512",
+        "page": 149,
+        "index": "1528"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "914c3b95bffa17151668e7aec0c54f1c19cab18388dfc6b015352052b104769f"
+    },
+    "另": {
+      "names": [
+        "竖",
+        "横折",
+        "横",
+        "横折钩",
+        "撇"
+      ],
+      "numericOrder": "25153",
+      "parts": [
+        {
+          "id": "gf0014-200",
+          "indices": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "id": "gf0014-208",
+          "indices": [
+            3,
+            4
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "25153",
+        "page": 20,
+        "index": "0256"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "504bc67205f0ef06569b1529d403650fc3e710d78ad715522e50f051aa328e5e"
+    },
+    "宝": {
+      "names": [
+        "点",
+        "点",
+        "横钩",
+        "横",
+        "横",
+        "竖",
+        "横",
+        "点"
+      ],
+      "numericOrder": "44511214",
+      "parts": [
+        {
+          "id": "gf0014-13",
+          "indices": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "id": "gf0014-468",
+          "indices": [
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "44511214",
+        "page": 107,
+        "index": "1274"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "91424fe04ead0dcdbeff539766e6fc0afaaa2994ea287bdb19c2d9919211cf76"
+    },
+    "雄": {
+      "names": [
+        "横",
+        "撇",
+        "撇折",
+        "点",
+        "撇",
+        "竖",
+        "点",
+        "横",
+        "横",
+        "横",
+        "竖",
+        "横"
+      ],
+      "numericOrder": "135432411121",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "135432411121",
+        "page": 323,
+        "index": "2596"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "85e7027e082e097879cd0e97732de95a07983717d03e075bb596117faf631855"
+    },
+    "顺": {
+      "names": [
+        "撇",
+        "竖",
+        "竖",
+        "横",
+        "撇",
+        "竖",
+        "横折",
+        "撇",
+        "点"
+      ],
+      "numericOrder": "322132534",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "322132534",
+        "page": 153,
+        "index": "1559"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "159954041e81896f321d6f0a5358b0e9b52914bda0aaa7e2f46446bd96d705b5"
+    },
+    "充": {
+      "names": [
+        "点",
+        "横",
+        "撇折",
+        "点",
+        "撇",
+        "竖弯钩"
+      ],
+      "numericOrder": "415435",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "415435",
+        "page": 35,
+        "index": "0525"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "6355543ceebe9894cbf8f6e6fc1d87789541507bedc22337a311dbc4ccd56767"
+    },
+    "秘": {
+      "names": [
+        "撇",
+        "横",
+        "竖",
+        "撇",
+        "点",
+        "点",
+        "卧钩",
+        "点",
+        "撇",
+        "点"
+      ],
+      "numericOrder": "3123445434",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "3123445434",
+        "page": 213,
+        "index": "1949"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "a26bc266ccad1dc229a5a4336b3d1c946845416a88bcd3403a7c694fef8ce3ee"
+    },
+    "永": {
+      "names": [
+        "点",
+        "横折钩",
+        "横撇",
+        "撇",
+        "捺"
+      ],
+      "numericOrder": "45534",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "45534",
+        "page": 24,
+        "index": "0324"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "7942f5d417840ce37095ea469c01583d12d6b95abc48c2e884abfea89a84b231"
+    },
+    "歇": {
+      "names": [
+        "竖",
+        "横折",
+        "横",
+        "横",
+        "撇",
+        "横折钩",
+        "撇",
+        "点",
+        "竖折",
+        "撇",
+        "横钩",
+        "撇",
+        "捺"
+      ],
+      "numericOrder": "2511353453534",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "2511353453534",
+        "page": 382,
+        "index": "2908"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "7fdd875cf85e2c02a22c6f66cfa8e21f4d40b8c2cf5e5514b5250b1c266bc627"
+    },
+    "吟": {
+      "names": [
+        "竖",
+        "横折",
+        "横",
+        "撇",
+        "捺",
+        "点",
+        "横撇"
+      ],
+      "numericOrder": "2513445",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "2513445",
+        "page": 49,
+        "index": "0740"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "d964ba5374553b04caeb84a56ab3e54f3013ae9ae8d7edfcaf897469c0f9c8e6"
+    },
+    "慈": {
+      "names": [
+        "点",
+        "撇",
+        "横",
+        "撇折",
+        "撇折",
+        "点",
+        "撇折",
+        "撇折",
+        "点",
+        "点",
+        "卧钩",
+        "点",
+        "点"
+      ],
+      "numericOrder": "4315545544544",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "4315545544544",
+        "page": 401,
+        "index": "3002"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "504e5695cf487dd216172a7026b5e44d571e3aa3d01998eeec7a3a0cc4ca3be0"
+    },
+    "线": {
+      "names": [
+        "撇折",
+        "撇折",
+        "提",
+        "横",
+        "横",
+        "斜钩",
+        "撇",
+        "点"
+      ],
+      "numericOrder": "55111534",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "55111534",
+        "page": 116,
+        "index": "1336"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "11d1923a035a9bd40fcb2e3e9014181f2e4a19933e34ca04523cefe84a71eefa"
+    },
+    "临": {
+      "names": [
+        "竖",
+        "竖",
+        "撇",
+        "横",
+        "点",
+        "竖",
+        "横折",
+        "竖",
+        "横"
+      ],
+      "numericOrder": "223142521",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "223142521",
+        "page": 139,
+        "index": "1471"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "fa0d7a960600c84d84fe7a74665359a8cec2065fa40216537e247bde7ff9f36b"
+    },
+    "缝": {
+      "names": [
+        "撇折",
+        "撇折",
+        "提",
+        "撇",
+        "横撇",
+        "捺",
+        "横",
+        "横",
+        "横",
+        "竖",
+        "点",
+        "横折折撇",
+        "捺"
+      ],
+      "numericOrder": "5513541112454",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "5513541112454",
+        "page": 410,
+        "index": "3045"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "e0d9babd96c8160e61da13210e14309102e535c9396f35290bf1894990e8f363"
+    },
+    "恐": {
+      "names": [
+        "横",
+        "竖",
+        "提",
+        "撇",
+        "横折弯钩",
+        "点",
+        "点",
+        "卧钩",
+        "点",
+        "点"
+      ],
+      "numericOrder": "1213544544",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "1213544544",
+        "page": 189,
+        "index": "1810"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "9353b64865b70ed0317ed5b7792a2e9a26f800abff9bcf5a5a7f7c763a782fe2"
+    },
+    "迟": {
+      "names": [
+        "横折",
+        "横",
+        "撇",
+        "点",
+        "点",
+        "横折折撇",
+        "捺"
+      ],
+      "numericOrder": "5134454",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "5134454",
+        "page": 60,
+        "index": "0906"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "1b0aa99c6f721ffe816371ca77fd4cfa7c51f9a6bac6e93954c89e30f2dc4c1c"
+    },
+    "归": {
+      "names": [
+        "竖",
+        "撇",
+        "横折",
+        "横",
+        "横"
+      ],
+      "numericOrder": "23511",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "23511",
+        "page": 19,
+        "index": "0234"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "61d9b2019705851407816d86c312bc6c8a34ccee7516fbac8bc744239eb907ab"
+    },
+    "寸": {
+      "names": [
+        "横",
+        "竖钩",
+        "点"
+      ],
+      "numericOrder": "124",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "124",
+        "page": 10,
+        "index": "0031"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "99b0c7cbfe307a5242c0b600ad545cf25adbec98af3c53ee811b5cfa95c57815"
+    },
+    "无": {
+      "names": [
+        "横",
+        "横",
+        "撇",
+        "竖弯钩"
+      ],
+      "numericOrder": "1135",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "1135",
+        "page": 12,
+        "index": "0081"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "b9a49116e522a0073c610ac76f46a9a7d424c159493f32aaf47ba6277ae50b30"
+    },
+    "改": {
+      "names": [
+        "横折",
+        "横",
+        "竖提",
+        "撇",
+        "横",
+        "撇",
+        "捺"
+      ],
+      "numericOrder": "5153134",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "5153134",
+        "page": 60,
+        "index": "0908"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "14852b29462308e2decc9588cd2ed83c0921b9229419f95f12e814ff47da4cbb"
+    },
+    "衰": {
+      "names": [
+        "点",
+        "横",
+        "竖",
+        "横折",
+        "横",
+        "横",
+        "撇",
+        "竖提",
+        "撇",
+        "捺"
+      ],
+      "numericOrder": "4125113534",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "4125113534",
+        "page": 224,
+        "index": "2019"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "54bfc69c847c508e0f364662aa86a0dedb32954b4bc882573599b1e0311a6262"
+    },
+    "童": {
+      "names": [
+        "点",
+        "横",
+        "点",
+        "撇",
+        "横",
+        "竖",
+        "横折",
+        "横",
+        "横",
+        "竖",
+        "横",
+        "横"
+      ],
+      "numericOrder": "414312511211",
+      "parts": [
+        {
+          "id": "gf0014-209",
+          "indices": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "id": "gf0014-207",
+          "indices": [
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "414312511211",
+        "page": 349,
+        "index": "2735"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "dfd80399c465cdf3448ccdc69e768079038d0801044e9c730c344415272a5e4a"
+    },
+    "何": {
+      "names": [
+        "撇",
+        "竖",
+        "横",
+        "竖",
+        "横折",
+        "横",
+        "竖钩"
+      ],
+      "numericOrder": "3212512",
+      "parts": [
+        {
+          "id": "gf0014-293",
+          "indices": [
+            0,
+            1
+          ]
+        },
+        {
+          "id": "candidate-glyph-53ef",
+          "indices": [
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "3212512",
+        "page": 51,
+        "index": "0771"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "e72ee69a5eb1007f0b0d674bd85d741f0a55282f94e9a62f7d91e0f7f22667cb"
+    },
+    "冲": {
+      "names": [
+        "点",
+        "提",
+        "竖",
+        "横折",
+        "横",
+        "竖"
+      ],
+      "numericOrder": "412512",
+      "parts": [
+        {
+          "id": "gf0014-214",
+          "indices": [
+            0,
+            1
+          ]
+        },
+        {
+          "id": "gf0014-495",
+          "indices": [
+            2,
+            3,
+            4,
+            5
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "412512",
+        "page": 35,
+        "index": "0511"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "b194ec2a7bd2c16b6cdc961cc9de91819b6d97d25380b397c1c43e0f93e72dd9"
+    },
+    "称": {
+      "names": [
+        "撇",
+        "横",
+        "竖",
+        "撇",
+        "点",
+        "撇",
+        "横钩",
+        "竖钩",
+        "撇",
+        "点"
+      ],
+      "numericOrder": "3123435234",
+      "parts": [
+        {
+          "id": "gf0014-135",
+          "indices": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "id": "candidate-glyph-5c14",
+          "indices": [
+            5,
+            6,
+            7,
+            8,
+            9
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "3123435234",
+        "page": 213,
+        "index": "1948"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "4c340d5b609746773a95e07dd93807651d487507e7d10ec2d67d38cc6b3e48b1"
+    },
+    "官": {
+      "names": [
+        "点",
+        "点",
+        "横钩",
+        "竖",
+        "横折",
+        "横",
+        "横折",
+        "横"
+      ],
+      "numericOrder": "44525151",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "44525151",
+        "page": 108,
+        "index": "1281"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "cb77875542f84e6dfcd5af886f01c071fe0048836f724751f88888271b342ab2"
+    },
+    "重": {
+      "names": [
+        "撇",
+        "横",
+        "竖",
+        "横折",
+        "横",
+        "横",
+        "竖",
+        "横",
+        "横"
+      ],
+      "numericOrder": "312511211",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "312511211",
+        "page": 152,
+        "index": "1552"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "3df06fe1dcf563ed2d284956548853fd143b240af01edeb305b1118a6372f147"
+    },
+    "秤": {
+      "names": [
+        "撇",
+        "横",
+        "竖",
+        "撇",
+        "点",
+        "横",
+        "点",
+        "撇",
+        "横",
+        "竖"
+      ],
+      "numericOrder": "3123414312",
+      "parts": [
+        {
+          "id": "gf0014-135",
+          "indices": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "id": "gf0014-271",
+          "indices": [
+            5,
+            6,
+            7,
+            8,
+            9
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "3123414312",
+        "page": 213,
+        "index": "1943"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "aaf5311b11f24d55c4789fdc5545ac85c869787b145729687425e6fde455b840"
+    },
+    "摇": {
+      "names": [
+        "横",
+        "竖钩",
+        "提",
+        "撇",
+        "点",
+        "点",
+        "撇",
+        "撇",
+        "横",
+        "横",
+        "竖",
+        "竖折",
+        "竖"
+      ],
+      "numericOrder": "1213443311252",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "1213443311252",
+        "page": 367,
+        "index": "2841"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "201c22d72492362da5968f8a4d09a53d45713645012b59c7889c1dbd2437bfea"
+    },
+    "赶": {
+      "names": [
+        "横",
+        "竖",
+        "横",
+        "竖",
+        "横",
+        "撇",
+        "捺",
+        "横",
+        "横",
+        "竖"
+      ],
+      "numericOrder": "1212134112",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "1212134112",
+        "page": 186,
+        "index": "1788"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "b98b3572500ca0590a7b105bf29d4be0a9e0096ed0881273088f81859f26472a"
+    },
+    "沿": {
+      "names": [
+        "点",
+        "点",
+        "提",
+        "撇",
+        "横折弯",
+        "竖",
+        "横折",
+        "横"
+      ],
+      "numericOrder": "44135251",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "44135251",
+        "page": 104,
+        "index": "1250"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "6345f89890d8aac4fc3beb82bafd8dd64ef5ff6ee41e0a36266f324f53550335"
+    },
+    "沉": {
+      "names": [
+        "点",
+        "点",
+        "提",
+        "点",
+        "横钩",
+        "撇",
+        "横折弯钩"
+      ],
+      "numericOrder": "4414535",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "4414535",
+        "page": 57,
+        "index": "0871"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "6d03abe557792fa9c3404f5e15cbfc715929429a44ee6aed8c0c2d288d0f8733"
+    },
+    "赞": {
+      "names": [
+        "撇",
+        "横",
+        "竖",
+        "横",
+        "撇",
+        "竖提",
+        "撇",
+        "横",
+        "竖",
+        "横",
+        "撇",
+        "竖弯钩",
+        "竖",
+        "横折",
+        "撇",
+        "点"
+      ],
+      "numericOrder": "3121353121352534",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "3121353121352534",
+        "page": 503,
+        "index": "3355"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "80eb3b217b8c658e1156f1a7b6cc73acb1d8dadca63f28d2cc340a876002181a"
+    },
+    "镜": {
+      "names": [
+        "撇",
+        "横",
+        "横",
+        "横",
+        "竖提",
+        "点",
+        "横",
+        "点",
+        "撇",
+        "横",
+        "竖",
+        "横折",
+        "横",
+        "横",
+        "撇",
+        "竖弯钩"
+      ],
+      "numericOrder": "3111541431251135",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "3111541431251135",
+        "page": 503,
+        "index": "3354"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "3b6877ef97e2a29088f90a149ad34cdec9efc9aa1940dc1037429062a19de8c8"
+    },
+    "参": {
+      "names": [
+        "撇折",
+        "点",
+        "横",
+        "撇",
+        "捺",
+        "撇",
+        "撇",
+        "撇"
+      ],
+      "numericOrder": "54134333",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "54134333",
+        "page": 116,
+        "index": "1334"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "2b7d295c5b86ca4d186956836f186ae3d5be0b5e6bdf2adf55d2aa0105e21a98"
+    },
+    "任": {
+      "names": [
+        "撇",
+        "竖",
+        "撇",
+        "横",
+        "竖",
+        "横"
+      ],
+      "numericOrder": "323121",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "323121",
+        "page": 32,
+        "index": "0467"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "0c79977e70519a42c0bfe62906d94dda3c79ce2152b7f2f0d11833ff950bf15b"
+    },
+    "而": {
+      "names": [
+        "横",
+        "撇",
+        "竖",
+        "横折钩",
+        "竖",
+        "竖"
+      ],
+      "numericOrder": "132522",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "132522",
+        "page": 28,
+        "index": "0392"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "092392d46272633ead47ec50a38495b59e8b77609529bb41411f0865f1af5dd0"
+    },
+    "唯": {
+      "names": [
+        "竖",
+        "横折",
+        "横",
+        "撇",
+        "竖",
+        "点",
+        "横",
+        "横",
+        "横",
+        "竖",
+        "横"
+      ],
+      "numericOrder": "25132411121",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "25132411121",
+        "page": 269,
+        "index": "2288"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "16b276e6fb44002276aace72a43a14be4aa4e1a0a14068d755e7b1865d52693a"
+    },
+    "设": {
+      "names": [
+        "点",
+        "横折提",
+        "撇",
+        "横折弯",
+        "横撇",
+        "捺"
+      ],
+      "numericOrder": "453554",
+      "parts": [
+        {
+          "id": "gf0014-427",
+          "indices": [
+            0,
+            1
+          ]
+        },
+        {
+          "id": "gf0014-336",
+          "indices": [
+            2,
+            3,
+            4,
+            5
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "453554",
+        "page": 37,
+        "index": "0560"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "a83546d1eb22b256451198eac19c60521984c617ccac6d9ed123cfba945351b3"
+    },
+    "计": {
+      "names": [
+        "点",
+        "横折提",
+        "横",
+        "竖"
+      ],
+      "numericOrder": "4512",
+      "parts": [
+        {
+          "id": "gf0014-427",
+          "indices": [
+            0,
+            1
+          ]
+        },
+        {
+          "id": "gf0014-319",
+          "indices": [
+            2,
+            3
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "4512",
+        "page": 16,
+        "index": "0168"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "50c7ac4b3dd0b73f327e83b0dd71d735e63bc59deeda4d08737b488e560870d4"
+    },
+    "受": {
+      "names": [
+        "撇",
+        "点",
+        "点",
+        "撇",
+        "点",
+        "横钩",
+        "横撇",
+        "捺"
+      ],
+      "numericOrder": "34434554",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "34434554",
+        "page": 94,
+        "index": "1174"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "64ab6363cd9d9801954d0be005b30c97cc9f576ec93e7536d471acfe2645bf2f"
+    },
+    "扩": {
+      "names": [
+        "横",
+        "竖钩",
+        "提",
+        "点",
+        "横",
+        "撇"
+      ],
+      "numericOrder": "121413",
+      "parts": [
+        {
+          "id": "gf0014-334",
+          "indices": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "id": "gf0014-128",
+          "indices": [
+            3,
+            4,
+            5
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "121413",
+        "page": 26,
+        "index": "0364"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "7e8813c2b8f62684957a67188d2f75e265e53392305e1be20a5d208f4a6decd7"
+    },
+    "怀": {
+      "names": [
+        "点",
+        "点",
+        "竖",
+        "横",
+        "撇",
+        "竖",
+        "点"
+      ],
+      "numericOrder": "4421324",
+      "parts": [
+        {
+          "id": "gf0014-408",
+          "indices": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "id": "gf0014-29",
+          "indices": [
+            3,
+            4,
+            5,
+            6
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "4421324",
+        "page": 58,
+        "index": "0873"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "93c8a903198b6e2ab380e03b47b6f3b9ea937fae3957924fe83980127cc865cd"
+    },
+    "精": {
+      "names": [
+        "点",
+        "撇",
+        "横",
+        "竖",
+        "撇",
+        "点",
+        "横",
+        "横",
+        "竖",
+        "横",
+        "竖",
+        "横折钩",
+        "横",
+        "横"
+      ],
+      "numericOrder": "43123411212511",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "43123411212511",
+        "page": 438,
+        "index": "3153"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "aa7a6066c5c5f1abe97021aea40bb2ec42f3aee46ac92d7e6c076864568b827d"
+    },
+    "特": {
+      "names": [
+        "撇",
+        "横",
+        "竖",
+        "提",
+        "横",
+        "竖",
+        "横",
+        "横",
+        "竖钩",
+        "点"
+      ],
+      "numericOrder": "3121121124",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "3121121124",
+        "page": 212,
+        "index": "1938"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "ab10367312066c573080f3fcce8a37aad2600b70ff8cd289b9e0d747a75f8191"
+    },
+    "赢": {
+      "names": [
+        "点",
+        "横",
+        "竖折",
+        "竖",
+        "横折",
+        "横",
+        "撇",
+        "横折钩",
+        "横",
+        "横",
+        "竖",
+        "横折",
+        "撇",
+        "点",
+        "撇",
+        "横折弯钩",
+        "点"
+      ],
+      "numericOrder": "41525135112534354",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "41525135112534354",
+        "page": 537,
+        "index": "3427"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "be6226eaadc3615b1979741da940961d2a9981f3ada815a34c6fb3aaaa2c275d"
+    },
+    "止": {
+      "names": [
+        "竖",
+        "横",
+        "竖",
+        "横"
+      ],
+      "numericOrder": "2121",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "2121",
+        "page": 13,
+        "index": "0109"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "90383c3163c06d17d2ffa5a90e75f49e6c8629570aef156666cd964f1c2f76ed"
+    },
+    "典": {
+      "names": [
+        "竖",
+        "横折",
+        "横",
+        "竖",
+        "竖",
+        "横",
+        "撇",
+        "点"
+      ],
+      "numericOrder": "25122134",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "25122134",
+        "page": 82,
+        "index": "1092"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "04bc64c31259074f4819a7245131b09a4915cd627e902a4d1346cf3d22a6813a"
+    },
+    "珍": {
+      "names": [
+        "横",
+        "横",
+        "竖",
+        "提",
+        "撇",
+        "捺",
+        "撇",
+        "撇",
+        "撇"
+      ],
+      "numericOrder": "112134333",
+      "parts": [
+        {
+          "id": "gf0014-469",
+          "indices": [
+            0,
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "id": "gf0014-292",
+          "indices": [
+            4,
+            5
+          ]
+        },
+        {
+          "id": "gf0014-307",
+          "indices": [
+            6,
+            7,
+            8
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "112134333",
+        "page": 120,
+        "index": "1358"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "b04d292521878384052ea66771f4666f59485ebb1aeb07cb857739719efb9036"
+    },
+    "穷": {
+      "names": [
+        "点",
+        "点",
+        "横钩",
+        "撇",
+        "点",
+        "横折钩",
+        "撇"
+      ],
+      "numericOrder": "4453453",
+      "parts": [
+        {
+          "id": "gf0014-414",
+          "indices": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "id": "gf0014-208",
+          "indices": [
+            5,
+            6
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "4453453",
+        "page": 58,
+        "index": "0882"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "d2b11d59faa428993adc26cdfd42cb9c47222b275f5685acaa424181ec9f5a64"
+    },
+    "留": {
+      "names": [
+        "撇",
+        "竖提",
+        "点",
+        "横折钩",
+        "撇",
+        "竖",
+        "横折",
+        "横",
+        "竖",
+        "横"
+      ],
+      "numericOrder": "3545325121",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "3545325121",
+        "page": 223,
+        "index": "2009"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "bea14a3bba1153607e77d3a93c85575bb9bae1606594bcb762060bee15ba77ea"
+    },
+    "暗": {
+      "names": [
+        "竖",
+        "横折",
+        "横",
+        "横",
+        "点",
+        "横",
+        "点",
+        "撇",
+        "横",
+        "竖",
+        "横折",
+        "横",
+        "横"
+      ],
+      "numericOrder": "2511414312511",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "2511414312511",
+        "page": 382,
+        "index": "2909"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "eb4e14a82e21e8ae349c4784510d48664f603320cbc3192e4e9acdbf41aca6d2"
+    },
+    "适": {
+      "names": [
+        "撇",
+        "横",
+        "竖",
+        "竖",
+        "横折",
+        "横",
+        "点",
+        "横折折撇",
+        "捺"
+      ],
+      "numericOrder": "312251454",
+      "parts": [
+        {
+          "id": "gf0014-513",
+          "indices": [
+            6,
+            7,
+            8
+          ]
+        },
+        {
+          "id": "gf0014-312",
+          "indices": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "312251454",
+        "page": 151,
+        "index": "1546"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "6aa32b4bb18523e0685f72deb620766bc1634e37e811f8b80dfa00f542cf9235"
+    },
+    "此": {
+      "names": [
+        "竖",
+        "横",
+        "竖",
+        "提",
+        "撇",
+        "竖弯钩"
+      ],
+      "numericOrder": "212135",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "212135",
+        "page": 29,
+        "index": "0411"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "20458081d893b5b180cc92b45a18412bea5a0f2a8a2a401a93b4371a939f886e"
+    },
+    "误": {
+      "names": [
+        "点",
+        "横折提",
+        "竖",
+        "横折",
+        "横",
+        "横",
+        "横",
+        "撇",
+        "捺"
+      ],
+      "numericOrder": "452511134",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "452511134",
+        "page": 176,
+        "index": "1714"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "01c1d4bd5df4d5ea1bbf97126fc5e3264222ca8adda7ecb73e1b7b0990951c88"
+    },
+    "性": {
+      "names": [
+        "点",
+        "点",
+        "竖",
+        "撇",
+        "横",
+        "横",
+        "竖",
+        "横"
+      ],
+      "numericOrder": "44231121",
+      "parts": [
+        {
+          "id": "gf0014-408",
+          "indices": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "id": "gf0014-316",
+          "indices": [
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      ],
+      "kind": "composite",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "44231121",
+        "page": 106,
+        "index": "1268"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；已逐笔核对部件子集。",
+      "geometrySha256": "1f9d1980ed68382924861fe9df709747c050d7087bc6c9b6e20934fc37d527a3"
+    },
+    "纲": {
+      "names": [
+        "撇折",
+        "撇折",
+        "提",
+        "竖",
+        "横折钩",
+        "撇",
+        "点"
+      ],
+      "numericOrder": "5512534",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "5512534",
+        "page": 62,
+        "index": "0933"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "be3b2dcd5b9cd1862c721c001f039d2cdf3644d0775d21a07f034b85e32c4f51"
+    },
+    "部": {
+      "names": [
+        "点",
+        "横",
+        "点",
+        "撇",
+        "横",
+        "竖",
+        "横折",
+        "横",
+        "横撇弯钩",
+        "竖"
+      ],
+      "numericOrder": "4143125152",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "4143125152",
+        "page": 227,
+        "index": "2044"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "e58f21439433de149f70235b4f296cfddd215cf20d87ccb926a4ebdc21558f7f"
+    },
+    "译": {
+      "names": [
+        "点",
+        "横折提",
+        "横撇",
+        "捺",
+        "横",
+        "横",
+        "竖"
+      ],
+      "numericOrder": "4554112",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "4554112",
+        "page": 59,
+        "index": "0898"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "862b9d3bbbbb064bd10559a6dbfef5b36e0538c54af73c03b7d2639c7cb12f6c"
+    },
+    "广": {
+      "names": [
+        "点",
+        "横",
+        "撇"
+      ],
+      "numericOrder": "413",
+      "parts": [],
+      "kind": "excluded",
+      "aliases": {},
+      "officialOrder": {
+        "numericOrder": "413",
+        "page": 11,
+        "index": "0053"
+      },
+      "review": "第五册新增字。笔画数和五类笔顺与 GF0023 核对；本次仅用于笔画练习。",
+      "geometrySha256": "a6917aa9763837d5bba76924418f1cd015bf85c3bc6363d7f429071b0dd89c53"
     }
   },
   "components": {
@@ -24390,7 +28595,7 @@
   },
   "provenance": {
     "reviewed": "2026-11-09",
-    "scope": "498 current curriculum/default characters; 325 reviewed component puzzles",
+    "scope": "641 current curriculum/default characters; 363 reviewed component puzzles",
     "dictionary": {
       "commit": "bddc96d41bef78427ed0e034e9f7e31d71fd1b92",
       "license": "LGPL-3.0-or-later",

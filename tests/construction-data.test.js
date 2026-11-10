@@ -9,8 +9,18 @@ describe('reviewed character forms',()=>{
     // The official five-way indexing groups 提 with 横, 竖钩 with 竖;
     // 弯钩 may project to 竖 or 折 depending on the actual stroke form.
     const categories=name=>['横','提'].includes(name)?'1':['竖','竖钩'].includes(name)?'2':name==='撇'?'3':['点','捺'].includes(name)?'4':name==='弯钩'?'25':'5';
-    expect(Object.keys(FORM_CATALOG.characters)).toHaveLength(498);
-    for(const ch of new Set(all.map(q=>q.character))){const record=FORM_CATALOG.characters[ch];const paths=JSON.parse(fs.readFileSync(new URL(`../public/strokes/${ch}.json`,import.meta.url)));expect(record.names.length,ch).toBe(paths.strokes.length);expect(record.names.every((name,i)=>categories(name).includes(record.numericOrder[i])),ch).toBe(true);expect(record.numericOrder,ch).toBe(record.officialOrder.numericOrder);expect(record.names.every(n=>STROKE_NAMES.includes(n)),ch).toBe(true);}
+    const characters = new Set(all.map(q=>q.character));
+    expect(Object.keys(FORM_CATALOG.characters)).toHaveLength(characters.size);
+    for(const ch of characters){const record=FORM_CATALOG.characters[ch];const paths=JSON.parse(fs.readFileSync(new URL(`../public/strokes/${ch}.json`,import.meta.url)));expect(record.names.length,ch).toBe(paths.strokes.length);expect(record.names.every((name,i)=>categories(name).includes(record.numericOrder[i])),ch).toBe(true);expect(record.numericOrder,ch).toBe(record.officialOrder.numericOrder);expect(record.names.every(n=>STROKE_NAMES.includes(n)),ch).toBe(true);}
+  });
+  it('offers reviewed puzzles and stroke practice for every fifth-book lesson',()=>{
+    const courses = all.filter(q=>q.book===5&&q.textbook==='zhongwen-primary-2023');
+    for (const lesson of new Set(courses.map(q=>q.lesson))) {
+      const pool = getConstructionPool({source:'zhongwen',stage:'5',lesson},all,1);
+      expect(pool.characters.map(card=>card.character)).toEqual(courses.filter(q=>q.lesson===lesson).map(q=>q.character));
+      expect(pool.puzzles.length).toBeGreaterThanOrEqual(2);
+      expect(pool.unsupported).toEqual([]);
+    }
   });
   it('protects independent forms and preserves complete disjoint component partitions',()=>{
     for(const ch of ['我','中','木','人','本','果','天','上','里'])expect(FORM_CATALOG.characters[ch].parts,ch).toEqual([]);

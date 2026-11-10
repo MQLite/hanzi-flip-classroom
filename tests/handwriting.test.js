@@ -51,7 +51,8 @@ describe('trace matching and reference scores',()=>{
   it('accepts every current canonical stroke, including dots, hooks and multibend strokes',()=>{
     const catalog=JSON.parse(fs.readFileSync(new URL('../src/data/character-forms.json',import.meta.url)));let count=0;
     for(const ch of Object.keys(catalog.characters)){const data=JSON.parse(fs.readFileSync(new URL(`../public/strokes/${ch}.json`,import.meta.url)));data.medians.forEach((median,index)=>{const result=evaluateHandwritingStroke(median,median);expect(result.accepted,`${ch} ${index+1}`).toBe(true);expect(result.score,`${ch} ${index+1}`).toBe(100);count++;});}
-    expect(count).toBe(3795);
+    const expected = Object.values(catalog.characters).reduce((total, record) => total + record.names.length, 0);
+    expect(count).toBe(expected);
   });
 });
 describe('independent handwriting sessions',()=>{

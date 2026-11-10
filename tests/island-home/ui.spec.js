@@ -25,9 +25,13 @@ test('independent challenge launches the selected course and deep links still op
  await page.goto('/?mode=strokes');await expect(page.locator('.writing-grid')).toBeVisible();await expect(page.locator('#island-map')).toBeHidden();
  await page.goto('/?mode=flip');await expect(page.locator('#reveal')).toBeVisible();await expect(page.locator('#island-map')).toBeHidden();
 });
-test('home offers scenario-only books and adapts personal grade and empty content',async({page})=>{
- await page.goto('/');await page.getByLabel('题库来源').selectOption('zhongwen');await page.getByLabel('选择册数',{exact:true}).selectOption('5');await expect(page.getByLabel('选择课次')).toHaveValue('9');
- await expect(page.locator('.island-card[data-mode="explore"]')).toBeEnabled();await page.getByRole('button',{name:'按顺序闯关',exact:true}).click();await expect(page.locator('#exploration-catalog')).toContainText('旧屋里的两封信');
+test('home offers fifth-book lessons and adapts personal grade and empty content',async({page})=>{
+ await page.goto('/');await page.getByLabel('题库来源').selectOption('zhongwen');await page.getByLabel('选择册数',{exact:true}).selectOption('5');await expect(page.getByLabel('选择课次')).toHaveValue('1');
+ await expect(page.getByLabel('选择课次').locator('option')).toHaveCount(12);
+ await page.getByLabel('选择课次').selectOption('9');
+ await expect(page.locator('.island-card[data-mode="flip"]')).toBeEnabled();
+ await expect(page.locator('.island-card[data-mode="sudoku"]')).toBeEnabled();
+ await page.locator('.island-card[data-mode="explore"]').click();await expect(page.locator('#exploration-catalog')).toContainText('旧屋里的两封信');
  await page.locator('#open-island-map').click();await page.getByLabel('题库来源').selectOption('personal');await expect(page.getByLabel('选择年级')).toBeVisible();await expect(page.locator('#stage')).toBeHidden();
  await page.getByLabel('选择年级').selectOption('4');await expect(page.locator('.island-map-course')).toContainText('4年级');
  await page.evaluate(k=>localStorage.setItem(k,JSON.stringify({schemaVersion:1,questions:[]})),key);await page.reload();await expect(page.getByRole('button',{name:'按顺序闯关',exact:true})).toBeDisabled();

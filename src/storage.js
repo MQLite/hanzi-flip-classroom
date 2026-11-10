@@ -76,10 +76,10 @@ export function validateBank(input) {
         errors.push(issue(`${base}.${field}`, 'required', `${field} 必须是非空文本。`))
       }
     }
-    if (!Number.isInteger(question.grade) || question.grade < 1 || question.grade > 4) {
-      errors.push(issue(`${base}.grade`, 'invalid-grade', 'grade 必须是 1 至 4 的整数。'))
-    }
     const hasCurriculum = ['textbook', 'book', 'lesson'].some(key => question[key] !== undefined)
+    if (!Number.isInteger(question.grade) || question.grade < 1 || (!hasCurriculum && question.grade > 4)) {
+      errors.push(issue(`${base}.grade`, 'invalid-grade', hasCurriculum ? '教材级别必须是正整数。' : 'grade 必须是 1 至 4 的整数。'))
+    }
     if (hasCurriculum && (!curriculumCourse(question) || question.grade !== question.book)) {
       errors.push(issue(`${base}.textbook`, 'invalid-curriculum', '教材归属必须对应所选教材版本的实际课次、汉字和级别。'))
     }
@@ -172,7 +172,7 @@ export function previewImport(text) {
   const parsed = parseImport(text)
   if (!parsed.ok) return parsed
   const countsByGrade = { 1: 0, 2: 0, 3: 0, 4: 0 }
-  for (const question of parsed.bank.questions) countsByGrade[question.grade] += 1
+  for (const {grade} of parsed.bank.questions) countsByGrade[grade] = (countsByGrade[grade] ?? 0) + 1
   return {
     ok: true,
     bank: parsed.bank,

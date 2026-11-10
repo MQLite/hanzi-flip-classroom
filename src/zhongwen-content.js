@@ -1,6 +1,8 @@
 // Zhongwen (primary school), third edition, 2023. Manually checked against
-// the two supplied PDF scans. Character examples are teaching aids; vocabulary
+// the supplied PDF scans. Character examples are teaching aids; vocabulary
 // preserves textbook wording, order and provenance. See docs/zhongwen-sources.md.
+import bookFive from './data/zhongwen-book5.json' with {type: 'json'}
+
 export const ZHONGWEN_CONTENT = [
   {
     "book": 1,
@@ -9301,5 +9303,6 @@ export const ZHONGWEN_CONTENT = [
       "生字、词语及读一读均已逐项对照教材原图；原栏目顺序及跨栏重复项保留。",
       "词语栏中国与专有名词栏中国为原书重复，均保留。长江、黄河按专有名词标音。"
     ]
-  }
+  },
+  ...bookFive.courses,
 ]
