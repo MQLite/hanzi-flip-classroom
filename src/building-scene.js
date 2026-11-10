@@ -47,7 +47,7 @@ export function createBuildingScene(host,{onBusyChange=()=>{}}={}){
   function captionText(){
     host.dataset.renderMode=simple||!available?'flat':'3d';host.dataset.motion=motion?.kind??'idle';host.setAttribute('aria-busy',String(Boolean(motion)));
     const moving={drop:'词砖逐块落下，正在就位…',remove:'读对了！对应词砖正在移出…',collapse:'失去支撑的词砖正在向下落…',settle:'失去支撑的装饰正在落下…',restore:'魔法复原！全部词砖正飞回原位…'};
-    const settled={build:'大声读词，让对应词砖一块块搭起来',built:'建筑搭好啦，挑词朗读，每读一词移走一砖',challenge:`词砖站稳了！还剩${state?visibleBuildingWords(state).length:0}块词砖，继续挑选`,collapsed:'部分词砖失去支撑，读出本课句子来拯救',cleared:'词砖已安全拆完，可以读句子复原或进入下一活动',restored:'复原完成！所有词砖重新回来了'};
+    const settled={build:'大声读词，让对应词砖一块块搭起来',built:'建筑搭好啦，挑词朗读，每读一词移走一砖',challenge:`词砖站稳了！还剩${state?visibleBuildingWords(state).length:0}块词砖，继续挑选`,collapsed:'部分词砖失去支撑，读出本课句子来拯救',cleared:'词砖已安全拆完',restored:'复原完成！所有词砖重新回来了'};
     caption.textContent=(host.dataset.renderMode==='3d'?'3D积木 · ':'平面显示 · ')+(motion?moving[motion.kind]:settled[state?.phase]??'准备搭建');
     toggle.textContent=host.dataset.renderMode==='3d'?'平面显示':'立体显示';toggle.disabled=!available;toggle.setAttribute('aria-label',host.dataset.renderMode==='3d'?'切换平面显示':'切换立体显示');
     inspect.disabled=!active||Boolean(motion)||!state||!visibleBuildingWords(state).length;

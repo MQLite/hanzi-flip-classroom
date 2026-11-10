@@ -62,7 +62,6 @@ export function createBuildingView(host,dispatch){
       const challenge=button('builder-challenge',state.phase==='restored'?'再来一次随机挑战':'进入随机读词挑战',true);challenge.disabled=!state.sentence;desk.append(challenge);
       if(!state.sentence)desk.append(el('p','本轮未使用重点句子，先练搭建；选择本课拯救句子后再挑战。','builder-note'));
     }
-    if(['restored','cleared'].includes(state.phase)||(state.phase==='built'&&!state.sentence))desk.append(button('builder-next-activity','下一活动：女巫的毒药',true));
     layout.append(desk);host.append(layout);const actions=el('div',undefined,'builder-bottom-controls');actions.append(button('builder-prepare','重新选择建筑与字词'),button('builder-change-lesson','选择其他课'));host.append(actions);
   }
   // Focus follows the next reading action; a held key must not activate that action too.
@@ -72,7 +71,7 @@ export function createBuildingView(host,dispatch){
     if(b.dataset.builderChoice){dispatch('choose-word',b.dataset.builderChoice);return;}
     if(b.dataset.builderType){dispatch('structure',b.dataset.builderType);return;}
     if(b.dataset.builderCard){if(!sceneView?.isAnimating)dispatch('challenge-card',b.dataset.builderCard);return;}
-    const intent={'builder-start':'start','builder-draw':'draw','builder-confirm':'confirm','builder-challenge':'challenge','builder-restore':'restore','builder-prepare':'prepare','builder-change-lesson':'change-lesson','builder-next-activity':'next-activity'}[b.id];
+    const intent={'builder-start':'start','builder-draw':'draw','builder-confirm':'confirm','builder-challenge':'challenge','builder-restore':'restore','builder-prepare':'prepare','builder-change-lesson':'change-lesson'}[b.id];
     if(sceneView?.isAnimating&&['draw','confirm','challenge','restore'].includes(intent))return;
     if(intent)dispatch(intent);
   },{signal:controller.signal});

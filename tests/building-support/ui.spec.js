@@ -25,13 +25,13 @@ test('a lower support drops only its upper column and keeps those poses through 
   await host.locator('#builder-restore').click();await expect(host).toHaveAttribute('data-phase','restored');await expect(host.locator('#builder-restore')).toHaveCount(0);
   await expect(host.locator('#builder-challenge')).toBeEnabled();await expect(host.locator('[data-word-brick][data-support-state="fallen"]')).toHaveCount(0);
 });
-test('safe top-down removal drops detached trim and ends with optional rescue and next activity',async({page},testInfo)=>{
+test('safe top-down removal drops detached trim and ends with optional rescue',async({page},testInfo)=>{
   const host=await fixture(page),saved=await page.evaluate(()=>localStorage.getItem('hanzi-flip.question-bank'));
   for(const [index,id]of ['w2','w3','w0','w1'].entries()){
     await host.locator(`[data-builder-card="${id}"]`).click();await expect(host).toHaveAttribute('data-phase',index===3?'cleared':'challenge');
     await expect(host.locator(`[data-builder-card="${id}"]`)).toHaveCount(0);await expect(host.locator('[data-word-brick][data-support-state="fallen"]')).toHaveCount(0);
   }
-  await expect(host).toContainText('词砖已安全拆完');await expect(host.locator('#builder-next-activity')).toBeVisible();await expect(host.locator('#builder-restore')).toBeEnabled();
+  await expect(host).toContainText('词砖已安全拆完');await expect(host.locator('#builder-restore')).toBeEnabled();
   await expect(host.locator('[data-word-brick]')).toHaveCount(0);expect(await page.evaluate(()=>localStorage.getItem('hanzi-flip.question-bank'))).toBe(saved);
   await page.screenshot({path:testInfo.outputPath('safe-clear.png'),fullPage:true});await host.locator('#builder-restore').click();await expect(host).toHaveAttribute('data-phase','restored');await expect(host.locator('[data-word-brick]')).toHaveCount(4);
 });

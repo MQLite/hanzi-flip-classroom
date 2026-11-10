@@ -66,7 +66,6 @@ export function createPoisonView(host,dispatch){
         const panel=el('div',undefined,'poison-antidote-panel'),sentence=el('p',state.antidote.sentence);sentence.id='poison-antidote-sentence';
         panel.append(el('small','请读出解药句子'),sentence,button('poison-rescue','读完了，解救成功','primary'),button('poison-antidote-skip','暂不用解药，继续'));copy.append(panel);
       }
-      if(['rescued','skipped'].includes(state.antidoteStatus))copy.append(button('poison-next-activity','下一活动：汉字迷宫','primary'));
       copy.append(button('poison-next','再来一轮','primary'),button('poison-change-lesson','选择其他课','text-button'));magic.append(copy);host.append(magic);
     }
     controls.append(button('poison-prepare','调整本轮词语','text-button'));host.append(controls);
@@ -95,7 +94,7 @@ export function createPoisonView(host,dispatch){
     const b=event.target.closest('button');if(!b||!host.contains(b)||b.disabled)return;
     if(b.dataset.poisonChoice){dispatch('choose-word',b.dataset.poisonChoice);return;}
     if(b.dataset.poisonCard){dispatch('card',b.dataset.poisonCard);return;}
-    const intent={'poison-start':'start','poison-begin-hide':'hide','poison-seal':'seal','poison-read':'read','poison-next':'next-round','poison-prepare':'prepare','poison-antidote':'antidote','poison-rescue':'rescue','poison-change-lesson':'change-lesson','poison-antidote-skip':'skip-antidote','poison-next-activity':'next-activity'}[b.id];
+    const intent={'poison-start':'start','poison-begin-hide':'hide','poison-seal':'seal','poison-read':'read','poison-next':'next-round','poison-prepare':'prepare','poison-antidote':'antidote','poison-rescue':'rescue','poison-change-lesson':'change-lesson','poison-antidote-skip':'skip-antidote'}[b.id];
     if(intent)dispatch(intent);
   },{signal:controller.signal});
   host.addEventListener('change',event=>{if(event.target.id==='poison-count')dispatch('count',Number(event.target.value));if(event.target.id==='poison-antidote-choice')dispatch('antidote-choice',event.target.value);},{signal:controller.signal});

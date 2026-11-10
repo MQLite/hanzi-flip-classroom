@@ -25,5 +25,5 @@ test('reduced motion keeps the complete witch and bottle visible on a phone with
   const witch=page.locator('.poison-witch');await expect(witch).toBeVisible();expect(await witch.evaluate(n=>n.getAnimations({subtree:true}).length)).toBe(0);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   const bottle=await witch.locator('[data-empty="true"]').boundingBox(),art=await witch.boundingBox();expect(bottle.x).toBeGreaterThanOrEqual(art.x);expect(bottle.x+bottle.width).toBeLessThanOrEqual(art.x+art.width);
-  await page.screenshot({path:'docs/codex/poison/witch-empty-bottle-390.png',fullPage:true});await page.locator('#poison-antidote-skip').click();await expect(page.locator('#poison-next-activity')).toBeVisible();
+  await page.screenshot({path:'docs/codex/poison/witch-empty-bottle-390.png',fullPage:true});await page.locator('#poison-antidote-skip').click();await expect(page.locator('#poison-next')).toBeVisible();
 });

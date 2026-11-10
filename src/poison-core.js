@@ -42,4 +42,4 @@ export function readPoisonCard(state,id){
   if(state.phase!=='read'||!state.words.some(w=>w.id===id)||state.results.some(r=>r.cardId===id))return state;
   return revealPoisonCard(selectPoisonCard(state,id));
 }
-export function skipPoisonAntidote(state){return state.phase==='complete'&&['available','unavailable','reading'].includes(state.antidoteStatus)?report({...state,antidoteStatus:'skipped'},'info','本轮不使用解药，大家仍可继续参加下一活动。'):state;}
+export function skipPoisonAntidote(state){return state.phase==='complete'&&['available','unavailable','reading'].includes(state.antidoteStatus)?report({...state,antidoteStatus:'skipped'},'info','本轮跳过解药。'):state;}

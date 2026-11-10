@@ -41,6 +41,6 @@ export function selectMazeCell(state,index){
 export function confirmMazeStep(state){
   if(state.phase!=='play'||state.pendingIndex===null||!neighbors(state.position,state.grid).includes(state.pendingIndex))return state;
   const position=state.pendingIndex,complete=position===state.goal;
-  return freeze({...state,position,pendingIndex:null,steps:state.steps+1,visited:state.visited.includes(position)?state.visited:[...state.visited,position],phase:complete?'complete':'play',feedback:complete?'找到出口啦！本课三项活动完成。':'前进一步！继续观察；遇到死路可以退回来。'});
+  return freeze({...state,position,pendingIndex:null,steps:state.steps+1,visited:state.visited.includes(position)?state.visited:[...state.visited,position],phase:complete?'complete':'play',feedback:complete?'找到出口啦！':'前进一步！继续观察；遇到死路可以退回来。'});
 }
 export function cancelMazeStep(state){return state.phase==='play'&&state.pendingIndex!==null?freeze({...state,pendingIndex:null,feedback:'先留在这里，再观察、重新选方向。'}):state;}

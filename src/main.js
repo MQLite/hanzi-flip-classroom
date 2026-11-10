@@ -88,7 +88,6 @@ function syncPinyinLocation(){
   const local=optionalPinyinModes.has(gameMode),dock=$('#reading-pinyin-dock'),label=$('#pinyin').closest('label'),parent=local?dock:$('.lesson-toolbar');dock.hidden=!local;
   if(label.parentElement!==parent){if(local)parent.append(label);else $('#restart').before(label);}
 }
-$('.lesson-toolbar').insertAdjacentHTML('afterend','<nav id="activity-flow" class="activity-flow" aria-label="本课活动衔接" hidden><span>本课三项活动</span><button id="activity-building">1 · 搭建挑战</button><i>→</i><button id="activity-poison">2 · 女巫毒药</button><i>→</i><button id="activity-maze">3 · 汉字迷宫</button></nav>');
 $('.classroom').insertAdjacentHTML('afterend','<section id="exploration-catalog" aria-label="本课情景探索" hidden></section>');
 $('#scene').insertAdjacentHTML('afterend', '<div id="workshop" hidden></div><div id="sentence-train" hidden></div><div id="sudoku" hidden></div><div id="mole" hidden></div>');
 $('.practice-box').insertAdjacentHTML('beforebegin', '<div id="workshop-collection-panel" hidden><h4>收集到的词语 <span>✦</span></h4><div id="workshop-collection" aria-live="polite"></div></div>');
@@ -166,16 +165,16 @@ function prepareMaze(){
   const pool=getMolePool({...selection,grade,type:'characters'},bank.questions);
   mazePool={...pool,words:pool.words.map(word=>({...word,id:word.id.replace('mole/','maze/')}))};mazeState=null;
 }
-$('#help-dialog').insertAdjacentHTML('beforeend','<p>汉字迷宫：每课变换通路，同课“再走一张”也会换路线。先观察立体墙和岔路，再选上下左右相邻的汉字。学生认读，老师点击“读对了，前进一步”，小人才迈步走一格；读错先重读，死路可以退回来。小人抵达出口后跳跃挥手、飞出彩纸庆祝，结束后可选下一课。可切换平面，减少动态效果时静态显示。汉字来自本课，会重复出现。活动导航按“搭建挑战 → 女巫毒药 → 汉字迷宫”携带当前教材课次；原导航保留各自本页进度。</p>');
+$('#help-dialog').insertAdjacentHTML('beforeend','<p>汉字迷宫：每课变换通路，同课“再走一张”也会换路线。先观察立体墙和岔路，再选上下左右相邻的汉字。学生认读，老师点击“读对了，前进一步”，小人才迈步走一格；读错先重读，死路可以退回来。小人抵达出口后跳跃挥手、飞出彩纸庆祝，结束后可在上方换课。可切换平面，减少动态效果时静态显示。汉字来自本课，会重复出现。</p>');
 function prepareBuilding(){
   if(selection.source!=='personal')selection={...selection,scope:'lesson'};
   const pool=getPoisonPool({...selection,grade},bank.questions);
   buildingPool={...pool,words:pool.words.map(word=>({...word,id:word.id.replace(/^poison\//u,'building/')}))};
   buildingSelectedIds=buildingPool.words.slice(0,12).map(word=>word.id);buildingSentenceId=buildingPool.sentences[0]?.id??'';buildingState=null;
 }
-$('#help-dialog').insertAdjacentHTML('beforeend','<p>汉字建筑师：每课可选房、桥、塔、楼，以及1–16个本课字词；四类建筑各有不同款式，换课变外形。每个词写在对应词砖上，学生朗读后老师确认，词砖逐块落下。搭好后从右侧挑词朗读，老师点卡；安全词会移走对应砖块和词卡，失去支撑的词砖会带动上方部分落下，仍有支撑的部分保留；从上往下安全拆完也能完成本轮。读出本课重点句子，老师确认后全部词砖飞回复原，再继续女巫活动。没有重点句子的课仍可搭建并进入下一活动。</p>');
+$('#help-dialog').insertAdjacentHTML('beforeend','<p>汉字建筑师：每课可选房、桥、塔、楼，以及1–16个本课字词；四类建筑各有不同款式，换课变外形。每个词写在对应词砖上，学生朗读后老师确认，词砖逐块落下。搭好后从右侧挑词朗读，老师点卡；安全词会移走对应砖块和词卡，失去支撑的词砖会带动上方部分落下，仍有支撑的部分保留；从上往下安全拆完也能完成本轮。读出本课重点句子，老师确认后全部词砖飞回复原。没有重点句子的课仍可练习搭建。</p>');
 $('#help-dialog').insertAdjacentHTML('beforeend','<p>女巫解药为可选环节：准备时选择本课重点句子，变身后点击“使用解药”，学生朗读，再由老师点击“读完了，解救成功”。可以跳过解药直接换小女巫，也可以点击“选择其他课”更换教材或课次。</p>');
-$('#help-dialog').insertAdjacentHTML('beforeend','<p>女巫的毒药：选本课2–16张词卡和1–2个毒药，其他同学闭眼，小女巫秘密点选。藏好后睁眼，学生先读，老师点刚读过的词卡，立即给结果。安全卡变灰；读中毒药词时，女巫拿着空药瓶现身坏笑，同时出现烟雾、青蛙变身和卡通音效，结束本轮并询问是否使用解药。可读本课句子解救，也可跳过后进入迷宫。音效可关闭，所有同学仍可继续参加。离开藏毒画面先遮挡秘密选择。</p>');
+$('#help-dialog').insertAdjacentHTML('beforeend','<p>女巫的毒药：选本课2–16张词卡和1–2个毒药，其他同学闭眼，小女巫秘密点选。藏好后睁眼，学生先读，老师点刚读过的词卡，立即给结果。安全卡变灰；读中毒药词时，女巫拿着空药瓶现身坏笑，同时出现烟雾、青蛙变身和卡通音效，结束本轮并询问是否使用解药。可读本课句子解救，也可跳过解药。音效可关闭，所有同学仍可继续参加。离开藏毒画面先遮挡秘密选择。</p>');
 function preparePoison(){
   if(selection.source!=='personal')selection={...selection,scope:'lesson'};
   poisonPool=getPoisonPool({...selection,grade},bank.questions);
@@ -382,8 +381,6 @@ function constructionIntent(intent,value){
 }
 function mazeIntent(intent,value){
   if(gameMode!=='maze')return;
-  if(intent==='next-activity'){goActivity('building');$(selection.source==='personal'?'#grade':'#lesson').focus();notify('请先在上方选择下一课，再开始新一组活动。');return;}
-  if(intent==='previous-activity'){goActivity('poison');return;}
   if(intent==='start'||intent==='restart'){
     if(!mazePool.words.length||(intent==='restart'&&!mayRestart()))return;const look=lessonAppearance(selection,grade);mazeState=createMazeState({words:mazePool.words,layoutKey:look.key,layoutVariant:look.variant,previousGrid:mazeState?.grid});
   }else if(mazeState){const actions={cell:()=>selectMazeCell(mazeState,value),confirm:()=>confirmMazeStep(mazeState),cancel:()=>cancelMazeStep(mazeState)};if(!actions[intent])return;mazeState=actions[intent]();}
@@ -391,7 +388,6 @@ function mazeIntent(intent,value){
 }
 function buildingIntent(intent,value){
   if(gameMode!=='building')return;
-  if(intent==='next-activity'){goActivity('poison');return;}
   if(intent==='choose-word'){
     if(buildingSelectedIds.includes(value))buildingSelectedIds=buildingSelectedIds.filter(id=>id!==value);
     else if(buildingSelectedIds.length<16)buildingSelectedIds=[...buildingSelectedIds,value];
@@ -417,7 +413,6 @@ function concealPoison(){
 }
 function poisonIntent(intent,value){
   if(gameMode!=='poison')return;
-  if(intent==='next-activity'){goActivity('maze');return;}
   if(intent==='choose-word'){
     if(poisonSelectedIds.includes(value))poisonSelectedIds=poisonSelectedIds.filter(id=>id!==value);
     else if(poisonSelectedIds.length<16)poisonSelectedIds=[...poisonSelectedIds,value];
@@ -484,7 +479,6 @@ function syncSimpleControl() {
   $('#simplify').setAttribute('aria-pressed', String(simple));
 }
 function snapshotMode(){return { session, grade, teamNames: [...teamNames], selectedTeam, showPinyin, selection: {...selection}, extensionOpen, workshopState, sudokuState,sudokuPool,sudokuSelectedIds:[...sudokuSelectedIds],moleState,molePool,moleType,poisonState,poisonPool,poisonSelectedIds:[...poisonSelectedIds],poisonCount,poisonAntidoteId,buildingState,buildingPool,buildingSelectedIds:[...buildingSelectedIds],buildingStructure,buildingSentenceId,mazeState,mazePool,constructionPool,puzzleState,strokeState,handwritingState,strokeInputMode };}
-function goActivity(mode){if(mode===gameMode||!mayRestart())return;switchMode(mode,{...selection,scope:'lesson'});}
 function switchMode(mode, linkedSelection, journeyTransfer=false) {
   if (mode === gameMode&&!journeyTransfer) return;
   if(!journeyTransfer)journey.pause();
@@ -497,7 +491,7 @@ function switchMode(mode, linkedSelection, journeyTransfer=false) {
   constructionView.setVisible(false);
   if(!homeMode&&gameHasBeenShown)modeSnapshots[gameMode]=snapshotMode();
   activeScene()?.setActive(false);
-  const carried=linkedSelection&&(journeyTransfer||['building','poison','maze'].includes(mode)),saved=carried?null:modeSnapshots[mode];
+  const carried=linkedSelection&&journeyTransfer,saved=carried?null:modeSnapshots[mode];
   gameMode = mode;
   if(carried)selection={...linkedSelection,scope:'lesson'};
   if (saved) ({ session, grade, teamNames, selectedTeam, showPinyin, selection, extensionOpen, workshopState,sudokuState,sudokuPool,sudokuSelectedIds,moleState,molePool,moleType,poisonState,poisonPool,poisonSelectedIds,poisonCount,poisonAntidoteId,buildingState,buildingPool,buildingSelectedIds,buildingStructure,buildingSentenceId,mazeState,mazePool,constructionPool,puzzleState,strokeState,handwritingState,strokeInputMode } = saved);
@@ -586,7 +580,6 @@ $('#mode-mole').onclick = () => switchMode('mole');
 $('#mode-poison').onclick = () => switchMode('poison');
 $('#mode-building').onclick = () => switchMode('building');
 $('#mode-maze').onclick = () => switchMode('maze');
-for(const mode of ['building','poison','maze'])$('#activity-'+mode).onclick=()=>goActivity(mode);
 
 function renderWorkshop() {
   if (gameMode !== 'workshop') return;
@@ -767,7 +760,6 @@ function render() {
   journey.sync(gameMode,{session,moleState,mazeState,puzzleState,strokeState,handwritingState,strokeInputMode,workshopState,workshopTransition,poisonState,buildingState,sudokuState});
   if(journey.isActive())$('#scope').closest('label').hidden=true;
   syncPinyinLocation();
-  $('#activity-flow').hidden=!['building','poison','maze'].includes(gameMode);for(const mode of ['building','poison','maze'])$('#activity-'+mode).setAttribute('aria-current',mode===gameMode?'step':'false');
   $('#pinyin').closest('label').hidden=gameMode!=='train'&&gameMode!=='mole'&&gameMode!=='poison'&&gameMode!=='building'&&gameMode!=='maze';
   if(isConstruction(gameMode)){
     strokeCleanup?.();strokeCleanup=null;cardStrokeCleanup?.();cardStrokeCleanup=null;cardStrokeKey=null;cardStrokeView=null;$('#card-face').replaceChildren();
