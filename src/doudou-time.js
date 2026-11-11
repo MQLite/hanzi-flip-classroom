@@ -20,6 +20,7 @@ const next = find('time-next');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 let periodIndex = 0, lineIndex = 0, completed = false, awaitingJourney = Boolean(journey.returnUrl);
 let chargeTimer = 0;
+let bubbleAnimation;
 
 function label(element, hanzi, pinyin) {
   element.replaceChildren(ruby(hanzi, pinyin));
@@ -69,12 +70,22 @@ function showDialogue({speaker: role, tokens}) {
     chunks.push(token);
   }
   dialogue.replaceChildren(...chunks);
+  bubbleAnimation?.cancel();
+  if (!reducedMotion.matches) {
+    bubbleAnimation = dialogue.closest('.time-dialogue').animate(
+      [{opacity:.4, transform:'translateY(7px)'}, {opacity:1, transform:'translateY(0)'}],
+      {duration:220, easing:'ease-out'},
+    );
+  }
 }
 
 function render() {
   const period = TIME_SCENES[periodIndex];
   const line = period.lines[lineIndex];
   scene.dataset.period = period.id;
+  const answerIndex = period.lines.findIndex(turn => turn.action === 'answer');
+  if (period.id === 'morning' && lineIndex <= answerIndex) scene.dataset.shot = 'wake';
+  else scene.dataset.shot = line.action === 'food' ? 'food' : 'meal';
   for (const [index, step] of steps.entries()) {
     if (index === periodIndex) step.setAttribute('aria-current', 'step');
     else step.removeAttribute('aria-current');

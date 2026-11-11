@@ -21,6 +21,16 @@ test('read each clock before Doudou answers, then charge and finish the explorat
   const speaker = page.locator('#time-speaker');
   const next = page.locator('#time-next');
   const clock = page.locator('#time-clock');
+  const scene = page.locator('#time-scene');
+  const bubble = scene.locator('.time-dialogue');
+  await expect(scene).toHaveAttribute('data-shot','wake');
+  await expect(scene.locator('#time-xiaoming')).toBeVisible();
+  await expect.poll(()=>scene.locator('.boy-wake').evaluate(img=>img.naturalWidth)).toBeGreaterThan(0);
+  await expect(scene.locator('#time-robot')).toBeVisible();
+  await expect(bubble).toHaveCount(1);
+  await expect(bubble).toBeInViewport({ratio:1});
+  await expect(speaker).toHaveAttribute('aria-label','小明');
+  await page.screenshot({path:testInfo.outputPath('wake.png')});
   const vocab = new Map();
   const periods = [
     {id:'morning', time:'现在八点。', angles:['240deg','0deg'], food:'我吃面条。'},
@@ -37,12 +47,26 @@ test('read each clock before Doudou answers, then charge and finish the explorat
       const pinyin = await line.locator('ruby rt').allTextContents();
       expect(pinyin.length,sentence).toBeGreaterThan(0);
       expect(pinyin.every(Boolean),sentence).toBe(true);
+      if (sentence === '谢谢！我要去吃早饭了。') {
+        await expect(scene).toHaveAttribute('data-shot','meal');
+        await expect(scene.locator('.boy-meal')).toBeVisible();
+      }
+      if (sentence === '我吃面条。') {
+        await expect(scene).toHaveAttribute('data-shot','food');
+        await expect(scene.locator('.boy-noodles')).toBeVisible();
+        await expect.poll(()=>scene.locator('.boy-noodles').evaluate(img=>img.naturalWidth)).toBeGreaterThan(0);
+        await expect(scene.locator('.boy-meal')).toBeHidden();
+        await expect(scene.locator('.boy-wake')).toBeHidden();
+        await page.screenshot({path:testInfo.outputPath('noodles.png')});
+      }
       if (sentence.startsWith('不了')) await expect(line.locator('[data-word=不了] rt')).toHaveText('Bù le,');
       for (const token of await line.locator('[data-word]').all()) {
         vocab.set(await token.getAttribute('data-word'),await token.locator('small[lang=en]').textContent());
       }
       if (sentence.includes('现在几点？')) {
         await expect(speaker).toHaveAttribute('aria-label','小明');
+        const askLeft = (await bubble.boundingBox()).x;
+        await expect(scene).toHaveAttribute('data-speaker','xiaoming');
         await expect(speaker.locator('rt')).toHaveText('Xiǎomíng');
         await expect(clock).toBeVisible();
         await expect(line).not.toHaveAccessibleName(period.time);
@@ -54,6 +78,8 @@ test('read each clock before Doudou answers, then charge and finish the explorat
         await next.click();
         await expect(line).toHaveAccessibleName(period.time);
         await expect(speaker).toHaveAttribute('aria-label','豆豆');
+        await expect(scene).toHaveAttribute('data-speaker','doudou');
+        expect((await bubble.boundingBox()).x).toBeGreaterThan(askLeft);
         continue;
       }
       await next.click();
@@ -86,6 +112,7 @@ test('mobile play fits the clock, shows the charging animation, and can replay',
   const next = page.locator('#time-next');
   const line = page.locator('#time-line');
   for (let turn = 0; turn < 30 && await next.getAttribute('aria-label') !== '给豆豆充电'; turn++) {
+    await expect(page.locator('#time-scene .time-dialogue')).toBeInViewport({ratio:1});
     if (await next.getAttribute('aria-label') === '我说好了') {
       await expect(page.locator('#time-clock')).toBeInViewport({ratio:1});
       await expect(next).toBeInViewport();
@@ -98,6 +125,7 @@ test('mobile play fits the clock, shows the charging animation, and can replay',
   await expect(next).toBeDisabled();
   await expect(page.locator('#time-robot')).toHaveClass(/is-charging/);
   await expect(line).toHaveAccessibleName('爱你！');
+  await expect(page.locator('#time-heart')).toHaveCSS('opacity','1');
   await page.screenshot({path:testInfo.outputPath('mobile-love.png')});
   await page.getByRole('button',{name:'再玩一次',exact:true}).click();
   await expect(line).toHaveAccessibleName('早上好，豆豆！');

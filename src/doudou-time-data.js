@@ -31,19 +31,19 @@ function line(speaker, tokens, action) {
 function makeDialogue(period) {
   const {greeting, reply, time, meal, food} = period;
   const conversation = reply ? [
-    line('you', [greeting, ['豆豆！', 'Dòudou!']]),
+    line('xiaoming', [greeting, ['豆豆！', 'Dòudou!']]),
     line('doudou', [reply]),
-    line('you', question, 'ask'),
+    line('xiaoming', question, 'ask'),
   ] : [
-    line('you', [greeting, ['豆豆！', 'Dòudou!'], ...question], 'ask'),
+    line('xiaoming', [greeting, ['豆豆！', 'Dòudou!'], ...question], 'ask'),
   ];
 
   conversation.push(
     line('doudou', [['现在', 'Xiànzài'], time], 'answer'),
-    line('you', [['谢谢！', 'Xièxie!'], ['我', 'Wǒ'], wantToGo, ['吃', 'chī'], meal, ['了。', 'le.']]),
+    line('xiaoming', [['谢谢！', 'Xièxie!'], ['我', 'Wǒ'], wantToGo, ['吃', 'chī'], meal, ['了。', 'le.']]),
     line('doudou', [['你', 'Nǐ'], meal, ['吃', 'chī'], ['什么？', 'shénme?']]),
-    line('you', [['我', 'Wǒ'], ['吃', 'chī'], food]),
-    line('you', [['你要', 'Nǐ yào'], together, ['吃吗？', 'chī ma?']]),
+    line('xiaoming', [['我', 'Wǒ'], ['吃', 'chī'], food], 'food'),
+    line('xiaoming', [['你要', 'Nǐ yào'], together, ['吃吗？', 'chī ma?']]),
     line('doudou', [decline, ['谢谢！', 'xièxie!'], ['我是', 'Wǒ shì'], robot, ['不吃', 'bù chī'], [meal[0] + '。', meal[1] + '.', meal[2]]]),
   );
 
