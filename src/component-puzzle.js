@@ -139,9 +139,7 @@ export function renderComponentPuzzle(root, {state, pool, onAction, renderGlyph}
     return;
   }
 
-  const header = node('header', undefined, 'puzzle-heading');
-  header.append(node('h3', '这些部件能拼出本课哪个字？'), node('p', '点选部件，再点「合一合」。同一部件可以多选，顺序不限。', 'construction-instruction'));
-  wrapper.append(header);
+  wrapper.append(node('h3', '拼一拼', 'puzzle-heading'));
 
   if (!round.targets.length) {
     const empty = node('div', undefined, 'construction-empty');

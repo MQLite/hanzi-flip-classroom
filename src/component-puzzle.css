@@ -1,7 +1,6 @@
 .component-puzzle{min-width:0;--puzzle-line:#cbd6c5;--puzzle-muted:#586e61}
 .component-puzzle *{box-sizing:border-box}
-.component-puzzle .puzzle-heading h3{font-size:23px;margin:0 0 5px}
-.component-puzzle .puzzle-heading p{margin:0 0 14px;font-size:14px}
+.component-puzzle .puzzle-heading{font-size:23px;margin:0 0 14px}
 .component-puzzle .puzzle-workspace{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);align-items:start;gap:12px}
 .component-puzzle .puzzle-choices,.component-puzzle .puzzle-assembly,.component-puzzle .puzzle-answers{min-width:0;padding:14px;border:1px solid var(--puzzle-line);border-radius:16px;background:#fafbf2}
 .component-puzzle .puzzle-choices{grid-column:1/-1}
@@ -66,7 +65,7 @@
 .component-puzzle .construction-empty{margin-bottom:14px;padding:18px}
 @media(max-width:700px){
   .component-puzzle .puzzle-workspace{grid-template-columns:minmax(0,1fr);gap:10px}
-  .component-puzzle .puzzle-heading h3{font-size:21px}
+  .component-puzzle .puzzle-heading{font-size:21px}
   .component-puzzle .parts-palette{max-height:clamp(148px,36dvh,260px);gap:7px}
   .component-puzzle .puzzle-choices,.component-puzzle .puzzle-assembly,.component-puzzle .puzzle-answers{padding:9px}
   .construction-game .component-puzzle .part-card{min-height:87px;padding:5px 3px}
