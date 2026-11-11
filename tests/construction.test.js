@@ -1,5 +1,6 @@
 import {describe,it,expect} from 'vitest';
-import {createPuzzleState,selectPuzzlePart,removePuzzlePart,checkPuzzle,createStrokeState,placeStroke,undoStroke,nextStrokeCharacter} from '../src/construction-core.js';
+import {createPuzzleState,selectPuzzlePart,removePuzzlePart,checkPuzzle,nextPuzzleRound,createStrokeState,placeStroke,undoStroke,nextStrokeCharacter} from '../src/construction-core.js';
+import {isJourneyStageComplete} from '../src/island-journey-data.js';
 
 const targets=[{character:'明',parts:[{id:'日'},{id:'月'}]},{character:'好',parts:[{id:'女'},{id:'子'}]},{character:'林',parts:[{id:'木'},{id:'木'}]},{character:'呆',parts:[{id:'口'},{id:'木'}]},{character:'杏',parts:[{id:'木'},{id:'口'}]}];
 const choose=(state,...ids)=>ids.reduce(selectPuzzlePart,state);
@@ -8,7 +9,23 @@ const geometry={medians:[[[100,700],[800,700]],[[200,450],[700,450]],[[80,180],[
 describe('discovery component puzzle',()=>{
   it('does not expose an answer before a valid combination',()=>{let s=createPuzzleState(targets);s=choose(s,'日');expect(s.revealed).toEqual([]);s=checkPuzzle(s);expect(s.feedback).toBe('retry');expect(s.revealed).toEqual([]);expect(s.found).toEqual([]);});
   it('matches a multiset, requires repeated parts and deduplicates collection',()=>{let s=createPuzzleState(targets);s=checkPuzzle(choose(s,'木'));expect(s.found).toEqual([]);s=checkPuzzle(choose(createPuzzleState(targets),'木','木'));expect(s.found).toEqual(['林']);s=checkPuzzle(choose(s,'木','木'));expect(s.found).toEqual(['林']);});
-  it('reveals all legitimate lesson answers and supports removing a selection',()=>{let s=choose(createPuzzleState(targets),'木','女','口');s=removePuzzlePart(s,1);s=checkPuzzle(s);expect(s.revealed).toEqual(['呆','杏']);expect(s.found).toEqual(['呆','杏']);expect(s.selected).toEqual([]);});
+  it('reveals all legitimate answers in the current round and supports removing a selection',()=>{let s=choose(createPuzzleState([targets[1],...targets.slice(3)]),'木','女','口');s=removePuzzlePart(s,1);s=checkPuzzle(s);expect(s.revealed).toEqual(['呆','杏']);expect(s.found).toEqual(['呆','杏']);expect(s.selected).toEqual([]);});
+  it('keeps later matches hidden and only completes the island after the final round', () => {
+    let state = createPuzzleState(targets);
+    expect(nextPuzzleRound(state)).toBe(state);
+    for (const parts of [['日','月'], ['女','子'], ['木','木'], ['口','木']]) {
+      state = checkPuzzle(choose(state,...parts));
+    }
+    expect(state.revealed).toEqual(['呆']);
+    expect(isJourneyStageComplete('puzzle',{puzzleState:state})).toBe(false);
+    state = nextPuzzleRound(state);
+    expect(state).toMatchObject({roundIndex:1,found:['明','好','林','呆'],revealed:[]});
+    expect(selectPuzzlePart(state,'日')).toBe(state);
+    state = checkPuzzle(choose(state,'木','口'));
+    expect(state.revealed).toEqual(['杏']);
+    expect(nextPuzzleRound(state)).toBe(state);
+    expect(isJourneyStageComplete('puzzle',{puzzleState:state})).toBe(true);
+  });
   it('ignores unknown parts and excessive selection without mutation',()=>{const s=createPuzzleState(targets);expect(selectPuzzlePart(s,'fake')).toBe(s);const filled=choose(s,'木','木','木','木');expect(selectPuzzlePart(filled,'木')).toBe(filled);expect(s.selected).toEqual([]);});
 });
 describe('canonical stroke placement',()=>{

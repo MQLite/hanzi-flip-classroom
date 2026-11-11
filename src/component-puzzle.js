@@ -1,4 +1,5 @@
 import {FORM_CATALOG} from './construction-data.js';
+import {getPuzzleRound} from './construction-core.js';
 
 function node(tag, text, className) {
   const element = document.createElement(tag);
@@ -100,25 +101,33 @@ function pickPart(root, source, palette, index, id, previousCount, onAction) {
 /** Render the discovery puzzle while leaving state transitions and glyph lifecycle to its owner. */
 export function renderComponentPuzzle(root, {state, pool, onAction, renderGlyph}) {
   const wrapper = node('div', undefined, 'component-puzzle');
+  const round = getPuzzleRound(state);
   const header = node('header', undefined, 'puzzle-heading');
   header.append(node('h3', '这些部件能拼出本课哪个字？'), node('p', '点选部件，再点「合一合」。同一部件可以多选，顺序不限。', 'construction-instruction'));
   wrapper.append(header);
 
-  if (!pool.puzzles.length) {
+  if (!round.targets.length) {
     const empty = node('div', undefined, 'construction-empty');
     empty.append(node('h3', '本课先练笔画'), node('p', '本课没有可出题的核定分拆。请切换“笔画很忙”，认识整个汉字。'));
-    wrapper.append(empty);
+    wrapper.append(empty, coverage(pool), references());
+    root.append(wrapper);
+    return;
   }
 
   const row = node('div', undefined, 'puzzle-workspace');
   const choices = node('section', undefined, 'puzzle-choices');
   choices.setAttribute('aria-label', '可选择的部件');
-  choices.append(node('h4', '部件'));
+  const choicesHeading = node('div', undefined, 'puzzle-choices-heading');
+  choicesHeading.append(node('h4', '部件'), node('span', `第 ${state.roundIndex + 1} / ${round.total} 轮`));
+  choices.append(choicesHeading);
   const palette = node('div', undefined, 'parts-palette');
-  for (const [index, component] of pool.components.entries()) {
+  const partIds = new Set(round.targets.flatMap(target => target.parts.map(part => part.id)));
+  const components = pool.components.filter(component => partIds.has(component.id));
+  for (const [index, component] of components.entries()) {
     const card = button('', 'part-card', () => pickPart(root, card, palette, index, component.id, state.selected.length, onAction));
     card.setAttribute('aria-label', `选择${component.name}`);
     card.append(componentShape(component, renderGlyph), node('span', component.name));
+    card.disabled = round.complete;
     palette.append(card);
   }
   choices.append(palette);
@@ -135,13 +144,31 @@ export function renderComponentPuzzle(root, {state, pool, onAction, renderGlyph}
     card.append(componentShape(component, renderGlyph), node('span', `${component.name} ×`));
     tray.append(card);
   }
-  if (!state.selected.length) tray.append(node('p', '从上方选择部件。'));
-  const check = button('合一合', 'construction-primary', () => onAction('check', null));
-  check.disabled = !state.selected.length;
-  const message = state.feedback === 'retry' ? '这组还没有拼成本课的字，试着换一换部件。' : state.feedback === 'matched' ? '拼出来了！一起读一读，再找下一个。' : '可以先观察部件的形状。';
+  if (!state.selected.length && !round.complete) tray.append(node('p', '从上方选择部件。'));
+  const hasNext = state.roundIndex + 1 < round.total;
+  let message = '可以先观察部件的形状。';
+  if (round.complete) message = '本轮完成！';
+  else if (state.feedback === 'retry') message = '这组还没有拼成本轮的字，试着换一换部件。';
+  else if (state.feedback === 'matched') message = '拼出来了！一起读一读，再找下一个。';
   const status = node('p', message, 'construction-status');
   status.setAttribute('role', 'status');
-  assembly.append(tray, check, status);
+  if (!round.complete) {
+    const check = button('合一合', 'construction-primary', () => {
+      onAction('check', null);
+      root.querySelector('.puzzle-next-round')?.focus({preventScroll:true});
+    });
+    check.disabled = !state.selected.length;
+    assembly.append(tray, check);
+  } else if (hasNext) {
+    const next = button('下一轮', 'construction-primary puzzle-next-round', () => {
+      onAction('next-round', null);
+      const firstPart = root.querySelector('.part-card');
+      firstPart?.scrollIntoView({block:'nearest', inline:'nearest', behavior:'instant'});
+      firstPart?.focus({preventScroll:true});
+    });
+    assembly.append(status, next);
+  }
+  if (!round.complete || !hasNext) assembly.append(status);
 
   const answers = node('section', undefined, 'puzzle-answers');
   answers.setAttribute('aria-label', '拼出的汉字和本课发现');
@@ -149,7 +176,7 @@ export function renderComponentPuzzle(root, {state, pool, onAction, renderGlyph}
   const reveal = node('div', undefined, 'puzzle-reveal');
   reveal.setAttribute('aria-live', 'polite');
   for (const character of state.revealed) {
-    const record = pool.puzzles.find(puzzle => puzzle.character === character);
+    const record = round.targets.find(puzzle => puzzle.character === character);
     if (!record) continue;
     const card = node('article');
     renderGlyph(card, character, null, {parts:record.parts});
@@ -157,12 +184,12 @@ export function renderComponentPuzzle(root, {state, pool, onAction, renderGlyph}
     reveal.append(card);
   }
   answers.append(reveal);
-  answers.append(node('h4', `本课发现 ${state.found.length} / ${pool.puzzles.length}`, 'puzzle-collection-label'));
+  answers.append(node('h4', `本轮拼出 ${round.found.length} / ${round.targets.length}`, 'puzzle-collection-label'));
   const collected = node('div', undefined, 'puzzle-collected');
-  for (const character of state.found) collected.append(node('span', character));
-  if (!state.found.length) collected.append(node('p', '找到的字会收集在这里。'));
+  for (const character of round.found) collected.append(node('span', character));
+  if (!round.found.length) collected.append(node('p', '找到的字会收集在这里。'));
   answers.append(collected);
-  if (pool.puzzles.length && state.found.length === pool.puzzles.length) answers.append(node('p', '✦ 本课拼图全部完成！可以继续做笔画练习。', 'construction-celebrate'));
+  if (round.complete && !hasNext) answers.append(node('p', '✦ 本课拼图全部完成！可以继续做笔画练习。', 'construction-celebrate'));
   row.append(choices, assembly, answers);
   wrapper.append(row, introductions(pool, renderGlyph), coverage(pool), references());
   root.append(wrapper);

@@ -59,7 +59,7 @@ import {createSudokuState,collectSudokuWord,placeSudokuWord,clearSudokuCell,undo
 import './construction.css';
 import {getConstructionPool} from './construction-data.js';
 import {createConstructionView} from './construction-view.js';
-import {createPuzzleState,selectPuzzlePart,removePuzzlePart,checkPuzzle,createStrokeState,placeStroke,undoStroke,nextStrokeCharacter} from './construction-core.js';
+import {createPuzzleState,selectPuzzlePart,removePuzzlePart,checkPuzzle,nextPuzzleRound,createStrokeState,placeStroke,undoStroke,nextStrokeCharacter} from './construction-core.js';
 import {createHandwritingState,submitHandwritingStroke,undoHandwritingStroke,rewriteHandwritingCharacter,navigateHandwriting} from './handwriting-core.js';
 
 const app = document.querySelector("#app");
@@ -396,6 +396,7 @@ function constructionIntent(intent,value){
     if(intent==='part')puzzleState=selectPuzzlePart(puzzleState,value);
     else if(intent==='remove')puzzleState=removePuzzlePart(puzzleState,value);
     else if(intent==='check')puzzleState=checkPuzzle(puzzleState);
+    else if(intent==='next-round')puzzleState=nextPuzzleRound(puzzleState);
   }else if(strokeInputMode==='write'){
     if(intent==='trace')handwritingState=submitHandwritingStroke(handwritingState,value.points,value.geometry);
     else if(intent==='undo')handwritingState=undoHandwritingStroke(handwritingState);
@@ -575,6 +576,7 @@ function switchMode(mode, linkedSelection, journeyTransfer=false) {
   $('.classroom').hidden=mode==='explore';
   $('#exploration-catalog').hidden=mode!=='explore';
   $('#restart').hidden=mode==='explore';
+  $('#restart').textContent=mode==='puzzle'?'↻ 重玩本课':'↻ 开始新一轮';
   $('#mode-explore').setAttribute('aria-pressed',String(mode==='explore'));
   $('#sudoku').hidden=mode!=='sudoku';
   $('#sudoku-sound-label').hidden=mode!=='sudoku';
@@ -768,7 +770,7 @@ function progressed() {
   );
 }
 function mayRestart() {
-  return !progressed() || confirm("开始新一轮会清空本轮得分和进度，继续吗？");
+  return !progressed() || confirm(gameMode==='puzzle'?'重玩本课会清空本课拼图进度，继续吗？':'开始新一轮会清空本轮得分和进度，继续吗？');
 }
 function newRound() {
   if(gameMode==='train') { session={...session,departure:null}; trainView.scene.cancelAnimation(); }

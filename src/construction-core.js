@@ -1,10 +1,31 @@
 const signature=ids=>[...ids].sort().join('|');
+const PUZZLE_ROUND_SIZE = 4;
 
 export function createPuzzleState(targets=[]){
-  return {targets,selected:[],found:[],revealed:[],feedback:'ready'};
+  return {targets,roundIndex:0,selected:[],found:[],revealed:[],feedback:'ready'};
 }
+
+export function getPuzzleRound(state) {
+  const start = state.roundIndex * PUZZLE_ROUND_SIZE;
+  const targets = state.targets.slice(start, start + PUZZLE_ROUND_SIZE);
+  const found = state.found.filter(character => targets.some(target => target.character === character));
+  return {
+    targets,
+    found,
+    complete: targets.length > 0 && found.length === targets.length,
+    total: Math.ceil(state.targets.length / PUZZLE_ROUND_SIZE),
+  };
+}
+
+export function nextPuzzleRound(state) {
+  const round = getPuzzleRound(state);
+  if (!round.complete || state.roundIndex + 1 >= round.total) return state;
+  return {...state,roundIndex:state.roundIndex + 1,selected:[],revealed:[],feedback:'ready'};
+}
+
 export function selectPuzzlePart(state,id){
-  if(state.selected.length>=4||!state.targets.some(t=>t.parts.some(p=>p.id===id)))return state;
+  const round = getPuzzleRound(state);
+  if(round.complete||state.selected.length>=4||!round.targets.some(t=>t.parts.some(p=>p.id===id)))return state;
   return {...state,selected:[...state.selected,id],revealed:[],feedback:'ready'};
 }
 export function removePuzzlePart(state,index){
@@ -13,7 +34,7 @@ export function removePuzzlePart(state,index){
 }
 export function checkPuzzle(state){
   const key=signature(state.selected);
-  const revealed=state.targets.filter(t=>signature(t.parts.map(p=>p.id))===key).map(t=>t.character);
+  const revealed=getPuzzleRound(state).targets.filter(t=>signature(t.parts.map(p=>p.id))===key).map(t=>t.character);
   if(!revealed.length)return {...state,revealed:[],feedback:'retry'};
   return {...state,selected:[],revealed,found:[...new Set([...state.found,...revealed])],feedback:'matched'};
 }

@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {FORM_CATALOG} from '../../src/construction-data.js';
 test('site: navigation order, direct links, mode snapshots and unchanged stored bank',async({page})=>{
  await page.goto('/?mode=puzzle');await expect(page.locator('#mode-puzzle')).toHaveAttribute('aria-pressed','true');
  expect(await page.locator('.game-modes button').allTextContents()).toEqual(['识字翻翻乐','打地鼠','汉字迷宫','汉字拼图','笔画很忙','组词小工坊','女巫的毒药','汉字建筑师','汉字数独','句子小火车','情景探索']);
@@ -110,4 +111,49 @@ test('puzzle: the component wall spans the page and a selected tile pops into th
   await tile.click();
   await expect(tray.getByRole('button',{name:'移除第2个女',exact:true})).toBeVisible();
   await expect(flight).toHaveCount(0);
+});
+
+test('puzzle: a ten-character lesson plays as four, four and two with a manual handoff', async ({page}) => {
+  await page.setViewportSize({width:1280,height:720});
+  await page.goto('/?mode=puzzle&source=paradise&stage=2A&lesson=1');
+  const wall = page.locator('.puzzle-choices');
+  const collected = page.locator('.puzzle-collected span');
+  const next = page.getByRole('button', {name:'下一轮', exact:true});
+  const rounds = ['哪国美澳', '利加拿英', '法带'];
+  for (const [index, characters] of rounds.entries()) {
+    await expect(wall).toContainText(`第 ${index + 1} / 3 轮`);
+    await expect(page.locator('.puzzle-collection-label')).toHaveText(`本轮拼出 0 / ${characters.length}`);
+    await expect(next).toHaveCount(0);
+    const parts = [...characters].flatMap(character => FORM_CATALOG.characters[character].parts.map(part => part.id));
+    await expect(wall.getByRole('button')).toHaveCount(new Set(parts).size);
+    for (const character of characters) {
+      for (const part of FORM_CATALOG.characters[character].parts) {
+        const name = FORM_CATALOG.components[part.id].name;
+        await wall.getByRole('button', {name:`选择${name}`, exact:true}).click();
+      }
+      await page.getByRole('button', {name:'合一合', exact:true}).click();
+      await expect(page.locator('.puzzle-reveal strong')).toHaveText(character);
+    }
+    await expect(collected).toHaveText([...characters]);
+    if (index === 0) {
+      await page.locator('#mode-strokes').click();
+      await page.locator('#mode-puzzle').click();
+      await expect(collected).toHaveText([...characters]);
+    }
+    if (index < rounds.length - 1) {
+      await expect(page.getByText('本课拼图全部完成', {exact:false})).toHaveCount(0);
+      await expect(next).toBeInViewport();
+      await next.click();
+      await expect(page.locator('.puzzle-reveal strong')).toHaveCount(0);
+      await expect(wall.getByRole('button').first()).toBeFocused();
+      if (index === 0) await page.setViewportSize({width:390,height:844});
+    }
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await expect(page.getByText('本课拼图全部完成', {exact:false})).toBeVisible();
+  await expect(next).toHaveCount(0);
+  page.once('dialog', dialog => dialog.accept());
+  await page.getByRole('button', {name:'重玩本课', exact:false}).click();
+  await expect(wall).toContainText('第 1 / 3 轮');
+  await expect(collected).toHaveCount(0);
 });
