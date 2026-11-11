@@ -24,6 +24,8 @@ test('read each clock before Doudou answers, then charge and finish the explorat
   const scene = page.locator('#time-scene');
   const bubble = scene.locator('.time-dialogue');
   await expect(scene).toHaveAttribute('data-shot','wake');
+  const table = scene.locator('#time-table');
+  await expect(table).toBeHidden();
   await expect(scene.locator('#time-xiaoming')).toBeVisible();
   await expect.poll(()=>scene.locator('.boy-wake').evaluate(img=>img.naturalWidth)).toBeGreaterThan(0);
   await expect(scene.locator('#time-robot')).toBeVisible();
@@ -33,9 +35,9 @@ test('read each clock before Doudou answers, then charge and finish the explorat
   await page.screenshot({path:testInfo.outputPath('wake.png')});
   const vocab = new Map();
   const periods = [
-    {id:'morning', time:'现在八点。', angles:['240deg','0deg'], food:'我吃面条。'},
-    {id:'noon', time:'现在十二点。', angles:['0deg','0deg'], food:'我吃米饭。'},
-    {id:'evening', time:'现在七点半。', angles:['225deg','180deg'], food:'我吃饺子。'},
+    {id:'morning', time:'现在八点。', angles:['240deg','0deg'], food:'我吃面条。', pose:'noodles'},
+    {id:'noon', time:'现在十二点。', angles:['0deg','0deg'], food:'我吃米饭。', pose:'rice'},
+    {id:'evening', time:'现在七点半。', angles:['225deg','180deg'], food:'我吃饺子。', pose:'dumplings'},
   ];
 
   for (const period of periods) {
@@ -49,15 +51,21 @@ test('read each clock before Doudou answers, then charge and finish the explorat
       expect(pinyin.every(Boolean),sentence).toBe(true);
       if (sentence === '谢谢！我要去吃早饭了。') {
         await expect(scene).toHaveAttribute('data-shot','meal');
-        await expect(scene.locator('.boy-meal')).toBeVisible();
+        await expect(scene.locator('.boy-seated')).toBeVisible();
       }
-      if (sentence === '我吃面条。') {
+      if (sentence === period.food) {
         await expect(scene).toHaveAttribute('data-shot','food');
-        await expect(scene.locator('.boy-noodles')).toBeVisible();
-        await expect.poll(()=>scene.locator('.boy-noodles').evaluate(img=>img.naturalWidth)).toBeGreaterThan(0);
-        await expect(scene.locator('.boy-meal')).toBeHidden();
+        const pose = scene.locator('.boy-'+period.pose);
+        await expect(pose).toBeVisible();
+        await expect.poll(()=>pose.evaluate(img=>img.naturalWidth)).toBeGreaterThan(0);
+        await expect(scene.locator('.boy-seated')).toBeHidden();
         await expect(scene.locator('.boy-wake')).toBeHidden();
-        await page.screenshot({path:testInfo.outputPath('noodles.png')});
+        await expect(table).toBeVisible();
+        const tableBounds = await table.boundingBox();
+        const foot = await scene.locator('.time-robot .foot-right').boundingBox();
+        expect(foot.x).toBeGreaterThan(tableBounds.x+tableBounds.width);
+        expect(foot.y).toBeGreaterThan(tableBounds.y+tableBounds.height/2);
+        await page.screenshot({path:testInfo.outputPath(period.pose+'.png')});
       }
       if (sentence.startsWith('不了')) await expect(line.locator('[data-word=不了] rt')).toHaveText('Bù le,');
       for (const token of await line.locator('[data-word]').all()) {
@@ -113,6 +121,15 @@ test('mobile play fits the clock, shows the charging animation, and can replay',
   const line = page.locator('#time-line');
   for (let turn = 0; turn < 30 && await next.getAttribute('aria-label') !== '给豆豆充电'; turn++) {
     await expect(page.locator('#time-scene .time-dialogue')).toBeInViewport({ratio:1});
+    if (await line.getAttribute('aria-label') === '我吃米饭。') {
+      const table = page.locator('#time-table');
+      await expect(table).toBeInViewport({ratio:.99});
+      await expect(page.locator('.boy-rice')).toBeVisible();
+      const tableBounds = await table.boundingBox();
+      const foot = await page.locator('.time-robot .foot-right').boundingBox();
+      expect(foot.x).toBeGreaterThan(tableBounds.x+tableBounds.width);
+      await page.screenshot({path:testInfo.outputPath('mobile-rice.png'),animations:'disabled'});
+    }
     if (await next.getAttribute('aria-label') === '我说好了') {
       await expect(page.locator('#time-clock')).toBeInViewport({ratio:1});
       await expect(next).toBeInViewport();

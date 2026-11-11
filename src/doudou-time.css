@@ -17,7 +17,7 @@ button { font: inherit; touch-action: manipulation; }
   height: max(100svh,50vw,500px);
   transform: translate(-50%,-50%) scale(var(--shot-scale,1));
   transform-origin: 50% 73%;
-  background: url('./doudou-time-atlas.webp') center top / 100% 300% no-repeat;
+  background: url('./doudou-dining-room.webp') center top / 100% 300% no-repeat;
   transition: transform .55s ease;
 }
 .time-scene[data-period="noon"] .time-meal-art { background-position: center center; }
@@ -43,9 +43,23 @@ rt { font-size: .56em; font-weight: 500; line-height: 1.2; }
   filter: drop-shadow(4px 8px 7px #31252152);
 }
 .time-xiaoming img { width: 100%; height: 100%; object-fit: contain; object-position: bottom center; }
-.time-xiaoming .boy-wake, .time-xiaoming .boy-noodles,
-[data-shot="wake"] .boy-meal, [data-period="morning"][data-shot="food"] .boy-meal { display: none; }
-[data-shot="wake"] .boy-wake, [data-period="morning"][data-shot="food"] .boy-noodles { display: block; }
+.time-scene:not([data-shot="wake"]) .time-xiaoming { left: 28%; }
+.time-table {
+  position: absolute;
+  z-index: 2;
+  left: 49%;
+  bottom: 13%;
+  width: clamp(168px,36vw,500px);
+  height: clamp(110px,29svh,258px);
+  object-fit: contain;
+  object-position: center bottom;
+  transform: translateX(-50%);
+  transform-origin: center bottom;
+  filter: drop-shadow(5px 9px 8px #32241c61);
+  pointer-events: none;
+}
+.time-scene[data-shot="food"] .time-table { transform: translateX(-50%) scale(1.08); }
+.time-scene[data-shot="food"] .time-xiaoming { transform: translateX(-50%) scale(1.1); transform-origin: center bottom; }
 .time-clock {
   position: absolute;
   z-index: 3;
@@ -81,6 +95,7 @@ rt { font-size: .56em; font-weight: 500; line-height: 1.2; }
   box-shadow: 0 8px 27px #211d1a48;
 }
 .time-dialogue::after { content: ''; position: absolute; left: 8px; top: calc(100% - 3px); width: 30px; height: 24px; background: var(--bubble); clip-path: polygon(0 0,100% 0,0 100%); }
+.time-scene:not([data-shot="wake"])[data-speaker="xiaoming"] .time-dialogue { left: 33%; }
 [data-speaker="doudou"] .time-dialogue { --bubble: #eef9ef; left: auto; right: 24%; }
 [data-speaker="doudou"] .time-dialogue::after { left: auto; right: 8px; transform: scaleX(-1); }
 .time-speaker { margin: 0 0 8px; color: #215b49; font-size: 1rem; font-weight: 750; }
@@ -135,8 +150,11 @@ rt { font-size: .56em; font-weight: 500; line-height: 1.2; }
   .time-periods { gap: 6px; }
   .time-periods li { font-size: .8rem; padding: 4px 7px; }
   .time-xiaoming { left: 23%; width: 45vw; height: min(34svh,65vw); }
+  .time-scene:not([data-shot="wake"]) .time-xiaoming { left: 23%; }
+  .time-table { left: 51%; width: 43vw; height: min(22svh,34vw); object-fit: fill; }
   .time-robot { left: 77%; width: min(38vw,180px); height: min(32svh,52vw); }
   .time-dialogue { bottom: 42%; left: 4%; max-width: 92%; padding: 11px 14px; border-radius: 16px; }
+  .time-scene:not([data-shot="wake"])[data-speaker="xiaoming"] .time-dialogue { bottom: 44%; left: 4%; }
   [data-speaker="doudou"] .time-dialogue { right: 4%; }
   .time-dialogue::after { left: 40px; }
   [data-speaker="doudou"] .time-dialogue::after { right: 40px; }

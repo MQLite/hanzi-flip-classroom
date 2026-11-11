@@ -11,6 +11,8 @@ const scene = find('time-scene');
 const clock = find('time-clock');
 const numbers = find('time-clock-numbers');
 const periodList = find('time-periods');
+const table = find('time-table');
+const poses = find('time-xiaoming').querySelectorAll('[data-pose]');
 const robot = find('time-robot');
 const heart = find('time-heart');
 const speaker = find('time-speaker');
@@ -79,13 +81,21 @@ function showDialogue({speaker: role, tokens}) {
   }
 }
 
+function showShot(period, line) {
+  const answerIndex = period.lines.findIndex(turn => turn.action === 'answer');
+  const wakingUp = period.id === 'morning' && lineIndex <= answerIndex;
+  const shot = wakingUp ? 'wake' : line.action === 'food' ? 'food' : 'meal';
+  scene.dataset.period = period.id;
+  scene.dataset.shot = shot;
+  table.hidden = wakingUp;
+  const pose = shot === 'food' ? period.id : shot;
+  for (const image of poses) image.hidden = image.dataset.pose !== pose;
+}
+
 function render() {
   const period = TIME_SCENES[periodIndex];
   const line = period.lines[lineIndex];
-  scene.dataset.period = period.id;
-  const answerIndex = period.lines.findIndex(turn => turn.action === 'answer');
-  if (period.id === 'morning' && lineIndex <= answerIndex) scene.dataset.shot = 'wake';
-  else scene.dataset.shot = line.action === 'food' ? 'food' : 'meal';
+  showShot(period, line);
   for (const [index, step] of steps.entries()) {
     if (index === periodIndex) step.setAttribute('aria-current', 'step');
     else step.removeAttribute('aria-current');
