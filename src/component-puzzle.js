@@ -98,10 +98,47 @@ function pickPart(root, source, palette, index, id, previousCount, onAction) {
   animatePart(root, source, target, nextCard.getBoundingClientRect());
 }
 
+function renderRoundReview(root, state, round, onAction, renderGlyph) {
+  const review = node('section', undefined, 'puzzle-round-review');
+  const heading = node('h3', '一起读一读');
+  heading.id = 'puzzle-round-review-title';
+  heading.tabIndex = -1;
+  review.setAttribute('aria-labelledby', heading.id);
+  review.append(node('p', `第 ${state.roundIndex + 1} / ${round.total} 轮`, 'puzzle-round-count'), heading);
+
+  const characters = node('div', undefined, 'puzzle-round-characters');
+  for (const {character} of round.targets) {
+    const card = node('div', undefined, 'puzzle-round-character');
+    card.append(node('span', character, 'puzzle-round-character-text'));
+    renderGlyph(card, character, null, {fit:true});
+    characters.append(card);
+  }
+  review.append(characters);
+
+  if (state.roundIndex + 1 < round.total) {
+    const next = button('下一轮', 'construction-primary', () => {
+      onAction('next-round', null);
+      const firstPart = root.querySelector('.part-card');
+      firstPart?.scrollIntoView({block:'nearest', inline:'nearest', behavior:'instant'});
+      firstPart?.focus({preventScroll:true});
+    });
+    review.append(next);
+  } else {
+    review.append(node('p', '本课拼图全部完成！', 'construction-celebrate'));
+  }
+  return review;
+}
+
 /** Render the discovery puzzle while leaving state transitions and glyph lifecycle to its owner. */
 export function renderComponentPuzzle(root, {state, pool, onAction, renderGlyph}) {
   const wrapper = node('div', undefined, 'component-puzzle');
   const round = getPuzzleRound(state);
+  if (round.complete) {
+    wrapper.append(renderRoundReview(root, state, round, onAction, renderGlyph), introductions(pool, renderGlyph), coverage(pool), references());
+    root.append(wrapper);
+    return;
+  }
+
   const header = node('header', undefined, 'puzzle-heading');
   header.append(node('h3', '这些部件能拼出本课哪个字？'), node('p', '点选部件，再点「合一合」。同一部件可以多选，顺序不限。', 'construction-instruction'));
   wrapper.append(header);
@@ -127,7 +164,6 @@ export function renderComponentPuzzle(root, {state, pool, onAction, renderGlyph}
     const card = button('', 'part-card', () => pickPart(root, card, palette, index, component.id, state.selected.length, onAction));
     card.setAttribute('aria-label', `选择${component.name}`);
     card.append(componentShape(component, renderGlyph), node('span', component.name));
-    card.disabled = round.complete;
     palette.append(card);
   }
   choices.append(palette);
@@ -144,31 +180,20 @@ export function renderComponentPuzzle(root, {state, pool, onAction, renderGlyph}
     card.append(componentShape(component, renderGlyph), node('span', `${component.name} ×`));
     tray.append(card);
   }
-  if (!state.selected.length && !round.complete) tray.append(node('p', '从上方选择部件。'));
-  const hasNext = state.roundIndex + 1 < round.total;
+  if (!state.selected.length) tray.append(node('p', '从上方选择部件。'));
   let message = '可以先观察部件的形状。';
-  if (round.complete) message = '本轮完成！';
-  else if (state.feedback === 'retry') message = '这组还没有拼成本轮的字，试着换一换部件。';
+  if (state.feedback === 'retry') message = '这组还没有拼成本轮的字，试着换一换部件。';
   else if (state.feedback === 'matched') message = '拼出来了！一起读一读，再找下一个。';
   const status = node('p', message, 'construction-status');
   status.setAttribute('role', 'status');
-  if (!round.complete) {
-    const check = button('合一合', 'construction-primary', () => {
-      onAction('check', null);
-      root.querySelector('.puzzle-next-round')?.focus({preventScroll:true});
-    });
-    check.disabled = !state.selected.length;
-    assembly.append(tray, check);
-  } else if (hasNext) {
-    const next = button('下一轮', 'construction-primary puzzle-next-round', () => {
-      onAction('next-round', null);
-      const firstPart = root.querySelector('.part-card');
-      firstPart?.scrollIntoView({block:'nearest', inline:'nearest', behavior:'instant'});
-      firstPart?.focus({preventScroll:true});
-    });
-    assembly.append(status, next);
-  }
-  if (!round.complete || !hasNext) assembly.append(status);
+  const check = button('合一合', 'construction-primary', () => {
+    onAction('check', null);
+    const review = root.querySelector('.puzzle-round-review');
+    review?.scrollIntoView({block:'nearest', inline:'nearest', behavior:'instant'});
+    review?.querySelector('h3').focus({preventScroll:true});
+  });
+  check.disabled = !state.selected.length;
+  assembly.append(tray, check, status);
 
   const answers = node('section', undefined, 'puzzle-answers');
   answers.setAttribute('aria-label', '拼出的汉字和本课发现');
@@ -189,7 +214,6 @@ export function renderComponentPuzzle(root, {state, pool, onAction, renderGlyph}
   for (const character of round.found) collected.append(node('span', character));
   if (!round.found.length) collected.append(node('p', '找到的字会收集在这里。'));
   answers.append(collected);
-  if (round.complete && !hasNext) answers.append(node('p', '✦ 本课拼图全部完成！可以继续做笔画练习。', 'construction-celebrate'));
   row.append(choices, assembly, answers);
   wrapper.append(row, introductions(pool, renderGlyph), coverage(pool), references());
   root.append(wrapper);

@@ -113,37 +113,51 @@ test('puzzle: the component wall spans the page and a selected tile pops into th
   await expect(flight).toHaveCount(0);
 });
 
-test('puzzle: a ten-character lesson plays as four, four and two with a manual handoff', async ({page}) => {
+test('puzzle: each round shows all its characters for a read-aloud before the manual handoff', async ({page}) => {
   await page.setViewportSize({width:1280,height:720});
   await page.goto('/?mode=puzzle&source=paradise&stage=2A&lesson=1');
   const wall = page.locator('.puzzle-choices');
   const collected = page.locator('.puzzle-collected span');
+  const reading = page.getByRole('region', {name:'一起读一读'});
   const next = page.getByRole('button', {name:'下一轮', exact:true});
   const rounds = ['哪国美澳', '利加拿英', '法带'];
   for (const [index, characters] of rounds.entries()) {
     await expect(wall).toContainText(`第 ${index + 1} / 3 轮`);
     await expect(page.locator('.puzzle-collection-label')).toHaveText(`本轮拼出 0 / ${characters.length}`);
+    await expect(reading).toHaveCount(0);
     await expect(next).toHaveCount(0);
     const parts = [...characters].flatMap(character => FORM_CATALOG.characters[character].parts.map(part => part.id));
     await expect(wall.getByRole('button')).toHaveCount(new Set(parts).size);
-    for (const character of characters) {
+    const solveOrder = [...characters].reverse();
+    for (const [position, character] of solveOrder.entries()) {
       for (const part of FORM_CATALOG.characters[character].parts) {
         const name = FORM_CATALOG.components[part.id].name;
         await wall.getByRole('button', {name:`选择${name}`, exact:true}).click();
       }
       await page.getByRole('button', {name:'合一合', exact:true}).click();
-      await expect(page.locator('.puzzle-reveal strong')).toHaveText(character);
+      if (position < solveOrder.length - 1) {
+        await expect(page.locator('.puzzle-reveal strong')).toHaveText(character);
+        await expect(reading).toHaveCount(0);
+      }
     }
-    await expect(collected).toHaveText([...characters]);
+    const heading = reading.getByRole('heading', {name:'一起读一读'});
+    await expect(heading).toBeFocused();
+    await expect(reading.locator('.puzzle-round-character > span')).toHaveText([...characters]);
+    for (const card of await reading.locator('.puzzle-round-character').all()) {
+      await expect(card).toBeInViewport({ratio:.95});
+      expect((await card.boundingBox()).width).toBeGreaterThan(100);
+      await expect(card.locator('svg path').first()).toBeVisible();
+    }
     if (index === 0) {
       await page.locator('#mode-strokes').click();
       await page.locator('#mode-puzzle').click();
-      await expect(collected).toHaveText([...characters]);
+      await expect(reading.locator('.puzzle-round-character > span')).toHaveText([...characters]);
     }
     if (index < rounds.length - 1) {
       await expect(page.getByText('本课拼图全部完成', {exact:false})).toHaveCount(0);
       await expect(next).toBeInViewport();
       await next.click();
+      await expect(reading).toHaveCount(0);
       await expect(page.locator('.puzzle-reveal strong')).toHaveCount(0);
       await expect(wall.getByRole('button').first()).toBeFocused();
       if (index === 0) await page.setViewportSize({width:390,height:844});

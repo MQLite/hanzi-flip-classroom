@@ -22,7 +22,26 @@
 .construction-game .component-puzzle .part-card.puzzle-part-flight{position:fixed;z-index:100;pointer-events:none;min-height:0;margin:0;border:2px solid #bd8752;background:#ffefc7;color:#245246;box-shadow:0 10px 24px #203d3455;transform-origin:center}
 .construction-game .component-puzzle .construction-primary{display:block;width:auto;min-width:0;min-height:46px;font-size:18px;padding:7px 13px}
 .component-puzzle .construction-status{font-size:15px;line-height:1.55;min-height:1.55em;margin:0}
-.component-puzzle .puzzle-assembly:has(.puzzle-next-round) .construction-status{grid-column:1}
+.component-puzzle .puzzle-round-review{
+  display:grid;justify-items:center;gap:12px;padding:clamp(14px,2.5vw,30px);
+  border:1px solid var(--puzzle-line);border-radius:18px;background:#fafbf2;text-align:center;
+  scroll-margin:12px;
+}
+.component-puzzle .puzzle-round-count{margin:0;color:var(--puzzle-muted);font-size:14px}
+.component-puzzle .puzzle-round-review h3{margin:0;font-size:clamp(24px,3.4vw,40px)}
+.component-puzzle .puzzle-round-characters{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:clamp(10px,2vw,20px);width:100%;
+}
+.component-puzzle .puzzle-round-character{
+  display:grid;place-items:center;flex:0 1 clamp(84px,18vw,196px);min-width:0;aspect-ratio:1;
+  border:1px solid var(--puzzle-line);border-radius:16px;background:#fffdf3;color:#264e43;
+}
+.component-puzzle .puzzle-round-character svg,.component-puzzle .puzzle-round-character-text{grid-area:1/1}
+.component-puzzle .puzzle-round-character svg{display:block;width:100%;height:100%;padding:6px}
+.component-puzzle .puzzle-round-character-text{font-size:clamp(48px,12vw,138px);line-height:1}
+.component-puzzle .puzzle-round-character:has(svg path) .puzzle-round-character-text{opacity:0}
+.component-puzzle .puzzle-round-character .glyph-load-error{display:none}
+.construction-game .component-puzzle .puzzle-round-review .construction-primary{min-width:128px}
 .component-puzzle .puzzle-reveal,.component-puzzle .puzzle-reveal:has(article:nth-child(2)){display:grid;grid-template-columns:minmax(0,1fr);gap:9px;margin:0}
 .component-puzzle .puzzle-reveal:empty{display:none}
 .component-puzzle .puzzle-reveal article,.component-puzzle .puzzle-reveal:has(article:nth-child(2)) article{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:8px;min-width:0;width:100%;padding:10px;border-radius:13px;background:#335f50;text-align:center}
@@ -54,5 +73,7 @@
   .component-puzzle .parts-tray{min-height:72px}
   .component-puzzle .selected-part .part-shape{width:37px;height:37px}
   .component-puzzle .puzzle-reveal article{max-width:360px}
+  .component-puzzle .puzzle-round-character{flex-basis:min(40%,132px)}
+  .component-puzzle .puzzle-round-character-text{font-size:clamp(48px,20vw,100px)}
   .component-puzzle .component-intro-list{grid-template-columns:minmax(0,1fr)}
 }
