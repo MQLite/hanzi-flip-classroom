@@ -38,59 +38,71 @@ test('Doudou leads all four parts and only the last stop completes the island ch
   await expect(page.locator('#next-scene')).toHaveAccessibleName('去登泰山');
   await page.locator('#next-scene').click();
 
-  const currentWord = page.locator('#tour-word');
-  const advance = page.getByRole('button',{name:'读对了，前进',exact:true});
-  const robot = page.locator('.tour-map [data-doudou]');
-  await expect(page.locator('#tour-title')).toHaveAccessibleName('登泰山');
   const map = page.locator('.tour-map');
+  const card = map.locator('#tour-card');
+  const robot = map.locator('[data-doudou]');
+  await expect(page.locator('#tour-title')).toHaveAccessibleName('登泰山');
   await expect(map).toHaveAttribute('data-renderer','3d');
   await expect(map.locator('canvas.tour-canvas')).toBeVisible();
-  await expect(robot).toBeVisible();
+  await expect(map).toBeInViewport({ratio:1});
   const initial = await robot.evaluate(node=>node.style.left);
   for (const word of mountainWords) {
-    await expect(currentWord).toHaveText(word);
+    await expect(map.getByRole('button')).toHaveCount(1);
+    await expect(card).toHaveAccessibleName(word);
+    await expect(card).toHaveText(word);
     if (word === '蒙特利尔') await page.screenshot({path:testInfo.outputPath('mountain.png')});
-    await advance.click();
+    if (word === '从') await page.emulateMedia({reducedMotion:'no-preference'});
+    await card.click();
+    if (word === '从') {
+      await expect(card).toBeHidden();
+      await expect(card).toHaveText('北京');
+      await page.emulateMedia({reducedMotion:'reduce'});
+    }
   }
   expect(await robot.evaluate(node=>node.style.left)).not.toBe(initial);
   await expect(page.getByRole('heading',{name:'登顶啦！'})).toBeVisible();
   await page.getByRole('button',{name:'关闭庆祝'}).click();
-  await page.getByRole('button',{name:'去游长江'}).click();
+  await map.getByRole('button',{name:'去游长江'}).click();
 
   await expect(page.locator('#tour-title')).toHaveAccessibleName('游长江');
-  await expect(map).toHaveAttribute('data-scene','river');
   await expect(map).toHaveAttribute('data-renderer','3d');
+  await expect(card).toBeInViewport({ratio:1});
   await page.screenshot({path:testInfo.outputPath('river.png')});
-  await expect(advance).toBeInViewport();
   const west = await robot.evaluate(node=>parseFloat(node.style.left));
   for (const word of riverWords) {
-    await expect(currentWord).toHaveText(word);
-    await advance.click();
+    await expect(map.getByRole('button')).toHaveCount(1);
+    await expect(card).toHaveAccessibleName(word);
+    await card.click();
   }
   expect(await robot.evaluate(node=>parseFloat(node.style.left))).toBeGreaterThan(west);
-  await page.getByRole('button',{name:'去北京城'}).click();
+  await map.getByRole('button',{name:'去北京城'}).click();
 
   await expect(page.locator('#tour-title')).toHaveAccessibleName('北京城里逛一逛');
   await expect(map).toHaveAttribute('data-renderer','3d');
-  const placeNames = ['颐和园','故宫','长城','博物馆'];
-  const sentences = ['我们到颐和园看中国。','故宫在中国，中国在东方。','万里长城万里长。','我们在博物馆逛一逛。'];
-  await page.getByRole('button',{name:'故宫',exact:true}).click();
-  await expect(page.locator('#tour-feedback')).toContainText('再看看');
-  await expect(page.locator('#tour-sentence')).toBeHidden();
-  for (const [index, place] of placeNames.entries()) {
-    const choice = page.getByRole('button',{name:place,exact:true});
-    await expect(choice.locator('rt')).not.toBeEmpty();
-    await expect(choice.locator('small[lang="en"]')).not.toBeEmpty();
-    await choice.click();
-    await expect(page.locator('#tour-sentence')).toHaveAccessibleName(sentences[index]);
-    await expect(page.locator('#tour-sentence rt').first()).not.toBeEmpty();
-    await expect(page.locator('#tour-sentence small[lang="en"]')).not.toBeEmpty();
-    const nextStop = page.getByRole('button',{name:index===3?'读完了，完成探索':'读完了，去下一站'});
+  const stops = [
+    [['颐和园','看','看中国'],'我们到颐和园看中国。'],
+    [['故宫','在','东方','在东方'],'故宫在中国，中国在东方。'],
+    [['长城','万里','长'],'万里长城万里长。'],
+    [['博物馆','城里','逛一逛'],'我们在博物馆逛一逛。'],
+  ];
+  for (const [index,[words,sentence]] of stops.entries()) {
+    await expect(card).toHaveAccessibleName('说出地名');
+    await expect(map.getByRole('button')).toHaveCount(1);
+    await card.click();
+    for (const word of words) {
+      await expect(card).toHaveAccessibleName(word);
+      await expect(card.locator('rt')).not.toBeEmpty();
+      await expect(card.locator('small[lang="en"]')).not.toBeEmpty();
+      await card.click();
+    }
+    await expect(card).toHaveAccessibleName(sentence);
+    await expect(card.locator('rt').first()).not.toBeEmpty();
+    await expect(card.locator('small[lang="en"]')).not.toBeEmpty();
     if (index === 2) {
-      await expect(nextStop).toBeInViewport();
+      await expect(card).toBeInViewport({ratio:1});
       await page.screenshot({path:testInfo.outputPath('beijing.png')});
     }
-    await nextStop.click();
+    await card.click();
   }
   expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('hanzi-flip.island-journeys.v1'))[0].status)).toBe('complete');
   await expect(page.locator('#lesson-celebration-title')).toHaveText('太牛啦');
@@ -100,7 +112,7 @@ test('Doudou leads all four parts and only the last stop completes the island ch
   await expect(page.locator('#start-mission')).toBeVisible();
 });
 
-test('Doudou can still climb on a phone with WebGL disabled', async ({page}) => {
+test('Doudou can still read and travel on a phone with WebGL disabled', async ({page}) => {
   await page.setViewportSize({width:390,height:844});
   await page.addInitScript(() => {
     const original = HTMLCanvasElement.prototype.getContext;
@@ -113,8 +125,28 @@ test('Doudou can still climb on a phone with WebGL disabled', async ({page}) => 
   await page.locator('#next-scene').click();
   await expect(page.locator('.tour-map')).toHaveAttribute('data-renderer','flat');
   await expect(page.locator('#tour-doudou .tour-robot')).toBeVisible();
-  await expect(page.locator('#tour-word')).toHaveText('从');
-  await page.getByRole('button',{name:'读对了，前进',exact:true}).click();
-  await expect(page.locator('#tour-word')).toHaveText('北京');
+  const card = page.locator('#tour-map #tour-card');
+  await expect(card).toHaveText('从');
+  await card.press('Enter');
+  await expect(card).toHaveText('北京');
+  await expect(card).toBeFocused();
+  for (const word of mountainWords.slice(1)) {
+    await expect(card).toHaveText(word);
+    await expect(card).toBeInViewport({ratio:1});
+    await card.click();
+  }
+  await page.getByRole('button',{name:'关闭庆祝'}).click();
+  await page.getByRole('button',{name:'去游长江'}).click();
+  for (const word of riverWords) {
+    await expect(card).toHaveText(word);
+    await card.click();
+  }
+  await page.getByRole('button',{name:'去北京城'}).click();
+  for (const word of ['说出地名','颐和园','看','看中国','我们到颐和园看中国。','说出地名','故宫','在','东方','在东方']) {
+    await expect(card).toHaveAccessibleName(word);
+    await card.click();
+  }
+  await expect(card).toHaveAccessibleName('故宫在中国，中国在东方。');
+  await expect(card).toBeInViewport({ratio:1});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 });

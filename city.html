@@ -53,37 +53,25 @@
       </section>
     </section>
     <section id="city-tour" hidden aria-labelledby="tour-title">
-      <h2 id="tour-title" tabindex="-1"></h2>
-      <div class="tour-layout">
-        <div id="tour-map" class="tour-map" aria-hidden="true">
-          <div id="tour-endpoints" class="tour-endpoints"></div>
-          <div id="tour-points"></div>
-          <div id="tour-doudou" data-doudou>
-            <span class="tour-robot"><i></i><b></b></span>
-            <span class="tour-boat"></span>
-          </div>
-        </div>
-        <div class="tour-task">
+      <div class="tour-heading">
+        <h2 id="tour-title" tabindex="-1"></h2>
+        <div class="tour-directions">
           <p id="tour-instruction"></p>
           <p id="tour-counter" class="tour-counter" role="status"></p>
-          <div id="tour-read" class="tour-read">
-            <p id="tour-word" role="status"></p>
-            <button type="button" class="city-primary" id="tour-advance">读对了，前进</button>
-          </div>
-          <div id="tour-destinations" hidden>
-            <div id="tour-choices" class="tour-choices"></div>
-            <p id="tour-feedback" role="status"></p>
-            <div id="tour-place-reading" hidden>
-              <div id="tour-place-words" class="tour-place-words"></div>
-              <p class="tour-sentence-prompt">读一读整句</p>
-              <div id="tour-sentence" role="group" tabindex="-1"></div>
-              <button type="button" class="city-primary" id="tour-confirm-sentence"></button>
-            </div>
-          </div>
-          <p id="tour-arrival" class="tour-arrival" role="status" hidden></p>
-          <button type="button" class="city-primary" id="tour-next-stage" hidden></button>
-          <button type="button" class="city-primary" id="tour-restart" hidden>从第一关再玩</button>
         </div>
+      </div>
+      <div id="tour-map" class="tour-map" role="group" aria-label="探索地图">
+        <div id="tour-endpoints" class="tour-endpoints" aria-hidden="true"></div>
+        <div id="tour-points" aria-hidden="true"></div>
+        <div id="tour-doudou" data-doudou aria-hidden="true">
+          <span class="tour-robot"><i></i><b></b></span>
+          <span class="tour-boat"></span>
+        </div>
+        <button type="button" class="tour-card" id="tour-card" hidden></button>
+      </div>
+      <div id="tour-summary" hidden>
+        <p>豆豆找回了记忆，也走完了中国之旅。</p>
+        <button type="button" class="city-primary" id="tour-restart">从第一关再玩</button>
       </div>
     </section>
   </main>

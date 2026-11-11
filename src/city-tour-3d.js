@@ -246,6 +246,7 @@ export function createTourScene(host, { stage, points, onUnavailable }) {
   let destination = 0;
   let visited = 0;
   let movement;
+  let onArrival;
 
   // A different camera depth per anchor gives real perspective while keeping feet on the map route.
   function project(x, y, depth, target) {
@@ -322,7 +323,10 @@ export function createTourScene(host, { stage, points, onUnavailable }) {
     visited = Math.max(visited, destination);
     stairs?.color(current, visited);
     pose();
+    const arrived = onArrival;
+    onArrival = undefined;
     redraw();
+    arrived?.();
   }
 
   function animate(now) {
@@ -340,9 +344,13 @@ export function createTourScene(host, { stage, points, onUnavailable }) {
     if (!disposed) frame = requestAnimationFrame(animate);
   }
 
-  function moveTo(index, { immediate = false } = {}) {
+  function moveTo(index, { immediate = false, onArrival: arrived } = {}) {
     if (disposed || !Number.isInteger(index) || !route[index]) return;
-    if (destination === index && !immediate) return;
+    if (destination === index && !immediate && !movement) {
+      arrived?.();
+      return;
+    }
+    onArrival = arrived;
     destination = index;
     if (immediate || preference.matches || document.hidden) {
       settle();
@@ -366,6 +374,7 @@ export function createTourScene(host, { stage, points, onUnavailable }) {
   function dispose() {
     if (disposed) return;
     disposed = true;
+    onArrival = undefined;
     cancelAnimationFrame(frame);
     observer?.disconnect();
     preference.removeEventListener('change', preferenceChange);

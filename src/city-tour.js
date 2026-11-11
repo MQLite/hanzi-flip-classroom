@@ -23,22 +23,12 @@ export function mountCityTour(root, {onStage, onFinish, onRestart}) {
   const doudou = find('tour-doudou');
   const instruction = find('tour-instruction');
   const counter = find('tour-counter');
-  const readCard = find('tour-read');
-  const word = find('tour-word');
-  const confirmWord = find('tour-advance');
-  const destinations = find('tour-destinations');
-  const choices = find('tour-choices');
-  const feedback = find('tour-feedback');
-  const reading = find('tour-place-reading');
-  const words = find('tour-place-words');
-  const sentence = find('tour-sentence');
-  const confirmSentence = find('tour-confirm-sentence');
-  const advanceStage = find('tour-next-stage');
-  const arrival = find('tour-arrival');
+  const card = find('tour-card');
+  const summary = find('tour-summary');
   const landmarks = find('tour-endpoints');
-
-  let stage, index, atPlace, scene, points, generation = 0;
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let stage, index, readingIndex, points, cardPoint, scene, pendingArrival;
+  let generation = 0, travelTimer = 0;
 
   function closeScene() {
     generation++;
@@ -47,16 +37,30 @@ export function mountCityTour(root, {onStage, onFinish, onRestart}) {
     map.dataset.renderer = 'flat';
   }
 
-  function moveDoudou() {
+  function finishMove() {
+    window.clearTimeout(travelTimer);
+    const afterMove = pendingArrival;
+    pendingArrival = null;
+    afterMove?.();
+  }
+
+  function moveDoudou(afterMove) {
+    card.hidden = true;
+    pendingArrival = afterMove;
     position(doudou, points[index]);
-    scene?.moveTo(index);
+    if (scene) scene.moveTo(index, {onArrival:finishMove});
+    else if (reducedMotion.matches) finishMove();
+    else travelTimer = window.setTimeout(finishMove, 650);
   }
 
   function loadScene() {
     const current = generation;
     import('./city-tour-3d.js').then(({createTourScene}) => {
       if (current !== generation) return;
-      scene = createTourScene(map, {stage, points, onUnavailable:closeScene});
+      scene = createTourScene(map, {stage, points, onUnavailable:() => {
+        closeScene();
+        finishMove();
+      }});
       map.dataset.renderer = '3d';
       scene.moveTo(index, {immediate:true});
     }).catch(() => {
@@ -64,180 +68,193 @@ export function mountCityTour(root, {onStage, onFinish, onRestart}) {
     });
   }
 
-  function makeMapPoint(point, className, label = '') {
-    const node = document.createElement('span');
-    node.className = className;
-    node.textContent = label;
-    position(node, point);
-    return node;
-  }
-
-  function showTitle(name, pinyin, english) {
-    title.replaceChildren(annotated(name, pinyin, english));
-    title.setAttribute('aria-label', name);
-  }
-
-  function routeStep() {
-    const route = READING_ROUTES[stage];
-    const complete = index === route.words.length;
-    for (const [step, marker] of [...pointsLayer.children].entries()) {
-      marker.classList.toggle('is-read', step < index);
-      marker.classList.toggle('is-next', step === index);
-    }
-    counter.textContent = index + ' / ' + route.words.length;
-    readCard.hidden = complete;
-    arrival.hidden = !complete;
-    advanceStage.hidden = !complete;
-    if (complete) {
-      arrival.textContent = route.arrival;
-      advanceStage.textContent = route.next;
+  function placeCard() {
+    if (card.hidden || !cardPoint) return;
+    const margin = 9;
+    const width = map.clientWidth, height = map.clientHeight;
+    const halfWidth = card.offsetWidth / 2, halfHeight = card.offsetHeight / 2;
+    const [x, y] = cardPoint;
+    let centerX = width * x / 100;
+    let centerY = height * y / 100;
+    if (stage === 'beijing') {
+      centerX += (x < 55 ? 1 : -1) * (halfWidth + 22);
+    } else if (stage === 'river') {
+      centerY += halfHeight + 13;
     } else {
-      word.textContent = route.words[index];
+      centerX += width * .04 + halfWidth * .5;
+      centerY -= halfHeight * .45;
     }
-    moveDoudou();
+    card.style.left = Math.min(width - halfWidth - margin, Math.max(halfWidth + margin, centerX)) + 'px';
+    card.style.top = Math.min(height - halfHeight - margin, Math.max(halfHeight + margin, centerY)) + 'px';
+  }
+
+  function showCard(point, label, kind, content = label) {
+    cardPoint = point;
+    card.dataset.kind = kind;
+    card.replaceChildren(content);
+    card.setAttribute('aria-label', label);
+    card.hidden = false;
+    placeCard();
+  }
+
+  function showPoints(active) {
+    for (const [step, marker] of [...pointsLayer.children].entries()) {
+      marker.classList.toggle('is-read', step < active);
+      marker.classList.toggle('is-next', step === active);
+    }
+  }
+
+  function showRouteWord(route) {
+    showPoints(index);
+    counter.textContent = index + ' / ' + route.words.length;
+    showCard(points[index + 1], route.words[index], 'word');
+  }
+
+  function advanceRoute(route) {
+    if (index === route.words.length) {
+      open(route.nextStage);
+      return;
+    }
+
+    index++;
+    moveDoudou(() => {
+      if (index < route.words.length) {
+        showRouteWord(route);
+        card.focus({preventScroll:true});
+        return;
+      }
+      showPoints(index);
+      counter.textContent = index + ' / ' + route.words.length;
+      instruction.textContent = route.arrival;
+      const showNext = () => {
+        showCard(points[index], route.next, 'next');
+        card.focus({preventScroll:true});
+      };
+      if (stage === 'mountain') showLessonCelebration({title:route.arrival, durationMs:5000, onClose:showNext});
+      else showNext();
+    });
+  }
+
+  function showBeijingReading() {
+    const stop = BEIJING_STOPS[index];
+    const entries = [stop.name, ...stop.words];
+    if (readingIndex < 0) {
+      showCard(stop.point, '说出地名', 'prompt');
+      return;
+    }
+    if (readingIndex < entries.length) {
+      const entry = entries[readingIndex];
+      showCard(stop.point, entry[0], 'reading', annotated(...entry));
+      return;
+    }
+    const content = document.createElement('span');
+    const line = document.createElement('span');
+    line.className = 'tour-sentence-line';
+    line.append(...stop.sentence.map(([hanzi, pinyin]) => ruby(hanzi, pinyin)));
+    content.append(line, gloss(stop.english));
+    const sentence = stop.sentence.map(([hanzi]) => hanzi).join('');
+    showCard(stop.point, sentence, 'sentence', content);
   }
 
   function showBeijingStop() {
-    const stop = BEIJING_STOPS[index];
-    atPlace = false;
-    instruction.textContent = '说出豆豆身边的地名，再选一选。';
-    reading.hidden = true;
-    choices.hidden = false;
-    feedback.textContent = '';
+    readingIndex = -1;
+    instruction.textContent = '看图说出地名，再点词牌核对。';
     counter.textContent = (index + 1) + ' / ' + BEIJING_STOPS.length;
-    for (const [step, marker] of [...pointsLayer.children].entries()) {
-      marker.classList.toggle('is-read', step < index);
-      marker.classList.toggle('is-next', step === index);
-    }
-    moveDoudou();
+    showPoints(index);
+    showBeijingReading();
   }
 
-  function choosePlace(stop) {
-    if (atPlace || stage !== 'beijing') return;
-    if (stop !== BEIJING_STOPS[index]) {
-      feedback.textContent = '再看看豆豆身边的地标，试一试。';
+  function advanceBeijing() {
+    if (readingIndex < BEIJING_STOPS[index].words.length + 1) {
+      readingIndex++;
+      instruction.textContent = '读完词牌上的字词或句子，点一下继续。';
+      showBeijingReading();
       return;
     }
-    atPlace = true;
-    feedback.textContent = '';
-    choices.hidden = true;
-    instruction.textContent = '读出字词和整句，再去下一站。';
-    words.replaceChildren(annotated(...stop.name), ...stop.words.map(row => annotated(...row)));
-    const sentenceText = stop.sentence.map(([hanzi]) => hanzi).join('');
-    const line = document.createElement('p');
-    line.className = 'tour-sentence-line';
-    line.replaceChildren(...stop.sentence.map(([hanzi, pinyin]) => ruby(hanzi, pinyin)));
-    sentence.replaceChildren(line, gloss(stop.english));
-    sentence.setAttribute('aria-label', sentenceText);
-    confirmSentence.textContent = index === BEIJING_STOPS.length - 1 ? '读完了，完成探索' : '读完了，去下一站';
-    reading.hidden = false;
-    sentence.focus({preventScroll:true});
-  }
 
-  const placeOrder = [BEIJING_STOPS[2], BEIJING_STOPS[0], BEIJING_STOPS[3], BEIJING_STOPS[1]];
-  choices.replaceChildren(...placeOrder.map(stop => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.setAttribute('aria-label', stop.name[0]);
-    button.append(annotated(...stop.name));
-    button.onclick = () => choosePlace(stop);
-    return button;
-  }));
+    index++;
+    if (index < BEIJING_STOPS.length) {
+      moveDoudou(() => {
+        showBeijingStop();
+        card.focus({preventScroll:true});
+      });
+      return;
+    }
+
+    closeScene();
+    stage = 'complete';
+    map.hidden = instruction.hidden = counter.hidden = card.hidden = true;
+    title.textContent = '四关都完成啦！';
+    title.removeAttribute('aria-label');
+    summary.hidden = false;
+    onStage(stage);
+    title.focus();
+    onFinish();
+  }
 
   function open(id) {
     closeScene();
     stage = id;
     index = 0;
-    root.hidden = false;
-    map.hidden = false;
+    root.hidden = map.hidden = instruction.hidden = counter.hidden = false;
+    summary.hidden = true;
     map.dataset.scene = id;
-    instruction.hidden = counter.hidden = false;
-    advanceStage.hidden = true;
-    advanceStage.disabled = false;
-    arrival.hidden = true;
-    find('tour-restart').hidden = true;
+
     const heading = CITY_TOUR_STAGES.find(item => item.id === id);
-    showTitle(heading.name, heading.pinyin, heading.english);
+    title.replaceChildren(annotated(heading.name, heading.pinyin, heading.english));
+    title.setAttribute('aria-label', heading.name);
     const route = READING_ROUTES[id];
-    destinations.hidden = Boolean(route);
-    readCard.hidden = !route;
     landmarks.hidden = !route;
+    points = route ? route.points : BEIJING_STOPS.map(stop => stop.point);
+    pointsLayer.replaceChildren(...(route ? points.slice(1) : points).map(point => {
+      const marker = document.createElement('span');
+      marker.className = 'tour-route-point';
+      position(marker, point);
+      return marker;
+    }));
+    position(doudou, points[index]);
 
     if (route) {
-      points = route.points;
       instruction.textContent = route.instruction;
       landmarks.replaceChildren(...route.landmarks.map(name => {
         const span = document.createElement('span');
         span.textContent = name;
         return span;
       }));
-      pointsLayer.replaceChildren(...points.slice(1).map((point, step) => {
-        if (id === 'river') return makeMapPoint(point, 'tour-route-point');
-        const [x, y] = point;
-        const offset = step % 2 ? 1 : -7;
-        return makeMapPoint([x + offset, y], 'tour-route-point tour-stair-label', route.words[step]);
-      }));
-      routeStep();
+      showRouteWord(route);
     } else {
-      points = BEIJING_STOPS.map(stop => stop.point);
-      pointsLayer.replaceChildren(...points.map(point => makeMapPoint(point, 'tour-route-point tour-city-pin')));
       showBeijingStop();
     }
 
     onStage(id);
-    title.focus();
+    title.focus({preventScroll:true});
+    window.scrollTo(0, 0);
     loadScene();
   }
 
-  confirmWord.onclick = () => {
+  card.onclick = event => {
+    if (card.hidden || event.detail > 1) return;
     const route = READING_ROUTES[stage];
-    if (!route || index >= route.words.length) return;
-    index++;
-    routeStep();
-    if (index !== route.words.length) return;
-    if (stage === 'mountain') {
-      advanceStage.disabled = true;
-      const current = generation;
-      window.setTimeout(() => {
-        if (current !== generation) return;
-        showLessonCelebration({title:route.arrival, durationMs:5000, onClose:() => {
-          advanceStage.disabled = false;
-          advanceStage.focus();
-        }});
-      }, reducedMotion.matches ? 0 : 1050);
-    } else {
-      advanceStage.focus();
-    }
+    if (route) advanceRoute(route);
+    else if (stage === 'beijing') advanceBeijing();
   };
-
-  advanceStage.onclick = () => open(READING_ROUTES[stage].nextStage);
-
-  confirmSentence.onclick = () => {
-    if (!atPlace || stage !== 'beijing') return;
-    index++;
-    if (index < BEIJING_STOPS.length) {
-      showBeijingStop();
-      choices.querySelector('button').focus({preventScroll:true});
-      return;
-    }
-    atPlace = false;
-    closeScene();
-    stage = 'complete';
-    map.hidden = instruction.hidden = counter.hidden = destinations.hidden = true;
-    title.textContent = '四关都完成啦！';
-    title.removeAttribute('aria-label');
-    arrival.textContent = '豆豆找回了记忆，也走完了中国之旅。';
-    arrival.hidden = false;
-    find('tour-restart').hidden = false;
-    onStage(stage);
-    title.focus();
-    onFinish();
+  card.onkeydown = event => {
+    if (event.repeat && (event.key === 'Enter' || event.key === ' ')) event.preventDefault();
   };
+  const observer = new ResizeObserver(placeCard);
+  observer.observe(map);
+  observer.observe(card);
 
   find('tour-restart').onclick = () => {
     root.hidden = true;
     onRestart();
   };
-  window.addEventListener('pagehide', event => { if (!event.persisted) closeScene(); });
+  window.addEventListener('pagehide', event => {
+    if (event.persisted) return;
+    window.clearTimeout(travelTimer);
+    pendingArrival = null;
+    observer.disconnect();
+    closeScene();
+  });
   return {open};
 }
