@@ -19,14 +19,28 @@ const speaker = find('time-speaker');
 const dialogue = find('time-line');
 const instruction = find('time-instruction');
 const next = find('time-next');
+const loveText = '爱你';
+const loveGlyphs = Promise.all(Array.from(loveText, character =>
+  fetch(import.meta.env.BASE_URL + 'strokes/' + encodeURIComponent(character) + '.json')
+    .then(response => response.ok ? response.json() : null)
+    .then(data => data?.strokes)
+)).catch(() => null);
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 let periodIndex = 0, lineIndex = 0, completed = false, awaitingJourney = Boolean(journey.returnUrl);
 let chargeTimer = 0;
 let bubbleAnimation;
 
-function label(element, hanzi, pinyin) {
+function label(element, hanzi, pinyin, english) {
   element.replaceChildren(ruby(hanzi, pinyin));
   element.setAttribute('aria-label', hanzi);
+  if (english) {
+    const translation = gloss(english);
+    translation.id = element.id + '-english';
+    element.append(translation);
+    element.setAttribute('aria-describedby', translation.id);
+  } else {
+    element.removeAttribute('aria-describedby');
+  }
 }
 
 for (let hour = 1; hour <= 12; hour++) {
@@ -105,8 +119,8 @@ function render() {
   if (!clock.hidden) showClock(period.clock);
   instruction.hidden = line.action !== 'ask';
   if (line.action === 'ask') {
-    label(instruction, '看时钟，说时间。', 'Kàn shízhōng, shuō shíjiān.');
-    label(next, '我说好了', 'Wǒ shuō hǎo le');
+    label(instruction, '看时钟，说时间。', 'Kàn shízhōng, shuō shíjiān.', 'Look at the clock and say the time.');
+    label(next, '我说好了', 'Wǒ shuō hǎo le', 'I’ve said it');
   } else if (line.action === 'charge') {
     label(next, '给豆豆充电', 'Gěi Dòudou chōngdiàn');
   } else if (lineIndex === period.lines.length - 1) {
@@ -117,12 +131,38 @@ function render() {
   }
 }
 
+async function drawLoveGlyphs(word) {
+  const glyphs = await loveGlyphs;
+  if (!word?.isConnected || !glyphs?.every(strokes => Array.isArray(strokes) && strokes.length) || !window.Path2D) return;
+
+  const canvas = document.createElement('canvas');
+  canvas.height = 256;
+  canvas.width = canvas.height * loveText.length;
+  const context = canvas.getContext('2d');
+  if (!context) return;
+
+  // Match the same 1024-unit, upward-pointing glyph used in the stroke practice.
+  const scale = canvas.height / 1024;
+  context.fillStyle = getComputedStyle(word).color;
+  glyphs.forEach((strokes, index) => {
+    context.setTransform(scale, 0, 0, -scale, index * canvas.height, 900 * scale);
+    for (const stroke of strokes) context.fill(new Path2D(stroke));
+  });
+
+  canvas.className = 'time-love-glyph';
+  canvas.setAttribute('aria-hidden', 'true');
+  canvas.textContent = loveText;
+  word.firstChild.textContent = word.firstChild.textContent.slice(loveText.length);
+  word.prepend(canvas);
+}
+
 function finishCharging() {
   completed = true;
   robot.classList.remove('is-charging');
   robot.classList.add('is-loving');
   heart.hidden = false;
   showDialogue(LOVE_LINE);
+  void drawLoveGlyphs(dialogue.querySelector('ruby'));
   next.disabled = false;
   label(next, ...(awaitingJourney ? ['完成探索', 'Wánchéng tànsuǒ'] : ['再玩一次', 'Zài wán yí cì']));
   next.focus({preventScroll:true});

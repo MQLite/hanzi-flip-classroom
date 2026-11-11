@@ -81,10 +81,14 @@ test('read each clock before Doudou answers, then charge and finish the explorat
         await expect(clock.locator('[data-hand=hour]')).toHaveCSS('--angle',period.angles[0]);
         await expect(clock.locator('[data-hand=minute]')).toHaveCSS('--angle',period.angles[1]);
         await expect(next).toHaveAccessibleName('我说好了');
+        await expect(page.locator('#time-instruction small[lang=en]')).toHaveText('Look at the clock and say the time.');
+        await expect(next.locator('small[lang=en]')).toHaveText('I’ve said it');
+        await expect(next).toHaveAccessibleDescription('I’ve said it');
         await expect(clock).toBeInViewport({ratio:1});
         await page.screenshot({path:testInfo.outputPath(period.id+'.png')});
         await next.click();
         await expect(line).toHaveAccessibleName(period.time);
+        await expect(next.locator('small[lang=en]')).toHaveCount(0);
         await expect(speaker).toHaveAttribute('aria-label','豆豆');
         await expect(scene).toHaveAttribute('data-speaker','doudou');
         expect((await bubble.boundingBox()).x).toBeGreaterThan(askLeft);
@@ -106,6 +110,14 @@ test('read each clock before Doudou answers, then charge and finish the explorat
   await expect(page.locator('#time-heart')).toBeVisible();
   await expect(page.locator('#time-robot')).toHaveClass(/is-loving/);
   await expect(line.locator('rt')).toHaveText('Ài nǐ!');
+  const loveGlyph = line.locator('canvas.time-love-glyph');
+  await expect(loveGlyph).toBeVisible();
+  await expect(loveGlyph).toHaveText('爱你');
+  const glyphHasInk = await loveGlyph.evaluate(canvas => {
+    const pixels = canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;
+    return pixels.some((value,index) => index % 4 === 3 && value > 0);
+  });
+  expect(glyphHasInk).toBe(true);
   await page.screenshot({path:testInfo.outputPath('love.png')});
   expect(await page.evaluate(key=>JSON.parse(localStorage.getItem(key))[0].status,storageKey)).toBe('active');
   await next.click();
@@ -133,6 +145,8 @@ test('mobile play fits the clock, shows the charging animation, and can replay',
     if (await next.getAttribute('aria-label') === '我说好了') {
       await expect(page.locator('#time-clock')).toBeInViewport({ratio:1});
       await expect(next).toBeInViewport();
+      await expect(next.locator('small[lang=en]')).toBeInViewport();
+      await expect(page.locator('#time-instruction small[lang=en]')).toBeInViewport();
     }
     await next.click();
   }

@@ -100,12 +100,14 @@ rt { font-size: .56em; font-weight: 500; line-height: 1.2; }
 [data-speaker="doudou"] .time-dialogue::after { left: auto; right: 8px; transform: scaleX(-1); }
 .time-speaker { margin: 0 0 8px; color: #215b49; font-size: 1rem; font-weight: 750; }
 .time-line { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px .19em; font-size: clamp(24px,min(3.1vw,5.4svh),42px); font-weight: 660; line-height: 1.35; }
+.time-love-glyph { inline-size: 2.2em; block-size: 1.1em; vertical-align: -.15em; }
 .time-line > span { display: inline-flex; flex-direction: column; text-align: center; align-items: center; }
 .time-line [data-word] { color: #803d24; background: #faedcf; border-radius: 8px; padding-inline: .13em; }
 .time-line [data-word] small { font-size: max(12px,.38em); line-height: 1.4; font-weight: 600; margin: 0 2px 4px; }
 .time-controls { position: absolute; z-index: 4; inset: auto 12px clamp(12px,3svh,28px); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; }
 .time-instruction { color: #fff9e9; background: #26251edb; margin: 0; padding: 8px 13px; border-radius: 12px; font-size: 1rem; }
 .time-next { min-height: 48px; max-width: 100%; border: 1px solid #194a3b; border-radius: 12px; padding: 9px 24px; background: #1b6652; color: #fff; font-weight: 750; font-size: clamp(16px,1.6vw,20px); cursor: pointer; box-shadow: 0 4px 14px #231d1b55; }
+.time-controls small[lang="en"] { display: block; margin-top: 4px; font-size: clamp(13px,1.25vw,17px); line-height: 1.35; font-weight: 500; }
 .time-next:hover:not(:disabled) { background: #22795f; }
 .time-next:disabled { opacity: .65; cursor: wait; }
 .time-robot {
