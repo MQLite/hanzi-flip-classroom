@@ -1,5 +1,6 @@
 import {ZHONGWEN_ID,PARADISE_ID,coursesForTextbook,stagesForTextbook} from './curriculum.js';
 import {ruby,gloss} from './ruby.js';
+import {CITY_TOUR_STAGES} from './city-tour-data.js';
 
 // Scenario content is separate from character and vocabulary question banks.
 export const EXPLORATIONS=[{
@@ -8,7 +9,7 @@ export const EXPLORATIONS=[{
   description:'一件旧衣，一面旧镜，两封未寄出的信。观察物件、组合线索，读懂《游子吟》《回乡偶书》里的心意。',
 }, {
   id:'city-mission',source:'paradise',textbook:PARADISE_ID,stage:'2A',book:2,lesson:2,
-  lessonTitle:'我从北京来',title:'豆豆的记忆',href:'./city.html',cityScene:true,
+  lessonTitle:'我从北京来',title:'豆豆游中国',href:'./city.html',cityScene:true,
 }, {
   id:'room-escape',source:'zhongwen',textbook:ZHONGWEN_ID,stage:'1',book:1,lesson:3,
   lessonTitle:'识字（三）',title:'密室逃脱',href:'./room.html',
@@ -50,11 +51,15 @@ export function renderExplorations(root,selection,{urlForScenario}={}){
     const art=document.createElement('div');art.className='exploration-cover';art.setAttribute('aria-hidden','true');
     if(scenario.cityScene){
       art.classList.add('city-exploration-cover');
-      art.textContent='🗺️';
       meta.replaceChildren(ruby('汉语乐园','Hànyǔ Lèyuán'),' · 2A · ',ruby('第','Dì'),'2',ruby('课','kè'));
-      title.replaceChildren(ruby(scenario.title,'Dòudou de jìyì'),gloss('Doudou’s Lost Memory'));
-      description.replaceChildren(ruby('读一读线索，','Dú yi dú xiànsuǒ,'),ruby('猜一猜城市。','cāi yi cāi chéngshì.'),gloss('Read the clues and guess the city.'));
-      tags.replaceChildren('7 ',ruby('关','guān'),gloss('7 levels'));
+      title.replaceChildren(ruby(scenario.title,'Dòudou yóu Zhōngguó'),gloss('Doudou Explores China'));
+      description.replaceChildren('和豆豆一起找回记忆、登泰山、游长江，再到北京认地标。',gloss('Find Doudou’s memories, climb Mount Tai, sail the Yangtze and explore Beijing.'));
+      tags.replaceChildren(...CITY_TOUR_STAGES.map((stage,index)=>{
+        const line=document.createElement('span');
+        line.className='city-tour-level';
+        line.textContent='第'+(index+1)+'关 · '+stage.name;
+        return line;
+      }));
       link.replaceChildren(ruby('进入情景','Jìnrù qíngjǐng'),gloss('Open the game'));
       link.setAttribute('aria-label','进入情景');
     }else if(scenario.id==='room-escape'){

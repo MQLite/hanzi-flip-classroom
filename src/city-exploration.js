@@ -3,6 +3,8 @@ import {ruby, gloss} from './ruby.js';
 import {renderRoute} from './city-route.js';
 import './city-exploration.css';
 import {bindExplorationJourney} from './island-exploration.js';
+import {CITY_TOUR_STAGES} from './city-tour-data.js';
+import {mountCityTour} from './city-tour.js';
 const islandJourney=bindExplorationJourney('city-mission');
 islandJourney.decorate();
 
@@ -11,6 +13,27 @@ const choices = byId('choices');
 const showClue = byId('show-clue');
 const next = byId('next-scene');
 const map = byId('city-map');
+const tourNav = byId('city-tour-nav');
+function updateTourProgress(id) {
+  const current = id === 'complete' ? CITY_TOUR_STAGES.length : CITY_TOUR_STAGES.findIndex(stage => stage.id === id);
+  tourNav.replaceChildren(...CITY_TOUR_STAGES.map((stage, index) => {
+    const item = document.createElement('li');
+    item.textContent = stage.name;
+    item.classList.toggle('is-complete', index < current);
+    if (index === current) item.setAttribute('aria-current', 'step');
+    return item;
+  }));
+}
+const tour = mountCityTour(byId('city-tour'), {
+  onStage: updateTourProgress,
+  onFinish: () => islandJourney.reportComplete(),
+  onRestart: () => {
+    byId('briefing').hidden = false;
+    updateTourProgress('memory');
+    byId('start-mission').focus();
+  },
+});
+updateTourProgress('memory');
 let level = 0;
 let revealed = 0;
 let solved = false;
@@ -58,7 +81,7 @@ function renderTracker() {
     const item = document.createElement('li');
     const complete = index < restored;
     item.textContent = complete ? '✓' : String(index + 1);
-    item.setAttribute('aria-label', `Level ${index + 1}: ${complete ? 'solved' : index === level ? 'open' : 'locked'}`);
+    item.setAttribute('aria-label', `City ${index + 1}: ${complete ? 'solved' : index === level ? 'open' : 'locked'}`);
     if (complete) item.className = 'solved';
     if (index === level) item.setAttribute('aria-current', 'step');
     return item;
@@ -90,10 +113,9 @@ function showAnswer() {
     ending.textContent = 'All seven memories restored!';
     answer.replaceChildren(speaker, speech, ending);
     answer.hidden = false;
-    label(next, '再玩一次', 'Zài wán yí cì', 'Play again');
-    islandJourney.reportComplete();
+    label(next, '去登泰山', 'Qù dēng Tàishān', 'Climb Mount Tai');
   } else {
-    label(next, '下一关 →', 'Xià yì guān', 'Next level');
+    label(next, '下一座城市 →', 'Xià yí zuò chéngshì', 'Next city');
   }
   guide(byId('feedback'), 'Correct!', ['猜对了！', 'Cāi duì le!']);
   for (const button of choices.children) button.disabled = true;
@@ -111,7 +133,7 @@ function openLevel() {
   for (const id of ['clues', 'objects', 'feedback', 'answer']) byId(id).replaceChildren();
   for (const id of ['guess', 'answer', 'next-scene', 'city-map']) byId(id).hidden = true;
   for (const button of choices.children) button.disabled = false;
-  guide(byId('scene-title'), `Level ${level + 1}`, ['第', 'Dì'], [String(level + 1)], ['关', 'guān']);
+  guide(byId('scene-title'), `City ${level + 1}`, ['第', 'Dì'], [String(level + 1)], ['站', 'zhàn']);
   label(showClue, '打开第一条线索', 'Dǎkāi dì yī tiáo xiànsuǒ', 'Open the first clue');
   showClue.hidden = false;
   renderTracker();
@@ -159,8 +181,7 @@ next.onclick = () => {
   if (!solved) return;
   if (level === scenes.length - 1) {
     byId('game').hidden = true;
-    byId('briefing').hidden = false;
-    byId('start-mission').focus();
+    tour.open('mountain');
     return;
   }
   level += 1;
