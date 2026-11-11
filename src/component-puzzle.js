@@ -48,11 +48,60 @@ function references() {
   return details;
 }
 
+function animatePart(root, source, target, origin) {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !source.animate) return;
+
+  const startTop = Math.max(6, Math.min(origin.top, window.innerHeight - origin.height - 6));
+  const end = target.getBoundingClientRect();
+  const x = end.left + (end.width - origin.width) / 2 - origin.left;
+  const y = end.top + (end.height - origin.height) / 2 - startTop;
+  const scale = Math.min(end.width / origin.width, end.height / origin.height);
+  const ghost = source.cloneNode(true);
+  ghost.classList.add('puzzle-part-flight');
+  ghost.setAttribute('aria-hidden', 'true');
+  ghost.tabIndex = -1;
+  ghost.style.left = origin.left + 'px';
+  ghost.style.top = startTop + 'px';
+  ghost.style.width = origin.width + 'px';
+  ghost.style.height = origin.height + 'px';
+  root.querySelector('.component-puzzle').append(ghost);
+
+  target.classList.add('is-landing');
+  const motion = ghost.animate([
+    {transform:'translate(0px, 0px) scale(1)'},
+    {transform:'translate(0px, -20px) scale(1.25)', offset:.3},
+    {transform:'translate(' + x + 'px, ' + y + 'px) scale(' + scale + ')'},
+  ], {duration:620, easing:'cubic-bezier(.22,.65,.28,1)'});
+  const settle = () => {
+    ghost.remove();
+    target.classList.remove('is-landing');
+  };
+  motion.onfinish = motion.oncancel = settle;
+}
+
+function pickPart(root, source, palette, index, id, previousCount, onAction) {
+  const scrollTop = palette.scrollTop;
+  const hadFocus = document.activeElement === source;
+  onAction('part', id);
+
+  const nextPalette = root.querySelector('.parts-palette');
+  const nextCard = nextPalette?.children[index];
+  if (!nextCard) return;
+  nextPalette.scrollTop = scrollTop;
+  if (hadFocus) nextCard.focus({preventScroll:true});
+
+  const selected = root.querySelectorAll('.parts-tray .selected-part');
+  if (selected.length !== previousCount + 1) return;
+  const target = selected[previousCount];
+  target.scrollIntoView({block:'nearest', inline:'nearest', behavior:'instant'});
+  animatePart(root, source, target, nextCard.getBoundingClientRect());
+}
+
 /** Render the discovery puzzle while leaving state transitions and glyph lifecycle to its owner. */
 export function renderComponentPuzzle(root, {state, pool, onAction, renderGlyph}) {
   const wrapper = node('div', undefined, 'component-puzzle');
   const header = node('header', undefined, 'puzzle-heading');
-  header.append(node('h3', '这些部件能拼出本课哪个字？'), node('p', '先选部件，再点“合一合”。同一部件可以多选，部件先后顺序不限。', 'construction-instruction'));
+  header.append(node('h3', '这些部件能拼出本课哪个字？'), node('p', '点选部件，再点「合一合」。同一部件可以多选，顺序不限。', 'construction-instruction'));
   wrapper.append(header);
 
   if (!pool.puzzles.length) {
@@ -64,10 +113,10 @@ export function renderComponentPuzzle(root, {state, pool, onAction, renderGlyph}
   const row = node('div', undefined, 'puzzle-workspace');
   const choices = node('section', undefined, 'puzzle-choices');
   choices.setAttribute('aria-label', '可选择的部件');
-  choices.append(node('h4', '1 · 选一选'));
+  choices.append(node('h4', '部件'));
   const palette = node('div', undefined, 'parts-palette');
-  for (const component of pool.components) {
-    const card = button('', 'part-card', () => onAction('part', component.id));
+  for (const [index, component] of pool.components.entries()) {
+    const card = button('', 'part-card', () => pickPart(root, card, palette, index, component.id, state.selected.length, onAction));
     card.setAttribute('aria-label', `选择${component.name}`);
     card.append(componentShape(component, renderGlyph), node('span', component.name));
     palette.append(card);
@@ -76,7 +125,7 @@ export function renderComponentPuzzle(root, {state, pool, onAction, renderGlyph}
 
   const assembly = node('section', undefined, 'puzzle-assembly');
   assembly.setAttribute('aria-label', '组合选中的部件');
-  assembly.append(node('h4', '2 · 合一合'));
+  assembly.append(node('h4', '选中的部件'));
   const tray = node('div', undefined, 'parts-tray');
   tray.setAttribute('aria-label', '选中的部件');
   for (const [index, id] of state.selected.entries()) {
@@ -86,7 +135,7 @@ export function renderComponentPuzzle(root, {state, pool, onAction, renderGlyph}
     card.append(componentShape(component, renderGlyph), node('span', `${component.name} ×`));
     tray.append(card);
   }
-  if (!state.selected.length) tray.append(node('p', '点选左边的部件，放进这里。'));
+  if (!state.selected.length) tray.append(node('p', '从上方选择部件。'));
   const check = button('合一合', 'construction-primary', () => onAction('check', null));
   check.disabled = !state.selected.length;
   const message = state.feedback === 'retry' ? '这组还没有拼成本课的字，试着换一换部件。' : state.feedback === 'matched' ? '拼出来了！一起读一读，再找下一个。' : '可以先观察部件的形状。';
@@ -96,7 +145,7 @@ export function renderComponentPuzzle(root, {state, pool, onAction, renderGlyph}
 
   const answers = node('section', undefined, 'puzzle-answers');
   answers.setAttribute('aria-label', '拼出的汉字和本课发现');
-  answers.append(node('h4', '3 · 读一读'));
+  answers.append(node('h4', '拼出的字'));
   const reveal = node('div', undefined, 'puzzle-reveal');
   reveal.setAttribute('aria-live', 'polite');
   for (const character of state.revealed) {
@@ -108,13 +157,6 @@ export function renderComponentPuzzle(root, {state, pool, onAction, renderGlyph}
     reveal.append(card);
   }
   answers.append(reveal);
-  if (!state.revealed.length) {
-    const placeholder = node('div', undefined, 'puzzle-answer-placeholder');
-    const question = node('span', '？');
-    question.setAttribute('aria-hidden', 'true');
-    placeholder.append(question, node('p', '合一合后，一起揭晓。'));
-    answers.append(placeholder);
-  }
   answers.append(node('h4', `本课发现 ${state.found.length} / ${pool.puzzles.length}`, 'puzzle-collection-label'));
   const collected = node('div', undefined, 'puzzle-collected');
   for (const character of state.found) collected.append(node('span', character));

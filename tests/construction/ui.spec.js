@@ -71,3 +71,43 @@ test('site: a merged puzzle answer is fully visible on a 720p projector',async({
  await page.setViewportSize({width:1280,height:720});await page.goto('/?mode=puzzle');await page.getByRole('button',{name:'选择女',exact:true}).click();await page.getByRole('button',{name:'选择子',exact:true}).click();await page.getByRole('button',{name:'合一合',exact:true}).click();
  const card=page.locator('.puzzle-reveal article');await expect(card).toContainText('好');await expect(card.locator('svg path')).toHaveCount(6);const bounds=await card.boundingBox();expect(bounds.y+bounds.height).toBeLessThanOrEqual(720);
 });
+
+test('puzzle: the component wall spans the page and a selected tile pops into the tray below', async ({page}, testInfo) => {
+  await page.setViewportSize({width:1280,height:720});
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  await page.goto('/?mode=puzzle');
+  const workspace = page.locator('.puzzle-workspace');
+  const wall = workspace.locator('.puzzle-choices');
+  const tray = workspace.locator('.parts-tray');
+  const tile = wall.getByRole('button',{name:'选择女',exact:true});
+  await expect(tile.locator('svg path')).toHaveCount(3);
+  const workspaceBounds = await workspace.boundingBox();
+  const wallBounds = await wall.boundingBox();
+  const trayBounds = await tray.boundingBox();
+  expect(wallBounds.width).toBeGreaterThan(workspaceBounds.width * .95);
+  expect(trayBounds.y).toBeGreaterThanOrEqual(wallBounds.y + wallBounds.height);
+  await tile.click();
+  const flight = page.locator('.component-puzzle .puzzle-part-flight');
+  await expect(flight).toBeVisible();
+  const keyframes = await flight.evaluate(card => card.getAnimations()[0].effect.getKeyframes());
+  expect(keyframes[1].transform).toContain('scale(1.25)');
+  expect(keyframes.at(-1).transform).toMatch(/scale\(0\./);
+  const selected = tray.getByRole('button',{name:'移除第1个女',exact:true});
+  await expect(selected).toHaveClass(/is-landing/);
+  await flight.evaluate(card => {
+    const animation = card.getAnimations()[0];
+    animation.pause();
+    animation.currentTime = 185;
+  });
+  await page.screenshot({path:testInfo.outputPath('component-pop.png')});
+  await flight.evaluate(card => card.getAnimations()[0].play());
+  await expect(flight).toHaveCount(0);
+  await expect(selected).not.toHaveClass(/is-landing/);
+  await expect(selected).toBeInViewport();
+  await expect(tile).toBeFocused();
+  await page.screenshot({path:testInfo.outputPath('component-wall.png')});
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await tile.click();
+  await expect(tray.getByRole('button',{name:'移除第2个女',exact:true})).toBeVisible();
+  await expect(flight).toHaveCount(0);
+});
