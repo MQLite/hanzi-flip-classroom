@@ -18,6 +18,7 @@ test('read each clock before Doudou answers, then charge and finish the explorat
   await page.goto(href+'?'+params);
   await expect(page.getByRole('heading',{name:'豆豆，现在几点？'})).toBeVisible();
   const line = page.locator('#time-line');
+  const speaker = page.locator('#time-speaker');
   const next = page.locator('#time-next');
   const clock = page.locator('#time-clock');
   const vocab = new Map();
@@ -41,6 +42,8 @@ test('read each clock before Doudou answers, then charge and finish the explorat
         vocab.set(await token.getAttribute('data-word'),await token.locator('small[lang=en]').textContent());
       }
       if (sentence.includes('现在几点？')) {
+        await expect(speaker).toHaveAttribute('aria-label','小明');
+        await expect(speaker.locator('rt')).toHaveText('Xiǎomíng');
         await expect(clock).toBeVisible();
         await expect(line).not.toHaveAccessibleName(period.time);
         await expect(clock.locator('[data-hand=hour]')).toHaveCSS('--angle',period.angles[0]);
@@ -50,6 +53,7 @@ test('read each clock before Doudou answers, then charge and finish the explorat
         await page.screenshot({path:testInfo.outputPath(period.id+'.png')});
         await next.click();
         await expect(line).toHaveAccessibleName(period.time);
+        await expect(speaker).toHaveAttribute('aria-label','豆豆');
         continue;
       }
       await next.click();

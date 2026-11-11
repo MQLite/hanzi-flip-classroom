@@ -54,7 +54,7 @@ function showClock([hour, minute]) {
 
 function showDialogue({speaker: role, tokens}) {
   const isDoudou = role === 'doudou';
-  label(speaker, ...(isDoudou ? ['豆豆', 'Dòudou'] : ['你', 'Nǐ']));
+  label(speaker, ...(isDoudou ? ['豆豆', 'Dòudou'] : ['小明', 'Xiǎomíng']));
   scene.dataset.speaker = role;
   dialogue.setAttribute('aria-label', tokens.map(([word]) => word).join(''));
 
