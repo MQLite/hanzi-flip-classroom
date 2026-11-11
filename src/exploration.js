@@ -11,6 +11,10 @@ export const EXPLORATIONS=[{
   id:'city-mission',source:'paradise',textbook:PARADISE_ID,stage:'2A',book:2,lesson:2,
   lessonTitle:'我从北京来',title:'豆豆游中国',href:'./city.html',cityScene:true,
 }, {
+  id:'doudou-time',source:'paradise',textbook:PARADISE_ID,stage:'2A',book:2,lesson:3,
+  lessonTitle:'现在几点',title:'豆豆，现在几点？',href:'./doudou-time.html',
+  description:'看时钟，跟豆豆说时间，聊聊早饭、午饭和晚饭。',
+}, {
   id:'room-escape',source:'zhongwen',textbook:ZHONGWEN_ID,stage:'1',book:1,lesson:3,
   lessonTitle:'识字（三）',title:'密室逃脱',href:'./room.html',
   description:'出口锁住了。读懂十二条汉字线索，跟猫咪找到钥匙，一起打开房门。',
@@ -36,7 +40,7 @@ export function renderExplorations(root,selection,{urlForScenario}={}){
   if(!scenarios.length){
     const empty=document.createElement('div');empty.className='exploration-empty';
     const title=document.createElement('h3');title.textContent='本课情景待补充';
-    const note=document.createElement('p');note.textContent='试试中文第一册第3课「密室逃脱」、第五册第9课「旧屋里的两封信」，或汉语乐园 2A 第2课「豆豆的记忆」。';
+    const note=document.createElement('p');note.textContent='试试中文第一册第3课「密室逃脱」、第五册第9课「旧屋里的两封信」，或汉语乐园 2A 第2课「豆豆游中国」和第3课「豆豆，现在几点？」。';
     empty.append(title,note);root.append(empty);return;
   }
   for(const scenario of scenarios){
@@ -62,6 +66,11 @@ export function renderExplorations(root,selection,{urlForScenario}={}){
       }));
       link.replaceChildren(ruby('进入情景','Jìnrù qíngjǐng'),gloss('Open the game'));
       link.setAttribute('aria-label','进入情景');
+    }else if(scenario.id==='doudou-time'){
+      art.classList.add('time-exploration-cover');
+      meta.textContent='汉语乐园 · 2A · 第3课 现在几点';
+      title.replaceChildren(ruby('豆豆，','Dòudou,'),ruby('现在几点？','xiànzài jǐ diǎn?'));
+      title.setAttribute('aria-label',scenario.title);
     }else if(scenario.id==='room-escape'){
       meta.textContent='中文（暨南大学版）· 第一册 · 第3课 识字（三）';
       tags.textContent='12条汉字线索　·　3D密室　·　猫咪同伴';

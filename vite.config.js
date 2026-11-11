@@ -12,6 +12,7 @@ export default defineConfig({
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         quest: fileURLToPath(new URL('./quest.html', import.meta.url)),
         city: fileURLToPath(new URL('./city.html', import.meta.url)),
+        doudouTime: fileURLToPath(new URL('./doudou-time.html', import.meta.url)),
         room: fileURLToPath(new URL('./room.html', import.meta.url)),
       },
       output: {

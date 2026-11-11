@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>豆豆，现在几点？ · 汉语乐园 2A</title>
+</head>
+<body>
+  <main class="time-page">
+    <header class="time-header">
+      <a href="./?mode=explore&amp;source=paradise&amp;stage=2A&amp;lesson=3" aria-label="返回情景探索">← <ruby>返回情景探索<rt>Fǎnhuí qíngjǐng tànsuǒ</rt></ruby></a>
+      <span><ruby>汉语乐园<rt>Hànyǔ Lèyuán</rt></ruby> · 2A · <ruby>第3课<rt>Dì sān kè</rt></ruby></span>
+    </header>
+    <h1 aria-label="豆豆，现在几点？"><ruby>豆豆，<rt>Dòudou,</rt></ruby><ruby>现在<rt>xiànzài</rt></ruby><ruby>几点？<rt>jǐ diǎn?</rt></ruby></h1>
+    <ol id="time-periods" class="time-periods" aria-label="早上、中午、晚上"></ol>
+
+    <div class="time-layout">
+      <div id="time-scene" class="time-scene">
+        <div id="time-clock" class="time-clock" role="img" hidden>
+          <div id="time-clock-numbers" aria-hidden="true"></div>
+          <span class="clock-hand" data-hand="hour" aria-hidden="true"></span>
+          <span class="clock-hand" data-hand="minute" aria-hidden="true"></span>
+          <span class="clock-center" aria-hidden="true"></span>
+        </div>
+        <div id="time-robot" class="time-robot" aria-hidden="true">
+          <span class="time-robot-antenna"></span>
+          <span class="time-robot-head"><span class="time-robot-face"><i></i><i></i><b></b></span></span>
+          <span class="time-robot-body"><span class="time-robot-battery"><i></i></span></span>
+          <span class="time-robot-arm arm-left"></span>
+          <span class="time-robot-arm arm-right"></span>
+          <span class="time-robot-foot foot-left"></span>
+          <span class="time-robot-foot foot-right"></span>
+          <span id="time-heart" class="time-heart" hidden>♥</span>
+        </div>
+      </div>
+
+      <section class="time-dialogue" aria-label="情景对话">
+        <div class="time-speaking" aria-live="polite">
+          <p id="time-speaker" class="time-speaker"></p>
+          <div id="time-line" class="time-line" role="group"></div>
+        </div>
+        <p id="time-instruction" class="time-instruction" hidden></p>
+        <button id="time-next" class="time-next" type="button"></button>
+      </section>
+    </div>
+  </main>
+  <script type="module" src="/src/doudou-time.js"></script>
+</body>
+</html>
