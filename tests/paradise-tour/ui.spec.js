@@ -102,10 +102,17 @@ test('Doudou leads all four parts and only the last stop completes the island ch
       await expect(card).toBeInViewport({ratio:1});
       await page.screenshot({path:testInfo.outputPath('beijing.png')});
     }
+    if (index === stops.length - 1) {
+      await expect(page.locator('#lesson-celebration')).toHaveCount(0);
+      await page.emulateMedia({reducedMotion:'no-preference'});
+    }
     await card.click();
   }
   expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('hanzi-flip.island-journeys.v1'))[0].status)).toBe('complete');
   await expect(page.locator('#lesson-celebration-title')).toHaveText('太牛啦');
+  const fireworks = page.locator('#lesson-celebration canvas');
+  expect(await fireworks.boundingBox()).toEqual({x:0,y:0,width:1280,height:720});
+  await page.screenshot({path:testInfo.outputPath('four-stage-fireworks.png')});
   await page.getByRole('button',{name:'关闭庆祝'}).click();
   await expect(page.getByRole('heading',{name:'四关都完成啦！'})).toBeVisible();
   await page.getByRole('button',{name:'从第一关再玩'}).click();
@@ -149,4 +156,13 @@ test('Doudou can still read and travel on a phone with WebGL disabled', async ({
   await expect(card).toHaveAccessibleName('故宫在中国，中国在东方。');
   await expect(card).toBeInViewport({ratio:1});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  for (const word of ['故宫在中国，中国在东方。','说出地名','长城','万里','长','万里长城万里长。','说出地名','博物馆','城里','逛一逛','我们在博物馆逛一逛。']) {
+    await expect(card).toHaveAccessibleName(word);
+    await card.click();
+  }
+  const finale = page.getByRole('dialog',{name:'四关都完成啦！'});
+  await expect(finale).toBeVisible();
+  expect(await finale.locator('canvas').boundingBox()).toEqual({x:0,y:0,width:390,height:844});
+  await finale.getByRole('button',{name:'关闭庆祝'}).click();
+  await expect(page.getByRole('button',{name:'从第一关再玩'})).toBeVisible();
 });

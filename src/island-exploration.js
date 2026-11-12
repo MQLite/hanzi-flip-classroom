@@ -29,10 +29,10 @@ export function bindExplorationJourney(scenarioId){
    if(!a.classList.contains('room-quiet'))a.textContent='← 返回小岛地图';
   }
  }
- function reportComplete(){
+ function reportComplete(celebration){
   if(!initial||awarded)return false;const result=reportExplorationComplete(scenarioId,search);if(!result)return false;awarded=true;
   const celebrate=result.state.status==='complete'&&!result.state.celebrated;
-  if(celebrate){saveJourney(markJourneyCelebrated(result.state));showLessonCelebration();}
+  if(celebrate){saveJourney(markJourneyCelebrated(result.state));showLessonCelebration(celebration);}
   if(!result.saved){const note=document.createElement('p');note.setAttribute('role','status');note.textContent='浏览器未能保存，本次通关仅保留在本页。';document.body.append(note);}
   return celebrate;
  }

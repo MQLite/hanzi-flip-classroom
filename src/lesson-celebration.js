@@ -1,11 +1,12 @@
 import './lesson-celebration.css';
 
 const DURATION = 10000;
+const DEFAULT_BURSTS = 7;
 const COLORS = ['#ffd66d', '#ff8fb4', '#80edff', '#b8ffa7', '#c3a4ff', '#fff5c4'];
 let activeCelebration = null;
 
 /** Show fireworks. The caller decides when to celebrate a completed round. */
-export function showLessonCelebration({onClose, title = '太牛啦', durationMs = DURATION, playSound} = {}) {
+export function showLessonCelebration({onClose, title = '太牛啦', durationMs = DURATION, playSound, burstCount = DEFAULT_BURSTS} = {}) {
   activeCelebration?.dispose();
   const previousFocus = document.activeElement;
   const dialog = document.createElement('dialog');
@@ -25,6 +26,7 @@ export function showLessonCelebration({onClose, title = '太牛啦', durationMs 
   const context = canvas.getContext('2d');
   const closeButton = dialog.querySelector('button');
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const spreadAcrossScreen = burstCount > DEFAULT_BURSTS;
   const startedAt = performance.now();
   let width = 0;
   let height = 0;
@@ -51,7 +53,8 @@ export function showLessonCelebration({onClose, title = '太牛啦', durationMs 
   function drawConfetti() {
     drawBackground();
     const scale = Math.max(0.75, Math.min(width, height) / 720);
-    for (let i = 0; i < 180; i++) {
+    const pieces = spreadAcrossScreen ? 320 : 180;
+    for (let i = 0; i < pieces; i++) {
       const x = ((i * 0.61803398875 + 0.07) % 1) * width;
       const y = ((i * 0.41421356237 + 0.09) % 1) * height;
       context.save();
@@ -67,12 +70,14 @@ export function showLessonCelebration({onClose, title = '太牛啦', durationMs 
     drawBackground();
     context.globalCompositeOperation = 'lighter';
     const size = Math.min(width, height);
-    for (let burst = 0; burst < 7; burst++) {
+    for (let burst = 0; burst < burstCount; burst++) {
       const cycle = elapsed / 1000 + burst * 0.34;
       const age = cycle % 2.45;
       const round = Math.floor(cycle / 2.45);
       const cx = (0.12 + ((burst * 0.29 + round * 0.19) % 0.76)) * width;
-      const cy = (0.13 + ((burst * 0.17 + round * 0.13) % 0.55)) * height;
+      const cy = spreadAcrossScreen
+        ? (0.09 + ((burst * 0.173 + round * 0.131) % 0.76)) * height
+        : (0.13 + ((burst * 0.17 + round * 0.13) % 0.55)) * height;
       const progress = Math.min(age / 1.9, 1);
       const radius = size * (0.14 + (burst % 3) * 0.045) * (1 - (1 - progress) ** 2);
       const opacity = Math.max(0, 1 - age / 2.1);

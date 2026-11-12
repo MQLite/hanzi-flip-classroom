@@ -5,6 +5,7 @@ import './city-exploration.css';
 import {bindExplorationJourney} from './island-exploration.js';
 import {CITY_TOUR_STAGES} from './city-tour-data.js';
 import {mountCityTour} from './city-tour.js';
+import {showLessonCelebration} from './lesson-celebration.js';
 const islandJourney=bindExplorationJourney('city-mission');
 islandJourney.decorate();
 
@@ -26,7 +27,12 @@ function updateTourProgress(id) {
 }
 const tour = mountCityTour(byId('city-tour'), {
   onStage: updateTourProgress,
-  onFinish: () => islandJourney.reportComplete(),
+  onFinish() {
+    const fireworks = {burstCount:18};
+    if (!islandJourney.reportComplete(fireworks)) {
+      showLessonCelebration({...fireworks, title:'四关都完成啦！'});
+    }
+  },
   onRestart: () => {
     byId('briefing').hidden = false;
     updateTourProgress('memory');
