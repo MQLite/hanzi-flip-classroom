@@ -1,5 +1,6 @@
 import {createPoisonAudio} from './poison-sound.js';
 import {createPoisonWitch} from './poison-witch.js';
+import {createAntidoteBottle,createRescuedChild} from './poison-rescue-art.js';
 import {withEnglishInstruction} from './english-instructions.js';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const actionEnglish = {
@@ -10,7 +11,7 @@ const actionEnglish = {
   'poison-prepare': 'Change cards',
   'poison-antidote': 'Use the antidote',
   'poison-antidote-skip': 'Skip the antidote',
-  'poison-rescue': 'Done reading. Rescued!',
+  'poison-rescue': 'Give the antidote',
   'poison-next': 'Replay this round',
   'poison-restart-challenge': 'Play again',
   'poison-change-lesson': 'Choose another lesson',
@@ -21,7 +22,7 @@ function term(word,pinyin){
   if(pinyin&&word.pinyin)box.append(el('small',word.pinyin,'poison-pinyin'));return box;
 }
 export function createPoisonView(host,dispatch){
-  let model={},key=null,cardNodes=[],controller=new AbortController(),active=false;const audio=createPoisonAudio();
+  let model={},key=null,cardNodes=[],controller=new AbortController(),active=false,rescueCharacter='boy';const audio=createPoisonAudio();
   function button(id,label,kind='',english=actionEnglish[id]){
     const b=el('button',label,kind);b.id=id;
     return withEnglishInstruction(b,english);
@@ -60,7 +61,23 @@ export function createPoisonView(host,dispatch){
     if(model.state.round===1)panel.append(button('poison-prepare','换字词','text-button'));
     host.append(panel);
   }
-  function buildBoard(animateHit=false){
+  function antidotePanel(sentenceText){
+    const panel=el('div',undefined,'poison-antidote-panel');
+    const sentence=el('p',sentenceText);sentence.id='poison-antidote-sentence';
+    const row=el('div',undefined,'poison-antidote-row');
+    const feed=button('poison-rescue','喂解药','primary');feed.prepend(createAntidoteBottle());
+    row.append(sentence,feed);
+    const choices=el('div',undefined,'poison-character-options');
+    choices.setAttribute('role','radiogroup');choices.setAttribute('aria-label','变回男孩或女孩');
+    for(const [value,label,english] of [['boy','男孩','Boy'],['girl','女孩','Girl']]){
+      const option=el('label'),radio=el('input');
+      radio.type='radio';radio.name='poison-character';radio.value=value;radio.checked=value===rescueCharacter;
+      option.append(radio,withEnglishInstruction(el('span',label),english));choices.append(option);
+    }
+    panel.append(withEnglishInstruction(el('small','请读出解药句子'),'Read the antidote sentence aloud.'),row,choices,button('poison-antidote-skip','跳过解药','text-button'));
+    return panel;
+  }
+  function buildBoard(animateHit=false,animateRescue=false){
     const state=model.state;host.replaceChildren();cardNodes=[];
     const hiding=state.phase==='hide';
     if(state.phase!=='complete')host.append(hiding
@@ -74,9 +91,19 @@ export function createPoisonView(host,dispatch){
       const magic=el('section',undefined,'poison-magic');magic.id='poison-magic';
       const art=el('div',undefined,'poison-magic-art');art.setAttribute('role','img');art.setAttribute('aria-label','魔法烟雾和小青蛙变身效果');
       if(state.antidoteStatus!=='rescued'){art.setAttribute('role','group');art.setAttribute('aria-label','女巫拿着空瓶坏笑，同学变成小青蛙');art.append(createPoisonWitch({animate:animateHit}));}
-      if(state.antidoteStatus==='reading')art.classList.add('is-transformed');
-      if(state.antidoteStatus==='rescued'){art.classList.add('is-rescued');art.setAttribute('aria-label','解药生效，同学恢复笑脸');}
-      art.append(el('span','🙂','poison-before'),el('span','🐸','poison-frog'));
+      if(state.antidoteStatus==='reading'){
+        magic.classList.add('is-reading-antidote');art.classList.add('is-transformed');
+      }
+      if(state.antidoteStatus==='rescued'){
+        art.classList.add('is-rescued');
+        art.setAttribute('aria-label',`小青蛙吃下解药，变回${state.rescuedCharacter==='girl'?'女孩':'男孩'}`);
+        const child=el('span',undefined,'poison-rescued-child');child.append(createRescuedChild(state.rescuedCharacter));art.append(child);
+        if(animateRescue){
+          art.classList.add('is-feeding');
+          const dose=el('span',undefined,'poison-rescue-dose');dose.append(createAntidoteBottle());art.append(dose);
+        }
+      }else art.append(el('span','🙂','poison-before'));
+      art.append(el('span','🐸','poison-frog'));
       for(let i=0;i<9;i++){const puff=el('i');puff.style.setProperty('--puff',i);art.append(puff);}magic.append(art);
       const copy=el('div');if(state.antidoteStatus!=='rescued')copy.append(el('h3','哎呀，中毒啦！'));
       if(['available','unavailable'].includes(state.antidoteStatus)){
@@ -84,10 +111,7 @@ export function createPoisonView(host,dispatch){
         const use=button('poison-antidote',state.antidote?'用解药':'暂无解药','primary',state.antidote?actionEnglish['poison-antidote']:null);use.disabled=!state.antidote;
         prompt.append(use,button('poison-antidote-skip',state.antidote?'跳过解药':'继续','',state.antidote?actionEnglish['poison-antidote-skip']:'Continue'));copy.append(prompt);
       }
-      if(state.antidoteStatus==='reading'){
-        const panel=el('div',undefined,'poison-antidote-panel'),sentence=el('p',state.antidote.sentence);sentence.id='poison-antidote-sentence';
-        panel.append(withEnglishInstruction(el('small','请读出解药句子'),'Read the antidote sentence aloud.'),sentence,button('poison-rescue','读完了，解救成功','primary'),button('poison-antidote-skip','跳过解药'));copy.append(panel);
-      }
+      if(state.antidoteStatus==='reading')copy.append(antidotePanel(state.antidote.sentence));
       if(['rescued','skipped'].includes(state.antidoteStatus)){
         const finalRound=state.round===3;
         copy.append(button('poison-continue',finalRound?'完成挑战':'下一轮','primary',finalRound?'Finish':'Next round'));
@@ -133,14 +157,19 @@ export function createPoisonView(host,dispatch){
     const b=event.target.closest('button');if(!b||!host.contains(b)||b.disabled)return;
     if(b.dataset.poisonChoice){dispatch('choose-word',b.dataset.poisonChoice);return;}
     if(b.dataset.poisonCard){dispatch('card',b.dataset.poisonCard);return;}
-    const intent={'poison-start':'start','poison-begin-hide':'hide','poison-seal':'seal','poison-read':'read','poison-next':'repeat-round','poison-continue':'advance-round','poison-prepare':'prepare','poison-antidote':'antidote','poison-rescue':'rescue','poison-change-lesson':'change-lesson','poison-antidote-skip':'skip-antidote','poison-restart-challenge':'restart-challenge'}[b.id];
+    if(b.id==='poison-rescue'){dispatch('rescue',rescueCharacter);return;}
+    const intent={'poison-start':'start','poison-begin-hide':'hide','poison-seal':'seal','poison-read':'read','poison-next':'repeat-round','poison-continue':'advance-round','poison-prepare':'prepare','poison-antidote':'antidote','poison-change-lesson':'change-lesson','poison-antidote-skip':'skip-antidote','poison-restart-challenge':'restart-challenge'}[b.id];
     if(intent)dispatch(intent);
   },{signal:controller.signal});
-  host.addEventListener('change',event=>{if(event.target.id==='poison-antidote-choice')dispatch('antidote-choice',event.target.value);},{signal:controller.signal});
+  host.addEventListener('change',event=>{
+    if(event.target.id==='poison-antidote-choice')dispatch('antidote-choice',event.target.value);
+    if(event.target.name==='poison-character')rescueCharacter=event.target.value;
+  },{signal:controller.signal});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)audio.stop();},{signal:controller.signal});
   return {
     update(next){
       const previous=model.state,previousPinyin=model.showPinyin;model=next;
+      if(previous?.words!==next.state?.words)rescueCharacter='boy';
       if(previous&&(!next.state||previous.words!==next.state.words||previous.round!==next.state.round))audio.stop();
       audio.setEnabled(next.soundEnabled!==false);
       host.dataset.round=next.state?.round??1;
@@ -153,12 +182,13 @@ export function createPoisonView(host,dispatch){
         return;
       }
       if(active&&previous?.phase==='read'&&next.state?.phase==='complete')audio.playPoison();
-      if(active&&previous?.antidoteStatus!=='rescued'&&next.state?.antidoteStatus==='rescued')audio.playRescue();
+      const animateRescue=active&&previous?.antidoteStatus==='reading'&&next.state?.antidoteStatus==='rescued'&&previous.words===next.state.words;
+      if(animateRescue)audio.playRescue();
       const focused=document.activeElement,focus=host.contains(focused)?{id:focused.id,choice:focused.dataset.poisonChoice}:null;
       if(!next.state){prepare();if(focus?.choice)host.querySelectorAll('[data-poison-choice]').forEach(b=>{if(b.dataset.poisonChoice===focus.choice)b.focus();});else if(focus?.id)host.querySelector(`#${focus.id}`)?.focus();return;}
       const changed=key!==next.state.words||previous?.phase!==next.state.phase||previous?.antidoteStatus!==next.state.antidoteStatus||previousPinyin!==next.showPinyin;
       host.dataset.phase=next.state.phase;
-      if(changed){key=next.state.words;if(next.state.phase==='cover'||next.state.phase==='ready')cover(next.state.phase==='ready');else buildBoard(previous?.phase==='read'&&next.state.phase==='complete');}
+      if(changed){key=next.state.words;if(next.state.phase==='cover'||next.state.phase==='ready')cover(next.state.phase==='ready');else buildBoard(previous?.phase==='read'&&next.state.phase==='complete',animateRescue);}
       if(['hide','read','complete'].includes(next.state.phase))updateBoard();
       if(changed&&focus){const target=host.querySelector('#poison-rescue,#poison-begin-hide,#poison-read,#poison-antidote:not(:disabled),#poison-antidote-skip,#poison-continue:not(:disabled),#poison-next,[data-poison-card]:not(:disabled)');target?.focus();}
     },

@@ -36,7 +36,10 @@ export function revealPoisonCard(state){
 }
 export function coverPoisonSecrets(state){return state?.phase==='hide'?report({...state,phase:'cover'},'info','请其他同学再次闭眼，再继续藏毒。'):state;}
 export function beginPoisonAntidote(state){return state.phase==='complete'&&state.antidoteStatus==='available'?report({...state,antidoteStatus:'reading'},'info','请读出本课解药句子，再由老师确认解救。'):state;}
-export function finishPoisonAntidote(state){return state.phase==='complete'&&state.antidoteStatus==='reading'?report({...state,antidoteStatus:'rescued'},'safe','解救成功！同学恢复啦，大家继续参加。'):state;}
+export function finishPoisonAntidote(state, character='boy'){
+  if(state.phase!=='complete'||state.antidoteStatus!=='reading'||!['boy','girl'].includes(character))return state;
+  return report({...state,antidoteStatus:'rescued',rescuedCharacter:character},'safe','解救成功！同学恢复啦，大家继续参加。');
+}
 export function nextPoisonRound(state){return state.phase==='complete'?createPoisonState({words:state.words,poisonCount:state.poisonCount,round:state.round+1,antidote:state.antidote}):state;}
 export function readPoisonCard(state,id){
   if(state.phase!=='read'||!state.words.some(w=>w.id===id)||state.results.some(r=>r.cardId===id))return state;
