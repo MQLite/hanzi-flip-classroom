@@ -1,6 +1,6 @@
 // Native vector artwork keeps the witch's expression and empty glass readable
 // on both the classroom projector and a phone, without an image download.
-export function createPoisonWitch({animate=false}={}){
+export function createPoisonWitch({animate=false,defeated=false}={}){
   const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
   svg.setAttribute('viewBox','0 0 340 300');svg.setAttribute('role','img');
   svg.setAttribute('aria-label','女巫拿着空药瓶，咧嘴坏笑');svg.setAttribute('focusable','false');
@@ -43,5 +43,10 @@ export function createPoisonWitch({animate=false}={}){
         <path d="m280 181 8 5m-12-2 9 6" fill="none" stroke="#7a945f" stroke-width="2" stroke-linecap="round"/>
       </g>
     </g>`;
+  if(defeated){
+    svg.classList.add('is-defeated');
+    svg.setAttribute('aria-label','女巫被打败，垂下空药瓶');
+    svg.querySelector('.witch-grin').innerHTML='<path d="M173 155q14-15 29-6" fill="none" stroke="#423245" stroke-width="4" stroke-linecap="round"/>';
+  }
   return svg;
 }

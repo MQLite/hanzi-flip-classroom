@@ -29,11 +29,12 @@ describe('native completion gates',()=>{
  it('recognizes all eleven games and refuses their partial states',()=>{
   const completed={flip:{session:{phase:'complete'}},mole:{moleState:{phase:'complete',holes:[null]}},maze:{mazeState:{phase:'complete'}},
    puzzle:{puzzleState:{targets:[{character:'明'}],found:['明']}},strokes:{strokeInputMode:'write',handwritingState:{characters:[{character:'一'}],completed:['一']}},
-   workshop:{workshopState:{phase:'complete'}},poison:{poisonState:{phase:'complete',antidoteStatus:'skipped'}},building:{buildingState:{phase:'restored'}},
+   workshop:{workshopState:{phase:'complete'}},poison:{poisonChallenge:{phase:'victory'}},building:{buildingState:{phase:'restored'}},
    sudoku:{sudokuState:{phase:'complete'}},train:{session:{phase:'complete',departure:null}},explore:{explorationComplete:true}};
   for(const {id} of GAME_ORDER){expect(isJourneyStageComplete(id,{}),id).toBe(false);expect(isJourneyStageComplete(id,completed[id]),id).toBe(true);}
   expect(isJourneyStageComplete('mole',{moleState:{phase:'complete',holes:[{status:'hit'}]}})).toBe(false);
-  expect(isJourneyStageComplete('poison',{poisonState:{phase:'complete',antidoteStatus:'available'}})).toBe(false);
+  expect(isJourneyStageComplete('poison',{poisonState:{phase:'complete',antidoteStatus:'skipped'}})).toBe(false);
+  expect(isJourneyStageComplete('poison',{poisonChallenge:{phase:'structure',index:2}})).toBe(false);
   expect(isJourneyStageComplete('strokes',{strokeState:{characters:[{}],completed:[],review:true}})).toBe(false);
   expect(isJourneyStageComplete('building',{buildingState:{phase:'built',sentence:{sentence:'你好'}}})).toBe(false);
   expect(isJourneyStageComplete('building',{buildingState:{phase:'built',sentence:null}})).toBe(true);
