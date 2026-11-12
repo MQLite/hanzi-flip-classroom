@@ -38,25 +38,9 @@
   text-align: center;
 }
 .poison-challenge h3 { margin: 0; font-size: clamp(21px, 3vw, 34px); }
-.poison-challenge p { margin: 0; line-height: 1.55; }
-.poison-challenge-count { color: #635270; font-variant-numeric: tabular-nums; }
-.poison-challenge-question {
-  display: grid;
-  place-items: center;
-  width: min(100%, 28rem);
-  min-height: clamp(100px, 18vw, 150px);
-  padding: 10px 14px;
-  border: 1px solid #cfbbdb;
-  border-radius: 13px;
-  background: #fffaf0;
-}
-.poison-challenge-question strong {
-  font: 700 clamp(36px, 7vw, 72px)/1.2 'KaiTi', 'STKaiti', 'Microsoft YaHei', serif;
-  overflow-wrap: anywhere;
-}
-.poison-challenge-question small { font-size: clamp(15px, 2vw, 22px); }
-.poison-challenge details { max-width: 100%; color: #584166; overflow-wrap: anywhere; }
-.poison-challenge summary { cursor: pointer; padding: 5px 9px; }
+.poison-structure-hints { max-width: 1000px; margin: 10px auto 0; color: #584166; overflow-wrap: anywhere; }
+.poison-structure-hints summary { cursor: pointer; padding: 5px 9px; }
+.poison-structure-hints ul { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,200px),1fr)); gap: 5px 12px; padding-inline-start: 24px; }
 .poison-challenge .primary { min-height: 44px; white-space: normal; }
 .poison-victory-art { position: relative; width: min(70%, 220px); aspect-ratio: 34 / 30; }
 .poison-witch.is-defeated { transform: rotate(-9deg); opacity: .72; }

@@ -53,9 +53,8 @@ import {lessonAppearance} from './lesson-appearance.js';
 import {createBuildingState,drawBuildingWord,confirmBuildingWord,beginBuildingChallenge,restoreBuilding,chooseBuildingChallengeWord} from './building-core.js';
 import {createPoisonView} from './poison.js';
 import {getPoisonChallengePool,getPoisonPool} from './poison-vocabulary.js';
-import {poisonChallengeCards} from './poison-challenge.js';
 import {readPoisonCard,skipPoisonAntidote} from './poison-core.js';
-import {createPoisonState,beginPoisonHiding,togglePoisonWord,sealPoison,beginPoisonReading,selectPoisonCard,cancelPoisonCard,revealPoisonCard,coverPoisonSecrets,nextPoisonRound,beginPoisonAntidote,finishPoisonAntidote} from './poison-core.js';
+import {createPoisonState,beginPoisonHiding,togglePoisonWord,sealPoison,beginPoisonReading,coverPoisonSecrets,beginPoisonAntidote,finishPoisonAntidote} from './poison-core.js';
 import {createSudokuState,collectSudokuWord,placeSudokuWord,clearSudokuCell,undoSudoku,getSudokuProgress} from './sudoku-core.js';
 import './construction.css';
 import {getConstructionPool} from './construction-data.js';
@@ -174,7 +173,7 @@ sudokuSoundToggle.onchange=()=>{
 };
 const playOptionalSudokuChime=()=>sudokuSoundToggle.checked?playSudokuChime():undefined;
 let moleState=null,molePool=null,moleType='mixed';
-let poisonState=null,poisonChallenge=null,poisonPool=null,poisonSelectedIds=[],poisonCount=1,poisonAntidoteId='';
+let poisonState=null,poisonWon=false,poisonPool=null,poisonSelectedIds=[],poisonAntidoteId='';
 let poisonSoundEnabled=true;
 $('.lesson-toolbar').insertAdjacentHTML('beforeend','<label id="poison-sound-label" hidden><input id="poison-sound" type="checkbox" checked> 中毒与解救音效</label>');
 $('#poison-sound').onchange=event=>{poisonSoundEnabled=event.target.checked;render();};
@@ -203,12 +202,12 @@ function prepareBuilding(){
   buildingSelectedIds=buildingPool.words.slice(0,12).map(word=>word.id);buildingSentenceId=buildingPool.sentences[0]?.id??'';buildingState=null;
 }
 $('#help-dialog').insertAdjacentHTML('beforeend','<p>汉字建筑师：每课可选房、桥、塔、楼，以及1–16个本课字词；四类建筑各有不同款式，换课变外形。每个词写在对应词砖上，学生朗读后老师确认，词砖逐块落下。搭好后从右侧挑词朗读，老师点卡；安全词会移走对应砖块和词卡，失去支撑的词砖会带动上方部分落下，仍有支撑的部分保留；从上往下安全拆完也能完成本轮。读出本课重点句子，老师确认后全部词砖飞回复原。没有重点句子的课仍可练习搭建。</p>');
-$('#help-dialog').insertAdjacentHTML('beforeend','<p>女巫的毒药分三轮。第一轮选本课生字，秘密藏毒，轮流读字。点中毒药就变身，可以读本课句子解救，也可以跳过解药。第二轮把“读一读”词语说成英语。第三轮说出生字的结构和部件位置。后两轮由老师确认答案，三轮通关后放烟花。离开藏毒画面时，秘密选择会自动遮挡。</p>');
+$('#help-dialog').insertAdjacentHTML('beforeend','<p>女巫的毒药分三轮，每轮小女巫秘密选一张毒药卡。第一轮读生字，第二轮把“读一读”词语说成英语，第三轮说出生字的结构和部件位置。老师确认口答后点卡。点中毒药立即变身，可以读句子解救，也可以跳过。三轮通关后放烟花。离开藏毒画面时，秘密选择会自动遮挡。</p>');
 function preparePoison(){
   if(selection.source!=='personal')selection={...selection,scope:'lesson'};
   poisonPool=getPoisonChallengePool({...selection,grade},bank.questions);
   poisonAntidoteId=poisonPool.sentences[0]?.id??'';
-  poisonSelectedIds=poisonPool.words.slice(0,12).map(word=>word.id);poisonState=poisonChallenge=null;
+  poisonSelectedIds=poisonPool.words.slice(0,12).map(word=>word.id);poisonState=null;poisonWon=false;
 }
 $('.lesson-toolbar').insertAdjacentHTML('beforeend','<label id="mole-content-label" hidden>练习内容<select id="mole-content" aria-label="打地鼠练习内容"><option value="mixed">生字＋词语</option><option value="characters">只练生字</option><option value="words">只练词语</option></select></label>');
 $('#help-dialog').insertAdjacentHTML('beforeend','<p>打地鼠：使用当前课次已收录的生字和词语，也可只练生字或词语。每轮最多9个不同词，学生读对后老师点击对应地鼠，挥锤、加一星，读完可再玩一轮；没有倒计时，不会自动消失。所有词读对后播放庆祝特效。可开启拼音提示，每词仅计一次分，切换游戏保留本页进度。</p>');
@@ -445,43 +444,38 @@ function concealPoison(){
 }
 function poisonIntent(intent,value){
   if(gameMode!=='poison')return;
-  if(intent==='start-translation'){
-    if(poisonChallenge||poisonState?.phase!=='complete'||!['rescued','skipped'].includes(poisonState.antidoteStatus)||!poisonPool.translations.length)return;
-    poisonChallenge={phase:'translate',index:0};
-  }else if(intent==='start-structure'){
-    if(poisonChallenge?.phase!=='translate'||poisonChallenge.index!==poisonPool.translations.length)return;
-    poisonChallenge={phase:'structure',index:0};
-  }else if(intent==='correct-answer'){
-    if(!poisonChallenge||poisonChallenge.phase==='victory')return;
-    const {phase,index}=poisonChallenge;
-    const cards=poisonChallengeCards(poisonPool,poisonSelectedIds,phase);
-    if(!cards[index])return;
-    if(phase==='structure'&&index+1===cards.length){
-      poisonChallenge={phase:'victory',index:index+1};
+  const selectedWords=()=>poisonPool.words.filter(word=>poisonSelectedIds.includes(word.id));
+  const makeRound=(words,round)=>createPoisonState({words,round,antidote:poisonPool.sentences.find(s=>s.id===poisonAntidoteId)});
+  if(intent==='advance-round'){
+    if(poisonWon||poisonState?.phase!=='complete'||!['rescued','skipped'].includes(poisonState.antidoteStatus))return;
+    if(poisonState.round===3){
+      poisonWon=true;
       render();
       if(!$('#lesson-celebration[open]'))showLessonCelebration({title:'女巫被打败了！'});
       return;
     }
-    poisonChallenge={phase,index:index+1};
+    const round=poisonState.round+1;
+    const words=round===2?poisonPool.translations:selectedWords();
+    if(words.length<2)return;
+    poisonState=makeRound(words,round);
   }else if(intent==='restart-challenge'){
-    if(poisonChallenge?.phase!=='victory')return;
+    if(!poisonWon)return;
     preparePoison();
   }else if(intent==='choose-word'){
     if(poisonSelectedIds.includes(value))poisonSelectedIds=poisonSelectedIds.filter(id=>id!==value);
     else if(poisonSelectedIds.length<16)poisonSelectedIds=[...poisonSelectedIds,value];
     else{notify('每轮最多16张词卡，请先取消一张再替换。');return;}
-  }else if(intent==='count')poisonCount=value;
-  else if(intent==='antidote-choice')poisonAntidoteId=value;
+  }else if(intent==='antidote-choice')poisonAntidoteId=value;
   else if(intent==='change-lesson'){
     preparePoison();syncSelection();render();$('#lesson').focus();notify('请在上方选择其他课次或教材。');return;
   }
   else if(intent==='start'){
-    if(poisonSelectedIds.length<2||poisonSelectedIds.length<=poisonCount)return;
-    poisonState=createPoisonState({words:poisonSelectedIds.map(id=>poisonPool.words.find(w=>w.id===id)),poisonCount,antidote:poisonPool.sentences.find(s=>s.id===poisonAntidoteId)});
+    if(poisonSelectedIds.length<2)return;
+    poisonState=makeRound(selectedWords(),1);
   }else if(intent==='prepare'){
     if(!mayRestart())return;poisonState=null;
   }else if(poisonState){
-    const actions={hide:()=>beginPoisonHiding(poisonState),card:()=>poisonState.phase==='hide'?togglePoisonWord(poisonState,value):readPoisonCard(poisonState,value),seal:()=>sealPoison(poisonState),read:()=>beginPoisonReading(poisonState),'next-round':()=>nextPoisonRound(poisonState),antidote:()=>beginPoisonAntidote(poisonState),rescue:()=>finishPoisonAntidote(poisonState),'skip-antidote':()=>skipPoisonAntidote(poisonState)};
+    const actions={hide:()=>beginPoisonHiding(poisonState),card:()=>poisonState.phase==='hide'?togglePoisonWord(poisonState,value):readPoisonCard(poisonState,value),seal:()=>sealPoison(poisonState),read:()=>beginPoisonReading(poisonState),'repeat-round':()=>poisonState.phase==='complete'?makeRound(poisonState.words,poisonState.round):poisonState,antidote:()=>beginPoisonAntidote(poisonState),rescue:()=>finishPoisonAntidote(poisonState),'skip-antidote':()=>skipPoisonAntidote(poisonState)};
     if(!actions[intent])return;poisonState=actions[intent]();
   }
   render();
@@ -537,7 +531,7 @@ function syncSimpleControl() {
   $('#simplify').textContent = simple ? '立体显示' : '简化显示';
   $('#simplify').setAttribute('aria-pressed', String(simple));
 }
-function snapshotMode(){return { session, grade, teamNames: [...teamNames], selectedTeam, showPinyin, selection: {...selection}, extensionOpen, workshopState, sudokuState,sudokuPool,sudokuSelectedIds:[...sudokuSelectedIds],moleState,molePool,moleType,poisonState,poisonChallenge,poisonPool,poisonSelectedIds:[...poisonSelectedIds],poisonCount,poisonAntidoteId,buildingState,buildingPool,buildingSelectedIds:[...buildingSelectedIds],buildingStructure,buildingSentenceId,mazeState,mazePool,constructionPool,puzzleState,strokeState,handwritingState,strokeInputMode };}
+function snapshotMode(){return { session, grade, teamNames: [...teamNames], selectedTeam, showPinyin, selection: {...selection}, extensionOpen, workshopState, sudokuState,sudokuPool,sudokuSelectedIds:[...sudokuSelectedIds],moleState,molePool,moleType,poisonState,poisonWon,poisonPool,poisonSelectedIds:[...poisonSelectedIds],poisonAntidoteId,buildingState,buildingPool,buildingSelectedIds:[...buildingSelectedIds],buildingStructure,buildingSentenceId,mazeState,mazePool,constructionPool,puzzleState,strokeState,handwritingState,strokeInputMode };}
 function switchMode(mode, linkedSelection, journeyTransfer=false) {
   if (mode === gameMode&&!journeyTransfer) return;
   if(!journeyTransfer)journey.pause();
@@ -553,7 +547,7 @@ function switchMode(mode, linkedSelection, journeyTransfer=false) {
   const carried=linkedSelection&&journeyTransfer,saved=carried?null:modeSnapshots[mode];
   gameMode = mode;
   if(carried)selection={...linkedSelection,scope:'lesson'};
-  if (saved) ({ session, grade, teamNames, selectedTeam, showPinyin, selection, extensionOpen, workshopState,sudokuState,sudokuPool,sudokuSelectedIds,moleState,molePool,moleType,poisonState,poisonChallenge,poisonPool,poisonSelectedIds,poisonCount,poisonAntidoteId,buildingState,buildingPool,buildingSelectedIds,buildingStructure,buildingSentenceId,mazeState,mazePool,constructionPool,puzzleState,strokeState,handwritingState,strokeInputMode } = saved);
+  if (saved) ({ session, grade, teamNames, selectedTeam, showPinyin, selection, extensionOpen, workshopState,sudokuState,sudokuPool,sudokuSelectedIds,moleState,molePool,moleType,poisonState,poisonWon,poisonPool,poisonSelectedIds,poisonAntidoteId,buildingState,buildingPool,buildingSelectedIds,buildingStructure,buildingSentenceId,mazeState,mazePool,constructionPool,puzzleState,strokeState,handwritingState,strokeInputMode } = saved);
   else {
     if(mode==='explore'){
       selection=linkedSelection??(matchingExplorations(selection).length?selection:{source:'zhongwen',stage:'5',scope:'lesson',lesson:9});
@@ -778,7 +772,7 @@ function progressed() {
   if(gameMode==='puzzle')return Boolean(puzzleState?.selected.length||puzzleState?.found.length);
   if(gameMode==='strokes')return Boolean(strokeState?.progress.some(Boolean)||handwritingState?.progress.some(Boolean)||handwritingState?.lastAttempt.length);
   return (
-    (gameMode==='poison'&&(poisonChallenge?poisonChallenge.phase!=='victory':poisonState?.phase!=='complete'&&Boolean(poisonState?.poisonIds.length||poisonState?.results.length))) ||
+    (gameMode==='poison'&&!poisonWon&&(poisonState?.round>1||poisonState?.phase!=='complete'&&Boolean(poisonState?.poisonIds.length||poisonState?.results.length))) ||
     (gameMode==='maze'&&mazeState?.phase==='play'&&Boolean(mazeState.steps||mazeState.pendingIndex!==null)) ||
     (gameMode==='building'&&['build','challenge','collapsed'].includes(buildingState?.phase)&&Boolean(buildingState?.builtIds.length||buildingState?.pendingId)) ||
     (gameMode==='mole'&&Boolean(moleState?.hits.length)) ||
@@ -818,7 +812,7 @@ function el(tag, text, className) {
 function render() {
   if(homeMode){journey.sync(gameMode,{});return;}
   gameHasBeenShown=true;
-  journey.sync(gameMode,{session,moleState,mazeState,puzzleState,strokeState,handwritingState,strokeInputMode,workshopState,workshopTransition,poisonChallenge,buildingState,sudokuState});
+  journey.sync(gameMode,{session,moleState,mazeState,puzzleState,strokeState,handwritingState,strokeInputMode,workshopState,workshopTransition,poisonWon,buildingState,sudokuState});
   if(journey.isActive())$('#scope').closest('label').hidden=true;
   syncReadingHintControls();
   $('#pinyin').closest('label').hidden=gameMode!=='train'&&gameMode!=='mole'&&gameMode!=='poison'&&gameMode!=='building'&&gameMode!=='maze';
@@ -895,8 +889,8 @@ function render() {
   if(gameMode==='poison'){
     strokeCleanup?.();strokeCleanup=null;cardStrokeCleanup?.();cardStrokeCleanup=null;cardStrokeKey=null;cardStrokeView=null;
     $('#card-face').replaceChildren();for(const id of ['#extension-toggle','#extension-hint','#extension'])$(id).hidden=true;
-    $('#round-caption').textContent=poisonChallenge?'':`本课字卡 · ${poisonCount}个毒药`;
-    poisonView.update({state:poisonState,challenge:poisonChallenge,pool:poisonPool,selectedIds:poisonSelectedIds,poisonCount,antidoteId:poisonAntidoteId,soundEnabled:poisonSoundEnabled,showPinyin});
+    $('#round-caption').textContent=poisonWon?'':'每轮 1 张毒药卡';
+    poisonView.update({state:poisonState,won:poisonWon,pool:poisonPool,selectedIds:poisonSelectedIds,antidoteId:poisonAntidoteId,soundEnabled:poisonSoundEnabled,showPinyin});
     syncEnglishInstructions($('#witch-poison'));
     return;
   }

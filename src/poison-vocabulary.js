@@ -27,7 +27,10 @@ export function getPoisonChallengePool(selection, questions = []) {
   const examples = [...new Set(scoped.flatMap(question => question.words ?? []))]
     .filter(word => /^\p{Script=Han}{2,12}$/u.test(word))
     .map(word => existingWords.get(word) ?? {word});
-  const translations = (reading.length ? reading : vocabulary.length ? vocabulary : examples).slice(0, 12);
+  const preferred = reading.length ? reading : vocabulary.length ? vocabulary : examples;
+  const extra = preferred.length === 1 ? [...vocabulary, ...examples].find(item => item.word !== preferred[0].word) : undefined;
+  const translations = [...preferred.slice(0, 12), ...(extra ? [extra] : [])]
+    .map(item => ({...item, id:`poison/translate/${item.word}`}));
   const structures = words.map(word => {
     const form = FORM_CATALOG.characters[word.word];
     const personalQuestion = source === 'personal' ? scoped.find(question => question.character === word.word) : null;
@@ -35,6 +38,6 @@ export function getPoisonChallengePool(selection, questions = []) {
     const parts = form?.parts.map(part => FORM_CATALOG.components[part.id].name) ?? [];
     return {...word, type, parts};
   });
-  const translationLabel = reading.length ? '读一读' : vocabulary.length ? '本课词语' : source === 'personal' ? '本年级例词' : '本课例词';
+  const translationLabel = reading.length ? (extra ? '读一读与本课词语' : '读一读') : vocabulary.length ? '本课词语' : source === 'personal' ? '本年级例词' : '本课例词';
   return {...pool, words, translations, structures, translationLabel};
 }

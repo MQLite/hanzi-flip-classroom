@@ -1,6 +1,6 @@
 import {describe,it,expect} from 'vitest';
 import {createPoisonState,beginPoisonHiding,togglePoisonWord,sealPoison,beginPoisonReading,selectPoisonCard,cancelPoisonCard,revealPoisonCard,coverPoisonSecrets,nextPoisonRound,beginPoisonAntidote,finishPoisonAntidote} from '../src/poison-core.js';
-import {getPoisonPool} from '../src/poison-vocabulary.js';
+import {getPoisonChallengePool,getPoisonPool} from '../src/poison-vocabulary.js';
 import {readPoisonCard,skipPoisonAntidote} from '../src/poison-core.js';
 import {PARADISE_QUESTIONS,ZHONGWEN_QUESTIONS} from '../src/curriculum.js';
 const words=()=>['苹果','香蕉','西瓜','牛奶','面包','饺子'].map((word,i)=>({id:`w${i}`,word,pinyin:'test'}));
@@ -64,6 +64,14 @@ describe('witch poison round rules',()=>{
   });
 });
 describe('poison lesson vocabulary',()=>{
+  it('keeps a lone Read Aloud word and adds one same-lesson word to make hiding possible',()=>{
+    const selection={source:'paradise',stage:'2A',lesson:2,grade:1};
+    const pool=getPoisonChallengePool(selection,PARADISE_QUESTIONS);
+    expect(pool.translations).toHaveLength(2);
+    expect(pool.translations[0].word).toBe('逛一逛');
+    expect(pool.translationLabel).toBe('读一读与本课词语');
+    expect(()=>createPoisonState({words:pool.translations})).not.toThrow();
+  });
   it('supports small lessons and preserves lesson boundaries and bank data',()=>{
     const bank=[...PARADISE_QUESTIONS,...ZHONGWEN_QUESTIONS],before=JSON.stringify(bank),pool=getPoisonPool({source:'paradise',stage:'1A',lesson:1},bank);
     expect(pool.words.length).toBeGreaterThanOrEqual(2);expect(pool.label).toContain('第1课');expect(pool.words.some(w=>w.word==='澳大利亚')).toBe(false);expect(pool.note).not.toContain('不足9');expect(JSON.stringify(bank)).toBe(before);
