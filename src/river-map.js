@@ -15,7 +15,7 @@ export function riverPosition(points, index, progress) {
   });
 }
 
-export function paintRiverMap(canvas, route, visited) {
+export function paintRiverMap(canvas, route, visited, showNumbers = false) {
   const {clientWidth: width, clientHeight: height} = canvas;
   const ratio = Math.min(window.devicePixelRatio || 1, 2);
   canvas.width = Math.round(width * ratio);
@@ -87,10 +87,24 @@ export function paintRiverMap(canvas, route, visited) {
     context.lineWidth = 2;
     context.stroke();
   }
+  const markerRadius = Math.max(9, Math.min(14, scale * .047));
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.font = `bold ${Math.round(markerRadius * 1.12)}px system-ui, sans-serif`;
   for (const [index, [x, y]] of route.points.entries()) {
+    const numbered = showNumbers && index > 0;
+    const px = x * width;
+    const py = y * height;
     context.beginPath();
-    context.arc(x * width, y * height, index === visited + 1 ? 5 : 3, 0, 2 * Math.PI);
-    context.fillStyle = index === visited + 1 ? '#ffe7a1' : index <= visited ? '#ffffff' : '#fff5d98f';
+    context.arc(px, py, numbered ? markerRadius : index === visited + 1 ? 5 : 3, 0, 2 * Math.PI);
+    context.fillStyle = numbered ? '#235a4c' : index === visited + 1 ? '#ffe7a1' : index <= visited ? '#ffffff' : '#fff5d98f';
     context.fill();
+    if (numbered) {
+      context.strokeStyle = '#fff8df';
+      context.lineWidth = 1.5;
+      context.stroke();
+      context.fillStyle = '#fff';
+      context.fillText(index, px, py);
+    }
   }
 }

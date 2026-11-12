@@ -36,7 +36,17 @@ async function readRoute(page, route, onReach) {
   await expect(word).toBeHidden();
 }
 
-test('the second-book lesson follows all 24 textbook cards and celebrates only at the Yellow River mouth', async ({page}, testInfo) => {
+async function checkReview(page, title, route) {
+  const review = page.getByRole('region', {name:title});
+  await expect(review.getByRole('listitem')).toHaveText(route.entries.map((entry, index) => `${index + 1}${entry}`));
+  const map = page.getByRole('img', {name:/从源头到.*的全程示意图/});
+  await expect(map).toBeVisible();
+  await expect(page.locator('canvas.river-scene')).toBeHidden();
+  await expect(page.locator('#lesson-celebration')).toHaveCount(0);
+  await expect(review.getByRole('heading')).toBeFocused();
+}
+
+test('the second-book lesson reviews both river maps and all 24 cards before celebrating', async ({page}, testInfo) => {
   const lesson = ZHONGWEN_CONTENT.find(row => row.book === 2 && row.lesson === 12);
   const [yangtze, yellow] = RIVER_ROUTES;
   expect(yangtze.entries).toEqual(lesson.characters.map(entry => entry.character));
@@ -62,9 +72,14 @@ test('the second-book lesson follows all 24 textbook cards and celebrates only a
   });
   await expect(page.locator('#lesson-celebration')).toHaveCount(0);
   await expect(page.getByText('小船到东海啦！', {exact:true})).toBeVisible();
+  await checkReview(page, '长江 · 带读生字', yangtze);
+  await expect(page.getByRole('button', {name:'去黄河 →'})).toBeInViewport({ratio:1});
+  await page.screenshot({path:testInfo.outputPath('yangtze-review.png')});
 
   await page.setViewportSize({width:390,height:844});
   await page.getByRole('button', {name:'去黄河 →'}).click();
+  await expect(page.getByRole('region', {name:'长江 · 带读生字'})).toBeHidden();
+  await expect(page.locator('canvas.river-scene')).toBeVisible();
   await expect(page.locator('#river-mouth')).toHaveText('东 · 渤海');
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await page.screenshot({path:testInfo.outputPath('yellow.png')});
@@ -74,6 +89,10 @@ test('the second-book lesson follows all 24 textbook cards and celebrates only a
       await page.screenshot({path:testInfo.outputPath('loess.png')});
     }
   });
+  await checkReview(page, '黄河 · 带读词语', yellow);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await page.screenshot({path:testInfo.outputPath('yellow-review.png')});
+  await page.getByRole('button', {name:'读完了，放烟花'}).click();
   await expect(page.getByRole('dialog', {name:'长江黄河通关！'})).toBeVisible();
   await page.getByRole('button', {name:'关闭庆祝'}).click();
   await page.getByRole('button', {name:'再游一次'}).click();
@@ -105,6 +124,9 @@ test('the boat moves before the next card and island credit waits until both riv
 
   await page.getByRole('button', {name:'去黄河 →'}).click();
   await readRoute(page, RIVER_ROUTES[1]);
+  await checkReview(page, '黄河 · 带读词语', RIVER_ROUTES[1]);
+  expect((await stored()).status).toBe('active');
+  await page.getByRole('button', {name:'读完了，放烟花'}).click();
   await expect(page.getByRole('dialog', {name:'太牛啦'})).toHaveCount(1);
   expect(await stored()).toMatchObject({status:'complete', celebrated:true, completed:['explore']});
   await page.getByRole('button', {name:'关闭庆祝'}).click();

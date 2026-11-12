@@ -35,6 +35,53 @@ body { margin: 0; }
 #river-landscape { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
 .river-scene { display: block; position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .river-map[data-renderer='3d'] #river-landscape,.river-map[data-renderer='3d'] .river-boat { visibility: hidden; }
+.river-stage[data-review] {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 16px;
+}
+.river-stage[data-review] .river-map { height: auto; min-height: 305px; }
+.river-stage[data-review] #river-landscape { visibility: visible; }
+.river-stage[data-review] :is(.river-scene, .river-boat, .river-reach) { visibility: hidden; }
+.river-review {
+  padding: 16px;
+  border: 1px solid #abc2ad;
+  border-radius: 18px;
+  background: #f8fbf3;
+}
+.river-review h2 { margin: 0 0 12px; font-size: clamp(19px, 2.25vw, 30px); }
+.river-review ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.river-review li {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 57px;
+  border: 1px solid #cad9c4;
+  border-radius: 9px;
+  background: #fffef6;
+  white-space: nowrap;
+  font-size: clamp(22px, 2.6vw, 38px);
+  font-weight: 750;
+}
+.river-review li span {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.65em;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  color: white;
+  background: #235a4c;
+  font-size: clamp(11px, 1.16vw, 15px);
+}
 .river-reach {
   position: absolute; inset: 10px auto auto 10px; max-width: calc(100% - 20px); margin: 0;
   padding: 6px 10px; border-radius: 8px; color: #fff; background: #173b34ed;
@@ -101,8 +148,17 @@ body { margin: 0; }
 #river-next { min-height: 45px; padding: 8px 17px; border: 0; border-radius: 9px; color: #fff; background: #256454; }
 #river-next:hover { background: #1a4f42; }
 
+@media (max-width: 860px) {
+  .river-stage[data-review] { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .river-stage[data-review] .river-map { min-height: clamp(155px, 26svh, 220px); }
+  .river-review li { font-size: clamp(19px, 5.6vw, 28px); }
+}
+
 @media (max-width: 600px) {
   .river-page { width: calc(100% - 24px); padding-top: 12px; }
   .river-map { height: clamp(300px, 48svh, 400px); border-radius: 12px; }
+  .river-review { padding: 11px; border-radius: 12px; }
+  .river-review h2 { margin-bottom: 8px; }
+  .river-review li { min-height: 43px; }
   .river-endpoints { inset-inline: 7px; }
 }

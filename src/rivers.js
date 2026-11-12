@@ -7,6 +7,7 @@ import './rivers.css';
 const journey = bindExplorationJourney('two-rivers');
 journey.decorate();
 const find = name => document.getElementById('river-' + name);
+const stagePanel = find('stage');
 const map = find('map');
 const landscape = find('landscape');
 const boat = find('boat');
@@ -18,12 +19,20 @@ const instruction = find('instruction');
 const progress = find('progress');
 const mouth = find('mouth');
 const reach = find('reach');
+const review = find('review');
+const reviewTitle = find('review-title');
+const reviewEntries = find('review-entries');
 const levels = [...document.querySelectorAll('.river-levels li')];
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 let stage = 0;
 let visited = 0;
 let boatStep = 0;
 let scene;
+let finished = false;
+
+function paintMap() {
+  paintRiverMap(landscape, RIVER_ROUTES[stage], visited, !review.hidden);
+}
 
 function position(element, [x, y]) {
   element.style.setProperty('--x', `${x * 100}%`);
@@ -57,6 +66,7 @@ function labelReach(route) {
 function openStage(index) {
   stage = index;
   visited = 0;
+  finished = false;
   const route = RIVER_ROUTES[stage];
   map.dataset.river = route.id;
   for (const [levelIndex, level] of levels.entries()) {
@@ -68,23 +78,39 @@ function openStage(index) {
   instruction.textContent = route.instruction;
   progress.textContent = `0 / ${route.entries.length}`;
   actions.hidden = true;
+  review.hidden = true;
+  stagePanel.removeAttribute('data-review');
+  landscape.setAttribute('aria-hidden', 'true');
   labelReach(route);
   word.hidden = true;
   scene?.setRoute(route);
   placeBoat(route.points[0], 0);
-  paintRiverMap(landscape, route, visited);
+  scene?.setPaused(false);
+  paintMap();
   showWord(route);
 }
 
 function dock(route) {
+  reviewTitle.textContent = `${route.name} · 带读${route.reviewKind}`;
+  reviewEntries.replaceChildren(...route.entries.map((entry, index) => {
+    const card = document.createElement('li');
+    const number = document.createElement('span');
+    number.setAttribute('aria-hidden', 'true');
+    number.textContent = index + 1;
+    card.append(number, entry);
+    return card;
+  }));
+  landscape.setAttribute('aria-label', `${route.name}从源头到${route.mouth}的全程示意图`);
+  landscape.removeAttribute('aria-hidden');
+  scene?.setPaused(true);
+  stagePanel.setAttribute('data-review', '');
+  review.hidden = false;
   actions.hidden = false;
-  const final = stage === RIVER_ROUTES.length - 1;
   arrival.textContent = route.arrival;
   instruction.hidden = true;
-  next.textContent = final ? (journey.returnUrl ? '返回小岛地图' : '再游一次') : '去黄河 →';
-  arrival.focus({preventScroll:true});
-  actions.scrollIntoView({block:'nearest'});
-  if (final && !journey.reportComplete()) showLessonCelebration({title:'长江黄河通关！'});
+  next.textContent = stage === RIVER_ROUTES.length - 1 ? '读完了，放烟花' : '去黄河 →';
+  paintMap();
+  reviewTitle.focus({preventScroll:true});
 }
 
 word.onclick = () => {
@@ -99,9 +125,9 @@ word.onclick = () => {
     labelReach(route);
     boat.classList.remove('is-sailing');
     progress.textContent = `${visited} / ${route.entries.length}`;
-    paintRiverMap(landscape, route, visited);
     if (visited === route.entries.length) dock(route);
     else {
+      paintMap();
       showWord(route);
       word.focus({preventScroll:true});
     }
@@ -129,16 +155,24 @@ word.onkeydown = event => {
 };
 
 next.onclick = () => {
-  if (stage === RIVER_ROUTES.length - 1 && journey.returnUrl) {
-    location.assign(journey.returnUrl);
-    return;
+  if (stage === RIVER_ROUTES.length - 1) {
+    if (!finished) {
+      finished = true;
+      next.textContent = journey.returnUrl ? '返回小岛地图' : '再游一次';
+      if (!journey.reportComplete()) showLessonCelebration({title:'长江黄河通关！'});
+      return;
+    }
+    if (journey.returnUrl) {
+      location.assign(journey.returnUrl);
+      return;
+    }
   }
   openStage((stage + 1) % RIVER_ROUTES.length);
   word.scrollIntoView({block:'nearest'});
   word.focus({preventScroll:true});
 };
 
-new ResizeObserver(() => paintRiverMap(landscape, RIVER_ROUTES[stage], visited)).observe(map);
+new ResizeObserver(paintMap).observe(map);
 openStage(0);
 
 function showFlatMap() {
@@ -157,6 +191,7 @@ import('./river-scene.js').then(({createRiverScene}) => {
   scene.setRoute(RIVER_ROUTES[stage]);
   scene?.setProgress(boatStep, boat.classList.contains('is-sailing'));
   if (!scene) return;
+  scene.setPaused(!review.hidden);
   map.dataset.renderer = '3d';
   reach.hidden = false;
   placeWord(RIVER_ROUTES[stage]);

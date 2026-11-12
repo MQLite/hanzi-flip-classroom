@@ -6,6 +6,8 @@ const lesson = ZHONGWEN_CONTENT.find(course => course.book === 2 && course.lesso
 export const RIVER_ROUTES = [
   {
     id: 'yangtze',
+    name: '长江',
+    reviewKind: '生字',
     mouth: '东海',
     instruction: '读出字牌上的字，再点字牌开船。',
     arrival: '小船到东海啦！',
@@ -15,9 +17,11 @@ export const RIVER_ROUTES = [
   },
   {
     id: 'yellow',
+    name: '黄河',
+    reviewKind: '词语',
     mouth: '渤海',
     instruction: '读出词牌上的词语，再点词牌开船。',
-    arrival: '小船到渤海啦！两关通关！',
+    arrival: '小船到渤海啦！',
     reaches: [[0,'青藏高原 · 黄河源区'],[4,'黄河「几」字弯 · 河套平原'],[7,'黄河中游 · 黄土高原'],[10,'黄河下游 · 河口湿地']],
     entries: ['河流', '河水', '江水', '古老', '中国', '国家', '一条河', '名字', '最长', '母亲', '亲人', '中华'],
     points: [[.08,.63],[.15,.66],[.23,.69],[.32,.63],[.38,.49],[.42,.27],[.50,.19],[.57,.23],[.60,.45],[.63,.66],[.73,.65],[.81,.54],[.93,.43]],

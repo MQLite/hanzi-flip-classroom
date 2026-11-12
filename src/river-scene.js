@@ -138,9 +138,10 @@ export function createRiverScene(host, {onUnavailable, onLayout}) {
   scene.add(sky, boat, sun, new THREE.HemisphereLight('#e3f2ff', '#928069', 2.05));
   const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
   let route, terrain, water, progress = 0, sailing = false, frame = 0, previousFrame = -Infinity, disposed = false;
+  let paused = false;
 
   function draw(now = 0) {
-    if (disposed || !route || document.hidden) return;
+    if (disposed || paused || !route || document.hidden) return;
     const time = motion.matches ? 0 : now / 1000;
     boat.position.y = .035 + Math.sin(time * 2.4) * .039;
     boat.rotation.x = Math.sin(time * 2.3) * .018;
@@ -160,7 +161,7 @@ export function createRiverScene(host, {onUnavailable, onLayout}) {
   }
 
   function schedule() {
-    if (!frame && route && !disposed && !document.hidden && !motion.matches) frame = requestAnimationFrame(animate);
+    if (!frame && route && !disposed && !paused && !document.hidden && !motion.matches) frame = requestAnimationFrame(animate);
   }
 
   function pose() {
@@ -237,6 +238,12 @@ export function createRiverScene(host, {onUnavailable, onLayout}) {
     schedule();
   }
 
+  function setPaused(value) {
+    if (paused === value) return;
+    paused = value;
+    changeMotion();
+  }
+
   function loseContext(event) {
     event?.preventDefault();
     dispose();
@@ -261,5 +268,5 @@ export function createRiverScene(host, {onUnavailable, onLayout}) {
   canvas.addEventListener('webglcontextlost', loseContext);
   motion.addEventListener('change', changeMotion);
   document.addEventListener('visibilitychange', changeMotion);
-  return {setRoute, setProgress, project, dispose};
+  return {setRoute, setProgress, setPaused, project, dispose};
 }

@@ -20,15 +20,21 @@
       <p id="river-instruction">读出字牌上的字，再点字牌开船。</p>
       <output id="river-progress" aria-live="polite">0 / 12</output>
     </div>
-    <div id="river-map" class="river-map">
-      <canvas id="river-landscape" aria-hidden="true"></canvas>
-      <p id="river-reach" class="river-reach" hidden></p>
-      <div class="river-endpoints"><span>西 · 源头</span><span id="river-mouth">东 · 东海</span></div>
-      <div id="river-boat" class="river-boat" aria-hidden="true"><span></span></div>
-      <button id="river-word" class="river-word" type="button"></button>
+    <div id="river-stage" class="river-stage">
+      <div id="river-map" class="river-map">
+        <canvas id="river-landscape" role="img" aria-hidden="true"></canvas>
+        <p id="river-reach" class="river-reach" hidden></p>
+        <div class="river-endpoints"><span>西 · 源头</span><span id="river-mouth">东 · 东海</span></div>
+        <div id="river-boat" class="river-boat" aria-hidden="true"><span></span></div>
+        <button id="river-word" class="river-word" type="button"></button>
+      </div>
+      <section id="river-review" class="river-review" aria-labelledby="river-review-title" hidden>
+        <h2 id="river-review-title" tabindex="-1"></h2>
+        <ol id="river-review-entries" role="list"></ol>
+      </section>
     </div>
     <div class="river-actions" id="river-actions" hidden>
-      <p id="river-arrival" tabindex="-1"></p>
+      <p id="river-arrival"></p>
       <button id="river-next" type="button">去黄河 →</button>
     </div>
   </main>
