@@ -33,6 +33,13 @@ body { margin: 0; }
   background: radial-gradient(ellipse at 37% 24%, #ead5a1 0, transparent 62%), linear-gradient(105deg, #c9c9a4, #edd9aa 64%, #aeca9d);
 }
 #river-landscape { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
+.river-scene { display: block; position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.river-map[data-renderer='3d'] #river-landscape,.river-map[data-renderer='3d'] .river-boat { visibility: hidden; }
+.river-reach {
+  position: absolute; inset: 10px auto auto 10px; max-width: calc(100% - 20px); margin: 0;
+  padding: 6px 10px; border-radius: 8px; color: #fff; background: #173b34ed;
+  font-size: clamp(12px, 1.6vw, 17px); pointer-events: none;
+}
 .river-endpoints { position: absolute; inset: auto 10px 10px; display: flex; justify-content: space-between; pointer-events: none; }
 .river-endpoints span { padding: 4px 9px; border-radius: 7px; color: #fff; background: #173b34; font-size: clamp(12px, 1.5vw, 15px); }
 

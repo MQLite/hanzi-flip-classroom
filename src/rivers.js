@@ -17,23 +17,41 @@ const next = find('next');
 const instruction = find('instruction');
 const progress = find('progress');
 const mouth = find('mouth');
+const reach = find('reach');
 const levels = [...document.querySelectorAll('.river-levels li')];
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 let stage = 0;
 let visited = 0;
+let boatStep = 0;
+let scene;
 
 function position(element, [x, y]) {
   element.style.setProperty('--x', `${x * 100}%`);
   element.style.setProperty('--y', `${y * 100}%`);
 }
 
-function showWord(route) {
+function placeWord(route) {
+  if (word.hidden || visited >= route.entries.length) return;
   const boatPoint = route.points[visited];
   const point = route.points[visited + 1];
-  position(word, point);
-  word.classList.toggle('river-word--above', point[1] >= .30 && point[1] < boatPoint[1] - .08);
+  position(word, scene ? scene.project(visited + 1) : point);
+  word.classList.toggle('river-word--above', !scene && point[1] >= .30 && point[1] < boatPoint[1] - .08);
+}
+
+function showWord(route) {
   word.textContent = route.entries[visited];
   word.hidden = false;
+  placeWord(route);
+}
+
+function placeBoat(point, step, moving = false) {
+  boatStep = step;
+  position(boat, point);
+  scene?.setProgress(step, moving);
+}
+
+function labelReach(route) {
+  reach.textContent = route.reaches.findLast(([step]) => step <= visited)[1];
 }
 
 function openStage(index) {
@@ -50,7 +68,10 @@ function openStage(index) {
   instruction.textContent = route.instruction;
   progress.textContent = `0 / ${route.entries.length}`;
   actions.hidden = true;
-  position(boat, route.points[0]);
+  labelReach(route);
+  word.hidden = true;
+  scene?.setRoute(route);
+  placeBoat(route.points[0], 0);
   paintRiverMap(landscape, route, visited);
   showWord(route);
 }
@@ -74,7 +95,8 @@ word.onclick = () => {
 
   function arrive() {
     visited++;
-    position(boat, route.points[visited]);
+    placeBoat(route.points[visited], visited);
+    labelReach(route);
     boat.classList.remove('is-sailing');
     progress.textContent = `${visited} / ${route.entries.length}`;
     paintRiverMap(landscape, route, visited);
@@ -94,7 +116,8 @@ word.onclick = () => {
     const elapsed = Math.min(1, (now - startedAt) / 580);
     if (elapsed === 1) arrive();
     else {
-      position(boat, riverPosition(route.points, visited, elapsed * elapsed * (3 - 2 * elapsed)));
+      const eased = elapsed * elapsed * (3 - 2 * elapsed);
+      placeBoat(riverPosition(route.points, visited, eased), visited + eased, true);
       requestAnimationFrame(sail);
     }
   }
@@ -117,3 +140,28 @@ next.onclick = () => {
 
 new ResizeObserver(() => paintRiverMap(landscape, RIVER_ROUTES[stage], visited)).observe(map);
 openStage(0);
+
+function showFlatMap() {
+  scene?.dispose();
+  scene = undefined;
+  map.dataset.renderer = 'flat';
+  reach.hidden = true;
+  placeWord(RIVER_ROUTES[stage]);
+}
+
+import('./river-scene.js').then(({createRiverScene}) => {
+  scene = createRiverScene(map, {
+    onUnavailable:showFlatMap,
+    onLayout:() => placeWord(RIVER_ROUTES[stage]),
+  });
+  scene.setRoute(RIVER_ROUTES[stage]);
+  scene?.setProgress(boatStep, boat.classList.contains('is-sailing'));
+  if (!scene) return;
+  map.dataset.renderer = '3d';
+  reach.hidden = false;
+  placeWord(RIVER_ROUTES[stage]);
+}).catch(showFlatMap);
+
+window.addEventListener('pagehide', event => {
+  if (!event.persisted) scene?.dispose();
+});
