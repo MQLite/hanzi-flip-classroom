@@ -30,9 +30,11 @@ export function bindExplorationJourney(scenarioId){
   }
  }
  function reportComplete(){
-  if(!initial||awarded)return;const result=reportExplorationComplete(scenarioId,search);if(!result)return;awarded=true;
-  if(result.state.status==='complete'&&!result.state.celebrated){saveJourney(markJourneyCelebrated(result.state));showLessonCelebration();}
+  if(!initial||awarded)return false;const result=reportExplorationComplete(scenarioId,search);if(!result)return false;awarded=true;
+  const celebrate=result.state.status==='complete'&&!result.state.celebrated;
+  if(celebrate){saveJourney(markJourneyCelebrated(result.state));showLessonCelebration();}
   if(!result.saved){const note=document.createElement('p');note.setAttribute('role','status');note.textContent='浏览器未能保存，本次通关仅保留在本页。';document.body.append(note);}
+  return celebrate;
  }
  return {decorate,reportComplete,returnUrl:returnUrl?.href??null};
 }

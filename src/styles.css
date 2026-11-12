@@ -1831,6 +1831,15 @@ body:not(.workshop-mode) #restart { margin-left: auto; }
 .city-exploration-cover::before { display: none; }
 .exploration-cover.time-exploration-cover { background: #b98157 url('./doudou-time-atlas.webp') center top / auto 300% no-repeat; }
 .time-exploration-cover::before { display: none; }
+.exploration-cover.rivers-exploration-cover {
+  background: radial-gradient(ellipse at 18% 15%, #e5e6bd, transparent 57%), linear-gradient(135deg, #a7c7a6, #d4dcad 62%, #72aaa8);
+}
+.rivers-exploration-cover::before,.rivers-exploration-cover::after {
+  content: '';position:absolute;inset: 3% -22% 36% -12%;height:auto;width:auto;
+  border:0;border-bottom:23px solid #277e91;border-radius:37% 67% 48% 61%;
+  background:none;box-shadow:none;transform:rotate(11deg);
+}
+.rivers-exploration-cover::after { inset:24% -17% 15% -20%;border-color:#a77740;transform:rotate(-13deg); }
 .city-tour-level { display: block; }
 .exploration-cover.room-exploration-cover{display:grid;place-items:center;background:radial-gradient(ellipse at 52% 44%,#647d62,#294c43 74%)}
 .room-exploration-cover svg{width:min(77%,225px);height:auto;filter:drop-shadow(0 10px 18px #162a25a0)}

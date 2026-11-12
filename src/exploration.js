@@ -15,6 +15,10 @@ export const EXPLORATIONS=[{
   lessonTitle:'现在几点',title:'豆豆，现在几点？',href:'./doudou-time.html',
   description:'看时钟，跟豆豆说时间，聊聊早饭、午饭和晚饭。',
 }, {
+  id:'two-rivers',source:'zhongwen',textbook:ZHONGWEN_ID,stage:'2',book:2,lesson:12,
+  lessonTitle:'江河',title:'长江与黄河',href:'./rivers.html',
+  description:'读出生字，坐船游长江。再读「读一读」里的词语，沿黄河一路到渤海。',
+}, {
   id:'room-escape',source:'zhongwen',textbook:ZHONGWEN_ID,stage:'1',book:1,lesson:3,
   lessonTitle:'识字（三）',title:'密室逃脱',href:'./room.html',
   description:'出口锁住了。读懂十二条汉字线索，跟猫咪找到钥匙，一起打开房门。',
@@ -71,6 +75,10 @@ export function renderExplorations(root,selection,{urlForScenario}={}){
       meta.textContent='汉语乐园 · 2A · 第3课 现在几点';
       title.replaceChildren(ruby('豆豆，','Dòudou,'),ruby('现在几点？','xiànzài jǐ diǎn?'));
       title.setAttribute('aria-label',scenario.title);
+    }else if(scenario.id==='two-rivers'){
+      meta.textContent='中文（暨南大学版）· 第二册 · 第12课 江河';
+      tags.textContent='长江 · 12 个生字　　黄河 · 12 个词语';
+      art.classList.add('rivers-exploration-cover');
     }else if(scenario.id==='room-escape'){
       meta.textContent='中文（暨南大学版）· 第一册 · 第3课 识字（三）';
       tags.textContent='12条汉字线索　·　3D密室　·　猫咪同伴';

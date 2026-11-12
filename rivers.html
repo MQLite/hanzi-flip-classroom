@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>长江与黄河 · 中文《江河》</title>
+</head>
+<body>
+  <main class="river-page">
+    <header class="river-top">
+      <a href="./?mode=explore&amp;source=zhongwen&amp;stage=2&amp;lesson=12" aria-label="返回情景探索">← 返回情景探索</a>
+      <span>中文 · 第二册 · 第 12 课《江河》</span>
+    </header>
+    <h1>长江与黄河</h1>
+    <ol class="river-levels" aria-label="关卡">
+      <li aria-current="step">第 1 关 · 游长江</li>
+      <li>第 2 关 · 游黄河</li>
+    </ol>
+    <div class="river-status">
+      <p id="river-instruction">读出字牌上的字，再点字牌开船。</p>
+      <output id="river-progress" aria-live="polite">0 / 12</output>
+    </div>
+    <div id="river-map" class="river-map">
+      <canvas id="river-landscape" aria-hidden="true"></canvas>
+      <div class="river-endpoints"><span>西 · 源头</span><span id="river-mouth">东 · 东海</span></div>
+      <div id="river-boat" class="river-boat" aria-hidden="true"><span></span></div>
+      <button id="river-word" class="river-word" type="button"></button>
+    </div>
+    <div class="river-actions" id="river-actions" hidden>
+      <p id="river-arrival" tabindex="-1"></p>
+      <button id="river-next" type="button">去黄河 →</button>
+    </div>
+  </main>
+  <script type="module" src="./src/rivers.js"></script>
+</body>
+</html>

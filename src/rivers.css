@@ -1,0 +1,101 @@
+:root {
+  color-scheme: light;
+  font-family: 'Microsoft YaHei', 'PingFang SC', system-ui, sans-serif;
+  color: #173b34;
+  background: #eef3e8;
+}
+body { margin: 0; }
+[hidden] { display: none !important; }
+.river-page { width: min(1180px, calc(100% - 36px)); margin: auto; padding: 18px 0 24px; }
+.river-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 20px; align-items: baseline; font-size: 14px; }
+.river-top a { color: #246150; text-underline-offset: .22em; }
+.river-top span { color: #526b60; }
+.river-page h1 { margin: 14px 0 12px; font-size: clamp(30px, 4.3vw, 51px); line-height: 1.1; }
+.river-levels { display: flex; gap: 8px; padding: 0; margin: 0 0 12px; list-style: none; }
+.river-levels li { padding: 6px 12px; border-radius: 8px; color: #4e675d; background: #e3eadc; font-size: clamp(13px, 1.65vw, 17px); }
+.river-levels [aria-current] { color: #fff; background: #256454; font-weight: 700; }
+.river-status { display: flex; justify-content: space-between; align-items: baseline; gap: 5px 16px; min-height: 28px; margin: 0 0 6px; }
+.river-status p { margin: 0; font-size: clamp(14px, 1.5vw, 18px); }
+#river-progress { margin-inline-start: auto; white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 700; }
+
+.river-map {
+  --river-card-width: clamp(90px, 17vw, 166px);
+  position: relative;
+  isolation: isolate;
+  height: clamp(306px, 54svh, 540px);
+  overflow: hidden;
+  border: 1px solid #abc2ad;
+  border-radius: 18px;
+  background: radial-gradient(ellipse at 14% 28%, #b9c9b1 0, transparent 40%), linear-gradient(100deg, #d2d7b6, #e1ecc5 52%, #a9cfac);
+  box-shadow: 0 14px 30px #244f3c22;
+}
+.river-map[data-river='yellow'] {
+  background: radial-gradient(ellipse at 37% 24%, #ead5a1 0, transparent 62%), linear-gradient(105deg, #c9c9a4, #edd9aa 64%, #aeca9d);
+}
+#river-landscape { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
+.river-endpoints { position: absolute; inset: auto 10px 10px; display: flex; justify-content: space-between; pointer-events: none; }
+.river-endpoints span { padding: 4px 9px; border-radius: 7px; color: #fff; background: #173b34; font-size: clamp(12px, 1.5vw, 15px); }
+
+.river-boat {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: clamp(35px, 5vw, 66px);
+  aspect-ratio: 1.35;
+  transform: translate(-50%, -80%);
+  pointer-events: none;
+  filter: drop-shadow(0 3px 2px #173b3466);
+}
+.river-boat::before {
+  content: '';
+  position: absolute;
+  inset: 0 13% 34% 33%;
+  background: linear-gradient(120deg, #fff9db, #e7cb83);
+  clip-path: polygon(5% 0, 100% 100%, 0 100%);
+}
+.river-boat span {
+  position: absolute;
+  inset: 62% 0 0;
+  border-top: 3px solid #ffdb88;
+  border-radius: 2px 6px 85% 58%;
+  background: linear-gradient(#bd733c, #794321);
+}
+.river-boat.is-sailing::after {
+  content: '';
+  position: absolute;
+  inset: 76% 85% -8% -31%;
+  border-block: 2px solid #fffbe8ba;
+  border-radius: 50%;
+}
+
+.river-word, #river-next { cursor: pointer; font: inherit; font-weight: 750; }
+.river-word {
+  position: absolute;
+  left: clamp(var(--river-card-width) / 2 + 9px, var(--x), 100% - var(--river-card-width) / 2 - 9px);
+  top: var(--y);
+  width: var(--river-card-width);
+  min-height: 49px;
+  transform: translate(-50%, 15px);
+  padding: 5px 4px;
+  border: 2px solid #816336;
+  border-radius: 11px;
+  color: #213d30;
+  background: #fff1bf;
+  box-shadow: 0 3px 0 #816336, 0 7px 15px #2b493333;
+  font-family: 'KaiTi', 'STKaiti', 'Microsoft YaHei', serif;
+  font-size: clamp(25px, 4.1vw, 50px);
+  line-height: 1.15;
+}
+.river-word--above { transform: translate(-50%, calc(-100% - 16px)); }
+.river-word:hover { background: #fffae6; }
+.river-word:focus-visible, #river-next:focus-visible { outline: 3px solid #174d68; outline-offset: 4px; }
+.river-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px 16px; flex-wrap: wrap; margin-top: 12px; }
+.river-actions p { margin: 0; font-size: clamp(19px, 2.5vw, 28px); font-weight: 750; }
+#river-next { min-height: 45px; padding: 8px 17px; border: 0; border-radius: 9px; color: #fff; background: #256454; }
+#river-next:hover { background: #1a4f42; }
+
+@media (max-width: 600px) {
+  .river-page { width: calc(100% - 24px); padding-top: 12px; }
+  .river-map { height: clamp(300px, 48svh, 400px); border-radius: 12px; }
+  .river-endpoints { inset-inline: 7px; }
+}
