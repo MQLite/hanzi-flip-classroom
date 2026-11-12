@@ -18,8 +18,8 @@ export function getJourneyAvailability(selection,bank,grade=1){
  const train=[...(selection.source==='zhongwen'?getZhongwenTrainQuestions(scope):selection.source==='paradise'?getParadiseTrainQuestions(scope):[]),...scoped.map(resolveTrainQuestion).filter(Boolean)];
  const poison=getPoisonChallengePool(scope,questions);
  const flags={flip:scoped.length>0,mole:mixed.words.length>0,maze:chars.words.length>0,puzzle:construction.puzzles.length>0,strokes:construction.characters.length>0,
-  workshop:createWorkshopState({questions:scoped},{random:()=>.5}).phase!=='empty',poison:poison.words.length>=2&&poison.translations.length>=2,building:mixed.words.length>0,sudoku:getSudokuCandidates(scope,questions).words.length>=9,train:train.length>0,explore:matchingExplorations(scope).length>0};
- const reasons={puzzle:'本课暂无可科学拆分的合体字',strokes:'本课暂无已核对笔画数据',poison:poison.words.length<2?'本课不足2个生字':'本课不足2个可翻译的词语',sudoku:'本课不足9个数独字词',train:'本课暂无句子练习',explore:'本课暂未设置情景探索'};
+  workshop:createWorkshopState({questions:scoped},{random:()=>.5}).phase!=='empty',poison:poison.words.length>=2,building:mixed.words.length>0,sudoku:getSudokuCandidates(scope,questions).words.length>=9,train:train.length>0,explore:matchingExplorations(scope).length>0};
+ const reasons={puzzle:'本课暂无可科学拆分的合体字',strokes:'本课暂无已核对笔画数据',poison:'本课不足2张字词卡',sudoku:'本课不足9个数独字词',train:'本课暂无句子练习',explore:'本课暂未设置情景探索'};
  return GAME_ORDER.map(g=>({...g,available:flags[g.id],reason:flags[g.id]?'':reasons[g.id]??'本课暂无相应字词'}));
 }
 export function isJourneyStageComplete(mode,m={}){

@@ -455,8 +455,7 @@ function poisonIntent(intent,value){
       return;
     }
     const round=poisonState.round+1;
-    const words=round===2?poisonPool.translations:selectedWords();
-    if(words.length<2)return;
+    const words=round===2&&poisonPool.readingWords.length>=2?poisonPool.readingWords:selectedWords();
     poisonState=makeRound(words,round);
   }else if(intent==='restart-challenge'){
     if(!poisonWon)return;
@@ -464,10 +463,10 @@ function poisonIntent(intent,value){
   }else if(intent==='choose-word'){
     if(poisonSelectedIds.includes(value))poisonSelectedIds=poisonSelectedIds.filter(id=>id!==value);
     else if(poisonSelectedIds.length<16)poisonSelectedIds=[...poisonSelectedIds,value];
-    else{notify('每轮最多16张词卡，请先取消一张再替换。');return;}
+    else{notify('最多16张卡。');return;}
   }else if(intent==='antidote-choice')poisonAntidoteId=value;
   else if(intent==='change-lesson'){
-    preparePoison();syncSelection();render();$('#lesson').focus();notify('请在上方选择其他课次或教材。');return;
+    preparePoison();syncSelection();render();$(selection.source==='personal'?'#grade':'#lesson').focus();return;
   }
   else if(intent==='start'){
     if(poisonSelectedIds.length<2)return;

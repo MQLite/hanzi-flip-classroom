@@ -3,7 +3,17 @@ async function readPoison(page,lesson='1'){
  await page.goto('/?mode=poison');if(lesson!=='1')await page.locator('#lesson').selectOption(lesson);const sentence=await page.locator('#poison-antidote-choice option:checked').textContent();
  await page.locator('#poison-start').click();await page.locator('#poison-begin-hide').click();await page.locator('[data-poison-card]').first().click();await page.locator('#poison-seal').click();await page.locator('#poison-read').click();await page.locator('[data-poison-card]').first().click();return sentence;
 }
-async function visibleCopy(page){return page.locator('#witch-poison').evaluate(root=>{let text=root.innerText;for(const b of root.querySelectorAll('button'))text=text.replace(b.innerText,'');return text.replace(/[\p{Extended_Pictographic}\uFE0F\s]/gu,'');});}
+async function visibleCopy(page){
+ return page.locator('#witch-poison').evaluate(root=>{
+  const buttons=[...root.querySelectorAll('button:not([hidden])')];
+  try{
+   for(const button of buttons)button.hidden=true;
+   return root.innerText.replace(/[\p{Extended_Pictographic}\uFE0F\s]/gu,'');
+  }finally{
+   for(const button of buttons)button.hidden=false;
+  }
+ });
+}
 test('poison aftermath keeps only the required phrases, real antidote sentence and functional controls',async({page})=>{
  await page.setViewportSize({width:1280,height:720});
  const sentence=await readPoison(page);await expect(page.getByRole('dialog',{name:'需要解药吗？'})).toBeVisible();expect(await visibleCopy(page)).toBe('哎呀，中毒啦！');await page.locator('#poison-antidote').click();

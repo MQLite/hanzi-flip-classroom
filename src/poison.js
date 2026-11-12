@@ -2,19 +2,15 @@ import {createPoisonAudio} from './poison-sound.js';
 import {createPoisonWitch} from './poison-witch.js';
 import {withEnglishInstruction} from './english-instructions.js';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
-const rounds = [null,
-  {task:'读生字', card:'字卡', action:'开始读字', prompt:'学生先读字，老师点卡，立即揭晓。', english:'Read the character aloud. Your teacher taps the card to reveal it.'},
-  {task:'说英语', card:'词卡', action:'开始说英语', prompt:'学生先说出词语的英语，老师点卡，立即揭晓。', english:'Say the word in English. Your teacher taps the card to reveal it.'},
-  {task:'分析结构', card:'字卡', action:'开始分析结构', prompt:'学生先说出这个字的结构和部件的位置，老师点卡，立即揭晓。', english:'Explain the character structure. Your teacher taps the card to reveal it.'},
-];
 const actionEnglish = {
-  'poison-start': 'Start the round. Close your eyes.',
-  'poison-begin-hide': 'Eyes closed. Hide the poison.',
-  'poison-seal': 'Done hiding. Cover the choices.',
-  'poison-read': 'Open your eyes and start reading.',
-  'poison-prepare': 'Change the characters for this round',
+  'poison-start': 'Start',
+  'poison-begin-hide': 'Ready to hide the poison',
+  'poison-seal': 'Done hiding',
+  'poison-read': 'Start reading',
+  'poison-prepare': 'Change cards',
+  'poison-antidote': 'Use the antidote',
   'poison-antidote-skip': 'Skip the antidote',
-  'poison-rescue': 'Done reading. Rescue the player!',
+  'poison-rescue': 'Done reading. Rescued!',
   'poison-next': 'Replay this round',
   'poison-restart-challenge': 'Play again',
   'poison-change-lesson': 'Choose another lesson',
@@ -33,83 +29,48 @@ export function createPoisonView(host,dispatch){
   function heading(title,copy,{titleEnglish,copyEnglish}={}){
     const h=el('div',undefined,'poison-heading');
     const round=model.state?.round??1;
-    h.append(el('span',`第 ${round} / 3 轮 · ${rounds[round].task}`,'poison-kicker'),
-      withEnglishInstruction(el('h3',title),titleEnglish),
-      withEnglishInstruction(el('p',copy),copyEnglish));
+    if(model.state)h.append(el('span',`第 ${round} / 3 轮`,'poison-kicker'));
+    h.append(withEnglishInstruction(el('h3',title),titleEnglish));
+    if(copy)h.append(withEnglishInstruction(el('p',copy),copyEnglish));
     return h;
   }
   function prepare(){
     host.replaceChildren();host.dataset.phase='prepare';key=null;cardNodes=[];
-    host.append(heading('女巫的小药房','选好本课生字，再请一位小女巫偷偷藏毒。',{
-      copyEnglish:'Choose the lesson characters. Then ask one player to hide the poison in secret.',
-    }));
+    host.append(heading('选本课字词',null,{titleEnglish:'Choose lesson cards'}));
     const layout=el('div',undefined,'poison-prep-layout'),left=el('section'),choices=el('div',undefined,'poison-choices');
-    choices.setAttribute('role','group');choices.setAttribute('aria-label','选择本轮字卡');
+    choices.setAttribute('role','group');choices.setAttribute('aria-label','选择字词卡');
     for(const word of model.pool.words){const b=el('button');b.dataset.poisonChoice=word.id;b.setAttribute('aria-pressed',String(model.selectedIds.includes(word.id)));b.append(term(word,model.showPinyin));choices.append(b);}
     left.append(el('p',model.pool.label,'poison-course'),choices);
-    if(!model.pool.words.length)left.append(el('p','当前范围还没有可用生字，请换课或打开题库管理。','poison-empty'));
+    if(!model.pool.words.length)left.append(el('p','暂无字词，请换课。','poison-empty'));
     const side=el('aside',undefined,'poison-guide');
-    const steps=el('ol');
-    const directions=[
-      ['其他同学闭眼，小女巫选一张毒药卡。','Everyone else closes their eyes while the witch picks one poison card.'],
-      ['藏好后大家睁眼，轮流选字。','Open your eyes and take turns choosing a character.'],
-      ['学生先读，老师点卡，立即出结果。','Read the character first. Your teacher taps the card to check it.'],
-      ['中毒就变身，再选择使用或跳过解药。','If you pick poison, choose whether to use the antidote.'],
-    ];
-    for(const [chinese,english] of directions)steps.append(withEnglishInstruction(el('li',chinese),english));
-    side.append(steps);
-    side.append(el('p',model.pool.note,'poison-note'));const count=el('p',`已选 ${model.selectedIds.length} 张 · 可选2–16张`,'poison-selection-count');count.setAttribute('role','status');side.append(count);
+    const count=el('p',`已选 ${model.selectedIds.length} 张（选 2–16 张）`,'poison-selection-count');count.setAttribute('role','status');side.append(count);
     const valid=model.selectedIds.length>=2&&model.selectedIds.length<=16;
-    if(!valid)side.append(el('p','请至少选两张字卡。','poison-note'));
-    const rescueLabel=el('label','可选解药 · 本课重点句子'),rescueSelect=el('select');rescueSelect.id='poison-antidote-choice';rescueSelect.setAttribute('aria-label','本课解药句子');
-    const skip=el('option','不用解药环节');skip.value='';rescueSelect.append(skip);
+    const rescueLabel=el('label','解药句子（可选）'),rescueSelect=el('select');rescueSelect.id='poison-antidote-choice';rescueSelect.setAttribute('aria-label','本课解药句子');
+    const skip=el('option','不用解药');skip.value='';rescueSelect.append(skip);
     for(const record of model.pool.sentences){const option=el('option',record.sentence);option.value=record.id;rescueSelect.append(option);}rescueSelect.value=model.antidoteId;rescueLabel.append(rescueSelect);side.append(rescueLabel);
-    if(!model.pool.sentences.length)side.append(el('p','本课暂无重点句子，仍可玩读词与变身。','poison-note'));
-    const start=button('poison-start','开始本轮 · 请大家闭眼','primary');start.disabled=!valid;side.append(start);layout.append(left,side);host.append(layout);
+    const start=button('poison-start','开始','primary');start.disabled=!valid;side.append(start);layout.append(left,side);host.append(layout);
   }
   function cover(ready){
     host.replaceChildren();cardNodes=[];
-    const round=rounds[model.state.round];
-    host.append(heading(ready?'毒药已藏好，大家睁眼':'其他同学，请闭眼',ready?round.prompt:'请老师指定一位小女巫，闭眼后再继续。',{
-      titleEnglish:ready?'Open your eyes.':'Everyone else, close your eyes.',
-      copyEnglish:ready?round.english:'Choose one player to be the witch. Continue when everyone else has closed their eyes.',
+    host.append(heading(ready?'大家睁眼':'小女巫看屏幕，其他同学闭眼',null,{
+      titleEnglish:ready?'Open your eyes.':'Witch, look at the screen. Everyone else, close your eyes.',
     }));
     const panel=el('div',undefined,'poison-cover');panel.append(el('span',ready?'🪄':'🙈','poison-cover-art'));
-    panel.append(el('p',ready?'毒药的标记已藏好。':'让小女巫独自看到屏幕。'));
-    panel.append(button(ready?'poison-read':'poison-begin-hide',ready?`大家睁眼，${round.action}`:'大家已闭眼，开始藏毒','primary',ready?round.english:undefined));
-    if(model.state.round===1)panel.append(button('poison-prepare','调整本轮生字','text-button'));
+    panel.append(button(ready?'poison-read':'poison-begin-hide',ready?'开始读':'开始藏毒','primary'));
+    if(model.state.round===1)panel.append(button('poison-prepare','换字词','text-button'));
     host.append(panel);
   }
   function buildBoard(animateHit=false){
     const state=model.state;host.replaceChildren();cardNodes=[];
-    const round=rounds[state.round];
     const hiding=state.phase==='hide';
-    const intro=heading(hiding?'嘘，小女巫正在藏毒':round.task,
-      hiding?'其他同学继续闭眼，秘密选一张卡，再点“藏好了”。':round.prompt,{
-        copyEnglish:hiding
-          ? 'Everyone else keeps their eyes closed. Secretly pick one card, then tap “Done hiding”.'
-          : round.english,
-      });
-    intro.hidden=state.phase==='complete';host.append(intro);
-    if(state.round===2&&state.phase!=='complete')host.append(el('p',`词卡来源 · ${model.pool.translationLabel}`,'poison-summary'));
-    const summary=el('p',undefined,'poison-summary');summary.id='poison-summary';summary.hidden=state.phase==='complete';host.append(summary);
-    const grid=el('div',undefined,'poison-grid');grid.setAttribute('role','group');grid.setAttribute('aria-label',state.phase==='hide'?'秘密选择毒药卡':`本轮${round.card}`);
+    if(state.phase!=='complete')host.append(hiding
+      ? heading('选一张毒药卡',null,{titleEnglish:'Pick one poison card'})
+      : heading('读一读','先读，再点卡。',{copyEnglish:'Read aloud, then tap the card.'}));
+    const grid=el('div',undefined,'poison-grid');grid.setAttribute('role','group');grid.setAttribute('aria-label',hiding?'秘密选择毒药卡':'本轮字词卡');
     for(const word of state.words){const b=el('button',undefined,'poison-card');b.dataset.poisonCard=word.id;b.append(term(word,model.showPinyin));const status=el('span','','poison-card-status');b.append(status);cardNodes.push({b,status,word});grid.append(b);}host.append(grid);
     const controls=el('div',undefined,'poison-controls');
-    if(state.phase==='hide')controls.append(button('poison-seal','藏好了，盖住标记','primary'));
-    else if(state.phase==='read'){
-      controls.append(withEnglishInstruction(el('strong','学生先答 · 老师点卡'),'Answer first. Your teacher taps the card.'));
-      if(state.round===3){
-        const hints=el('details',undefined,'poison-structure-hints');
-        hints.append(el('summary','看部件提示'));
-        const list=el('ul');
-        for(const item of model.pool.structures.filter(word=>model.selectedIds.includes(word.id))){
-          const description=[item.type,item.parts.join('、')].filter(Boolean).join(' · ');
-          if(description)list.append(el('li',`${item.word}　${description}`));
-        }
-        if(list.children.length){hints.append(list);host.append(hints);}
-      }
-    }else{
+    if(hiding)controls.append(button('poison-seal','藏好了','primary'));
+    if(state.phase==='complete'){
       const magic=el('section',undefined,'poison-magic');magic.id='poison-magic';
       const art=el('div',undefined,'poison-magic-art');art.setAttribute('role','img');art.setAttribute('aria-label','魔法烟雾和小青蛙变身效果');
       if(state.antidoteStatus!=='rescued'){art.setAttribute('role','group');art.setAttribute('aria-label','女巫拿着空瓶坏笑，同学变成小青蛙');art.append(createPoisonWitch({animate:animateHit}));}
@@ -120,27 +81,24 @@ export function createPoisonView(host,dispatch){
       const copy=el('div');if(state.antidoteStatus!=='rescued')copy.append(el('h3','哎呀，中毒啦！'));
       if(['available','unavailable'].includes(state.antidoteStatus)){
         const prompt=el('section',undefined,'poison-antidote-prompt');prompt.id='poison-antidote-prompt';prompt.setAttribute('role','dialog');prompt.setAttribute('aria-modal','false');prompt.setAttribute('aria-label','需要解药吗？');
-        const use=button('poison-antidote',state.antidote?'要解药 · 读本课句子':'本课暂无解药','primary');use.disabled=!state.antidote;
-        if(state.antidote)withEnglishInstruction(use,'Use the antidote: read the lesson sentence.');
-        prompt.append(use,button('poison-antidote-skip','不用解药，继续'));copy.append(prompt);
+        const use=button('poison-antidote',state.antidote?'用解药':'暂无解药','primary',state.antidote?actionEnglish['poison-antidote']:null);use.disabled=!state.antidote;
+        prompt.append(use,button('poison-antidote-skip',state.antidote?'跳过解药':'继续','',state.antidote?actionEnglish['poison-antidote-skip']:'Continue'));copy.append(prompt);
       }
       if(state.antidoteStatus==='reading'){
         const panel=el('div',undefined,'poison-antidote-panel'),sentence=el('p',state.antidote.sentence);sentence.id='poison-antidote-sentence';
-        panel.append(withEnglishInstruction(el('small','请读出解药句子'),'Read the antidote sentence aloud.'),sentence,button('poison-rescue','读完了，解救成功','primary'),button('poison-antidote-skip','暂不用解药，继续'));copy.append(panel);
+        panel.append(withEnglishInstruction(el('small','请读出解药句子'),'Read the antidote sentence aloud.'),sentence,button('poison-rescue','读完了，解救成功','primary'),button('poison-antidote-skip','跳过解药'));copy.append(panel);
       }
       if(['rescued','skipped'].includes(state.antidoteStatus)){
-        const labels=['','进入第二轮 · 说英语','进入第三轮 · 分析结构','完成挑战'];
-        const english=['','Round 2: Say the words in English','Round 3: Explain character structure','Finish the challenge'];
-        const available=state.round!==1||model.pool.translations.length>=2;
-        const proceed=button('poison-continue',available?labels[state.round]:'本课不足两张可翻译的词卡','primary',available?english[state.round]:undefined);
-        proceed.disabled=!available;
-        copy.append(proceed);
+        const finalRound=state.round===3;
+        copy.append(button('poison-continue',finalRound?'完成挑战':'下一轮','primary',finalRound?'Finish':'Next round'));
       }
       copy.append(button('poison-next','重玩本轮','text-button'),button('poison-change-lesson','选择其他课','text-button'));magic.append(copy);host.append(magic);
     }
-    if(state.round===1)controls.append(button('poison-prepare','调整本轮生字','text-button'));
-    host.append(controls);
-    const feedback=el('p',undefined,'poison-feedback');feedback.id='poison-feedback';feedback.hidden=state.phase==='complete';feedback.setAttribute('role','status');feedback.setAttribute('aria-live','polite');host.append(feedback);
+    if(state.round===1&&state.phase!=='complete')controls.append(button('poison-prepare','换字词','text-button'));
+    if(state.phase!=='complete'){
+      const feedback=el('p',undefined,'poison-feedback');feedback.id='poison-feedback';feedback.setAttribute('role','status');host.append(feedback);
+    }
+    if(controls.children.length)host.append(controls);
   }
   function updateBoard(){
     const state=model.state;
@@ -149,15 +107,17 @@ export function createPoisonView(host,dispatch){
       b.classList.toggle('is-secret',secret);b.classList.toggle('is-pending',pending);b.classList.toggle('is-used',Boolean(result));b.classList.toggle('is-poison',Boolean(result?.poison));
       b.disabled=state.phase==='complete'||Boolean(result);b.setAttribute('aria-pressed',String(secret||pending));
       // Never expose an unrevealed poison in public attributes, labels or status text.
-      status.textContent=state.phase==='hide'?(secret?'已选毒药':'点选'):result?(result.poison?'魔法毒药':'安全 · 已答'):pending?'正在回答':'点卡揭晓';
+      status.textContent=secret?'已选':result?'已读':'';
+      status.hidden=!status.textContent;
       const p=b.querySelector('.poison-pinyin');if(p)p.hidden=!model.showPinyin;
     }
-    host.querySelector('#poison-summary').textContent=state.phase==='hide'?`已选 ${state.poisonIds.length} / 1 张毒药卡`:`已答 ${state.results.length} / ${state.words.length} 张${rounds[state.round].card}`;
     const seal=host.querySelector('#poison-seal');if(seal)seal.disabled=state.poisonIds.length!==state.poisonCount;
-    const reveal=host.querySelector('#poison-reveal');if(reveal)reveal.disabled=!state.pendingId;
-    const cancel=host.querySelector('#poison-cancel');if(cancel)cancel.disabled=!state.pendingId;
-    const current=host.querySelector('#poison-current');if(current)current.textContent=state.pendingId?`请读：${state.words.find(w=>w.id===state.pendingId).word}`:'请先选一个词';
-    const feedback=host.querySelector('#poison-feedback');feedback.textContent=state.feedback.kind==='safe'?'安全！换下一位同学。':state.feedback.kind==='info'&&state.phase==='read'?rounds[state.round].prompt:state.feedback.message;feedback.dataset.kind=state.feedback.kind;
+    const feedback=host.querySelector('#poison-feedback');
+    if(feedback){
+      const safe=state.phase==='read'&&state.feedback.kind==='safe';
+      feedback.textContent=safe?'安全！':'';
+      feedback.dataset.kind=safe?'safe':'info';
+    }
   }
   function victory(){
     const panel=el('section',undefined,'poison-challenge');

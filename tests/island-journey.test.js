@@ -45,6 +45,8 @@ describe('native completion gates',()=>{
   const rows=getJourneyAvailability(course,ZHONGWEN_QUESTIONS,1);expect(rows.find(r=>r.id==='flip').available).toBe(true);
   expect(rows.find(r=>r.id==='explore')).toMatchObject({available:false,reason:expect.any(String)});
   expect(getJourneyAvailability({...course,lesson:3},ZHONGWEN_QUESTIONS,1).find(r=>r.id==='explore').available).toBe(true);
+  const characters=['一','二'].map(character=>({id:character,grade:1,character,words:[]}));
+  expect(getJourneyAvailability({source:'personal'},characters,1).find(row=>row.id==='poison').available).toBe(true);
   const empty=getJourneyAvailability({source:'personal'},[],1);expect(empty.every(r=>!r.available)).toBe(true);
  });
 });

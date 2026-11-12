@@ -67,10 +67,9 @@ describe('poison lesson vocabulary',()=>{
   it('keeps a lone Read Aloud word and adds one same-lesson word to make hiding possible',()=>{
     const selection={source:'paradise',stage:'2A',lesson:2,grade:1};
     const pool=getPoisonChallengePool(selection,PARADISE_QUESTIONS);
-    expect(pool.translations).toHaveLength(2);
-    expect(pool.translations[0].word).toBe('逛一逛');
-    expect(pool.translationLabel).toBe('读一读与本课词语');
-    expect(()=>createPoisonState({words:pool.translations})).not.toThrow();
+    expect(pool.readingWords).toHaveLength(2);
+    expect(pool.readingWords[0].word).toBe('逛一逛');
+    expect(()=>createPoisonState({words:pool.readingWords})).not.toThrow();
   });
   it('supports small lessons and preserves lesson boundaries and bank data',()=>{
     const bank=[...PARADISE_QUESTIONS,...ZHONGWEN_QUESTIONS],before=JSON.stringify(bank),pool=getPoisonPool({source:'paradise',stage:'1A',lesson:1},bank);

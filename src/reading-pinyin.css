@@ -13,18 +13,11 @@
 .poison-controls .game-instruction-english{
   text-align:center;
 }
-#witch-poison[data-phase="read"] .poison-controls strong > .game-instruction-english{
-  margin-top:.15em;
-}
 @media(min-width:1000px){
   .building-mode:has(.builder-round-layout) .reading-pinyin-dock,
-  .maze-mode:has(#hanzi-maze[data-phase="play"],#hanzi-maze[data-phase="complete"]) .reading-pinyin-dock,
-  .poison-mode:has(#witch-poison:not([data-phase="prepare"])) .reading-pinyin-dock{position:absolute;right:12px;bottom:8px;z-index:2;margin:0}
+  .maze-mode:has(#hanzi-maze[data-phase="play"],#hanzi-maze[data-phase="complete"]) .reading-pinyin-dock{position:absolute;right:12px;bottom:8px;z-index:2;margin:0}
 }
 @media(max-width:720px){
   .reading-pinyin-dock{margin-top:10px}
   .reading-pinyin-dock>.switch-label{min-height:38px;padding:8px 10px}
-  .poison-mode:has(#witch-poison[data-phase="read"]) .play-area{padding-bottom:96px}
-  .poison-mode:has(#witch-poison[data-phase="read"].show-english-instructions) .play-area{padding-bottom:136px}
-  .poison-mode:has(#witch-poison[data-phase="read"]) .reading-pinyin-dock input{scroll-margin-bottom:136px}
 }
