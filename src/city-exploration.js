@@ -10,6 +10,17 @@ const islandJourney=bindExplorationJourney('city-mission');
 islandJourney.decorate();
 
 const byId = id => document.getElementById(id);
+const pinyinToggle = byId('city-pinyin');
+const pinyinPreference = 'hanzi-flip.city-pinyin';
+try { pinyinToggle.checked = localStorage.getItem(pinyinPreference) === 'on'; } catch { /* Storage may be blocked. */ }
+function showPinyin() {
+  pinyinToggle.closest('.city-page').dataset.pinyin = pinyinToggle.checked ? 'on' : 'off';
+}
+pinyinToggle.addEventListener('change', () => {
+  showPinyin();
+  try { localStorage.setItem(pinyinPreference, pinyinToggle.checked ? 'on' : 'off'); } catch { /* Keep the in-page choice. */ }
+});
+showPinyin();
 const choices = byId('choices');
 const showClue = byId('show-clue');
 const next = byId('next-scene');

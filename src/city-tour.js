@@ -107,7 +107,8 @@ export function mountCityTour(root, {onStage, onFinish, onRestart}) {
   function showRouteWord(route) {
     showPoints(index);
     counter.textContent = index + ' / ' + route.words.length;
-    showCard(points[index + 1], route.words[index], 'word');
+    const [word, pinyin] = route.words[index];
+    showCard(points[index + 1], word, 'word', ruby(word, pinyin));
   }
 
   function advanceRoute(route) {

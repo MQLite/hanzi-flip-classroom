@@ -19,7 +19,7 @@
   position: relative;
   isolation: isolate;
   width: min(100%,1120px);
-  width: min(100%,1120px,max(660px,calc(200svh - 580px)));
+  width: min(100%,1120px,max(660px,calc(200svh - 620px)));
   aspect-ratio: 2;
   margin-inline: auto;
   background-image: url('./city-tour-atlas.webp');
