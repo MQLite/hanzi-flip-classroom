@@ -13,6 +13,41 @@ async function open(page) {
   await expect(page.getByRole('dialog', {name: '描写参考分', exact: true})).toBeVisible();
 }
 
+test('the score page has inclusive encouragement and fireworks thresholds',async({page},testInfo)=>{
+  await setup(page);
+  for(const [score,message,icon] of [[69,null,null],[70,'请再接再厉','头戴努力头巾的表情'],[79,'请再接再厉','头戴努力头巾的表情'],[80,'还不错哦','笑脸'],[89,'还不错哦','笑脸'],[90,null,null],[100,null,null]]){
+    await page.evaluate(score=>window.fixture.show({score}),score);
+    const popup=page.getByRole('dialog',{name:'描写参考分',exact:true});
+    await expect(popup.locator('.handwriting-score-dialog__value')).toHaveText(String(score));
+    await expect(popup.locator('canvas')).toHaveCount(Number(score>=90));
+    if(message)await expect(popup.getByText(message,{exact:true})).toBeVisible();
+    if(icon)await expect(popup.getByRole('img',{name:icon,exact:true})).toBeVisible();
+    if([70,80,90].includes(score))await page.screenshot({path:testInfo.outputPath(`reward-${score}.png`)});
+    await popup.getByRole('button',{name:'关闭',exact:true}).click();
+    expect(await page.evaluate(()=>window.fixture.resources())).toEqual({timers:0,frames:0,listeners:0});
+  }
+});
+
+test('encouragement uses the matching Mandarin recordings and honors mute',async({page})=>{
+  await page.addInitScript(()=>{
+    window.spoken=[];
+    const play=HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play=function(){window.spoken.push(this.src);return play.call(this);};
+  });
+  await setup(page);
+  for(const [score,filename] of [[80,'nice'],[70,'keep-going']]){
+    await page.evaluate(score=>window.fixture.show({score}),score);
+    await expect.poll(()=>page.evaluate(()=>window.spoken.at(-1))).toContain(`/audio/handwriting/${filename}.wav`);
+    const wav=await page.request.get(`/audio/handwriting/${filename}.wav`);
+    expect(wav.ok()).toBe(true);
+    expect((await wav.body()).subarray(0,4).toString()).toBe('RIFF');
+    await page.getByRole('button',{name:'关闭',exact:true}).click();
+  }
+  await page.evaluate(()=>window.fixture.show({score:80,muted:true}));
+  await expect(page.getByText('还不错哦',{exact:true})).toBeVisible();
+  expect(await page.evaluate(()=>window.spoken.length)).toBe(2);
+});
+
 test('shows the actual final score and three supplied metrics immediately without a timer', async ({page}) => {
   await setup(page);
   await open(page);

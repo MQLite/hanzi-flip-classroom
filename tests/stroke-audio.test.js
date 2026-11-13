@@ -12,3 +12,30 @@ it('cancels preceding and stale play promises, and suppresses muted audio',async
 it('handles rejected playback and rejects unknown names/teardown',async()=>{
   const createAudio=vi.fn(()=>({pause:vi.fn(),currentTime:0,play:()=>Promise.reject(Error('blocked'))}));const audio=createStrokeAudio({createAudio});expect(await audio.play('横')).toBe(false);expect(await audio.play('../secret')).toBe(false);audio.dispose();await audio.play('横');expect(createAudio).toHaveBeenCalledTimes(1);
 });
+it('waits for the actual end and releases a stalled or cancelled pronunciation',async()=>{
+  vi.useFakeTimers();
+  const clips=[];
+  const audio=createStrokeAudio({createAudio:()=>{
+    const clip=new EventTarget();
+    clip.play=()=>Promise.resolve();clip.pause=vi.fn();clips.push(clip);
+    return clip;
+  }});
+  try{
+    const done=vi.fn();
+    const first=audio.play('横',{waitForEnd:true}).then(done);
+    await Promise.resolve();
+    expect(done).not.toHaveBeenCalled();
+    clips[0].dispatchEvent(new Event('ended'));
+    await first;
+    expect(done).toHaveBeenCalledWith(true);
+    const cancelled=audio.play('竖',{waitForEnd:true});
+    const stalled=audio.play('点',{waitForEnd:true});
+    expect(await cancelled).toBe(false);
+    await vi.runAllTimersAsync();
+    expect(await stalled).toBe(false);
+    expect(clips[2].pause).toHaveBeenCalled();
+  }finally{
+    audio.dispose();
+    vi.useRealTimers();
+  }
+});

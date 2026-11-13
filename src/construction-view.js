@@ -19,15 +19,43 @@ async function loadGlyph(character){
   return cache.get(character);
 }
 
-export function createConstructionView(root,{onAction,storage}){
+export function createConstructionView(root,{onAction,onScoreDismissed,storage}){
   const audio=createStrokeAudio();let current=null,epoch=0,audioAttempt=0,visible=true,disposed=false,selected='',muted=false,drag=null,suppressUntil=0,pad=null,scorePopup=null;
+  let pendingScore=null;
   let showStrokeHints = true;
   try {
     showStrokeHints = storage?.getItem(STROKE_HINTS_KEY) !== 'off';
   } catch {
     // Keep the default when the browser blocks storage reads.
   }
-  function dismissScore(){scorePopup?.dispose();scorePopup=null;}
+  function dismissScore(){
+    pendingScore=null;
+    const popup=scorePopup;
+    scorePopup=null;
+    popup?.dispose();
+  }
+  async function finishHandwriting(state){
+    pendingScore=state;
+    render();
+    await audio.play(state.lastName,{waitForEnd:true});
+    if(pendingScore!==state||!visible||disposed)return;
+    pendingScore=null;
+    render();
+    scorePopup=showHandwritingScore({
+      character:state.characters[state.index].character,
+      score:state.scores[state.index],
+      drawings:state.drawings[state.index],
+      metrics:scoreMetrics(state),
+      muted,
+      onClose(){
+        if(!scorePopup)return;
+        scorePopup=null;
+        onScoreDismissed?.();
+        const summary=root.querySelector('#handwriting-score');
+        if(visible&&!disposed&&summary){summary.tabIndex=-1;summary.focus({preventScroll:true});}
+      },
+    });
+  }
   function scoreMetrics(state){const results=state.strokeScores[state.index];return Object.fromEntries(['shape','position','length'].map(key=>[key,Math.round(results.reduce((sum,r)=>sum+r.metrics[key],0)/results.length)]));}
   function cancelDrag(){if(drag){drag.ghost?.remove();drag=null;}window.removeEventListener('pointermove',pointerMove);window.removeEventListener('pointerup',pointerUp);window.removeEventListener('pointercancel',pointerCancel);}
   function pointerCancel(){cancelDrag();}
@@ -91,7 +119,7 @@ export function createConstructionView(root,{onAction,storage}){
     const messages={
       ready: showStrokeHints ? '从当前编号旁的小圆点起笔，沿虚线和箭头写完一笔后抬手。' : '观察字影，按笔顺逐笔描写。',
       accepted: `写对了：${state.lastName??''}。继续下一笔。`,
-      complete: '✦ 这个字写完了！看看你的描写参考分。',
+      complete: pendingScore ? '听完最后一笔，再看参考分。' : '✦ 这个字写完了！看看你的描写参考分。',
       'wrong-order': '请按笔顺写下一笔。',
       'wrong-direction': '这一笔方向反了，请重新起笔。',
       retry: '再试一次，连续写完这一笔，注意位置和方向。',
@@ -105,13 +133,14 @@ export function createConstructionView(root,{onAction,storage}){
       ? '沿细虚线写，不必描满粗字影。写对一笔，自动读出笔画名。'
       : '看字影，按笔顺逐笔写。写对一笔，自动读出笔画名。';
     side.append(node('h3','自己写'),node('p',instruction,'construction-instruction'));
-    if(state.scores[state.index]!==null){
+    if(pendingScore)side.append(node('p','正在播放最后一笔。','handwriting-ready'));
+    else if(state.scores[state.index]!==null){
       const score=node('section',undefined,'handwriting-score');score.id='handwriting-score';score.dataset.score=state.scores[state.index];score.setAttribute('aria-live','polite');const number=node('strong',String(state.scores[state.index]));number.append(node('small',' / 100'));score.append(node('h4','描写相似度参考分'),number);
       const results=state.strokeScores[state.index],metrics=node('div',undefined,'handwriting-score-metrics');for(const [key,label] of [['shape','形状'],['position','位置'],['length','长短']])metrics.append(node('span',`${label} ${Math.round(results.reduce((sum,r)=>sum+r.metrics[key],0)/results.length)}`));score.append(metrics,node('p','按完成的笔画比较；写得慢、重试不扣分。'));side.append(score);
     }else side.append(node('p',`正在描写第 ${state.placed+1} 笔，完成整字后显示参考分。`,'handwriting-ready'));
-    const written=node('div',undefined,'handwriting-written-strokes');written.setAttribute('aria-label','已写对的笔画，可点选再听');for(const name of record.names.slice(0,state.placed)){const b=node('button',name);b.type='button';b.setAttribute('aria-label',`重听${name}`);b.onclick=()=>audio.play(name);written.append(b);}side.append(written);
+    const written=node('div',undefined,'handwriting-written-strokes');written.setAttribute('aria-label','已写对的笔画，可点选再听');for(const name of record.names.slice(0,state.placed)){const b=node('button',name);b.type='button';b.disabled=Boolean(pendingScore);b.setAttribute('aria-label',`重听${name}`);b.onclick=()=>audio.play(name);written.append(b);}side.append(written);
     if(state.completed.length===pool.characters.length)side.append(node('p','✦ 本课写完啦！可以打开“笔画总复习 / 预习”。','construction-celebrate'));
-    const history=node('section',undefined,'handwriting-results');history.append(node('h4','本课描写记录'));const list=node('div',undefined,'handwriting-result-list');state.characters.forEach((c,i)=>{if(state.scores[i]===null)return;const item=node('span');item.dataset.character=c.character;item.append(node('b',c.character),node('span',`${state.scores[i]}分`));list.append(item);});if(!list.children.length)list.append(node('p','完成一个字，就会记下一个参考分。'));history.append(list);side.append(history,coverage(pool),references());layout.append(stage,side);root.append(layout);
+    const history=node('section',undefined,'handwriting-results');history.append(node('h4','本课描写记录'));const list=node('div',undefined,'handwriting-result-list');state.characters.forEach((c,i)=>{if(state.scores[i]===null||pendingScore&&i===state.index)return;const item=node('span');item.dataset.character=c.character;item.append(node('b',c.character),node('span',`${state.scores[i]}分`));list.append(item);});if(!list.children.length)list.append(node('p','完成一个字，就会记下一个参考分。'));history.append(list);side.append(history,coverage(pool),references());layout.append(stage,side);root.append(layout);
   }
   function renderStrokes(state,pool){
     if(!pool.characters.length){root.append(empty('本课暂无核定笔画','请选择其他课次，或补充核定的汉字资料。'),coverage(pool));return;}
@@ -196,10 +225,19 @@ export function createConstructionView(root,{onAction,storage}){
   }
   function onHidden(){if(document.hidden)stop();}document.addEventListener('visibilitychange',onHidden);window.addEventListener('blur',stop);
   return {
-    update(value){const accepted=current&&visible&&!document.hidden&&value.mode==='strokes'&&value.inputMode==='write'&&current.inputMode==='write'&&current.mode===value.mode&&current.pool===value.pool&&current.state.index===value.state.index&&value.state.placed===current.state.placed+1&&['accepted','complete'].includes(value.state.feedback);
-      const changed=!current||current.mode!==value.mode||current.pool!==value.pool||current.state.index!==value.state.index||current.inputMode!==value.inputMode;const advanced=current&&current.state.placed!==value.state.placed;if(changed){dismissScore();stop();selected='';}else if(advanced)selected='';current={...value};render();if(accepted){audioAttempt++;audio.play(value.state.lastName);
-        if(value.state.feedback==='complete'){const {state}=value;dismissScore();scorePopup=showHandwritingScore({character:state.characters[state.index].character,score:state.scores[state.index],metrics:scoreMetrics(state),onClose(){scorePopup=null;const summary=root.querySelector('#handwriting-score');if(visible&&!disposed&&summary){summary.tabIndex=-1;summary.focus({preventScroll:true});}}});}
-      }},
+    update(value){
+      const {state}=value;
+      const changed=!current||current.mode!==value.mode||current.pool!==value.pool||current.state.index!==state.index||current.inputMode!==value.inputMode||current.state.review!==state.review;
+      const advanced=current&&current.state.placed!==state.placed;
+      const accepted=!changed&&advanced&&visible&&!document.hidden&&value.mode==='strokes'&&value.inputMode==='write'&&state.placed===current.state.placed+1&&['accepted','complete'].includes(state.feedback);
+      if(changed||pendingScore&&pendingScore!==state){dismissScore();stop();selected='';}
+      else if(advanced)selected='';
+      current={...value};
+      if(accepted&&state.feedback==='complete'){finishHandwriting(state);return;}
+      render();
+      if(accepted){audioAttempt++;audio.play(state.lastName);}
+    },
+    isShowingScore(){return Boolean(pendingScore||scorePopup);},
     setVisible(value){if(visible===value)return;visible=value;epoch++;stop();if(!visible){dismissScore();pad?.dispose();pad=null;}if(visible)render();},
     dispose(){disposed=true;epoch++;dismissScore();stop();pad?.dispose();pad=null;audio.dispose();document.removeEventListener('visibilitychange',onHidden);window.removeEventListener('blur',stop);root.replaceChildren();}
   };

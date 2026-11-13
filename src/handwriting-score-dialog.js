@@ -1,9 +1,11 @@
 import './handwriting-score-dialog.css';
+import {createHandwritingInk} from './handwriting-pad.js';
+import {startLessonFireworks} from './lesson-celebration.js';
 
 let activeScoreDialog = null;
 
 /** Show one completed character's score. The caller owns progression and results. */
-export function showHandwritingScore({character = '', score = 0, metrics, onClose} = {}) {
+export function showHandwritingScore({character = '', score = 0, drawings = [], metrics, muted = false, onClose} = {}) {
   activeScoreDialog?.dispose();
   const previousFocus = document.activeElement;
   const dialog = document.createElement('dialog');
@@ -19,7 +21,42 @@ export function showHandwritingScore({character = '', score = 0, metrics, onClos
     <button type="button" class="handwriting-score-dialog__close" autofocus>关闭</button>
   `;
   dialog.querySelector('.handwriting-score-dialog__character').textContent = character;
-  dialog.querySelector('.handwriting-score-dialog__value').textContent = Number.isFinite(score) ? Math.max(0, Math.min(100, score)) : 0;
+  score = Number.isFinite(score) ? Math.max(0, Math.min(100, score)) : 0;
+  dialog.querySelector('.handwriting-score-dialog__value').textContent = score;
+  const content = dialog.querySelector('.handwriting-score-dialog__content');
+  if (drawings.length) {
+    dialog.classList.add('has-student-ink');
+    content.insertAdjacentHTML('beforebegin', `
+      <figure class="handwriting-score-dialog__writing">
+        <svg viewBox="0 0 1024 1024" role="img" aria-label="学生写的字">
+          <path class="score-grid-lines" d="M512 0V1024M0 512H1024M0 0L1024 1024M1024 0L0 1024"/>
+        </svg>
+        <figcaption>你写的字</figcaption>
+      </figure>`);
+    dialog.querySelector('svg').append(createHandwritingInk(drawings));
+  }
+
+  let canvas, voice;
+  if (score >= 90) {
+    canvas = document.createElement('canvas');
+    canvas.className = 'handwriting-score-dialog__fireworks';
+    canvas.setAttribute('aria-hidden', 'true');
+    dialog.classList.add('has-fireworks');
+    dialog.prepend(canvas);
+  } else if (score >= 70) {
+    const smile = score >= 80;
+    const encouragement = document.createElement('p');
+    encouragement.className = 'handwriting-score-dialog__encouragement';
+    const headband = '<path d="M15 26l-9 13 9-3 3 7 5-16" fill="#c84850"/><path d="M14 25q18-8 36 0v9q-18-8-36 0z" fill="#c84850"/><path d="m18 27 28 0" stroke="#ffe9bd" stroke-width="2"/>';
+    encouragement.innerHTML = `
+      <svg viewBox="0 0 64 64" role="img" aria-label="${smile ? '笑脸' : '头戴努力头巾的表情'}">
+        <circle cx="32" cy="33" r="23" fill="#ffdc80" stroke="#946028" stroke-width="2"/>
+        ${smile ? '' : headband}
+        <path d="M22 39q3-6 6 0m8 0q3-6 6 0m-17 5q7 8 14 0" fill="none" stroke="#573924" stroke-width="2.6" stroke-linecap="round"/>
+      </svg><span>${smile ? '还不错哦' : '请再接再厉'}</span>`;
+    content.append(encouragement);
+    if (!muted) voice = new Audio(`${import.meta.env.BASE_URL}audio/handwriting/${smile ? 'nice' : 'keep-going'}.wav`);
+  }
 
   const availableMetrics = [['shape', '字形'], ['position', '位置'], ['length', '长度']]
     .filter(([key]) => Number.isFinite(metrics?.[key]) && metrics[key] >= 0 && metrics[key] <= 100);
@@ -35,15 +72,19 @@ export function showHandwritingScore({character = '', score = 0, metrics, onClos
       item.append(term, value);
       list.append(item);
     }
-    dialog.querySelector('.handwriting-score-dialog__content').append(list);
+    content.append(list);
   }
 
   const closeButton = dialog.querySelector('button');
   let closed = false;
+  let stopFireworks, fireworksTimer;
 
   function close() {
     if (closed) return;
     closed = true;
+    if (fireworksTimer !== undefined) window.clearTimeout(fireworksTimer);
+    stopFireworks?.();
+    voice?.pause();
     window.removeEventListener('pagehide', close);
     for (const type of ['keydown', 'keyup', 'keypress']) window.removeEventListener(type, isolateKeyboard, true);
     closeButton.removeEventListener('click', close);
@@ -85,5 +126,14 @@ export function showHandwritingScore({character = '', score = 0, metrics, onClos
   for (const type of ['keydown', 'keyup', 'keypress']) window.addEventListener(type, isolateKeyboard, true);
   document.body.append(dialog);
   dialog.showModal();
+  if (canvas) {
+    stopFireworks = startLessonFireworks(canvas);
+    fireworksTimer = window.setTimeout(() => {
+      stopFireworks();
+      canvas.remove();
+      dialog.classList.remove('has-fireworks');
+    }, 4000);
+  }
+  voice?.play().catch(() => {});
   return handle;
 }

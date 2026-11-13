@@ -25,11 +25,58 @@ dialog.handwriting-score-dialog[open] {
   place-items: center;
 }
 
+dialog.handwriting-score-dialog.has-student-ink {
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  align-content: center;
+  gap: clamp(12px,4vw,54px);
+  padding-inline: max(24px, 8vw);
+}
+
+.handwriting-score-dialog__writing {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 47vh, 440px);
+  margin: 0;
+  text-align: center;
+}
+
+.handwriting-score-dialog__writing svg {
+  display: block;
+  width: 100%;
+  border: 2px solid #a5b9a4;
+  border-radius: 14px;
+  background: #fcfdf5;
+}
+
+.handwriting-score-dialog__writing figcaption { margin-top: 8px; font-weight: 700; }
+.handwriting-score-dialog__writing .score-grid-lines { fill: none; stroke: #bdcec1; stroke-width: 4; stroke-dasharray: 18 12; }
+.handwriting-score-dialog__writing .handwriting-ink { fill: none; stroke: #294e9b; stroke-width: 32; stroke-linecap: round; stroke-linejoin: round; }
+.handwriting-score-dialog__fireworks { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+dialog.handwriting-score-dialog.has-fireworks { background: radial-gradient(ellipse at center,#21436a,#0b1b35); color: #fff4c2; }
+.handwriting-score-dialog.has-fireworks .handwriting-score-dialog__content {
+  padding: 8px clamp(16px,3vw,40px) 20px;
+  border-radius: 18px;
+  background: #0b1b35ed;
+}
+.handwriting-score-dialog.has-fireworks :is(.handwriting-score-dialog__title,.handwriting-score-dialog__score,.handwriting-score-dialog__metrics dt,.handwriting-score-dialog__metrics dd) { color: #fff4c2; }
+
+.handwriting-score-dialog__encouragement {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  font-size: clamp(1.25rem,4vmin,2rem);
+  font-weight: 750;
+}
+.handwriting-score-dialog__encouragement svg { width: clamp(42px,8vmin,64px); flex: none; }
+
 .handwriting-score-dialog::backdrop {
   background: #f2f3e4;
 }
 
 .handwriting-score-dialog .handwriting-score-dialog__content {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -111,6 +158,7 @@ dialog.handwriting-score-dialog[open] {
 
 .handwriting-score-dialog .handwriting-score-dialog__close {
   position: absolute;
+  z-index: 2;
   top: max(20px, env(safe-area-inset-top));
   right: max(20px, env(safe-area-inset-right));
   min-width: 108px;
@@ -136,6 +184,11 @@ dialog.handwriting-score-dialog[open] {
 }
 
 @media (max-width: 600px) {
+  dialog.handwriting-score-dialog.has-student-ink { grid-template-columns: minmax(0,1fr); gap: 10px; padding: 74px 14px 18px; }
+  .has-student-ink .handwriting-score-dialog__writing { width: min(56vw,26dvh); }
+  .handwriting-score-dialog.has-student-ink .handwriting-score-dialog__character { font-size: 2.25rem; margin-bottom: 2px; }
+  .handwriting-score-dialog.has-student-ink .handwriting-score-dialog__title { margin-bottom: 2px; }
+  .handwriting-score-dialog.has-student-ink .handwriting-score-dialog__metrics { margin-top: 10px; padding-top: 10px; }
   .handwriting-score-dialog .handwriting-score-dialog__metrics {
     gap: 18px;
     padding-right: 0;

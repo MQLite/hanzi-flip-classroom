@@ -3,19 +3,23 @@ import {createStrokeGuides} from './stroke-guides.js';
 const NS='http://www.w3.org/2000/svg';
 function svgNode(tag,attributes={}){const n=document.createElementNS(NS,tag);for(const [key,value] of Object.entries(attributes))n.setAttribute(key,value);return n;}
 const pathFor=points=>points.map((p,i)=>`${i?'L':'M'}${p[0].toFixed(2)} ${p[1].toFixed(2)}`).join(' ');
+export function createHandwritingInk(drawings){
+  const ink=svgNode('g',{transform:'translate(0 900) scale(1 -1)',class:'handwriting-ink'});
+  for(const points of drawings)ink.append(svgNode('path',{d:pathFor(points)}));
+  return ink;
+}
 
 /** One mounted pad owns one gesture. Context changes dispose its listeners. */
 export function mountHandwritingPad(svg,{geometry,state,showStrokeHints=true,onStroke,onCancel=()=>{}}){
   const controller=new AbortController(),options={signal:controller.signal};let gesture=null,disposed=false;
   const transform = 'translate(0 900) scale(1 -1)';
   const shadow = svgNode('g', {transform, class: showStrokeHints ? 'glyph-shadow' : 'glyph-shadow is-unmarked'});
-  const ink = svgNode('g', {transform, class: 'handwriting-ink'});
+  const ink = createHandwritingInk(state.drawings[state.index]);
   const draft = svgNode('g', {transform, class: 'handwriting-draft'});
   geometry.strokes.forEach((d, index) => {
     const active = showStrokeHints && index === state.placed;
     shadow.append(svgNode('path', {d, class: active ? 'is-next' : ''}));
   });
-  for(const points of state.drawings[state.index])ink.append(svgNode('path',{d:pathFor(points)}));
   if(state.lastAttempt.length)draft.append(svgNode('path',{d:pathFor(state.lastAttempt),class:'handwriting-rejected'}));
   svg.append(shadow,ink);
   if(showStrokeHints)svg.append(createStrokeGuides(geometry.medians,state.placed));

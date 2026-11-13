@@ -5,35 +5,16 @@ const DEFAULT_BURSTS = 7;
 const COLORS = ['#ffd66d', '#ff8fb4', '#80edff', '#b8ffa7', '#c3a4ff', '#fff5c4'];
 let activeCelebration = null;
 
-/** Show fireworks. The caller decides when to celebrate a completed round. */
-export function showLessonCelebration({onClose, title = '太牛啦', durationMs = DURATION, playSound, burstCount = DEFAULT_BURSTS} = {}) {
-  activeCelebration?.dispose();
-  const previousFocus = document.activeElement;
-  const dialog = document.createElement('dialog');
-  dialog.id = 'lesson-celebration';
-  dialog.className = 'lesson-celebration';
-  dialog.setAttribute('aria-labelledby', 'lesson-celebration-title');
-  dialog.innerHTML = `
-    <canvas class="lesson-celebration__fireworks" aria-hidden="true"></canvas>
-    <h2 id="lesson-celebration-title" class="lesson-celebration__title"></h2>
-    <button type="button" class="lesson-celebration__close" autofocus>关闭庆祝</button>
-  `;
-  const heading = dialog.querySelector('h2');
-  heading.textContent = title;
-  heading.style.setProperty('--celebration-title-limit', `${88 / Math.max(1, [...title].length)}vw`);
-  document.body.append(dialog);
-  const canvas = dialog.querySelector('canvas');
+/** Draw fireworks in a caller-owned canvas and return its cleanup function. */
+export function startLessonFireworks(canvas, {burstCount = DEFAULT_BURSTS} = {}) {
   const context = canvas.getContext('2d');
-  const closeButton = dialog.querySelector('button');
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const spreadAcrossScreen = burstCount > DEFAULT_BURSTS;
   const startedAt = performance.now();
   let width = 0;
   let height = 0;
   let frameId = 0;
-  let timerId = 0;
   let closed = false;
-  let stopSound;
 
   function drawBackground() {
     context.clearRect(0, 0, width, height);
@@ -115,8 +96,8 @@ export function showLessonCelebration({onClose, title = '太牛啦', durationMs 
 
   function resize() {
     if (closed) return;
-    width = dialog.clientWidth;
-    height = dialog.clientHeight;
+    width = canvas.clientWidth;
+    height = canvas.clientHeight;
     // A cap keeps projector-size drawing inexpensive on high-density screens.
     const ratio = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = Math.round(width * ratio);
@@ -131,6 +112,41 @@ export function showLessonCelebration({onClose, title = '太牛啦', durationMs 
     frameId = window.requestAnimationFrame(animate);
   }
 
+  window.addEventListener('resize', resize);
+  resize();
+  if (!reducedMotion && context) frameId = window.requestAnimationFrame(animate);
+  return () => {
+    if (closed) return;
+    closed = true;
+    window.cancelAnimationFrame(frameId);
+    window.removeEventListener('resize', resize);
+    canvas.width = 0;
+    canvas.height = 0;
+  };
+}
+
+/** Show fireworks. The caller decides when to celebrate a completed round. */
+export function showLessonCelebration({onClose, title = '太牛啦', durationMs = DURATION, playSound, burstCount = DEFAULT_BURSTS} = {}) {
+  activeCelebration?.dispose();
+  const previousFocus = document.activeElement;
+  const dialog = document.createElement('dialog');
+  dialog.id = 'lesson-celebration';
+  dialog.className = 'lesson-celebration';
+  dialog.setAttribute('aria-labelledby', 'lesson-celebration-title');
+  dialog.innerHTML = `
+    <canvas class="lesson-celebration__fireworks" aria-hidden="true"></canvas>
+    <h2 id="lesson-celebration-title" class="lesson-celebration__title"></h2>
+    <button type="button" class="lesson-celebration__close" autofocus>关闭庆祝</button>
+  `;
+  const heading = dialog.querySelector('h2');
+  heading.textContent = title;
+  heading.style.setProperty('--celebration-title-limit', `${88 / Math.max(1, [...title].length)}vw`);
+  const canvas = dialog.querySelector('canvas');
+  const closeButton = dialog.querySelector('button');
+  let timerId = 0;
+  let closed = false;
+  let stopSound, stopFireworks;
+
   function stopSoundWhenHidden() {
     if (document.hidden) stopSound?.();
   }
@@ -139,8 +155,7 @@ export function showLessonCelebration({onClose, title = '太牛啦', durationMs 
     if (closed) return;
     closed = true;
     window.clearTimeout(timerId);
-    window.cancelAnimationFrame(frameId);
-    window.removeEventListener('resize', resize);
+    stopFireworks?.();
     window.removeEventListener('pagehide', close);
     document.removeEventListener('visibilitychange', stopSoundWhenHidden);
     stopSound?.();
@@ -150,8 +165,6 @@ export function showLessonCelebration({onClose, title = '太牛啦', durationMs 
     dialog.removeEventListener('close', close);
     if (dialog.open) dialog.close();
     dialog.remove();
-    canvas.width = 0;
-    canvas.height = 0;
     if (activeCelebration === handle) activeCelebration = null;
     if (previousFocus?.isConnected && typeof previousFocus.focus === 'function') previousFocus.focus({preventScroll: true});
     onClose?.();
@@ -176,14 +189,13 @@ export function showLessonCelebration({onClose, title = '太牛啦', durationMs 
   closeButton.addEventListener('click', close);
   dialog.addEventListener('cancel', cancel);
   dialog.addEventListener('close', close);
-  window.addEventListener('resize', resize);
   window.addEventListener('pagehide', close);
   for (const type of ['keydown', 'keyup', 'keypress']) window.addEventListener(type, isolateKeyboard, true);
+  document.body.append(dialog);
   dialog.showModal();
-  resize();
+  stopFireworks = startLessonFireworks(canvas, {burstCount});
   stopSound = playSound?.();
   if (stopSound) document.addEventListener('visibilitychange', stopSoundWhenHidden);
-  if (!reducedMotion && context) frameId = window.requestAnimationFrame(animate);
   timerId = window.setTimeout(close, durationMs);
   return handle;
 }

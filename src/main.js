@@ -356,7 +356,7 @@ const moleView=createMoleView($('#mole'),moleIntent);
 const poisonView=createPoisonView($('#witch-poison'),poisonIntent);
 const buildingView=createBuildingView($('#hanzi-building'),buildingIntent);
 const mazeView=createMazeView($('#hanzi-maze'),mazeIntent);
-const constructionView=createConstructionView($('#hanzi-construction'),{onAction:constructionIntent,storage});
+const constructionView=createConstructionView($('#hanzi-construction'),{onAction:constructionIntent,onScoreDismissed:render,storage});
 constructionView.setVisible(false);
 let journeyContextCache;
 function journeyContext(){
@@ -811,7 +811,10 @@ function el(tag, text, className) {
 function render() {
   if(homeMode){journey.sync(gameMode,{});return;}
   gameHasBeenShown=true;
-  journey.sync(gameMode,{session,moleState,mazeState,puzzleState,strokeState,handwritingState,strokeInputMode,workshopState,workshopTransition,poisonWon,buildingState,sudokuState});
+  if(isConstruction(gameMode)){
+    constructionView.update({mode:gameMode,state:gameMode==='puzzle'?puzzleState:strokeInputMode==='write'?handwritingState:strokeState,pool:constructionPool,inputMode:strokeInputMode});
+  }
+  journey.sync(gameMode,{session,moleState,mazeState,puzzleState,strokeState,handwritingState:constructionView.isShowingScore()?null:handwritingState,strokeInputMode,workshopState,workshopTransition,poisonWon,buildingState,sudokuState});
   if(journey.isActive())$('#scope').closest('label').hidden=true;
   syncReadingHintControls();
   $('#pinyin').closest('label').hidden=gameMode!=='train'&&gameMode!=='mole'&&gameMode!=='poison'&&gameMode!=='building'&&gameMode!=='maze';
@@ -820,7 +823,7 @@ function render() {
     for(const id of ['#extension-toggle','#extension-hint','#extension'])$(id).hidden=true;
     $('#round-caption').textContent=gameMode==='puzzle'?'本课部件 · 自己发现汉字':'本课生字 · 规范笔顺';
     $('footer > span').textContent=gameMode==='puzzle'?'先选部件，再合一合；每个汉字只收集一次。':strokeInputMode==='write'?'按笔顺逐笔描写，写完一字可看全屏参考分。':'学生说名称，老师拖笔画；按笔顺完成后进入总复习。';
-    constructionView.update({mode:gameMode,state:gameMode==='puzzle'?puzzleState:strokeInputMode==='write'?handwritingState:strokeState,pool:constructionPool,inputMode:strokeInputMode});return;
+    return;
   }
   if(gameMode==='explore'){
     strokeCleanup?.();strokeCleanup=null;
