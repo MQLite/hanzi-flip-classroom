@@ -14,6 +14,19 @@ async function visibleCopy(page){
   }
  });
 }
+async function expectRaisedHands(restored){
+ const child=restored.locator('.poison-rescued-child svg');
+ const hands=child.locator('[data-cheering-hand]');
+ await expect(hands).toHaveCount(2);
+ const head=await child.locator('[data-skin]').boundingBox();
+ for(const hand of await hands.all()){
+  const box=await hand.boundingBox();
+  expect(box.y+box.height).toBeLessThan(head.y+head.height/3);
+ }
+ const left=await hands.first().boundingBox(),right=await hands.last().boundingBox();
+ expect(left.x+left.width).toBeLessThan(head.x);
+ expect(right.x).toBeGreaterThan(head.x+head.width);
+}
 test('poison aftermath keeps only the required phrases, real antidote sentence and functional controls',async({page},testInfo)=>{
  await page.setViewportSize({width:1280,height:720});
  const sentence=await readPoison(page);await expect(page.getByRole('dialog',{name:'需要解药吗？'})).toBeVisible();expect(await visibleCopy(page)).toBe('哎呀，中毒啦！');await page.locator('#poison-antidote').click();
@@ -27,6 +40,7 @@ test('poison aftermath keeps only the required phrases, real antidote sentence a
  await expect(page.locator('.poison-magic-art.is-rescued')).toHaveCount(0);
  await feed.click();
  await expect(page.getByRole('img',{name:'小青蛙吃下解药，变回女孩'})).toBeVisible();
+ await expectRaisedHands(page.getByRole('img',{name:'小青蛙吃下解药，变回女孩'}));
  await page.screenshot({path:testInfo.outputPath('girl-rescue.png')});
  await expect(page.locator('#poison-next')).toBeVisible();expect(await visibleCopy(page)).toBe('');
 });
@@ -46,6 +60,7 @@ test('the teacher can feed the potion to restore a boy and see the transformatio
  await expect(restored).toBeVisible();
  expect(await restored.evaluate(node=>node.getAnimations({subtree:true}).length)).toBeGreaterThan(0);
  await page.screenshot({path:testInfo.outputPath('boy-rescue.png'),animations:'disabled'});
+ await expectRaisedHands(restored);
 });
 test('other lessons retain their own exact antidote sentence without source captions',async({page})=>{
  const sentence=await readPoison(page,'2');expect(sentence).not.toBe('你好！');await page.locator('#poison-antidote').click();await expect(page.locator('#poison-antidote-sentence')).toHaveText(sentence);expect(await visibleCopy(page)).toBe(('哎呀，中毒啦！请读出解药句子'+sentence).replace(/\s/gu,''));

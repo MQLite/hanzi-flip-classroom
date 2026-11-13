@@ -47,6 +47,9 @@ const glassesMarkup = `
     <path d="M83 64q5-5 10 0M55 64l-6-3m72 3 6-3"/>
   </g>`;
 
+const raisedArms = 'M67 109Q47 100 37 73L22 10M109 109q20-9 30-36l15-63';
+const openPalm = 'M22 13q-5-3-8-9l-4-7q-2-5 2-6 2-1 5 3l4 6-3-13q-1-5 3-5 3 0 4 5l3 10v-13q0-4 4-4 3 0 3 4l-1 16 4-7q3-4 6-1 2 2 0 6l-6 12q-4 8-12 6z';
+
 export function createRescuedChild(character, appearance=0) {
   const girl = character === 'girl';
   const skin = skinTones[appearance % skinTones.length];
@@ -54,18 +57,23 @@ export function createRescuedChild(character, appearance=0) {
   const hairColor = hairColors[(appearance + Math.floor(appearance / hairStyles.length)) % hairColors.length];
   const shirt = shirtColors[appearance % shirtColors.length];
   const glasses = appearance % 4 === 0 || appearance % 4 === 3;
-  return illustration('0 0 176 198', `
+  return illustration('0 -24 176 222', `
     <ellipse cx="88" cy="185" rx="52" ry="7" fill="#54755e" opacity=".2"/>
     <g stroke="#403249" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
       ${hair.back?`<path d="${hair.back}" fill="${hairColor}"/>`:''}
       ${hair.detail??''}
       <path d="M70 144v32l-13 6h24l7-35m17-3v32l13 6H95l-7-35" fill="#4d657e"/>
-      <path d="M65 105q-11 3-24 25l-10-13m80-12q11 3 24 25l10-13" fill="none" stroke="#403249" stroke-width="13"/>
-      <path d="M65 105q-11 3-24 25l-10-13m80-12q11 3 24 25l10-13" fill="none" stroke="${skin}" stroke-width="8"/>
+      <path d="${raisedArms}" fill="none" stroke-width="15"/>
+      <path d="${raisedArms}" fill="none" stroke="${skin}" stroke-width="9"/>
+      <g fill="${skin}" stroke-width="2.7">
+        <path data-cheering-hand d="${openPalm}" transform="translate(-4)"/>
+        <path data-cheering-hand d="${openPalm}" transform="translate(180) scale(-1 1)"/>
+      </g>
       <path d="M73 101h30l${girl?'18 49H55':'10 49H63'}z" fill="${shirt}"/>
       <circle data-skin cx="88" cy="62" r="40" fill="${skin}"/>
       <path data-hair="${hair.name}" d="${hair.front}" fill="${hairColor}"/>
-      <path d="M70 64v3m36-3v3M78 80q10 10 20 0" stroke="#281c25" fill="none"/>
+      <path d="M67 66q3-5 6 0m30 0q3-5 6 0" stroke="#281c25" fill="none" stroke-width="3"/>
+      <path d="M77 79q11 4 22 0-3 12-11 12t-11-12z" fill="#713a44" stroke="#281c25" stroke-width="2.5"/>
       ${glasses?glassesMarkup:''}
     </g>
     <g fill="#ed8e85" opacity=".65"><circle cx="63" cy="76" r="5"/><circle cx="113" cy="76" r="5"/></g>
