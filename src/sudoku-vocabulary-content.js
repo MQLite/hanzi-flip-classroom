@@ -2072,13 +2072,13 @@ export const SUDOKU_VOCABULARY_CONTENT = [
     "preferredWords": [
       "河水",
       "中国",
-      "外国",
       "国家",
       "名字",
-      "有名",
-      "最小",
       "母亲",
-      "父亲"
+      "父亲",
+      "古人",
+      "两条鱼",
+      "双亲"
     ],
     "readingVocabulary": []
   }

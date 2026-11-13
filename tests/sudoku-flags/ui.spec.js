@@ -50,11 +50,17 @@ test('Paradise 2A lesson 1 uses flag images for the three country names and keep
   await expect(page.locator('[data-score="team-1"]')).toHaveText('3');
 });
 
-test('Zhongwen book 2 lesson 12 uses parent portraits and the Chinese flag',async({page},testInfo)=>{
+test('Zhongwen book 2 lesson 12 uses six illustrated clues by default',async({page},testInfo)=>{
   await page.setViewportSize({width:1280,height:720});
   await page.goto('/?mode=sudoku&source=zhongwen&stage=2&lesson=12');
+  for(const word of ['外国','有名','最小']){
+    await expect(page.locator(`[data-sudoku-choice$="/${word}"]`)).toHaveAttribute('aria-pressed','false');
+  }
   await page.locator('#sudoku-start').click();
-  const clues=[['母亲','母亲和孩子'],['父亲','父亲和孩子'],['中国','中国国旗']];
+  const clues=[
+    ['母亲','母亲和孩子'],['父亲','父亲和孩子'],['中国','中国国旗'],
+    ['古人','穿古装的古人'],['两条鱼','两条鱼'],['双亲','父亲和母亲'],
+  ];
   for(const [word,label] of clues){
     const cells=page.locator(`[data-sudoku-cell][data-word-id$="/${word}"]`);
     const picture=cells.getByRole('img',{name:label,exact:true}).first();
