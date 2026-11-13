@@ -52,14 +52,15 @@ test('other lessons retain their own exact antidote sentence without source capt
  await expect(page.locator('#poison-magic')).not.toContainText('教材第');await page.locator('#poison-antidote-skip').click();await page.locator('#poison-next').click();await expect(page.locator('#witch-poison')).toHaveAttribute('data-phase','cover');
 });
 
-test('repeated rescues rotate both skin tone and hair for either character choice',async({page},testInfo)=>{
+test('both character choices rotate skin, hair, ponytails, braids and glasses',async({page},testInfo)=>{
  await readPoison(page);
  const artwork=page.locator('.poison-rescued-child');
  const skin=artwork.locator('[data-skin]').first();
  const hair=artwork.locator('[data-hair]').first();
- const colors=new Set(),styles=new Set();
+ const appearancesByCharacter=new Map();
  let previous;
- for(const [index,character] of ['男孩','男孩','男孩','女孩','女孩','女孩'].entries()){
+ for(let index=0;index<12;index++){
+  const character=index<6?'男孩':'女孩';
   if(index>0){
    await page.locator('#poison-next').click();
    await page.locator('#poison-begin-hide').click();
@@ -79,12 +80,21 @@ test('repeated rescues rotate both skin tone and hair for either character choic
    expect(appearance[0]).not.toBe(previous[0]);
    expect(appearance[1]).not.toBe(previous[1]);
   }
-  colors.add(appearance[0]);styles.add(appearance[1]);previous=appearance;
+  const style=await hair.getAttribute('data-hair');
+  const glasses=await artwork.locator('[data-glasses]').count()>0;
+  const variants=appearancesByCharacter.get(character)??[];
+  variants.push({skin:appearance[0],style,glasses});
+  appearancesByCharacter.set(character,variants);
+  previous=appearance;
   await page.locator('#pinyin').setChecked(index%2===0);
   await expect(skin).toHaveAttribute('fill',appearance[0]);
   await expect(hair).toHaveAttribute('d',appearance[1]);
-  if(index<5)await artwork.screenshot({path:testInfo.outputPath(`rescue-${index+1}.png`)});
+  await expect(artwork.locator('[data-glasses]')).toHaveCount(Number(glasses));
+  if(['ponytail','braids'].includes(style))await artwork.screenshot({path:testInfo.outputPath(`rescue-${index+1}.png`)});
  }
- expect(colors.size).toBe(5);
- expect(styles.size).toBe(4);
+ for(const variants of appearancesByCharacter.values()){
+  expect(new Set(variants.map(variant=>variant.skin)).size).toBe(5);
+  expect(variants.map(variant=>variant.style).sort()).toEqual(['bob','braids','curls','long','ponytail','short']);
+  expect(new Set(variants.map(variant=>variant.glasses))).toEqual(new Set([true,false]));
+ }
 });
