@@ -5,7 +5,7 @@ import {startLessonFireworks} from './lesson-celebration.js';
 let activeScoreDialog = null;
 
 /** Show one completed character's score. The caller owns progression and results. */
-export function showHandwritingScore({character = '', score = 0, drawings = [], metrics, muted = false, onClose} = {}) {
+export function showHandwritingScore({character = '', score = 0, drawings = [], metrics, onClose} = {}) {
   activeScoreDialog?.dispose();
   const previousFocus = document.activeElement;
   const dialog = document.createElement('dialog');
@@ -36,7 +36,7 @@ export function showHandwritingScore({character = '', score = 0, drawings = [], 
     dialog.querySelector('svg').append(createHandwritingInk(drawings));
   }
 
-  let canvas, voice;
+  let canvas;
   if (score >= 90) {
     canvas = document.createElement('canvas');
     canvas.className = 'handwriting-score-dialog__fireworks';
@@ -55,7 +55,6 @@ export function showHandwritingScore({character = '', score = 0, drawings = [], 
         <path d="M22 39q3-6 6 0m8 0q3-6 6 0m-17 5q7 8 14 0" fill="none" stroke="#573924" stroke-width="2.6" stroke-linecap="round"/>
       </svg><span>${smile ? '还不错哦' : '请再接再厉'}</span>`;
     content.append(encouragement);
-    if (!muted) voice = new Audio(`${import.meta.env.BASE_URL}audio/handwriting/${smile ? 'nice' : 'keep-going'}.wav`);
   }
 
   const availableMetrics = [['shape', '字形'], ['position', '位置'], ['length', '长度']]
@@ -84,7 +83,6 @@ export function showHandwritingScore({character = '', score = 0, drawings = [], 
     closed = true;
     if (fireworksTimer !== undefined) window.clearTimeout(fireworksTimer);
     stopFireworks?.();
-    voice?.pause();
     window.removeEventListener('pagehide', close);
     for (const type of ['keydown', 'keyup', 'keypress']) window.removeEventListener(type, isolateKeyboard, true);
     closeButton.removeEventListener('click', close);
@@ -134,6 +132,5 @@ export function showHandwritingScore({character = '', score = 0, drawings = [], 
       dialog.classList.remove('has-fireworks');
     }, 4000);
   }
-  voice?.play().catch(() => {});
   return handle;
 }

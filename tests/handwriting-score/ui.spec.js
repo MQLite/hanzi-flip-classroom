@@ -28,24 +28,19 @@ test('the score page has inclusive encouragement and fireworks thresholds',async
   }
 });
 
-test('encouragement uses the matching Mandarin recordings and honors mute',async({page})=>{
+test('score encouragement is shown without playing audio',async({page})=>{
   await page.addInitScript(()=>{
     window.spoken=[];
     const play=HTMLMediaElement.prototype.play;
     HTMLMediaElement.prototype.play=function(){window.spoken.push(this.src);return play.call(this);};
   });
   await setup(page);
-  for(const [score,filename] of [[80,'nice'],[70,'keep-going']]){
+  for(const [score,message] of [[80,'还不错哦'],[70,'请再接再厉']]){
     await page.evaluate(score=>window.fixture.show({score}),score);
-    await expect.poll(()=>page.evaluate(()=>window.spoken.at(-1))).toContain(`/audio/handwriting/${filename}.wav`);
-    const wav=await page.request.get(`/audio/handwriting/${filename}.wav`);
-    expect(wav.ok()).toBe(true);
-    expect((await wav.body()).subarray(0,4).toString()).toBe('RIFF');
+    await expect(page.getByText(message,{exact:true})).toBeVisible();
+    expect(await page.evaluate(()=>window.spoken)).toEqual([]);
     await page.getByRole('button',{name:'关闭',exact:true}).click();
   }
-  await page.evaluate(()=>window.fixture.show({score:80,muted:true}));
-  await expect(page.getByText('还不错哦',{exact:true})).toBeVisible();
-  expect(await page.evaluate(()=>window.spoken.length)).toBe(2);
 });
 
 test('shows the actual final score and three supplied metrics immediately without a timer', async ({page}) => {

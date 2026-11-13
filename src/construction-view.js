@@ -46,7 +46,6 @@ export function createConstructionView(root,{onAction,onScoreDismissed,storage})
       score:state.scores[state.index],
       drawings:state.drawings[state.index],
       metrics:scoreMetrics(state),
-      muted,
       onClose(){
         if(!scorePopup)return;
         scorePopup=null;
