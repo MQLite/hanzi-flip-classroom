@@ -1,10 +1,12 @@
-import {PARADISE_ID} from './curriculum.js';
+import {PARADISE_ID, ZHONGWEN_ID} from './curriculum.js';
 import china from './assets/flags/cn.svg';
 import canada from './assets/flags/ca.svg';
 import australia from './assets/flags/au.svg';
 import look from './assets/sudoku/look.svg';
 import long from './assets/sudoku/long.svg';
 import paris from './assets/sudoku/paris.svg';
+import mother from './assets/sudoku/mother.svg';
+import father from './assets/sudoku/father.svg';
 
 // Local flag-icons SVGs (MIT): https://github.com/lipis/flag-icons
 const flags = new Map([
@@ -18,10 +20,19 @@ const illustrations = new Map([
   ['长', {url: long, label: '箭头指向较长的线', style: 'sudoku-illustration'}],
   ['巴黎', {url: paris, label: '埃菲尔铁塔', style: 'sudoku-illustration'}],
 ]);
-const picturesByLesson = new Map([[1, flags], [2, illustrations]]);
+const jianghe = new Map([
+  ['母亲', {url: mother, label: '母亲和孩子', style: 'sudoku-illustration'}],
+  ['父亲', {url: father, label: '父亲和孩子', style: 'sudoku-illustration'}],
+  ['中国', flags.get('中国')],
+]);
+const picturesByLesson = new Map([
+  [`${PARADISE_ID}/2/1`, flags],
+  [`${PARADISE_ID}/2/2`, illustrations],
+  [`${ZHONGWEN_ID}/2/12`, jianghe],
+]);
 
 export function lessonPictureForWord(word) {
   const source = word?.source;
-  if (source?.textbook !== PARADISE_ID || source.book !== 2) return null;
-  return picturesByLesson.get(source.lesson)?.get(word.word) ?? null;
+  if (!source) return null;
+  return picturesByLesson.get(`${source.textbook}/${source.book}/${source.lesson}`)?.get(word.word) ?? null;
 }
