@@ -23,6 +23,7 @@ function term(word,pinyin){
 }
 export function createPoisonView(host,dispatch){
   let model={},key=null,cardNodes=[],controller=new AbortController(),active=false,rescueCharacter='boy';const audio=createPoisonAudio();
+  let nextAppearance=0;
   function button(id,label,kind='',english=actionEnglish[id]){
     const b=el('button',label,kind);b.id=id;
     return withEnglishInstruction(b,english);
@@ -97,7 +98,7 @@ export function createPoisonView(host,dispatch){
       if(state.antidoteStatus==='rescued'){
         art.classList.add('is-rescued');
         art.setAttribute('aria-label',`小青蛙吃下解药，变回${state.rescuedCharacter==='girl'?'女孩':'男孩'}`);
-        const child=el('span',undefined,'poison-rescued-child');child.append(createRescuedChild(state.rescuedCharacter));art.append(child);
+        const child=el('span',undefined,'poison-rescued-child');child.append(createRescuedChild(state.rescuedCharacter,state.rescuedAppearance));art.append(child);
         if(animateRescue){
           art.classList.add('is-feeding');
           const dose=el('span',undefined,'poison-rescue-dose');dose.append(createAntidoteBottle());art.append(dose);
@@ -157,7 +158,12 @@ export function createPoisonView(host,dispatch){
     const b=event.target.closest('button');if(!b||!host.contains(b)||b.disabled)return;
     if(b.dataset.poisonChoice){dispatch('choose-word',b.dataset.poisonChoice);return;}
     if(b.dataset.poisonCard){dispatch('card',b.dataset.poisonCard);return;}
-    if(b.id==='poison-rescue'){dispatch('rescue',rescueCharacter);return;}
+    if(b.id==='poison-rescue'){
+      if(model.state?.antidoteStatus!=='reading')return;
+      dispatch('rescue',{character:rescueCharacter,appearance:nextAppearance});
+      nextAppearance++;
+      return;
+    }
     const intent={'poison-start':'start','poison-begin-hide':'hide','poison-seal':'seal','poison-read':'read','poison-next':'repeat-round','poison-continue':'advance-round','poison-prepare':'prepare','poison-antidote':'antidote','poison-change-lesson':'change-lesson','poison-antidote-skip':'skip-antidote','poison-restart-challenge':'restart-challenge'}[b.id];
     if(intent)dispatch(intent);
   },{signal:controller.signal});

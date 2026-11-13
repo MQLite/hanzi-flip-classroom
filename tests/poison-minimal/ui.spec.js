@@ -51,3 +51,40 @@ test('other lessons retain their own exact antidote sentence without source capt
  const sentence=await readPoison(page,'2');expect(sentence).not.toBe('你好！');await page.locator('#poison-antidote').click();await expect(page.locator('#poison-antidote-sentence')).toHaveText(sentence);expect(await visibleCopy(page)).toBe(('哎呀，中毒啦！请读出解药句子'+sentence).replace(/\s/gu,''));
  await expect(page.locator('#poison-magic')).not.toContainText('教材第');await page.locator('#poison-antidote-skip').click();await page.locator('#poison-next').click();await expect(page.locator('#witch-poison')).toHaveAttribute('data-phase','cover');
 });
+
+test('repeated rescues rotate both skin tone and hair for either character choice',async({page},testInfo)=>{
+ await readPoison(page);
+ const artwork=page.locator('.poison-rescued-child');
+ const skin=artwork.locator('[data-skin]').first();
+ const hair=artwork.locator('[data-hair]').first();
+ const colors=new Set(),styles=new Set();
+ let previous;
+ for(const [index,character] of ['男孩','男孩','男孩','女孩','女孩','女孩'].entries()){
+  if(index>0){
+   await page.locator('#poison-next').click();
+   await page.locator('#poison-begin-hide').click();
+   const first=page.locator('[data-poison-card]').first();
+   await first.click();
+   await page.locator('#poison-seal').click();
+   await page.locator('#poison-read').click();
+   await first.click();
+  }
+  await page.locator('#poison-antidote').click();
+  await page.getByRole('radio',{name:character,exact:true}).check();
+  await page.getByRole('button',{name:'喂解药',exact:true}).click();
+  await expect(page.getByRole('img',{name:`小青蛙吃下解药，变回${character}`})).toBeVisible();
+  await expect(skin).toHaveCount(1);
+  const appearance=[await skin.getAttribute('fill'),await hair.getAttribute('d')];
+  if(previous){
+   expect(appearance[0]).not.toBe(previous[0]);
+   expect(appearance[1]).not.toBe(previous[1]);
+  }
+  colors.add(appearance[0]);styles.add(appearance[1]);previous=appearance;
+  await page.locator('#pinyin').setChecked(index%2===0);
+  await expect(skin).toHaveAttribute('fill',appearance[0]);
+  await expect(hair).toHaveAttribute('d',appearance[1]);
+  if(index<5)await artwork.screenshot({path:testInfo.outputPath(`rescue-${index+1}.png`)});
+ }
+ expect(colors.size).toBe(5);
+ expect(styles.size).toBe(4);
+});

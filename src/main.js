@@ -474,7 +474,7 @@ function poisonIntent(intent,value){
   }else if(intent==='prepare'){
     if(!mayRestart())return;poisonState=null;
   }else if(poisonState){
-    const actions={hide:()=>beginPoisonHiding(poisonState),card:()=>poisonState.phase==='hide'?togglePoisonWord(poisonState,value):readPoisonCard(poisonState,value),seal:()=>sealPoison(poisonState),read:()=>beginPoisonReading(poisonState),'repeat-round':()=>poisonState.phase==='complete'?makeRound(poisonState.words,poisonState.round):poisonState,antidote:()=>beginPoisonAntidote(poisonState),rescue:()=>finishPoisonAntidote(poisonState,value),'skip-antidote':()=>skipPoisonAntidote(poisonState)};
+    const actions={hide:()=>beginPoisonHiding(poisonState),card:()=>poisonState.phase==='hide'?togglePoisonWord(poisonState,value):readPoisonCard(poisonState,value),seal:()=>sealPoison(poisonState),read:()=>beginPoisonReading(poisonState),'repeat-round':()=>poisonState.phase==='complete'?makeRound(poisonState.words,poisonState.round):poisonState,antidote:()=>beginPoisonAntidote(poisonState),rescue:()=>finishPoisonAntidote(poisonState,value.character,value.appearance),'skip-antidote':()=>skipPoisonAntidote(poisonState)};
     if(!actions[intent])return;poisonState=actions[intent]();
   }
   render();

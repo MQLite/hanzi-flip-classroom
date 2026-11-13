@@ -19,20 +19,34 @@ export function createAntidoteBottle() {
   `);
 }
 
-export function createRescuedChild(character) {
+const skinTones = ['#ffd2a5', '#9d5e43', '#ebac79', '#75412f', '#c58356'];
+const hairStyles = [
+  {front:'M49 55q-7-27 16-32l-2-9 15 6 10-12 7 10q38 0 33 36-23-3-35-20-20 22-44 21z'},
+  {front:'M49 61q-12-4-7-15-7-12 4-20 1-14 16-14 8-12 22-6 13-7 23 4 16-2 21 11 14 5 12 17 8 13-12 23l-3-15q-10 6-20-2-10 8-21 0-10 8-22 3l-8 10z'},
+  {back:'M54 38Q33 54 38 96l-5 21q20 8 40-17h30q20 25 40 17l-5-21q5-42-16-58z',front:'M48 65q-7-47 34-51 46-5 47 48-22-2-34-24-15 23-47 27z'},
+  {back:'M53 41Q27 61 38 106l-8 25q12 11 41 2l6-40h22l6 40q29 9 41-2l-8-25q11-45-15-65z',front:'M47 69q-7-51 38-56 42-2 45 54-20-8-30-29-13 17-42 19l-5 17z'},
+];
+const hairColors = ['#312830', '#56372b', '#8e4b2f', '#3f2a26', '#9a642e', '#242634'];
+const shirtColors = ['#5197c9', '#d17c59', '#67a38b', '#ba78ab'];
+
+export function createRescuedChild(character, appearance=0) {
   const girl = character === 'girl';
+  const skin = skinTones[appearance % skinTones.length];
+  const hair = hairStyles[appearance % hairStyles.length];
+  const hairColor = hairColors[appearance % hairColors.length];
+  const shirt = shirtColors[appearance % shirtColors.length];
   return illustration('0 0 176 198', `
     <ellipse cx="88" cy="185" rx="52" ry="7" fill="#54755e" opacity=".2"/>
     <g stroke="#403249" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+      ${hair.back?`<path d="${hair.back}" fill="${hairColor}"/>`:''}
       <path d="M70 144v32l-13 6h24l7-35m17-3v32l13 6H95l-7-35" fill="#4d657e"/>
       <path d="M65 105q-11 3-24 25l-10-13m80-12q11 3 24 25l10-13" fill="none" stroke="#403249" stroke-width="13"/>
-      <path d="M65 105q-11 3-24 25l-10-13m80-12q11 3 24 25l10-13" fill="none" stroke="#efb98d" stroke-width="8"/>
-      <path d="M73 101h30l${girl?'18 49H55':'10 49H63'}z" fill="${girl?'#dc7298':'#5197c9'}"/>
-      ${girl?'<path d="M49 62q-17 36-4 47 21-5 27-22m55-25q17 36 4 47-21-5-27-22" fill="#483546"/>':''}
-      <circle cx="88" cy="62" r="40" fill="#ffd2a5"/>
-      <path d="${girl?'M49 60q-6-42 37-46 43-1 43 47-24-4-43-25-11 20-37 24z':'M49 55q-7-27 16-32l-2-9 15 6 10-12 7 10q38 0 33 36-23-3-35-20-20 22-44 21z'}" fill="#483546"/>
-      <path d="M70 64v3m36-3v3M78 80q10 10 20 0" fill="none"/>
+      <path d="M65 105q-11 3-24 25l-10-13m80-12q11 3 24 25l10-13" fill="none" stroke="${skin}" stroke-width="8"/>
+      <path d="M73 101h30l${girl?'18 49H55':'10 49H63'}z" fill="${shirt}"/>
+      <circle data-skin cx="88" cy="62" r="40" fill="${skin}"/>
+      <path data-hair d="${hair.front}" fill="${hairColor}"/>
+      <path d="M70 64v3m36-3v3M78 80q10 10 20 0" stroke="#281c25" fill="none"/>
     </g>
-    <circle cx="63" cy="76" r="5" fill="#e89387"/><circle cx="113" cy="76" r="5" fill="#e89387"/>
+    <g fill="#ed8e85" opacity=".65"><circle cx="63" cy="76" r="5"/><circle cx="113" cy="76" r="5"/></g>
   `);
 }
