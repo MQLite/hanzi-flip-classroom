@@ -97,8 +97,13 @@
 .poison-antidote-panel #poison-antidote-skip { margin: 6px auto 0; }
 .poison-rescued-child { grid-area: 1 / 1; width: 72%; max-width: 195px; }
 .poison-rescued-child svg,.poison-rescue-dose svg { display: block; width: 100%; }
+.poison-rescued-child svg { overflow: visible; }
 .poison-magic-art.is-feeding .poison-frog { display: block; animation: poison-frog-sip .9s both; }
-.poison-magic-art.is-feeding .poison-rescued-child { animation: poison-child-appear 1.25s both; }
+.poison-magic-art.is-feeding .poison-rescued-child {
+  --poison-appear-time: 1.25s;
+  animation: poison-child-appear var(--poison-appear-time) both;
+}
+.poison-magic-art.is-feeding .poison-child-figure { animation: poison-child-hop .44s var(--poison-appear-time) 2 both; }
 .poison-rescue-dose { position: absolute; top: 28%; left: 52%; width: 23%; z-index: 1; animation: poison-dose .9s both; }
 @keyframes poison-dose {
   0% { opacity: 0; transform: translate(38%,-30%); }
@@ -113,8 +118,12 @@
 }
 @keyframes poison-child-appear {
   0%,65% { opacity: 0; transform: translateY(14px) scale(.62); }
-  86% { opacity: 1; transform: translateY(-8px) scale(1.08); }
   100% { opacity: 1; transform: none; }
+}
+@keyframes poison-child-hop {
+  0% { transform: translateY(0); animation-timing-function: ease-out; }
+  50% { transform: translateY(-22px); animation-timing-function: ease-in; }
+  100% { transform: translateY(0); }
 }
 @media(max-width:720px) {
   .poison-magic.is-reading-antidote > div:last-child { width: 100%; }
@@ -123,5 +132,5 @@
 }
 @media(prefers-reduced-motion:reduce) {
   .poison-magic-art.is-feeding .poison-frog,.poison-rescue-dose { display: none; }
-  .poison-magic-art.is-feeding .poison-rescued-child { animation: none; }
+  .poison-magic-art.is-feeding :is(.poison-rescued-child,.poison-child-figure) { animation: none; }
 }

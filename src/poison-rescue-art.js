@@ -59,7 +59,7 @@ export function createRescuedChild(character, appearance=0) {
   const glasses = appearance % 4 === 0 || appearance % 4 === 3;
   return illustration('0 -24 176 222', `
     <ellipse cx="88" cy="185" rx="52" ry="7" fill="#54755e" opacity=".2"/>
-    <g stroke="#403249" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <g class="poison-child-figure" stroke="#403249" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
       ${hair.back?`<path d="${hair.back}" fill="${hairColor}"/>`:''}
       ${hair.detail??''}
       <path d="M70 144v32l-13 6h24l7-35m17-3v32l13 6H95l-7-35" fill="#4d657e"/>
@@ -75,7 +75,7 @@ export function createRescuedChild(character, appearance=0) {
       <path d="M67 66q3-5 6 0m30 0q3-5 6 0" stroke="#281c25" fill="none" stroke-width="3"/>
       <path d="M77 79q11 4 22 0-3 12-11 12t-11-12z" fill="#713a44" stroke="#281c25" stroke-width="2.5"/>
       ${glasses?glassesMarkup:''}
+      <g fill="#ed8e85" stroke="none" opacity=".65"><circle cx="63" cy="76" r="5"/><circle cx="113" cy="76" r="5"/></g>
     </g>
-    <g fill="#ed8e85" opacity=".65"><circle cx="63" cy="76" r="5"/><circle cx="113" cy="76" r="5"/></g>
   `);
 }

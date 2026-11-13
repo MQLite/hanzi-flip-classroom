@@ -41,6 +41,7 @@ test('poison aftermath keeps only the required phrases, real antidote sentence a
  await feed.click();
  await expect(page.getByRole('img',{name:'小青蛙吃下解药，变回女孩'})).toBeVisible();
  await expectRaisedHands(page.getByRole('img',{name:'小青蛙吃下解药，变回女孩'}));
+ expect(await page.locator('.poison-rescued-child').evaluate(node=>node.getAnimations({subtree:true}).length)).toBe(0);
  await page.screenshot({path:testInfo.outputPath('girl-rescue.png')});
  await expect(page.locator('#poison-next')).toBeVisible();expect(await visibleCopy(page)).toBe('');
 });
@@ -58,7 +59,28 @@ test('the teacher can feed the potion to restore a boy and see the transformatio
  await page.getByRole('button',{name:'喂解药',exact:true}).click();
  const restored=page.getByRole('img',{name:'小青蛙吃下解药，变回男孩'});
  await expect(restored).toBeVisible();
- expect(await restored.evaluate(node=>node.getAnimations({subtree:true}).length)).toBeGreaterThan(0);
+ const jump=await restored.evaluate(node=>{
+  const animations=node.getAnimations({subtree:true});
+  const appearance=animations.find(animation=>animation.animationName==='poison-child-appear');
+  const hop=animations.find(animation=>animation.animationName==='poison-child-hop');
+  if(!appearance||!hop)return null;
+  const {delay,duration,iterations}=hop.effect.getTiming();
+  hop.pause();
+  const heights=[0,.5,1,1.5,2].map(cycle=>{
+   hop.currentTime=delay+duration*cycle;
+   const transform=getComputedStyle(hop.effect.target).transform;
+   return new DOMMatrix(transform==='none'?'matrix(1,0,0,1,0,0)':transform).m42;
+  });
+  hop.finish();
+  return {delay,iterations,heights,appearanceEnd:appearance.effect.getComputedTiming().endTime};
+ });
+ expect(jump).not.toBeNull();
+ expect(jump.delay).toBeGreaterThanOrEqual(jump.appearanceEnd);
+ expect(jump.iterations).toBe(2);
+ const [start,firstHop,firstLanding,secondHop,finalLanding]=jump.heights;
+ expect([start,firstLanding,finalLanding]).toEqual([0,0,0]);
+ expect(firstHop).toBeLessThan(-10);
+ expect(secondHop).toBeLessThan(-10);
  await page.screenshot({path:testInfo.outputPath('boy-rescue.png'),animations:'disabled'});
  await expectRaisedHands(restored);
 });
