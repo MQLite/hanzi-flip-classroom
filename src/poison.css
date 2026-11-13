@@ -52,11 +52,13 @@
 .is-reading-antidote .poison-magic-art .poison-frog { font-size: clamp(40px, 5vw, 70px); bottom: 0; }
 .poison-antidote-panel { padding: clamp(10px, 2vw, 24px); }
 .poison-antidote-panel > small { display: block; color: #485f4d; font-size: clamp(14px, 1.6vw, 20px); }
-.poison-antidote-row {
+.poison-antidote-actions {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "choices feed" "skip feed";
+  justify-items: end;
   align-items: center;
-  gap: clamp(8px, 2vw, 24px);
+  gap: 4px clamp(8px, 2vw, 20px);
 }
 .poison-antidote-panel #poison-antidote-sentence {
   font: 600 clamp(44px, 7.2vw, 122px)/1.22 'KaiTi','STKaiti','Microsoft YaHei',serif;
@@ -64,6 +66,8 @@
   text-wrap: balance;
 }
 #witch-poison #poison-rescue {
+  grid-area: feed;
+  align-self: end;
   display: grid;
   justify-items: center;
   align-items: center;
@@ -78,8 +82,8 @@
   font-weight: 700;
 }
 #witch-poison #poison-rescue:hover { background: #e5d6fa; }
-#poison-rescue svg { display: block; width: clamp(48px, 8.5vw, 104px); }
-.poison-character-options { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+#poison-rescue svg { display: block; width: clamp(36px, 5.2vw, 68px); }
+.poison-character-options { grid-area: choices; display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
 .poison-character-options label {
   display: flex;
   align-items: center;
@@ -94,7 +98,7 @@
 }
 .poison-character-options label:has(:checked) { background: #dfead9; border-color: #68836c; }
 .poison-character-options input { accent-color: #446a50; }
-.poison-antidote-panel #poison-antidote-skip { margin: 6px auto 0; }
+.poison-antidote-panel #poison-antidote-skip { grid-area: skip; margin: 0; }
 .poison-rescued-child { grid-area: 1 / 1; width: 72%; max-width: 195px; }
 .poison-rescued-child svg,.poison-rescue-dose svg { display: block; width: 100%; }
 .poison-rescued-child svg { overflow: visible; }
@@ -104,6 +108,10 @@
   animation: poison-child-appear var(--poison-appear-time) both;
 }
 .poison-magic-art.is-feeding .poison-child-figure { animation: poison-child-hop .44s var(--poison-appear-time) 2 both; }
+.poison-magic-art.is-feeding [data-cheering-decoration] {
+  transform-origin: center;
+  animation: poison-cheering-decoration .55s var(--poison-appear-time) both;
+}
 .poison-rescue-dose { position: absolute; top: 28%; left: 52%; width: 23%; z-index: 1; animation: poison-dose .9s both; }
 @keyframes poison-dose {
   0% { opacity: 0; transform: translate(38%,-30%); }
@@ -125,12 +133,16 @@
   50% { transform: translateY(-22px); animation-timing-function: ease-in; }
   100% { transform: translateY(0); }
 }
+@keyframes poison-cheering-decoration {
+  from { opacity: 0; transform: scale(.65); }
+  to { opacity: 1; transform: scale(1); }
+}
 @media(max-width:720px) {
   .poison-magic.is-reading-antidote > div:last-child { width: 100%; }
   .is-reading-antidote .poison-magic-art { width: min(34%, 140px); }
-  .poison-antidote-row { gap: 6px; }
+  .poison-character-options label { padding-inline: 8px; }
 }
 @media(prefers-reduced-motion:reduce) {
   .poison-magic-art.is-feeding .poison-frog,.poison-rescue-dose { display: none; }
-  .poison-magic-art.is-feeding :is(.poison-rescued-child,.poison-child-figure) { animation: none; }
+  .poison-magic-art.is-feeding :is(.poison-rescued-child,.poison-child-figure,[data-cheering-decoration]) { animation: none; }
 }

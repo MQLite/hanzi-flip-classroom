@@ -65,9 +65,7 @@ export function createPoisonView(host,dispatch){
   function antidotePanel(sentenceText){
     const panel=el('div',undefined,'poison-antidote-panel');
     const sentence=el('p',sentenceText);sentence.id='poison-antidote-sentence';
-    const row=el('div',undefined,'poison-antidote-row');
     const feed=button('poison-rescue','喂解药','primary');feed.prepend(createAntidoteBottle());
-    row.append(sentence,feed);
     const choices=el('div',undefined,'poison-character-options');
     choices.setAttribute('role','radiogroup');choices.setAttribute('aria-label','变回男孩或女孩');
     for(const [value,label,english] of [['boy','男孩','Boy'],['girl','女孩','Girl']]){
@@ -75,7 +73,9 @@ export function createPoisonView(host,dispatch){
       radio.type='radio';radio.name='poison-character';radio.value=value;radio.checked=value===rescueCharacter;
       option.append(radio,withEnglishInstruction(el('span',label),english));choices.append(option);
     }
-    panel.append(withEnglishInstruction(el('small','请读出解药句子'),'Read the antidote sentence aloud.'),row,choices,button('poison-antidote-skip','跳过解药','text-button'));
+    const actions=el('div',undefined,'poison-antidote-actions');
+    actions.append(choices,feed,button('poison-antidote-skip','跳过解药','text-button'));
+    panel.append(withEnglishInstruction(el('small','请读出解药句子'),'Read the antidote sentence aloud.'),sentence,actions);
     return panel;
   }
   function buildBoard(animateHit=false,animateRescue=false){
