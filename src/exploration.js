@@ -87,7 +87,7 @@ export function renderExplorations(root,selection,{urlForScenario}={}){
       title.replaceChildren(ruby('现在','Xiànzài'),ruby('几点？','jǐ diǎn?'));
       title.setAttribute('aria-label',scenario.title);
       description.replaceChildren(
-        ruby('让时钟','Ràng shízhōng'),ruby('转起来，','zhuàn qǐlai,'),ruby('喊「停」，','hǎn “tíng”,'),
+        ruby('让时钟','Ràng shízhōng'),ruby('转起来，','zhuàn qǐlai,'),ruby('喊「停止」，','hǎn “tíngzhǐ”,'),
         ruby('再说出','zài shuō chū'),ruby('现在','xiànzài'),ruby('几点。','jǐ diǎn.'),
       );
       tags.replaceChildren(ruby('6 轮','Liù lún'));

@@ -35,6 +35,7 @@ test('each level opens independently and the clock stops for six spoken answers'
   const second = page.getByRole('article').filter({has:page.getByRole('heading',{name:'现在几点？',exact:true})});
   await expect(first.getByRole('link')).toHaveAttribute('href', './doudou-time.html');
   await expect(second.getByRole('heading').locator('rt')).toHaveText(['Xiànzài','jǐ diǎn?']);
+  expect(await readingText(second.locator('p').filter({hasText:'喊「停止」'}),'rt')).toContain('喊「停止」');
   await expectAnnotated(second);
   await second.getByRole('link').click();
   await expect(page).toHaveURL(/\/clock-stop\.html$/);
@@ -54,12 +55,13 @@ test('each level opens independently and the clock stops for six spoken answers'
   const hour = clock.locator('[data-hand=hour]');
   const minute = clock.locator('[data-hand=minute]');
   const start = page.getByRole('button', {name:'开始', exact:true});
-  const stop = page.getByRole('button', {name:'停', exact:true});
+  const stop = page.getByRole('button', {name:'停止', exact:true});
   const check = page.getByRole('button', {name:'看答案', exact:true});
   for (let round = 1; round <= 6; round++) {
     await expect.poll(() => readingText(progress,'rt')).toBe(`第 ${round} / 6 轮`);
     await start.click();
     await expectAnnotated(page.locator('.clock-game'));
+    await expect(stop.locator('rt')).toHaveText('Tíngzhǐ');
     const previous = await minute.evaluate(hand => hand.style.getPropertyValue('--angle'));
     await page.clock.runFor(850);
     await expect(minute).not.toHaveCSS('--angle', previous);
@@ -90,7 +92,7 @@ test('each level opens independently and the clock stops for six spoken answers'
   await expect(second.getByRole('link')).toBeVisible();
 });
 
-test('opt-in recognition stops on 停, ignores unrelated speech, and falls back when access fails', async ({page}) => {
+test('recognition shows 停止 after hearing the complete command and falls back when access fails', async ({page}) => {
   await page.addInitScript(() => {
     window.SpeechRecognition = class {
       start() { window.recognizer = this; this.onstart?.(); }
@@ -98,25 +100,30 @@ test('opt-in recognition stops on 停, ignores unrelated speech, and falls back 
     };
   });
   await page.goto('/clock-stop.html');
-  const mic = page.getByRole('checkbox', {name:'语音喊停'});
+  const mic = page.getByRole('checkbox', {name:'语音喊「停止」'});
   const start = page.getByRole('button', {name:'开始', exact:true});
-  const stop = page.getByRole('button', {name:'停', exact:true});
+  const stop = page.getByRole('button', {name:'停止', exact:true});
   await expect(mic).not.toBeChecked();
   await mic.check();
   await start.click();
   expect(await page.evaluate(() => window.recognizer.lang)).toBe('zh-CN');
   const voiceStatus = page.locator('#clock-voice-status');
-  await expect(voiceStatus.locator('rt')).toHaveText(['Zhèngzài tīng','tíng…']);
+  await expect(voiceStatus.locator('rt')).toHaveText(['Zhèngzài tīng','tíngzhǐ…']);
   await expectAnnotated(page.locator('.clock-game'));
   await page.evaluate(() => window.recognizer.onresult({resultIndex:0,results:[[{transcript:'现在两点'}]]}));
   await expect(stop).toBeVisible();
-  await page.evaluate(() => window.recognizer.onresult({resultIndex:0,results:[[{transcript:'停！'}]]}));
+  await page.evaluate(() => window.recognizer.onresult({resultIndex:0,results:[[{transcript:'停'}]]}));
+  await expect(stop).toBeVisible();
+  await page.evaluate(() => window.recognizer.onresult({resultIndex:0,results:[[{transcript:'停止！'}]]}));
   await expect(page.locator('#clock-prompt rt')).toHaveText(['Xiànzài','jǐ diǎn?']);
+  await expect.poll(() => readingText(voiceStatus,'rt')).toBe('停止');
+  await expect(voiceStatus.locator('rt')).toHaveText('Tíngzhǐ');
   expect(await page.evaluate(() => window.recognizer.aborted)).toBe(true);
   await page.getByRole('button', {name:'下一轮', exact:true}).click();
+  await expect(voiceStatus).toBeHidden();
   await start.click();
   await page.evaluate(() => window.recognizer.onerror({error:'not-allowed'}));
-  await expect.poll(() => readingText(voiceStatus,'rt')).toBe('语音暂不可用，可以点「停」。');
+  await expect.poll(() => readingText(voiceStatus,'rt')).toBe('语音暂不可用，可以点「停止」。');
   await expectAnnotated(voiceStatus);
   await stop.click();
   await expect(page.locator('#clock-prompt rt')).toHaveText(['Xiànzài','jǐ diǎn?']);
@@ -136,7 +143,7 @@ test('the lesson journey displays pinyin on the return link and fireworks dialog
   await expect(back.locator('rt')).toHaveText(['Fǎnhuí','xiǎodǎo','dìtú']);
   for (let round = 1; round <= 6; round++) {
     await page.getByRole('button',{name:'开始',exact:true}).click();
-    await page.getByRole('button',{name:'停',exact:true}).click();
+    await page.getByRole('button',{name:'停止',exact:true}).click();
     await page.getByRole('button',{name:round === 6 ? '完成' : '下一轮',exact:true}).click();
   }
   const dialog = page.getByRole('dialog',{name:'太牛啦'});

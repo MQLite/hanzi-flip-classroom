@@ -12,8 +12,8 @@ const HOURS = [
 const ROUND_READINGS = ['yī', 'èr', 'sān', 'sì', 'wǔ', 'liù'];
 const PROMPTS = {
   ready: ['Press Start to move the hands.', ['点「开始」，', 'Diǎn “kāishǐ”,'], ['让时钟', 'ràng shízhōng'], ['走起来。', 'zǒu qǐlai.']],
-  running: ['Say “tíng” or press Stop.', ['喊「停」', 'Hǎn “tíng”'], ['或点「停」。', 'huò diǎn “tíng”.']],
-  manual: ['Press Stop.', ['点「停」。', 'Diǎn “tíng”.']],
+  running: ['Say “tíngzhǐ” or press Stop.', ['喊「停止」', 'Hǎn “tíngzhǐ”'], ['或点「停止」。', 'huò diǎn “tíngzhǐ”.']],
+  manual: ['Press Stop.', ['点「停止」。', 'Diǎn “tíngzhǐ”.']],
   stopped: ['What time is it now?', ['现在', 'Xiànzài'], ['几点？', 'jǐ diǎn?']],
   complete: ['All six rounds complete!', ['六轮', 'Liù lún'], ['完成！', 'wánchéng!']],
 };
@@ -87,7 +87,7 @@ function stopListening() {
 function listenForStop() {
   if (!Recognition || !voice.checked) return;
   const unavailable = () => setVoiceStatus(
-    ['语音', 'Yǔyīn'], ['暂不可用，', 'zàn bù kěyòng,'], ['可以点', 'kěyǐ diǎn'], ['「停」。', 'tíng.'],
+    ['语音', 'Yǔyīn'], ['暂不可用，', 'zàn bù kěyòng,'], ['可以点', 'kěyǐ diǎn'], ['「停止」。', 'tíngzhǐ.'],
   );
   try {
     const active = new Recognition();
@@ -96,14 +96,17 @@ function listenForStop() {
     active.continuous = true;
     active.interimResults = true;
     active.onstart = () => {
-      if (recognizer === active) setVoiceStatus(['正在听', 'Zhèngzài tīng'], ['「停」…', 'tíng…']);
+      if (recognizer === active) setVoiceStatus(['正在听', 'Zhèngzài tīng'], ['「停止」…', 'tíngzhǐ…']);
     };
     active.onresult = event => {
       if (recognizer !== active) return;
       for (let index = event.resultIndex; index < event.results.length; index++) {
-        const phrase = event.results[index][0].transcript.replace(/[\p{P}\s]+/gu, '');
-        if (/^(停+|停止|停下|停下来)$/u.test(phrase)) {
+        const result = event.results[index];
+        const phrase = result[0].transcript.replace(/[\p{P}\s]+/gu, '');
+        // A provisional 停 may be the first syllable of 停止.
+        if (/^(?:停止)+$/u.test(phrase) || (result.isFinal && /^(停+|停下|停下来)$/u.test(phrase))) {
           freezeClock();
+          setVoiceStatus(['停止', 'Tíngzhǐ']);
           return;
         }
       }
@@ -151,6 +154,7 @@ check.addEventListener('click', () => {
   answer.hidden = false;
 });
 next.addEventListener('click', () => {
+  setVoiceStatus();
   if (phase === 'complete') {
     round = 1;
   } else if (round === ROUND_COUNT) {
