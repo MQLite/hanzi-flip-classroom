@@ -2,6 +2,7 @@ import {EXPLORATIONS} from './exploration.js';
 import {courseKey,completeJourneyStage,markJourneyCelebrated} from './island-journey-core.js';
 import {loadJourneys,saveJourney} from './island-journey-storage.js';
 import {showLessonCelebration} from './lesson-celebration.js';
+import {ruby} from './ruby.js';
 function matches(scenario,state){return scenario&&state?.status==='active'&&state.stages[state.index]?.id==='explore'&&scenario.source===state.course.source&&scenario.stage===state.course.stage&&scenario.lesson===state.course.lesson;}
 export function scenarioJourneyUrl(scenario,state,base=globalThis.location?.href){
  if(!matches(scenario,state))return scenario.href;
@@ -33,7 +34,13 @@ export function bindExplorationJourney(scenarioId){
   if(!initial||awarded)return false;const result=reportExplorationComplete(scenarioId,search);if(!result)return false;awarded=true;
   const celebrate=result.state.status==='complete'&&!result.state.celebrated;
   if(celebrate){saveJourney(markJourneyCelebrated(result.state));showLessonCelebration(celebration);}
-  if(!result.saved){const note=document.createElement('p');note.setAttribute('role','status');note.textContent='浏览器未能保存，本次通关仅保留在本页。';document.body.append(note);}
+  if(!result.saved){
+   const note=document.createElement('p');
+   const [reason, consequence]=celebration?.pinyin?.saveFailure??[];
+   note.setAttribute('role','status');
+   note.append(ruby('浏览器未能保存，',reason),ruby('本次通关仅保留在本页。',consequence));
+   document.body.append(note);
+  }
   return celebrate;
  }
  return {decorate,reportComplete,returnUrl:returnUrl?.href??null};

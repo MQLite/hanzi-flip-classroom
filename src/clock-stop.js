@@ -1,16 +1,21 @@
 import {mountAnalogClock} from './analog-clock.js';
 import {bindExplorationJourney} from './island-exploration.js';
-import {gloss} from './ruby.js';
+import {gloss, ruby} from './ruby.js';
 import './clock-stop.css';
 
 const ROUND_COUNT = 6;
 const TICKS_PER_CYCLE = 24;
-const HOURS = ['十二', '一', '两', '三', '四', '五', '六', '七', '八', '九', '十', '十一'];
+const HOURS = [
+  ['十二', 'shí’èr'], ['一', 'yī'], ['两', 'liǎng'], ['三', 'sān'], ['四', 'sì'], ['五', 'wǔ'],
+  ['六', 'liù'], ['七', 'qī'], ['八', 'bā'], ['九', 'jiǔ'], ['十', 'shí'], ['十一', 'shíyī'],
+];
+const ROUND_READINGS = ['yī', 'èr', 'sān', 'sì', 'wǔ', 'liù'];
 const PROMPTS = {
-  ready: ['点「开始」，让时钟走起来。', 'Press Start to move the hands.'],
-  running: ['喊「停」或点「停」。', 'Say “tíng” or press Stop.'],
-  stopped: ['现在几点？', 'What time is it now?'],
-  complete: ['六轮完成！', 'All six rounds complete!'],
+  ready: ['Press Start to move the hands.', ['点「开始」，', 'Diǎn “kāishǐ”,'], ['让时钟', 'ràng shízhōng'], ['走起来。', 'zǒu qǐlai.']],
+  running: ['Say “tíng” or press Stop.', ['喊「停」', 'Hǎn “tíng”'], ['或点「停」。', 'huò diǎn “tíng”.']],
+  manual: ['Press Stop.', ['点「停」。', 'Diǎn “tíng”.']],
+  stopped: ['What time is it now?', ['现在', 'Xiànzài'], ['几点？', 'jǐ diǎn?']],
+  complete: ['All six rounds complete!', ['六轮', 'Liù lún'], ['完成！', 'wánchéng!']],
 };
 
 const get = id => document.getElementById(id);
@@ -29,6 +34,11 @@ const voiceStatus = get('clock-voice-status');
 const Recognition = window.SpeechRecognition ?? window.webkitSpeechRecognition;
 const journey = bindExplorationJourney('clock-stop');
 journey.decorate();
+if (journey.returnUrl) {
+  const back = get('clock-back');
+  back.replaceChildren('← ', ruby('返回', 'Fǎnhuí'), ruby('小岛', 'xiǎodǎo'), ruby('地图', 'dìtú'));
+  back.removeAttribute('title');
+}
 
 let round = 1;
 let tick = 0;
@@ -42,12 +52,11 @@ function moveClock(nextTick) {
 }
 
 function render() {
-  progress.textContent = `第 ${round} / ${ROUND_COUNT} 轮`;
-  [prompt.textContent, promptEn.textContent] = PROMPTS[phase];
-  if (phase === 'running' && (!Recognition || !voice.checked)) {
-    prompt.textContent = '点「停」。';
-    promptEn.textContent = 'Press Stop.';
-  }
+  progress.replaceChildren(ruby(`第 ${round}`, `Dì ${ROUND_READINGS[round - 1]}`), ' / ', ruby(`${ROUND_COUNT} 轮`, 'liù lún'));
+  const promptKey = phase === 'running' && (!Recognition || !voice.checked) ? 'manual' : phase;
+  const [translation, ...chunks] = PROMPTS[promptKey];
+  prompt.replaceChildren(...chunks.map(([text, reading]) => ruby(text, reading)));
+  promptEn.textContent = translation;
   start.hidden = phase !== 'ready';
   stop.hidden = phase !== 'running';
   check.hidden = phase !== 'stopped';
@@ -57,16 +66,16 @@ function render() {
   if (phase !== 'stopped') answer.hidden = true;
 
   if (!next.hidden) {
-    const [label, english] = phase === 'complete' ? ['再玩一次', 'Play again']
-      : round === ROUND_COUNT ? ['完成', 'Finish'] : ['下一轮', 'Next round'];
-    next.replaceChildren(label, gloss(english));
+    const [label, reading, english] = phase === 'complete' ? ['再玩一次', 'Zài wán yí cì', 'Play again']
+      : round === ROUND_COUNT ? ['完成', 'Wánchéng', 'Finish'] : ['下一轮', 'Xià yì lún', 'Next round'];
+    next.replaceChildren(ruby(label, reading), gloss(english));
     next.setAttribute('aria-label', label);
   }
 }
 
-function setVoiceStatus(message) {
-  voiceStatus.textContent = message;
-  voiceStatus.hidden = !message;
+function setVoiceStatus(...chunks) {
+  voiceStatus.replaceChildren(...chunks.map(([text, reading]) => ruby(text, reading)));
+  voiceStatus.hidden = !chunks.length;
 }
 
 function stopListening() {
@@ -77,7 +86,9 @@ function stopListening() {
 
 function listenForStop() {
   if (!Recognition || !voice.checked) return;
-  const unavailable = () => setVoiceStatus('语音暂不可用，可以点「停」。');
+  const unavailable = () => setVoiceStatus(
+    ['语音', 'Yǔyīn'], ['暂不可用，', 'zàn bù kěyòng,'], ['可以点', 'kěyǐ diǎn'], ['「停」。', 'tíng.'],
+  );
   try {
     const active = new Recognition();
     recognizer = active;
@@ -85,7 +96,7 @@ function listenForStop() {
     active.continuous = true;
     active.interimResults = true;
     active.onstart = () => {
-      if (recognizer === active) setVoiceStatus('正在听「停」…');
+      if (recognizer === active) setVoiceStatus(['正在听', 'Zhèngzài tīng'], ['「停」…', 'tíng…']);
     };
     active.onresult = event => {
       if (recognizer !== active) return;
@@ -113,7 +124,7 @@ function freezeClock(focus = true) {
   if (phase !== 'running') return;
   window.clearInterval(timer);
   stopListening();
-  setVoiceStatus('');
+  setVoiceStatus();
   phase = 'stopped';
   render();
   if (focus) check.focus({preventScroll:true});
@@ -131,7 +142,12 @@ start.addEventListener('click', () => {
 });
 stop.addEventListener('click', () => freezeClock());
 check.addEventListener('click', () => {
-  answer.textContent = `现在${HOURS[Math.floor(tick / 2)]}点${tick % 2 ? '半' : ''}。`;
+  const [hour, reading] = HOURS[Math.floor(tick / 2)];
+  const halfHour = tick % 2 === 1;
+  answer.replaceChildren(
+    ruby('现在', 'Xiànzài'),
+    ruby(halfHour ? `${hour}点半。` : `${hour}点。`, halfHour ? `${reading} diǎn bàn.` : `${reading} diǎn.`),
+  );
   answer.hidden = false;
 });
 next.addEventListener('click', () => {
@@ -140,7 +156,13 @@ next.addEventListener('click', () => {
   } else if (round === ROUND_COUNT) {
     phase = 'complete';
     render();
-    journey.reportComplete();
+    journey.reportComplete({
+      pinyin: {
+        title: 'Tài niú la',
+        close: 'Guānbì qìngzhù',
+        saveFailure: ['Liúlǎnqì wèi néng bǎocún,', 'běn cì tōngguān jǐn bǎoliú zài běn yè.'],
+      },
+    });
     return;
   } else {
     round++;

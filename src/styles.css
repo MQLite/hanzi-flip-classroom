@@ -1837,6 +1837,8 @@ body:not(.workshop-mode) #restart { margin-left: auto; }
 .clock-stop-cover span::before, .clock-stop-cover span::after { content: ""; position: absolute; left: 50%; bottom: 50%; border-radius: 8px; transform-origin: 50% 100%; }
 .clock-stop-cover span::before { width: 7%; height: 26%; background: #21483e; transform: translateX(-50%) rotate(90deg); }
 .clock-stop-cover span::after { width: 4%; height: 36%; background: #b34d2d; transform: translateX(-50%) rotate(180deg); }
+.clock-stop-card ruby { margin-inline-end: .08em; }
+.clock-stop-card rt { font-size: max(.62em, .65rem); font-weight: 600; line-height: 1.2; }
 @media (min-width: 900px) {
   .exploration-options { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; }
   .exploration-options .exploration-card { display: flex; flex-direction: column; }

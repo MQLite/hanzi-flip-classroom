@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>时钟喊停 · 汉语乐园 2A</title>
+  <title>现在几点？ · 汉语乐园 2A</title>
 </head>
 <body>
   <main class="clock-game">
     <header class="clock-game-header">
-      <a href="./?mode=explore&amp;source=paradise&amp;stage=2A&amp;lesson=3" aria-label="返回情景探索">← 返回情景探索</a>
-      <p id="clock-round" aria-live="polite">第 1 / 6 轮</p>
+      <a id="clock-back" href="./?mode=explore&amp;source=paradise&amp;stage=2A&amp;lesson=3" aria-label="返回情景探索">← <ruby>返回<rt>Fǎnhuí</rt></ruby><ruby>情景<rt>qíngjǐng</rt></ruby><ruby>探索<rt>tànsuǒ</rt></ruby></a>
+      <p id="clock-round" aria-live="polite"></p>
     </header>
     <div class="clock-game-stage">
-      <h1>时钟喊停</h1>
+      <h1 aria-label="现在几点？"><ruby>现在<rt>Xiànzài</rt></ruby><ruby>几点？<rt>jǐ diǎn?</rt></ruby></h1>
       <div id="clock-face" class="clock-face" role="img" aria-label="指针时钟">
         <div class="clock-numbers" aria-hidden="true"></div>
         <span class="clock-hand" data-hand="hour" aria-hidden="true"></span>
@@ -26,14 +26,14 @@
         </div>
         <p id="clock-answer" class="clock-answer" role="status" hidden></p>
         <div class="clock-actions">
-          <button id="clock-start" type="button" aria-label="开始">开始<small lang="en">Start</small></button>
-          <button id="clock-stop" type="button" aria-label="停" hidden>停<small lang="en">Stop</small></button>
-          <button id="clock-check" type="button" aria-label="看答案" hidden>看答案<small lang="en">Show answer</small></button>
+          <button id="clock-start" type="button" aria-label="开始"><ruby>开始<rt>Kāishǐ</rt></ruby><small lang="en">Start</small></button>
+          <button id="clock-stop" type="button" aria-label="停" hidden><ruby>停<rt>Tíng</rt></ruby><small lang="en">Stop</small></button>
+          <button id="clock-check" type="button" aria-label="看答案" hidden><ruby>看<rt>Kàn</rt></ruby><ruby>答案<rt>dá’àn</rt></ruby><small lang="en">Show answer</small></button>
           <button id="clock-next" type="button" hidden></button>
         </div>
         <label id="clock-voice-option" class="clock-voice-option">
           <input id="clock-voice" type="checkbox" aria-label="语音喊停">
-          <span>语音喊停 <small lang="en">Voice control</small></span>
+          <span><ruby>语音<rt>Yǔyīn</rt></ruby><ruby>喊停<rt>hǎn tíng</rt></ruby> <small lang="en">Voice control</small></span>
         </label>
         <p id="clock-voice-status" class="clock-voice-status" role="status" hidden></p>
       </div>

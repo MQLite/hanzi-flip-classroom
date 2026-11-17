@@ -16,8 +16,7 @@ export const EXPLORATIONS=[{
   description:'看时钟，跟豆豆说时间，聊聊早饭、午饭和晚饭。',
 }, {
   id:'clock-stop',source:'paradise',textbook:PARADISE_ID,stage:'2A',book:2,lesson:3,
-  lessonTitle:'现在几点',title:'时钟喊停',href:'./clock-stop.html',
-  description:'让时钟转起来，喊「停」，再说出现在几点。',
+  lessonTitle:'现在几点',title:'现在几点？',href:'./clock-stop.html',
 }, {
   id:'two-rivers',source:'zhongwen',textbook:ZHONGWEN_ID,stage:'2',book:2,lesson:12,
   lessonTitle:'江河',title:'长江与黄河',href:'./rivers.html',
@@ -81,11 +80,19 @@ export function renderExplorations(root,selection,{urlForScenario}={}){
       title.replaceChildren(ruby('豆豆，','Dòudou,'),ruby('现在几点？','xiànzài jǐ diǎn?'));
       title.setAttribute('aria-label',scenario.title);
     }else if(scenario.id==='clock-stop'){
+      card.classList.add('clock-stop-card');
       art.classList.add('clock-stop-cover');
       art.append(document.createElement('span'));
-      meta.textContent='汉语乐园 · 2A · 第3课 现在几点 · 第2关';
-      tags.textContent='6 轮';
-      link.textContent='开始时钟游戏';
+      meta.replaceChildren(ruby('汉语乐园','Hànyǔ Lèyuán'),' · 2A · ',ruby('第3课','Dì sān kè'),' · ',ruby('第2关','Dì èr guān'));
+      title.replaceChildren(ruby('现在','Xiànzài'),ruby('几点？','jǐ diǎn?'));
+      title.setAttribute('aria-label',scenario.title);
+      description.replaceChildren(
+        ruby('让时钟','Ràng shízhōng'),ruby('转起来，','zhuàn qǐlai,'),ruby('喊「停」，','hǎn “tíng”,'),
+        ruby('再说出','zài shuō chū'),ruby('现在','xiànzài'),ruby('几点。','jǐ diǎn.'),
+      );
+      tags.replaceChildren(ruby('6 轮','Liù lún'));
+      link.replaceChildren(ruby('开始','Kāishǐ'),ruby('时钟','shízhōng'),ruby('游戏','yóuxì'));
+      link.setAttribute('aria-label','开始时钟游戏');
     }else if(scenario.id==='two-rivers'){
       meta.textContent='中文（暨南大学版）· 第二册 · 第12课 江河';
       tags.textContent='长江 · 12 个生字　　黄河 · 12 个词语';

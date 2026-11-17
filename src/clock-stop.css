@@ -8,6 +8,8 @@
 [hidden] { display: none !important; }
 body { margin: 0; }
 .clock-game { width: min(100%, 1130px); margin: 0 auto; padding: clamp(16px, 3vw, 38px); }
+.clock-game ruby { margin-inline-end: .08em; }
+.clock-game rt { font-size: max(.58em, .65rem); font-weight: 600; line-height: 1.3; }
 .clock-game-header {
   display: flex;
   align-items: center;

@@ -1,4 +1,5 @@
 import './lesson-celebration.css';
+import {ruby} from './ruby.js';
 
 const DURATION = 10000;
 const DEFAULT_BURSTS = 7;
@@ -126,7 +127,7 @@ export function startLessonFireworks(canvas, {burstCount = DEFAULT_BURSTS} = {})
 }
 
 /** Show fireworks. The caller decides when to celebrate a completed round. */
-export function showLessonCelebration({onClose, title = '太牛啦', durationMs = DURATION, playSound, burstCount = DEFAULT_BURSTS} = {}) {
+export function showLessonCelebration({onClose, title = '太牛啦', durationMs = DURATION, playSound, burstCount = DEFAULT_BURSTS, pinyin = {}} = {}) {
   activeCelebration?.dispose();
   const previousFocus = document.activeElement;
   const dialog = document.createElement('dialog');
@@ -139,10 +140,16 @@ export function showLessonCelebration({onClose, title = '太牛啦', durationMs 
     <button type="button" class="lesson-celebration__close" autofocus>关闭庆祝</button>
   `;
   const heading = dialog.querySelector('h2');
-  heading.textContent = title;
+  heading.replaceChildren(ruby(title, pinyin.title));
   heading.style.setProperty('--celebration-title-limit', `${88 / Math.max(1, [...title].length)}vw`);
   const canvas = dialog.querySelector('canvas');
   const closeButton = dialog.querySelector('button');
+  if (pinyin.title) heading.setAttribute('aria-label', title);
+  if (pinyin.close) {
+    const label = closeButton.textContent;
+    closeButton.replaceChildren(ruby(label, pinyin.close));
+    closeButton.setAttribute('aria-label', label);
+  }
   let timerId = 0;
   let closed = false;
   let stopSound, stopFireworks;
