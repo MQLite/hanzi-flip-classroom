@@ -16,6 +16,23 @@ describe('trace matching and reference scores',()=>{
     expect(evaluateHandwritingStroke([[100,840],[800,840]],horizontal).accepted).toBe(false);
     expect(evaluateHandwritingStroke([[100,800],[650,300]],[[100,800],[100,300],[650,300]]).accepted).toBe(false);
   });
+  it('deducts progressively for visible oscillation while allowing slight jitter and smooth curves',()=>{
+    const wave=(amplitude,cycles)=>Array.from({length:121},(_,i)=>[
+      100+i*700/120,
+      700+amplitude*Math.sin(i*2*Math.PI*cycles/120),
+    ]);
+    const slight=evaluateHandwritingStroke(wave(4,12),horizontal);
+    const moderate=evaluateHandwritingStroke(wave(12,12),horizontal);
+    const strong=evaluateHandwritingStroke(wave(22,10),horizontal);
+    const smooth=evaluateHandwritingStroke(wave(45,1),horizontal);
+    for(const result of [slight,moderate,strong,smooth])expect(result.accepted).toBe(true);
+    expect(slight.score).toBeGreaterThanOrEqual(98);
+    expect(moderate.score).toBeLessThanOrEqual(92);
+    expect(strong.score).toBeLessThan(moderate.score-8);
+    expect(smooth.score).toBeGreaterThan(moderate.score);
+    const naturalHook=evaluateHandwritingStroke(hook.map(([x,y])=>[x+10,y+14]),hook);
+    expect(naturalHook.score).toBeGreaterThanOrEqual(96);
+  });
   it('gives canonical traces100 and near traces a lower but accepted score',()=>{
     const exact=evaluateHandwritingStroke(horizontal,horizontal),near=evaluateHandwritingStroke([[110,725],[430,719],[795,725]],horizontal);
     expect(exact.accepted).toBe(true);expect(exact.score).toBe(100);expect(near.accepted).toBe(true);expect(near.score).toBeGreaterThan(70);expect(near.score).toBeLessThan(100);

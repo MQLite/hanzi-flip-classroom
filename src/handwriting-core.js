@@ -22,8 +22,7 @@ export function resamplePath(points,count=48){
   const length=pathLength(points);let edge=1,walked=0,segment=distance(points[0],points[1]);
   return Array.from({length:count},(_,i)=>{const target=length*i/(count-1);while(edge<points.length-1&&walked+segment<target){walked+=segment;edge++;segment=distance(points[edge-1],points[edge]);}const t=segment?(target-walked)/segment:0;return [points[edge-1][0]+(points[edge][0]-points[edge-1][0])*t,points[edge-1][1]+(points[edge][1]-points[edge-1][1])*t];});
 }
-function smoothPath(points){
-  const samples=resamplePath(points,96);
+function smoothSamples(samples){
   return samples.map((p,i)=>i===0||i===samples.length-1?p:[(samples[i-1][0]+2*p[0]+samples[i+1][0])/4,(samples[i-1][1]+2*p[1]+samples[i+1][1])/4]);
 }
 function frechet(a,b){
@@ -35,6 +34,22 @@ function simplify(points,epsilon=18){
   if(points.length<=2)return points;let furthest=epsilon,index=-1;
   for(let i=1;i<points.length-1;i++){const d=pointDistance(points[i],[points[0],points.at(-1)]);if(d>furthest){furthest=d;index=i;}}
   if(index<0)return [points[0],points.at(-1)];return [...simplify(points.slice(0,index+1),epsilon).slice(0,-1),...simplify(points.slice(index),epsilon)];
+}
+function shortScaleLengthLoss(samples){
+  // Ignore tiny pointer noise, then compare against a smoother path over a fixed
+  // distance on the writing grid. The sample timing does not enter the score.
+  const detail=simplify(samples,4),length=pathLength(detail);
+  if(length===0)return 0;
+  const even=resamplePath(detail,samples.length);
+  const radius=Math.max(2,Math.min(12,Math.round(42*(even.length-1)/length)));
+  const coarse=even.map((_,index)=>{
+    const reach=Math.min(radius,index,even.length-1-index);
+    let x=0,y=0;
+    for(let i=index-reach;i<=index+reach;i++){x+=even[i][0];y+=even[i][1];}
+    const count=2*reach+1;
+    return [x/count,y/count];
+  });
+  return Math.max(0,pathLength(even)-pathLength(coarse));
 }
 function cosine(a,b){const lengths=Math.hypot(...a)*Math.hypot(...b);return lengths?(a[0]*b[0]+a[1]*b[1])/lengths:1;}
 const vector=(a,b)=>[b[0]-a[0],b[1]-a[1]];
@@ -52,7 +67,8 @@ export function evaluateHandwritingStroke(points,median){
     const backwards=distance(drawn[0],reference.at(-1))<tolerance&&distance(drawn.at(-1),reference[0])<tolerance;
     return reject(backwards?'direction':'position');
   }
-  const smoothed=smoothPath(drawn),smoothReference=smoothPath(reference),length=pathLength(smoothed),ratio=length/pathLength(smoothReference);
+  const drawnSamples=resamplePath(drawn,96),referenceSamples=resamplePath(reference,96);
+  const smoothed=smoothSamples(drawnSamples),smoothReference=smoothSamples(referenceSamples),length=pathLength(smoothed),ratio=length/pathLength(smoothReference);
   if(ratio<.55||ratio>1.85)return reject('incomplete');
   const a=resamplePath(smoothed),b=resamplePath(smoothReference),corridor=Math.max(65,Math.min(90,referenceLength*.15));
   const coverage=b.filter(p=>pointDistance(p,drawn)<=corridor).length/b.length;
@@ -66,8 +82,13 @@ export function evaluateHandwritingStroke(points,median){
   const center=path=>[average(path.map(p=>p[0])),average(path.map(p=>p[1]))],ca=center(a),cb=center(b);
   const shapeError=average(a.map((p,i)=>distance([p[0]-ca[0],p[1]-ca[1]],[b[i][0]-cb[0],b[i][1]-cb[1]])));
   const metrics={shape:clamp(100-shapeError/2.6),position:clamp(100-distance(ca,cb)/1.8),length:clamp(100-Math.abs(Math.log(ratio))*65)};
-  const score=Math.round(metrics.shape*.55+metrics.position*.3+metrics.length*.15);
-  return score>=60?{accepted:true,score,reason:'correct',metrics}:reject('shape');
+  const baseScore=metrics.shape*.55+metrics.position*.3+metrics.length*.15;
+  if(Math.round(baseScore)<60)return reject('shape');
+  // Subtract the reference's own bends and allow ordinary finger movement.
+  const extraLength=shortScaleLengthLoss(drawnSamples)-shortScaleLengthLoss(referenceSamples);
+  const allowance=Math.max(12,referenceLength*.13);
+  const deduction=Math.min(20,Math.max(0,extraLength-allowance)*45/referenceLength);
+  return {accepted:true,score:Math.round(baseScore-deduction),reason:'correct',metrics};
 }
 
 export function createHandwritingState(characters=[]){

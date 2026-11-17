@@ -1,7 +1,22 @@
 import {test,expect} from '@playwright/test';
+import {resamplePath} from '../../src/handwriting-core.js';
 async function setup(page){await page.goto('/?mode=strokes');await page.locator('#bank-source').selectOption('zhongwen');await page.getByRole('button',{name:'触屏描写',exact:true}).click();await expect(page.locator('.handwriting-pad .glyph-shadow path')).toHaveCount(1);}
 async function points(page,offset=0){const data=await (await page.request.get('/strokes/'+encodeURIComponent('一')+'.json')).json();return data.medians[0].map(p=>[p[0],p[1]+offset]);}
-async function draw(page,trace){await page.locator('.handwriting-pad').scrollIntoViewIfNeeded();const screen=await page.locator('.handwriting-pad').evaluate((svg,trace)=>trace.map(p=>{const q=new DOMPoint(p[0],900-p[1]).matrixTransform(svg.getScreenCTM());return {x:q.x,y:q.y};}),trace);await page.mouse.move(screen[0].x,screen[0].y);await page.mouse.down();for(const p of screen.slice(1))await page.mouse.move(p.x,p.y,{steps:4});await page.mouse.up();}
+async function draw(page,trace,steps=4){await page.locator('.handwriting-pad').scrollIntoViewIfNeeded();const screen=await page.locator('.handwriting-pad').evaluate((svg,trace)=>trace.map(p=>{const q=new DOMPoint(p[0],900-p[1]).matrixTransform(svg.getScreenCTM());return {x:q.x,y:q.y};}),trace);await page.mouse.move(screen[0].x,screen[0].y);await page.mouse.down();for(const p of screen.slice(1))await page.mouse.move(p.x,p.y,{steps});await page.mouse.up();}
+test('visible jitter lowers the fullscreen score and the dialog keeps the original shaky ink',async({page})=>{
+ await setup(page);
+ await page.getByRole('button',{name:'读音：开启',exact:true}).click();
+ const samples=resamplePath(await points(page),97);
+ const trace=samples.map(([x,y],index)=>[x,y+18*Math.sin(index*Math.PI/4)]);
+ await draw(page,trace,1);
+ const popup=page.locator('#handwriting-score-dialog');
+ await expect(popup).toBeVisible();
+ const score=Number(await popup.locator('.handwriting-score-dialog__value').textContent());
+ expect(score).toBeGreaterThanOrEqual(70);
+ expect(score).toBeLessThan(90);
+ const ink=await page.locator('.handwriting-pad .handwriting-ink path').getAttribute('d');
+ await expect(popup.getByRole('img',{name:'学生写的字'}).locator('.handwriting-ink path')).toHaveAttribute('d',ink);
+});
 test('the final stroke audio ends before the score, which retains the student’s ink',async({page},testInfo)=>{
  await page.setViewportSize({width:1280,height:720});
  await page.addInitScript(()=>{
