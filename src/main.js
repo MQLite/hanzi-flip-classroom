@@ -202,7 +202,7 @@ function prepareBuilding(){
   buildingSelectedIds=buildingPool.words.slice(0,12).map(word=>word.id);buildingSentenceId=buildingPool.sentences[0]?.id??'';buildingState=null;
 }
 $('#help-dialog').insertAdjacentHTML('beforeend','<p>汉字建筑师：每课可选房、桥、塔、楼，以及1–16个本课字词；四类建筑各有不同款式，换课变外形。每个词写在对应词砖上，学生朗读后老师确认，词砖逐块落下。搭好后从右侧挑词朗读，老师点卡；安全词会移走对应砖块和词卡，失去支撑的词砖会带动上方部分落下，仍有支撑的部分保留；从上往下安全拆完也能完成本轮。读出本课重点句子，老师确认后全部词砖飞回复原。没有重点句子的课仍可练习搭建。</p>');
-$('#help-dialog').insertAdjacentHTML('beforeend','<p>女巫的毒药分三轮，每轮小女巫秘密选一张毒药卡。第一轮读生字，第二轮把“读一读”词语说成英语，第三轮说出生字的结构和部件位置。老师确认口答后点卡。点中毒药立即变身，可以读句子解救，也可以跳过。三轮通关后放烟花。离开藏毒画面时，秘密选择会自动遮挡。</p>');
+$('#help-dialog').insertAdjacentHTML('beforeend','<p>女巫的毒药分三轮，每轮小女巫秘密选一张毒药卡。学生先读本轮字词，老师再点卡。点中毒药立即变身，可以读句子解救，也可以跳过。三轮通关后放烟花。离开藏毒画面时，秘密选择会自动遮挡。</p>');
 function preparePoison(){
   if(selection.source!=='personal')selection={...selection,scope:'lesson'};
   poisonPool=getPoisonChallengePool({...selection,grade},bank.questions);
@@ -455,7 +455,8 @@ function poisonIntent(intent,value){
       return;
     }
     const round=poisonState.round+1;
-    const words=round===2&&poisonPool.readingWords.length>=2?poisonPool.readingWords:selectedWords();
+    const roundWords=round===2?poisonPool.readingWords:poisonPool.reviewWords;
+    const words=roundWords?.length>=2?roundWords:selectedWords();
     poisonState=makeRound(words,round);
   }else if(intent==='restart-challenge'){
     if(!poisonWon)return;

@@ -38,6 +38,39 @@ test('setup retains minimum-safe and sixteen-card limits',async({page})=>{
   const chosen=await page.locator('[data-poison-choice][aria-pressed="true"]').evaluateAll(nodes=>nodes.map(n=>n.dataset.poisonChoice));for(const id of chosen)await page.locator(`[data-poison-choice="${id}"]`).click();await page.locator('[data-poison-choice][aria-pressed="false"]').first().click();await expect(page.locator('#poison-start')).toBeDisabled();await page.locator('[data-poison-choice][aria-pressed="false"]').first().click();await expect(page.locator('#poison-start')).toBeEnabled();await page.getByLabel('学习阶段',{exact:true}).selectOption('3A');await page.getByLabel('选择课次').selectOption('4');for(let i=0;i<5;i++)await page.locator('[data-poison-choice][aria-pressed="false"]').first().click();await expect(page.locator('[data-poison-choice][aria-pressed="true"]')).toHaveCount(16);await expect(page.locator('#toast')).toContainText('最多16张');
 });
 
+test('Paradise 2A lesson 3 uses the two lesson lists and the ten-word review', async ({page}) => {
+  await page.goto('/?mode=poison&source=paradise&stage=2A&lesson=3');
+  const rounds = [
+    ['早上','几点','半','十二点','点','八点半','晚上','现在','两点','六点'],
+    ['九只','小','绵羊','戴着','小铃铛','两只','在','山上','几只','下山冈'],
+    ['早上','几点','半','点','晚上','现在','两点','小','在','几只'],
+  ];
+  const host = page.locator('#witch-poison');
+  await expect(host.locator('[data-poison-choice][aria-pressed=true] .poison-term')).toHaveText(rounds[0]);
+  await prepare(page);
+  for (const [index, terms] of rounds.entries()) {
+    await expect(host).toHaveAttribute('data-round', String(index + 1));
+    if (index > 0) await host.locator('#poison-begin-hide').click();
+    const cards = host.locator('[data-poison-card]');
+    expect((await cards.locator('.poison-term').allTextContents()).sort()).toEqual([...terms].sort());
+    await expect(cards.locator('.poison-pinyin')).toHaveCount(0);
+    await page.locator('#pinyin').check();
+    const pinyinText = await cards.locator('.poison-pinyin').allTextContents();
+    expect(pinyinText).toHaveLength(10);
+    expect(pinyinText.every(reading => reading.trim().length > 0)).toBe(true);
+    if (index === 1) {
+      const last = cards.filter({has:page.getByText('下山冈',{exact:true})});
+      await expect(last.locator('.poison-pinyin')).toHaveText('xià shān gāng');
+    }
+    await page.locator('#pinyin').uncheck();
+    const [poison] = await hide(page);
+    await host.locator(`[data-poison-card="${poison}"]`).click();
+    await host.locator('#poison-antidote-skip').click();
+    await host.locator('#poison-continue').click();
+  }
+  await expect(page.getByRole('dialog',{name:'女巫被打败了！'})).toBeVisible();
+});
+
 test('all three classroom rounds read lesson cards, hide fresh poison and celebrate after the third round', async ({page}, testInfo) => {
   await page.setViewportSize({width:1280,height:720});
   await page.goto('/?mode=poison&source=zhongwen&stage=2&lesson=12');
