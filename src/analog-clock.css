@@ -1,0 +1,6 @@
+.clock-numbers { position: absolute; inset: 0; }
+.clock-numbers span { position: absolute; transform: translate(-50%,-50%); font-size: var(--clock-number-size, clamp(.8rem,1.65vw,1.35rem)); font-weight: 750; line-height: 1; }
+.clock-hand { position: absolute; left: 50%; bottom: 50%; transform: translateX(-50%) rotate(var(--angle, 0deg)); transform-origin: 50% 100%; border-radius: 8px; }
+.clock-hand[data-hand="hour"] { width: 6%; height: 25%; background: #21483e; }
+.clock-hand[data-hand="minute"] { width: 3%; height: 34%; background: #b34d2d; }
+.clock-center { position: absolute; top: 50%; left: 50%; width: 7%; aspect-ratio: 1; border-radius: 50%; transform: translate(-50%,-50%); background: #304a40; }

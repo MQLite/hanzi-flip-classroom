@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>时钟喊停 · 汉语乐园 2A</title>
+</head>
+<body>
+  <main class="clock-game">
+    <header class="clock-game-header">
+      <a href="./?mode=explore&amp;source=paradise&amp;stage=2A&amp;lesson=3" aria-label="返回情景探索">← 返回情景探索</a>
+      <p id="clock-round" aria-live="polite">第 1 / 6 轮</p>
+    </header>
+    <div class="clock-game-stage">
+      <h1>时钟喊停</h1>
+      <div id="clock-face" class="clock-face" role="img" aria-label="指针时钟">
+        <div class="clock-numbers" aria-hidden="true"></div>
+        <span class="clock-hand" data-hand="hour" aria-hidden="true"></span>
+        <span class="clock-hand" data-hand="minute" aria-hidden="true"></span>
+        <span class="clock-center" aria-hidden="true"></span>
+      </div>
+      <div class="clock-game-controls">
+        <div class="clock-instruction" role="status">
+          <p id="clock-prompt"></p>
+          <small id="clock-prompt-en" lang="en"></small>
+        </div>
+        <p id="clock-answer" class="clock-answer" role="status" hidden></p>
+        <div class="clock-actions">
+          <button id="clock-start" type="button" aria-label="开始">开始<small lang="en">Start</small></button>
+          <button id="clock-stop" type="button" aria-label="停" hidden>停<small lang="en">Stop</small></button>
+          <button id="clock-check" type="button" aria-label="看答案" hidden>看答案<small lang="en">Show answer</small></button>
+          <button id="clock-next" type="button" hidden></button>
+        </div>
+        <label id="clock-voice-option" class="clock-voice-option">
+          <input id="clock-voice" type="checkbox" aria-label="语音喊停">
+          <span>语音喊停 <small lang="en">Voice control</small></span>
+        </label>
+        <p id="clock-voice-status" class="clock-voice-status" role="status" hidden></p>
+      </div>
+    </div>
+  </main>
+  <script type="module" src="/src/clock-stop.js"></script>
+</body>
+</html>

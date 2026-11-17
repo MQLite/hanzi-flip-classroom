@@ -1,0 +1,119 @@
+:root {
+  color-scheme: light;
+  font-family: "Nunito", system-ui, "Microsoft YaHei", sans-serif;
+  color: #183e38;
+  background: #f1f7f0;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; }
+.clock-game { width: min(100%, 1130px); margin: 0 auto; padding: clamp(16px, 3vw, 38px); }
+.clock-game-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  margin-bottom: clamp(16px, 3vw, 32px);
+}
+.clock-game-header a { color: inherit; text-decoration: none; font-size: .95rem; padding: 8px 0; }
+.clock-game-header a:hover { text-decoration: underline; }
+#clock-round {
+  margin: 0;
+  padding: 7px 13px;
+  border: 1px solid #a6c5b9;
+  border-radius: 50px;
+  font-weight: 750;
+  background: #e3efe5;
+}
+.clock-game-stage {
+  display: grid;
+  grid-template-areas: "face title" "face controls";
+  grid-template-columns: minmax(270px, 1.15fr) minmax(230px, 1fr);
+  grid-template-rows: 1fr 1fr;
+  align-items: start;
+  column-gap: clamp(30px, 5vw, 74px);
+  row-gap: 15px;
+  padding: clamp(24px, 4vw, 54px);
+  border: 1px solid #c2d9cd;
+  border-radius: clamp(20px, 4vw, 44px);
+  background: radial-gradient(ellipse at 24% 50%, #c7e2d5 0%, #f9fcf5 65%);
+}
+.clock-game-stage h1 { grid-area: title; align-self: end; font-size: clamp(2rem, 4vw, 3.5rem); margin: 0; line-height: 1.15; }
+.clock-face {
+  --clock-number-size: clamp(1.25rem, 4vw, 2.35rem);
+  grid-area: face;
+  position: relative;
+  align-self: center;
+  justify-self: center;
+  width: min(100%, 440px, 64svh);
+  aspect-ratio: 1;
+  border: clamp(7px, 1vw, 13px) solid #236255;
+  border-radius: 50%;
+  background: #fffdf1;
+  box-shadow: 0 10px 0 #37706126, inset 0 0 0 4px #dce9de;
+  font-variant-numeric: tabular-nums;
+}
+.clock-face::before {
+  content: "";
+  position: absolute;
+  inset: 4%;
+  border-radius: 50%;
+  background: repeating-conic-gradient(from -1deg, #255149 0 2deg, transparent 2deg 30deg);
+  mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+  opacity: .65;
+}
+.clock-game-controls { grid-area: controls; }
+.clock-instruction { margin-bottom: 17px; }
+.clock-instruction p { font-size: clamp(1.16rem, 2.1vw, 1.65rem); line-height: 1.4; font-weight: 750; margin: 0; }
+.clock-instruction small, .clock-voice-option small { color: #45665e; }
+.clock-answer {
+  width: fit-content;
+  margin: 0 0 16px;
+  padding: 5px 12px;
+  border-radius: 9px;
+  color: #145548;
+  background: #dbefe0;
+  font-size: clamp(1.55rem, 3vw, 2.35rem);
+  line-height: 1.35;
+  font-weight: 750;
+}
+.clock-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.clock-actions button {
+  border: 1px solid #0e5449;
+  border-radius: 12px;
+  background: #176457;
+  color: #fff;
+  font: inherit;
+  font-weight: 750;
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  padding: 9px 19px;
+  min-height: 54px;
+  cursor: pointer;
+}
+.clock-actions button:hover { filter: brightness(1.12); }
+.clock-actions button:focus-visible, .clock-game-header a:focus-visible, .clock-voice-option input:focus-visible {
+  outline: 3px solid #884821;
+  outline-offset: 3px;
+}
+.clock-actions small { display: block; font-size: .78rem; font-weight: 600; }
+#clock-stop { border-color: #89341e; background: #a3452c; min-width: 102px; }
+#clock-check { color: #18594e; background: #f5faf5; border-color: #97b7ab; }
+.clock-voice-option { display: flex; width: fit-content; align-items: center; gap: 8px; margin-top: 16px; }
+.clock-voice-option input { accent-color: #176457; width: 18px; height: 18px; margin: 0; }
+.clock-voice-status { margin: 7px 0 0; color: #45665e; font-size: .9rem; }
+@media (max-width: 740px) {
+  .clock-game-stage {
+    grid-template-areas: "title" "face" "controls";
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    justify-items: center;
+    gap: 18px;
+    padding: 22px 14px;
+    text-align: center;
+    background: linear-gradient(#dfefe6, #f9fcf5 90%);
+  }
+  .clock-face { width: min(100%, 350px, 47svh); }
+  .clock-actions { justify-content: center; }
+  .clock-answer, .clock-voice-option { margin-inline: auto; }
+}

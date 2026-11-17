@@ -1,4 +1,5 @@
 import {TIME_SCENES, LOVE_LINE} from './doudou-time-data.js';
+import {mountAnalogClock} from './analog-clock.js';
 import {bindExplorationJourney} from './island-exploration.js';
 import {ruby, gloss} from './ruby.js';
 import './doudou-time.css';
@@ -9,7 +10,7 @@ journey.decorate();
 const find = id => document.getElementById(id);
 const scene = find('time-scene');
 const clock = find('time-clock');
-const numbers = find('time-clock-numbers');
+const showClock = mountAnalogClock(clock);
 const periodList = find('time-periods');
 const table = find('time-table');
 const poses = find('time-xiaoming').querySelectorAll('[data-pose]');
@@ -43,31 +44,12 @@ function label(element, hanzi, pinyin, english) {
   }
 }
 
-for (let hour = 1; hour <= 12; hour++) {
-  const angle = hour * Math.PI / 6;
-  const number = document.createElement('span');
-  number.textContent = hour;
-  number.style.left = (50 + 39 * Math.sin(angle)) + '%';
-  number.style.top = (50 - 39 * Math.cos(angle)) + '%';
-  numbers.append(number);
-}
-
 const steps = TIME_SCENES.map(period => {
   const item = document.createElement('li');
   label(item, ...period.label);
   periodList.append(item);
   return item;
 });
-
-function showClock([hour, minute]) {
-  const minuteAngle = minute * 6;
-  const hourAngle = ((hour % 12) + minute / 60) * 30;
-  clock.querySelector('[data-hand=hour]').style.setProperty('--angle', hourAngle + 'deg');
-  clock.querySelector('[data-hand=minute]').style.setProperty('--angle', minuteAngle + 'deg');
-  const hourPosition = minute ? hour + '和' + (hour + 1) + '之间' : '数字' + hour;
-  const minutePosition = minute ? minute / 5 : 12;
-  clock.setAttribute('aria-label', '指针时钟。时针指向' + hourPosition + '，分针指向数字' + minutePosition + '。');
-}
 
 function showDialogue({speaker: role, tokens}) {
   const isDoudou = role === 'doudou';

@@ -15,6 +15,10 @@ export const EXPLORATIONS=[{
   lessonTitle:'现在几点',title:'豆豆，现在几点？',href:'./doudou-time.html',
   description:'看时钟，跟豆豆说时间，聊聊早饭、午饭和晚饭。',
 }, {
+  id:'clock-stop',source:'paradise',textbook:PARADISE_ID,stage:'2A',book:2,lesson:3,
+  lessonTitle:'现在几点',title:'时钟喊停',href:'./clock-stop.html',
+  description:'让时钟转起来，喊「停」，再说出现在几点。',
+}, {
   id:'two-rivers',source:'zhongwen',textbook:ZHONGWEN_ID,stage:'2',book:2,lesson:12,
   lessonTitle:'江河',title:'长江与黄河',href:'./rivers.html',
   description:'读出生字，坐船游长江。再读「读一读」里的词语，沿黄河一路到渤海。',
@@ -41,6 +45,7 @@ export function explorationCourses(textbook){
 export function renderExplorations(root,selection,{urlForScenario}={}){
   root.replaceChildren();
   const scenarios=matchingExplorations(selection);
+  root.classList.toggle('exploration-options', scenarios.length>1);
   if(!scenarios.length){
     const empty=document.createElement('div');empty.className='exploration-empty';
     const title=document.createElement('h3');title.textContent='本课情景待补充';
@@ -72,9 +77,15 @@ export function renderExplorations(root,selection,{urlForScenario}={}){
       link.setAttribute('aria-label','进入情景');
     }else if(scenario.id==='doudou-time'){
       art.classList.add('time-exploration-cover');
-      meta.textContent='汉语乐园 · 2A · 第3课 现在几点';
+      meta.textContent='汉语乐园 · 2A · 第3课 现在几点 · 第1关';
       title.replaceChildren(ruby('豆豆，','Dòudou,'),ruby('现在几点？','xiànzài jǐ diǎn?'));
       title.setAttribute('aria-label',scenario.title);
+    }else if(scenario.id==='clock-stop'){
+      art.classList.add('clock-stop-cover');
+      art.append(document.createElement('span'));
+      meta.textContent='汉语乐园 · 2A · 第3课 现在几点 · 第2关';
+      tags.textContent='6 轮';
+      link.textContent='开始时钟游戏';
     }else if(scenario.id==='two-rivers'){
       meta.textContent='中文（暨南大学版）· 第二册 · 第12课 江河';
       tags.textContent='长江 · 12 个生字　　黄河 · 12 个词语';

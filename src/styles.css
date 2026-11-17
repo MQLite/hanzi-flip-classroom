@@ -1831,6 +1831,22 @@ body:not(.workshop-mode) #restart { margin-left: auto; }
 .city-exploration-cover::before { display: none; }
 .exploration-cover.time-exploration-cover { background: #b98157 url('./doudou-time-atlas.webp') center top / auto 300% no-repeat; }
 .time-exploration-cover::before { display: none; }
+.exploration-cover.clock-stop-cover { display: grid; place-items: center; background: radial-gradient(ellipse at center,#c6e5d6,#77aa98); }
+.clock-stop-cover::before { display: none; }
+.clock-stop-cover span { position: relative; width: min(52%, 190px); aspect-ratio: 1; border: 9px solid #236255; border-radius: 50%; background: #fffdf1; box-shadow: 0 9px 0 #30554a33; }
+.clock-stop-cover span::before, .clock-stop-cover span::after { content: ""; position: absolute; left: 50%; bottom: 50%; border-radius: 8px; transform-origin: 50% 100%; }
+.clock-stop-cover span::before { width: 7%; height: 26%; background: #21483e; transform: translateX(-50%) rotate(90deg); }
+.clock-stop-cover span::after { width: 4%; height: 36%; background: #b34d2d; transform: translateX(-50%) rotate(180deg); }
+@media (min-width: 900px) {
+  .exploration-options { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; }
+  .exploration-options .exploration-card { display: flex; flex-direction: column; }
+  .exploration-options .exploration-cover { min-height: 156px; }
+  .exploration-options .time-exploration-cover { background-size: max(100%, 280px) auto; background-position: center 9%; }
+  .exploration-options .clock-stop-cover span { width: 105px; border-width: 6px; }
+  .exploration-options .exploration-card>div:last-child { padding: 20px 25px 24px; }
+  .exploration-options .exploration-card h3 { margin: 6px 0 10px; }
+  .exploration-options .exploration-tags { margin: 10px 0; }
+}
 .exploration-cover.rivers-exploration-cover {
   background: radial-gradient(ellipse at 18% 15%, #e5e6bd, transparent 57%), linear-gradient(135deg, #a7c7a6, #d4dcad 62%, #72aaa8);
 }
