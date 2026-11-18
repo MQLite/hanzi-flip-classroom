@@ -61,6 +61,7 @@ import {getConstructionPool} from './construction-data.js';
 import {createConstructionView} from './construction-view.js';
 import {createPuzzleState,selectPuzzlePart,removePuzzlePart,checkPuzzle,nextPuzzleRound,createStrokeState,placeStroke,undoStroke,nextStrokeCharacter} from './construction-core.js';
 import {createHandwritingState,submitHandwritingStroke,undoHandwritingStroke,rewriteHandwritingCharacter,navigateHandwriting} from './handwriting-core.js';
+import {mountPrizeRecord} from './prize-record.js';
 
 const app = document.querySelector("#app");
 app.innerHTML = `<header class="site-header"><a class="brand" href="./" aria-label="汉字奇遇岛首页"><span class="brand-mark">字<span></span></span><div><h1>汉字奇遇岛</h1><p>每一个汉字，都是一次小小的发现。</p></div></a><nav aria-label="教师工具"><span class="teacher-badge">教师课堂 · 1–4 年级</span><button id="open-bank">题库管理</button><button id="open-help">使用帮助</button><button id="fullscreen" class="icon-button" aria-label="全屏显示">⛶</button></nav></header>
@@ -75,6 +76,7 @@ app.innerHTML = `<header class="site-header"><a class="brand" href="./" aria-lab
 <dialog id="settings-dialog" aria-labelledby="settings-title"><div class="dialog-heading"><div><span class="eyebrow">OUR LITTLE TEAMS</span><h2 id="settings-title">为小组起个名字</h2></div><button class="close-dialog icon-button" aria-label="关闭小组设置">×</button></div><p>应用设置会开始新一轮，清空本轮得分。</p><label>小组数量<select id="team-count"><option value="2">2 个小组</option><option value="3">3 个小组</option><option value="4">4 个小组</option></select></label><div id="team-fields"></div><button id="apply-teams" class="primary">应用并开始新一轮</button></dialog>
 <dialog id="help-dialog" aria-labelledby="help-title"><div class="dialog-heading"><h2 id="help-title">欢迎来到汉字奇遇岛</h2><button class="close-dialog icon-button" aria-label="关闭帮助">×</button></div><ol class="help-steps"><li>选择年级，认读屏幕上的汉字。</li><li>翻牌揭晓汉字、拼音和词语；句子练习请使用“句子小火车”。</li><li>选中小组，再点“答对了”，就会沿踏石走到下一座小岛，自动换字；想巩固的字点“再练一次”。每字只结算一次。</li><li>一轮结束后，带着需要巩固的字再出发。</li></ol><p>跳过的字记为未作答；回看不会重复加分。多音字以本题拼音为参考，老师可结合词语判断其他读音。</p><p>题库自动保存在此设备的此浏览器中，请定期导出备份。课堂得分、小组和进度不会在刷新后恢复。</p><p>年级是难度建议，不对应特定教材。打开面板或输入文字时，课堂快捷键会暂停。</p><p>立体显示不流畅时，可随时切换“简化显示”，本轮进度保留。</p></dialog>`;
 const $ = (s) => document.querySelector(s);
+const prizeRecord = mountPrizeRecord(app);
 $('.lesson-heading').insertAdjacentHTML('beforeend', '<nav class="game-modes" aria-label="游戏模式"><button id="mode-flip" aria-pressed="true">识字翻翻乐</button><button id="mode-workshop" aria-pressed="false">组词小工坊</button><button id="mode-train" aria-pressed="false">句子小火车</button><button id="mode-sudoku" aria-pressed="false">汉字数独</button><button id="mode-explore" aria-pressed="false">情景探索</button><button id="mode-mole" aria-pressed="false">打地鼠</button><button id="mode-poison" aria-pressed="false">女巫的毒药</button></nav>');
 $('.play-area').insertAdjacentHTML('beforeend','<div id="witch-poison" hidden></div>');
 $('.game-modes').insertAdjacentHTML('beforeend','<button id="mode-building" aria-pressed="false">汉字建筑师</button>');
@@ -374,6 +376,7 @@ const journey=createIslandJourney({getContext:journeyContext,onConceal:concealPo
   playSound:gameMode==='sudoku'?playOptionalSudokuChime:undefined,
 }),onHomeChange(visible){
  homeMode=visible;document.body.classList.toggle('island-home-mode',visible);
+ prizeRecord.setHome(visible);
  if(visible){
   if(gameMode==='train'&&session.departure)finishDeparture(session.departure);
   if(gameMode==='flip'&&flipTransition)finishFlipTransition(flipTransition);

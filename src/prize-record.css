@@ -1,0 +1,77 @@
+.prize-shell { width: 100%; }
+#open-prize-record { border-color: #aebca1; background: #edf2df; white-space: nowrap; }
+dialog.prize-panel {
+  position: fixed;
+  inset: 16px 16px 16px auto;
+  width: min(366px, calc(100vw - 24px));
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  margin: 0;
+  padding: 0;
+  border: 1px solid #b9c9b1;
+  border-radius: 20px;
+  color: #244e41;
+  background: #fffdf5;
+  box-shadow: 0 12px 42px #244e4126;
+  overflow: hidden;
+  outline: none;
+}
+dialog.prize-panel[open] { display: flex; flex-direction: column; }
+.prize-panel::backdrop { background: #163c3a55; }
+.prize-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; padding: 20px 18px 14px; border-bottom: 1px solid #e1e6d7; }
+.prize-heading h2 { font-family: "Microsoft YaHei", system-ui, sans-serif; font-size: 25px; letter-spacing: -.5px; }
+.prize-heading p { font-size: 12px; line-height: 1.7; margin-top: 5px; color: #5c705e; }
+#close-prize-record { flex: none; width: 32px; height: 32px; padding: 0; line-height: 1; border: 0; background: transparent; font-size: 26px; }
+.prize-body { padding: 12px 18px 18px; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.prize-panel :is(input, select, textarea) { min-width: 0; font-size: 14px; padding: 8px 10px; }
+.prize-panel textarea { min-height: 60px; }
+.prize-panel :is(label, summary) { font-size: 13px; font-weight: 650; }
+.prize-panel summary { cursor: pointer; padding: 7px 0; }
+.prize-panel summary:focus-visible { outline: 3px solid #dfa570; outline-offset: 2px; }
+.prize-panel form { display: grid; gap: 7px; }
+.prize-panel form button { padding: 8px 12px; font-size: 13px; justify-self: start; }
+.prize-storage-note { font-size: 11px; line-height: 1.5; color: #6a7b68; margin-bottom: 13px; }
+.prize-warning { border-radius: 8px; padding: 10px; font-size: 12px; background: #fff0cf; color: #77470d; margin-bottom: 12px; }
+.prize-class-controls { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 5px 10px; }
+.prize-class-tools { grid-column: 1 / -1; }
+.prize-class-tools :is(summary,button) { font-size: 12px; }
+.prize-class-tools button { padding: 7px 8px; margin-bottom: 8px; }
+#prize-new-class { margin-bottom: 14px; }
+#prize-class-form { margin: 3px 0 10px; }
+#prize-student-form { margin-bottom: 17px; }
+#prize-new-students { margin-bottom: 12px; }
+.prize-roster-tools { margin-bottom: 8px; }
+.prize-roster-tools p { font-size: 12px; color: #5e735e; margin-bottom: 7px; }
+.prize-students { display: grid; gap: 12px; }
+.prize-student { min-width: 0; padding: 12px; border-radius: 13px; border: 1px solid #dce3d1; background: #f6f8ee; }
+.prize-student-heading { display: flex; align-items: baseline; gap: 8px; justify-content: space-between; }
+.prize-student-heading h3 { font-size: 17px; line-height: 1.4; overflow-wrap: anywhere; min-width: 0; }
+.prize-balance { flex: none; color: #65794e; font-size: 13px; font-weight: 650; }
+.prize-stamps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; margin: 11px 0 12px; justify-items: center; }
+.prize-stamp { display: grid; place-items: center; width: 33px; aspect-ratio: 1; border: 1.5px dashed #bfceb4; border-radius: 50%; color: #b5483f; background: #fffdf6; font-size: 18px; line-height: 1; font-family: "Microsoft YaHei", sans-serif; font-weight: 750; }
+.prize-stamp.is-filled { border: 2px solid #bd6457; box-shadow: inset 0 0 0 2px #fffdf5; background: #f9e1d3; transform: rotate(-9deg); }
+.prize-stamp.is-filled:nth-child(2n) { transform: rotate(7deg); }
+.prize-stamp-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.prize-stamp-actions button { min-height: 39px; padding: 8px 6px; font-size: 13px; border-color: #b9c9a8; background: #e9efdb; }
+.prize-stamp-actions button:hover { background: #dce8c6; }
+button.prize-redeem { width: 100%; margin-top: 9px; padding: 9px 7px; font-size: 13px; font-weight: 700; background: #f7e7b9; border-color: #d0b76e; color: #6c5114; }
+button.prize-redeem:hover { background: #f3d990; }
+.prize-gifts { margin-top: 8px; color: #685b36; font-size: 12px; text-align: center; }
+.prize-student-details { margin-top: 6px; }
+.prize-student-details :is(summary,button) { font-size: 12px; font-weight: 400; }
+.prize-student-details button { padding: 6px 7px; }
+.prize-history { padding: 0; margin: 8px 0; max-height: 150px; overflow: auto; list-style: none; }
+.prize-history li { display: flex; justify-content: space-between; gap: 5px; padding: 5px 0; font-size: 11px; color: #65715d; }
+.prize-manage-student { display: flex; gap: 6px; margin-top: 6px; }
+.prize-panel .prize-delete { color: #9b4c3d; }
+.prize-message, .prize-empty { font-size: 13px; line-height: 1.7; color: #61745b; }
+.prize-message { margin-top: 10px; }
+.prize-panel [hidden] { display: none !important; }
+@media (min-width: 1200px) {
+  .prize-shell.prize-home.prize-open { display: grid; grid-template-columns: minmax(0, 1fr) 332px; column-gap: 8px; max-width: 1840px; margin: auto; padding-right: 20px; align-items: start; }
+  body.island-home-mode .prize-shell.prize-open > main { width: 100%; min-width: 0; margin: 0; }
+  dialog.prize-panel.is-docked { position: sticky; inset: auto; top: 16px; width: 100%; margin-top: 12px; max-height: calc(100dvh - 32px); box-shadow: 0 6px 24px #244e410c; }
+}
+@media (max-width: 700px) {
+  dialog.prize-panel { inset: 12px 12px 12px auto; max-height: calc(100dvh - 24px); }
+}
