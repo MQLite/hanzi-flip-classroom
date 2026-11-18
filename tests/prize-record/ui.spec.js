@@ -1,7 +1,15 @@
 import {test, expect} from '@playwright/test';
 
 const key = 'hanzi-flip.prize-record.v1';
+const panelName = 'Prize Record · 奖励记录';
+async function openRecords(page) {
+  const panel = page.getByRole('dialog', {name:panelName, exact:true});
+  if (!await panel.isVisible()) await page.getByRole('button', {name:panelName, exact:true}).click();
+  await expect(panel).toBeVisible();
+  return panel;
+}
 async function addClass(page, name) {
+  await openRecords(page);
   const details = page.locator('#prize-new-class');
   if (!await details.evaluate(element => element.open)) await details.locator('summary').click();
   await page.getByLabel('班级名称', {exact:true}).fill(name);
@@ -17,18 +25,16 @@ async function addStudents(page, names) {
 }
 const cardFor = (page, name) => page.getByRole('article', {name:name + '的集章记录', exact:true});
 
-test('right-hand records persist classes, stamp reasons and gifts with a reversible exchange', async ({page}, testInfo) => {
+test('fullscreen records persist classes, stamp reasons and gifts with a reversible exchange', async ({page}, testInfo) => {
   await page.setViewportSize({width:1440, height:900});
   await page.goto('/');
-  const panel = page.getByRole('dialog', {name:'Prize Record', exact:true});
-  await expect(panel).toBeVisible();
+  await expect(page.getByRole('dialog', {name:panelName, exact:true})).not.toBeVisible();
+  const panel = await openRecords(page);
   const panelBox = await panel.boundingBox();
-  const mapBox = await page.locator('#island-map').boundingBox();
-  expect(panelBox.x).toBeGreaterThanOrEqual(mapBox.x + mapBox.width);
+  expect(panelBox).toMatchObject({x:0, y:0, width:1440, height:900});
   await page.setViewportSize({width:1280, height:720});
   const narrowPanel = await panel.boundingBox();
-  const narrowMap = await page.locator('#island-map').boundingBox();
-  expect(narrowPanel.x).toBeGreaterThanOrEqual(narrowMap.x + narrowMap.width);
+  expect(narrowPanel).toMatchObject({x:0, y:0, width:1280, height:720});
   await page.setViewportSize({width:1440, height:900});
   const bank = await page.evaluate(() => localStorage.getItem('hanzi-flip.question-bank'));
   await addClass(page, '周六 1pm');
@@ -53,6 +59,7 @@ test('right-hand records persist classes, stamp reasons and gifts with a reversi
   await card.getByRole('button', {name:'兑换 1 份礼物', exact:true}).click();
   await expect(card.locator('.prize-balance')).toHaveText('0 个章');
   await page.reload();
+  await openRecords(page);
   await expect(card.locator('.prize-balance')).toHaveText('0 个章');
   await expect(card).toContainText('已兑换 1 份礼物');
   await expect(cardFor(page, '安安').locator('.prize-balance')).toHaveText('0 个章');
@@ -68,15 +75,15 @@ test('right-hand records persist classes, stamp reasons and gifts with a reversi
 test('a phone can open records during a game, type names and return to the same game', async ({page}, testInfo) => {
   await page.setViewportSize({width:390, height:844});
   await page.goto('/?mode=flip');
-  await page.getByRole('button', {name:'Prize Record', exact:true}).click();
-  const panel = page.getByRole('dialog', {name:'Prize Record', exact:true});
+  const panel = await openRecords(page);
+  expect(await panel.boundingBox()).toMatchObject({x:0, y:0, width:390, height:844});
   await addClass(page, '小班');
   await addStudents(page, '艾米、Ben');
   await cardFor(page, 'Ben').getByRole('button', {name:'表现 +1', exact:true}).click();
   await expect(cardFor(page, 'Ben').locator('.prize-balance')).toHaveText('1 个章');
   await page.screenshot({path:testInfo.outputPath('prize-record-phone.png')});
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await page.getByRole('button', {name:'收起集章表', exact:true}).click();
+  await page.getByRole('button', {name:'关闭', exact:true}).click();
   await expect(panel).not.toBeVisible();
   await expect(page.locator('#reveal')).toBeVisible();
   await page.keyboard.press('Enter');
@@ -91,6 +98,7 @@ test('two classroom tabs serialize stamps without losing a balance', async ({pag
   await addStudents(page, '小明');
   const second = await context.newPage();
   await second.goto('/');
+  await openRecords(second);
   async function award(tab, name) {
     const student = cardFor(tab, '小明');
     for (let index = 0; index < 5; index++) {
@@ -144,4 +152,59 @@ test('a seventeen-student class is searchable and names can be edited without lo
   page.once('dialog', dialog => dialog.accept());
   await renamed.getByRole('button', {name:'删除学生', exact:true}).click();
   await expect(page.locator('.prize-student')).toHaveCount(16);
+});
+
+test('independent language switches annotate the interface, preserve old records, and remember their choices', async ({page}, testInfo) => {
+  await page.addInitScript(key => {
+    if (localStorage.getItem(key)) return;
+    const history = Array.from({length:10}, (_,index) => ({id:'stamp-' + index, kind:'homework', at:'2026-11-19T01:00:00.000Z'}));
+    localStorage.setItem(key, JSON.stringify({
+      version:1, selectedClassId:'original-class',
+      classes:[{id:'original-class', name:'周六班', students:[{id:'original-student', name:'小明', history}]}],
+    }));
+  }, key);
+  await page.setViewportSize({width:1280, height:720});
+  await page.goto('/');
+  const panel = await openRecords(page);
+  const pinyin = page.getByRole('checkbox', {name:'奖励记录拼音'});
+  const english = page.getByRole('checkbox', {name:'奖励记录英语'});
+  const student = cardFor(page, '小明');
+  await expect(student.locator('.prize-balance')).toHaveText('10 个章');
+  await expect(panel.locator('rt')).toHaveCount(0);
+  await pinyin.check();
+  await expect(panel.locator('#prize-record-title rt')).toHaveText('Jiǎnglì jìlù');
+  await expect(panel.locator('small[lang=en]')).toHaveCount(0);
+  await english.check();
+  await expect(student.getByRole('button', {name:'作业 +1', exact:true}).locator('small[lang=en]')).toHaveText('Homework +1');
+  await expect(student.getByRole('button', {name:'表现 +1', exact:true}).locator('rt')).toHaveText('Biǎoxiàn +1');
+  await expect(student.locator('h3')).toHaveText('小明');
+  await student.locator('summary').click();
+  const missing = await panel.locator('[data-prize-text]').evaluateAll(elements => elements
+    .filter(element => element.getClientRects().length && /\p{Script=Han}/u.test(element.dataset.prizeText))
+    .filter(element => !element.querySelector('rt')?.textContent.trim() || !element.querySelector('small[lang=en]')?.textContent.trim())
+    .map(element => element.dataset.prizeText));
+  expect(missing).toEqual([]);
+  await panel.locator('#prize-new-students').evaluate(element => element.open = true);
+  expect(await panel.locator('.prize-classroom-tools').evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+  await panel.locator('#prize-new-students').evaluate(element => element.open = false);
+  await student.getByRole('button', {name:'兑换 1 份礼物', exact:true}).click();
+  await expect(student.locator('.prize-gifts small[lang=en]')).toHaveText('1 gift redeemed');
+  await expect(student.locator('.prize-balance rt')).toHaveText('0 gè zhāng');
+  await page.screenshot({path:testInfo.outputPath('prize-record-languages.png')});
+  await pinyin.uncheck();
+  await expect(panel.locator('rt')).toHaveCount(0);
+  await expect(student.getByRole('button', {name:'作业 +1', exact:true}).locator('small[lang=en]')).toBeVisible();
+  await pinyin.check();
+  await page.reload();
+  await openRecords(page);
+  await expect(pinyin).toBeChecked();
+  await expect(english).toBeChecked();
+  await expect(student.locator('.prize-balance rt')).toHaveText('0 gè zhāng');
+  await expect(student.locator('h3')).toHaveText('小明');
+  await page.setViewportSize({width:390, height:844});
+  await expect(pinyin).toBeInViewport();
+  await expect(english).toBeInViewport();
+  await expect(panel.getByRole('button', {name:'关闭', exact:true})).toBeInViewport();
+  expect(await panel.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+  await page.screenshot({path:testInfo.outputPath('prize-record-languages-phone.png')});
 });
