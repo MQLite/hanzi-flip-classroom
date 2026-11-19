@@ -10,7 +10,7 @@ it('maps actual start and exit cells to a consistent3D board and only walks one 
 it('keeps board, avatar and exit celebration bounds in frame on phone and projector',()=>{
   const bounds=[
     {xs:[-4.85,4.85],ys:[-.3,.65],zs:[-4.85,4.85]},
-    {xs:[-4.3,4.3],ys:[.14,1.35],zs:[-4.3,4.3]},
+    {xs:[-4.5,4.5],ys:[.10,1.6],zs:[-4.4,4.4]},
     {xs:[3.2,4.8],ys:[.14,2.9],zs:[2.15,3.85]},
   ];
   for(const aspect of [346/360,432/420,365/330,852/440,1098/780]){

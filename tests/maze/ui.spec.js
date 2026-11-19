@@ -1,13 +1,14 @@
 import {test,expect} from '@playwright/test';
+import {mazeRoute,followMazeRoute} from './route.js';
 async function start(page){await page.goto('/?mode=maze');await expect(page.locator('#mode-maze')).toHaveAttribute('aria-pressed','true');await page.locator('#maze-start').click();}
 const current=page=>page.locator('[data-maze-cell][aria-current="location"]');
-async function path(page){return page.locator('[data-maze-cell]').evaluateAll(nodes=>{const open=new Set(nodes.map(n=>Number(n.dataset.mazeCell))),queue=[[9]],seen=new Set([9]);while(queue.length){const path=queue.shift(),last=path.at(-1);if(last===71)return path;for(const n of [last-9,last+9,last-1,last+1])if(open.has(n)&&!seen.has(n)&&Math.abs(Math.floor(n/9)-Math.floor(last/9))+Math.abs(n%9-last%9)===1){seen.add(n);queue.push([...path,n]);}}return [];});}
 test('maze choices require reading confirmation, walls and far cells stay blocked',async({page})=>{
   await start(page);await expect(page.locator('.maze-cell')).toHaveCount(81);await expect(current(page)).toHaveAttribute('data-maze-cell','9');await expect(page.locator('[data-maze-cell="71"]')).toBeDisabled();await page.locator('[data-maze-cell="10"]').click();await expect(current(page)).toHaveAttribute('data-maze-cell','9');await expect(page.locator('#maze-read-word')).not.toBeEmpty();await page.locator('#maze-cancel').click();await expect(page.locator('#maze-confirm')).toBeDisabled();
   await page.locator('[data-maze-cell="10"]').click();await page.locator('#maze-confirm').click();await expect(current(page)).toHaveAttribute('data-maze-cell','10');await expect(page.locator('#maze-progress')).toContainText('1');
 });
 test('an observed route reaches the exit one read at a time, preserves the bank and offers a replay',async({page})=>{
-  await start(page);const saved=await page.evaluate(()=>localStorage.getItem('hanzi-flip.question-bank')),route=await path(page);expect(route.length).toBeGreaterThan(2);for(const index of route.slice(1)){await page.locator(`[data-maze-cell="${index}"]`).click();await page.locator('#maze-confirm').click();}
+  await start(page);const saved=await page.evaluate(()=>localStorage.getItem('hanzi-flip.question-bank'));
+  await followMazeRoute(page,await mazeRoute(page));
   await expect(page.locator('#hanzi-maze')).toHaveAttribute('data-phase','complete');await expect(page.locator('#maze-celebration')).toContainText('出口');await expect(page.locator('#maze-restart')).toBeVisible();await expect(page.locator('#maze-next-activity,#maze-previous-activity')).toHaveCount(0);expect(await page.evaluate(()=>localStorage.getItem('hanzi-flip.question-bank'))).toBe(saved);
 });
 test('native arrows select a neighboring character, Enter confirms once and mode switches keep position',async({page})=>{

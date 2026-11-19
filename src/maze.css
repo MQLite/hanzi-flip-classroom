@@ -36,6 +36,73 @@
 .maze-desk > button { min-height: 48px; font-size: 16px; }
 .maze-note, .maze-feedback { font-size: 12px; }
 .maze-bottom-controls button { font-size: 12px; }
+.maze-landmark, .maze-effect-badge {
+  position: absolute;
+  z-index: 3;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.maze-landmark {
+  padding: .16em .45em;
+  border: 2px solid #fffdf0;
+  border-radius: .45em;
+  color: white;
+  background: #176078;
+  box-shadow: 0 2px 4px #263a3240;
+  font: 750 clamp(10px, 1.45vw, 21px)/1.2 system-ui, sans-serif;
+  white-space: nowrap;
+}
+.maze-landmark--goal { background: #ffe08a; color: #522e10; }
+.maze-landmark::after {
+  content: '';
+  position: absolute;
+  left: calc(50% - .27em);
+  top: 100%;
+  border: .27em solid transparent;
+  border-top-color: #176078;
+}
+.maze-landmark--goal::after {
+  top: auto;
+  bottom: 100%;
+  border-color: transparent;
+  border-bottom-color: #ffe08a;
+}
+.maze-cell button.is-start:not(.is-current) { border-color: #2c7785; }
+.maze-cell button.is-exit:not(.is-current) { border-color: #ba842f; }
+.maze-stage[data-render-mode="flat"] .maze-cell button.is-current { background: #176078; border-color: #fffcef; }
+.maze-stage[data-render-mode="flat"] .is-current strong { visibility: hidden; }
+.maze-stage[data-render-mode="flat"] .maze-marker {
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: clamp(20px, 3.2vw, 53px);
+}
+.maze-effect-badge {
+  padding: .16em;
+  border: 2px solid #e2bf72;
+  border-radius: 50%;
+  background: #fff3c9;
+  box-shadow: 0 4px 18px #62451952;
+  font-size: clamp(32px, 4vw, 66px);
+  line-height: 1;
+}
+.maze-effect-badge[hidden] { display: none; }
+.maze-encounter-rules {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 7px 18px;
+  padding: 0;
+  list-style: none;
+  color: #42583c;
+  font-size: 14px;
+  font-weight: 650;
+}
+#maze-encounter { background: #fff1d4; border-color: #ddbf7c; }
+#maze-encounter[data-kind="butterfly"] { background: #e6f1f1; border-color: #9cbebc; }
+.maze-layout:has(.maze-stage[data-encounter-pending]) #maze-encounter > * { visibility: hidden; }
+.maze-encounter-icon { font-size: clamp(45px, 5.2vw, 84px); line-height: 1; }
+#maze-encounter .maze-encounter-result { font: 750 clamp(18px, 1.9vw, 31px)/1.4 system-ui, sans-serif; }
 @media (max-width: 1000px) and (min-width: 721px) {
   .maze-layout { grid-template-columns: minmax(0, 1fr) 250px; gap: 18px; }
 }

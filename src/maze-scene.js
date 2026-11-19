@@ -1,12 +1,17 @@
 import * as THREE from 'three';
 import {mazePoint,sampleMazeWalk,mazeCameraFrame} from './maze-motion.js';
+import {mazeEncounters} from './maze-core.js';
 
 const el=(tag,cls)=>{const node=document.createElement(tag);node.className=cls;return node;};
 export function createMazeScene(host,board,{onBusyChange=()=>{}}={}){
   const world=el('div','maze-world'),caption=el('p','maze-motion-status'),toggle=el('button','maze-scene-mode');
-  caption.id='maze-motion-status';caption.setAttribute('role','status');caption.tabIndex=-1;toggle.id='maze-scene-mode';toggle.type='button';host.prepend(world);host.append(toggle,caption);
+  const entrance=el('span','maze-landmark maze-landmark--start'),exit=el('span','maze-landmark maze-landmark--goal');
+  const effectBadge=el('span','maze-effect-badge');
+  entrance.textContent='起点';exit.textContent='出口';effectBadge.hidden=true;
+  for(const badge of [entrance,exit,effectBadge])badge.setAttribute('aria-hidden','true');
+  caption.id='maze-motion-status';caption.setAttribute('role','status');caption.tabIndex=-1;toggle.id='maze-scene-mode';toggle.type='button';host.prepend(world);host.append(entrance,exit,effectBadge,toggle,caption);
   const media=matchMedia('(prefers-reduced-motion: reduce)'),scene=new THREE.Scene(),camera=new THREE.OrthographicCamera(-6,6,6,-6,.1,80),layout=new THREE.Group(),player=new THREE.Group(),gate=new THREE.Group(),confetti=new THREE.Group();scene.add(layout,player,gate,confetti);
-  const geometry={box:new THREE.BoxGeometry(1,1,1),sphere:new THREE.SphereGeometry(1,14,10),cylinder:new THREE.CylinderGeometry(.5,.5,1,12),star:new THREE.OctahedronGeometry(.12),smile:new THREE.TorusGeometry(.052,.009,6,12,Math.PI)};
+  const geometry={box:new THREE.BoxGeometry(1,1,1),sphere:new THREE.SphereGeometry(1,14,10),cylinder:new THREE.CylinderGeometry(.5,.5,1,12),star:new THREE.OctahedronGeometry(.12),smile:new THREE.TorusGeometry(.052,.009,6,12,Math.PI),ring:new THREE.RingGeometry(.27,.35,32)};
   const materials=new Map(),paperMaterials=[];
   function material(color){if(!materials.has(color))materials.set(color,new THREE.MeshStandardMaterial({color,roughness:.73,metalness:.02}));return materials.get(color);}
   function mesh(kind,color,size,position,parent=scene){const node=new THREE.Mesh(geometry[kind],material(color));node.scale.set(...size);node.position.set(...position);node.castShadow=true;node.receiveShadow=true;parent.add(node);return node;}
@@ -14,13 +19,17 @@ export function createMazeScene(host,board,{onBusyChange=()=>{}}={}){
   const sun=new THREE.DirectionalLight('#fff1d0',2.6);sun.position.set(-5,12,8);sun.castShadow=true;sun.shadow.mapSize.set(512,512);Object.assign(sun.shadow.camera,{left:-8,right:8,top:9,bottom:-8,near:1,far:35});sun.shadow.normalBias=.025;sun.shadow.bias=-.0003;
   scene.add(new THREE.HemisphereLight('#fff7e4','#a3baa0',2.2),sun);
   // The explorer uses shared primitives so rounds never create another avatar or renderer.
-  mesh('cylinder','#6f9fb7',[.31,.37,.29],[0,.48,0],player);mesh('box','#d4b46a',[.20,.23,.10],[0,.49,-.17],player);
+  player.scale.setScalar(1.35);
+  const ringMaterial=new THREE.MeshBasicMaterial({color:'#176078',toneMapped:false});
+  const ring=new THREE.Mesh(geometry.ring,ringMaterial);
+  ring.rotation.x=-Math.PI/2;ring.position.y=-.027;player.add(ring);
+  mesh('cylinder','#397fa4',[.31,.37,.29],[0,.48,0],player);mesh('box','#d4b46a',[.20,.23,.10],[0,.49,-.17],player);
   mesh('sphere','#edc498',[.18,.18,.17],[0,.80,0],player);mesh('sphere','#e8bc57',[.20,.11,.20],[0,.925,0],player);mesh('box','#e8bc57',[.37,.035,.12],[0,.92,.16],player);
   for(const x of [-.06,.06])mesh('sphere','#3d4a40',[.024,.028,.022],[x,.81,.16],player);
   const smile=mesh('smile','#946b4c',[1,1,1],[0,.755,.171],player);smile.rotation.z=Math.PI;
   const legs=[],arms=[];
   for(const sign of [-1,1]){const leg=new THREE.Group();leg.position.set(sign*.085,.29,0);player.add(leg);mesh('cylinder','#587b88',[.10,.25,.10],[0,-.13,0],leg);mesh('box','#8d7355',[.12,.075,.19],[0,-.27,.045],leg);legs.push(leg);
-    const arm=new THREE.Group();arm.position.set(sign*.21,.62,0);player.add(arm);mesh('cylinder','#6f9fb7',[.08,.22,.08],[0,-.12,0],arm);mesh('sphere','#edc498',[.055,.055,.055],[0,-.25,0],arm);arms.push(arm);}
+    const arm=new THREE.Group();arm.position.set(sign*.21,.62,0);player.add(arm);mesh('cylinder','#397fa4',[.08,.22,.08],[0,-.12,0],arm);mesh('sphere','#edc498',[.055,.055,.055],[0,-.25,0],arm);arms.push(arm);}
   mesh('box','#af8d67',[.035,.8,.035],[-4.62,.4,-3]);mesh('box','#d88972',[.30,.19,.025],[-4.48,.71,-3]);
   for(const x of [-.42,.42])mesh('box','#dcb65c',[.10,1.2,.14],[x,.6,.23],gate);mesh('box','#e9c66e',[.95,.13,.16],[0,1.22,.23],gate);mesh('star','#ecd078',[1,1,1],[0,1.54,.23],gate);
   const gateGlow=material('#e9c66e');gateGlow.emissive.set('#d5a83e');gateGlow.emissiveIntensity=.12;
@@ -30,19 +39,46 @@ export function createMazeScene(host,board,{onBusyChange=()=>{}}={}){
   function rest(){legs.forEach(n=>n.rotation.set(0,0,0));arms.forEach(n=>n.rotation.set(0,0,0));player.rotation.z=0;}
   function status(){
     host.dataset.renderMode=simple||!available?'flat':'3d';host.dataset.motion=motion?.kind??'idle';host.dataset.avatarCell=String(settledCell);host.setAttribute('aria-busy',String(Boolean(motion)));
-    caption.textContent=(host.dataset.renderMode==='3d'?'3D迷宫 · ':'平面迷宫 · ')+(motion?.kind==='walk'?'读对啦，小人正在走向下一格…':motion?.kind==='celebrate'?'到达出口！跳起来一起庆祝！':state?.phase==='complete'?'找到出口，可以选择下一课啦':'先读字，老师确认后小人再前进');
+    const reveal=motion?.kind==='walk'&&motion.revealed;
+    host.toggleAttribute('data-encounter-pending',Boolean(motion?.kind==='walk'&&motion.encounter&&!reveal));
+    effectBadge.hidden=!reveal||!motion?.pausing;
+    caption.textContent=(host.dataset.renderMode==='3d'?'3D迷宫 · ':'平面迷宫 · ')+(reveal?state.feedback:motion?.kind==='walk'?'读对啦，小人正在走向下一格…':motion?.kind==='celebrate'?'到达出口！跳起来一起庆祝！':state?.phase==='complete'?'找到出口，可以选择下一课啦':'先读字，老师确认后小人再前进');
     toggle.textContent=host.dataset.renderMode==='3d'?'平面显示':'立体显示';toggle.setAttribute('aria-label',host.dataset.renderMode==='3d'?'切换平面迷宫':'切换立体迷宫');toggle.disabled=!available;
   }
   function project(){
     const width=world.clientWidth,height=world.clientHeight;
+    const flat=simple||!available;
+    const occupied=motion?.kind==='walk'?[motion.path[motion.segment],motion.path[motion.segment+1]]:[state?.position];
     for(const button of board.querySelectorAll('[data-maze-cell]')){
-      const index=Number(button.dataset.mazeCell);button.classList.toggle('has-pawn',index===state?.position||(motion?.kind==='walk'&&index===motion.from));
-      if(simple||!available){for(const key of ['position','left','top','width','height','transform'])button.style.removeProperty(key);button.querySelector('strong').style.removeProperty('font-size');continue;}
+      const index=Number(button.dataset.mazeCell);
+      button.classList.toggle('has-pawn',occupied.includes(index));
+      if(flat){for(const key of ['position','left','top','width','height','transform'])button.style.removeProperty(key);button.querySelector('strong').style.removeProperty('font-size');continue;}
       if(!width||!height)continue;const point=new THREE.Vector3(...mazePoint(index)).project(camera),horizontal=new THREE.Vector3(mazePoint(index)[0]+.94,.14,mazePoint(index)[2]).project(camera),vertical=new THREE.Vector3(mazePoint(index)[0],.14,mazePoint(index)[2]+.94).project(camera);
       const w=Math.abs(horizontal.x-point.x)*width/2,h=Math.abs(vertical.y-point.y)*height/2;
       Object.assign(button.style,{position:'absolute',left:`${(point.x+1)*width/2}px`,top:`${(1-point.y)*height/2}px`,width:`${w}px`,height:`${h}px`,transform:'translate(-50%,-50%)'});
       const label=button.querySelector('strong'),length=Math.max(1,Array.from(label.textContent).length);
       label.style.fontSize=`${Math.max(12,Math.min(64,(w-4)/length,h-3))}px`;
+    }
+    if(flat){
+      const cells=board.querySelectorAll('.maze-cell'),frame=host.getBoundingClientRect();
+      for(const [badge,index]of [[entrance,0],[exit,80]]){
+        if(!cells[index])continue;
+        const tile=cells[index].getBoundingClientRect();
+        badge.style.left=`${tile.left+tile.width/2-frame.left-host.clientLeft}px`;
+        badge.style.top=`${tile.top+tile.height/2-frame.top-host.clientTop}px`;
+      }
+    }else if(width&&height){
+      placeBadge(entrance,[-4,.62,-4]);placeBadge(exit,[4,.62,4.32]);
+      if(!effectBadge.hidden){
+        const [x,,z]=mazePoint(motion.encounter.cell);
+        placeBadge(effectBadge,[x,1.6,z]);
+      }
+    }
+    function placeBadge(badge,point){
+      const projected=new THREE.Vector3(...point).project(camera);
+      const margin=badge.offsetWidth/2+4;
+      badge.style.left=`${Math.min(width-margin,Math.max(margin,(projected.x+1)*width/2))}px`;
+      badge.style.top=`${(1-projected.y)*height/2}px`;
     }
   }
   function draw(){if(disposed||!active||document.hidden||simple||!available||!renderer)return;try{renderer.render(scene,camera);}catch{fallback();}}
@@ -59,25 +95,49 @@ export function createMazeScene(host,board,{onBusyChange=()=>{}}={}){
   function tick(now){
     frame=0;if(!motion||disposed||!allowed()){finish();return;}const t=Math.max(0,Math.min(1,(now-motion.start)/motion.duration));
     if(motion.kind==='walk'){
-      const pose=sampleMazeWalk(motion.from,motion.to,t);player.position.set(...pose.position);player.rotation.y=pose.heading;legs.forEach((leg,i)=>leg.rotation.x=pose.swing*(i?1:-1));arms.forEach((arm,i)=>arm.rotation.x=pose.swing*(i?-1:1));draw();if(!motion||disposed)return;
-      if(t>=1){settledCell=state.position;rest();if(motion.win){celebrate(now);frame=requestAnimationFrame(tick);}else finish();}else frame=requestAnimationFrame(tick);return;
+      if(motion.pausing){
+        if(t>=1){motion.pausing=false;motion.start=now;motion.duration=330;status();project();}
+        frame=requestAnimationFrame(tick);return;
+      }
+      const from=motion.path[motion.segment],to=motion.path[motion.segment+1];
+      const pose=sampleMazeWalk(from,to,t);player.position.set(...pose.position);player.rotation.y=pose.heading;
+      legs.forEach((leg,i)=>leg.rotation.x=pose.swing*(i?1:-1));arms.forEach((arm,i)=>arm.rotation.x=pose.swing*(i?-1:1));
+      draw();if(!motion||disposed)return;
+      if(t>=1){
+        settledCell=to;rest();motion.segment++;
+        if(motion.segment===motion.path.length-1){
+          if(motion.win){celebrate(now);frame=requestAnimationFrame(tick);}else finish();
+          return;
+        }
+        if(motion.segment===1&&motion.encounter){
+          motion.revealed=true;motion.pausing=true;motion.duration=600;
+          effectBadge.textContent=mazeEncounters[motion.encounter.kind].icon;
+        }
+        motion.start=now;status();project();
+      }
+      frame=requestAnimationFrame(tick);return;
     }
     const goal=mazePoint(state.goal);player.position.set(goal[0],goal[1]+Math.abs(Math.sin(t*3*Math.PI))*.42*(1-t*.5),goal[2]);player.rotation.z=Math.sin(t*6*Math.PI)*.06;arms.forEach((arm,i)=>arm.rotation.z=(i?1:-1)*(2.4+Math.sin(t*10*Math.PI)*.18));confetti.visible=true;gateGlow.emissiveIntensity=.12+Math.sin(t*Math.PI)*.8;
     paperMaterials.forEach(m=>m.opacity=Math.sin(t*Math.PI)*.9);confetti.children.forEach((paper,i)=>{const angle=i*2.399963,r=.12+.66*Math.sin(t*Math.PI)*(.55+(i%4)*.13);paper.position.set(goal[0]+Math.cos(angle)*r,goal[1]+.4+2.2*Math.sin(t*Math.PI)*(.5+(i%7)/14),goal[2]+Math.sin(angle)*r);paper.rotation.set(t*9+i,t*7+i*.5,t*10+i*.3);});
     draw();if(t>=1)finish();else frame=requestAnimationFrame(tick);
   }
-  const observer=new ResizeObserver(resize);observer.observe(world);
+  const observer=new ResizeObserver(resize);observer.observe(world);observer.observe(board);
   function visibility(){if(document.hidden)finish();else resize();}
   function preference(){if(media.matches)finish();}
   document.addEventListener('visibilitychange',visibility);media.addEventListener('change',preference);
   const api={update(next){
     const previous=state,fresh=previous?.grid!==next.grid;state=next;
     if(fresh){finish();layout.clear();tiles=new Map();next.grid.forEach((open,index)=>{const [x,,z]=mazePoint(index);if(open){const tile=mesh('box','#fff3d7',[.965,.09,.965],[x,.035,z],layout);tile.castShadow=false;tiles.set(index,tile);}else{mesh('box','#608568',[.98,.58,.98],[x,.29,z],layout);mesh('box','#829b72',[.94,.045,.94],[x,.60,z],layout);}});gate.position.set(...mazePoint(next.goal));settledCell=next.position;player.position.set(...mazePoint(next.position));player.rotation.y=Math.PI/2;}
-    for(const [index,tile]of tiles)tile.material=material(index===next.pendingIndex?'#ecd18a':index===next.position?'#b8d4af':next.visited.includes(index)?'#dae6bc':'#fff3d7');
-    if(!fresh&&previous.position!==next.position){finish();state=next;const from=previous.position,to=next.position,a=mazePoint(from),b=mazePoint(to);
-      if(allowed()&&Math.abs(a[0]-b[0])+Math.abs(a[2]-b[2])===1){settledCell=from;player.position.set(...a);motion={kind:'walk',from,to,win:next.phase==='complete',start:performance.now(),duration:620};status();onBusyChange(true);frame=requestAnimationFrame(tick);}else finish();
+    for(const [index,tile]of tiles)tile.material=material(index===next.pendingIndex?'#ecd18a':index===next.position?'#b8d4af':index===next.start?'#b6ddd7':index===next.goal?'#f7d67c':next.visited.includes(index)?'#dae6bc':'#fff3d7');
+    if(!fresh&&previous.steps!==next.steps&&next.move){
+      finish();
+      if(allowed()){
+        settledCell=previous.position;player.position.set(...mazePoint(settledCell));
+        motion={kind:'walk',path:[settledCell,...next.move.path],segment:0,encounter:next.move.encounter,win:next.phase==='complete',start:performance.now(),duration:620};
+        status();onBusyChange(true);frame=requestAnimationFrame(tick);
+      }
     }
     status();resize();
-  },get isAnimating(){return Boolean(motion);},setActive(value){active=Boolean(value);if(!active)finish();else resize();},setSimple(value){simple=Boolean(value)||!available;finish();resize();},dispose(){disposed=true;active=false;finish();observer.disconnect();document.removeEventListener('visibilitychange',visibility);media.removeEventListener('change',preference);renderer?.domElement.removeEventListener('webglcontextlost',lost);renderer?.domElement.removeEventListener('webglcontextrestored',restored);Object.values(geometry).forEach(g=>g.dispose());materials.forEach(m=>m.dispose());paperMaterials.forEach(m=>m.dispose());sun.shadow.dispose();renderer?.dispose();world.remove();toggle.remove();caption.remove();}};
+  },get isAnimating(){return Boolean(motion);},setActive(value){active=Boolean(value);if(!active)finish();else resize();},setSimple(value){simple=Boolean(value)||!available;finish();resize();},dispose(){disposed=true;active=false;finish();observer.disconnect();document.removeEventListener('visibilitychange',visibility);media.removeEventListener('change',preference);renderer?.domElement.removeEventListener('webglcontextlost',lost);renderer?.domElement.removeEventListener('webglcontextrestored',restored);Object.values(geometry).forEach(g=>g.dispose());materials.forEach(m=>m.dispose());paperMaterials.forEach(m=>m.dispose());ringMaterial.dispose();sun.shadow.dispose();renderer?.dispose();world.remove();entrance.remove();exit.remove();effectBadge.remove();toggle.remove();caption.remove();}};
   toggle.onclick=()=>api.setSimple(!simple);status();return api;
 }

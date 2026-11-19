@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {mazeRoute,followMazeRoute} from '../maze/route.js';
 const labels=['识字翻翻乐','打地鼠','汉字迷宫','汉字拼图','笔画很忙','组词小工坊','女巫的毒药','汉字建筑师','汉字数独','句子小火车','情景探索'];
 const key='hanzi-flip.question-bank';
 const questions=[{id:'bright',grade:1,character:'明',pinyin:'míng',words:['明月','明月'],sentence:'明月真美。'}];
@@ -46,8 +47,7 @@ test('a full available lesson traverses five native games and celebrates on the 
  await page.locator('#open-island-map').click();await page.getByRole('button',{name:'按顺序闯关',exact:true}).click();
  await finishFlip(page);await page.locator('#journey-next').click();await page.locator('[data-mole-slot][data-status="up"]').click();await expect(page.locator('#journey-next')).toBeEnabled();await page.locator('#journey-next').click();
  await page.locator('#maze-start').click();
- const route=await page.locator('[data-maze-cell]').evaluateAll(nodes=>{const open=new Set(nodes.map(n=>Number(n.dataset.mazeCell))),queue=[[9]],seen=new Set([9]);while(queue.length){const p=queue.shift(),last=p.at(-1);if(last===71)return p;for(const n of [last-9,last+9,last-1,last+1])if(open.has(n)&&!seen.has(n)&&Math.abs(Math.floor(n/9)-Math.floor(last/9))+Math.abs(n%9-last%9)===1){seen.add(n);queue.push([...p,n]);}}return [];});
- expect(route.length).toBeGreaterThan(2);for(const index of route.slice(1)){await page.locator(`[data-maze-cell="${index}"]`).click();await page.locator('#maze-confirm').click();}
+ await followMazeRoute(page,await mazeRoute(page));
  await page.locator('#journey-next').click();await expect(page.locator('#mode-strokes')).toHaveAttribute('aria-pressed','true');
  await expect(page.getByRole('button',{name:'触屏描写',exact:true})).toHaveAttribute('aria-pressed','true');
  await page.getByRole('button',{name:'拖动笔画',exact:true}).click();

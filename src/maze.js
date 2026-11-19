@@ -1,4 +1,5 @@
 import {createMazeScene} from './maze-scene.js';
+import {mazeEncounters} from './maze-core.js';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const button=(id,text,primary=false)=>{const b=el('button',text,primary?'primary':'');b.id=id;return b;};
 export function createMazeView(host,dispatch){
@@ -15,7 +16,10 @@ export function createMazeView(host,dispatch){
   function adjacent(a,b){return Math.abs(Math.floor(a/9)-Math.floor(b/9))+Math.abs(a%9-b%9)===1;}
   function prepare(){
     host.append(el('span','OBSERVE · READ · EXPLORE','maze-kicker'),el('h3','观察路线，认字出发'),el('p',model.pool.label,'maze-course'));
-    const intro=el('div',undefined,'maze-intro');intro.append(el('div','🧭','maze-compass'),el('p','先观察通道和岔路，找一找出口在哪里。'),el('p','学生选择相邻汉字并朗读；读对后老师确认，才能前进一步。遇到死路，可以退回来继续找路。'));
+    const intro=el('div',undefined,'maze-intro');intro.append(el('div','🧭','maze-compass'),el('p','先观察通道和岔路。选相邻的格子，读对汉字后前进。'));
+    const rules=el('ul',undefined,'maze-encounter-rules');
+    for(const effect of Object.values(mazeEncounters))rules.append(el('li',`${effect.icon} ${effect.name} ${effect.text}`));
+    intro.append(rules,el('p','机关藏在格子里，每个只触发一次。'));
     const chips=el('div',undefined,'maze-word-chips');for(const word of model.pool.words.slice(0,30))chips.append(el('span',word.word));intro.append(chips);
     if(!model.pool.words.length)intro.append(el('p','当前范围没有可用生字，请换课或打开题库管理。','maze-empty'));
     const start=button('maze-start','观察好了，开始迷宫',true);start.disabled=!model.pool.words.length;intro.append(start);host.append(intro);
@@ -27,19 +31,34 @@ export function createMazeView(host,dispatch){
       const index=row*9+col,cell=el('div',undefined,`maze-cell${state.grid[index]?'':' maze-wall'}`);cell.setAttribute('role','gridcell');
       if(state.grid[index]){
         const b=el('button');b.dataset.mazeCell=index;b.disabled=state.phase==='complete'||!adjacent(state.position,index);b.setAttribute('aria-label',`${index===state.start?'起点，':index===state.goal?'出口，':''}第${row+1}行第${col+1}列，${state.cells[index].word}`);
-        b.append(el('strong',state.cells[index].word));if(index===state.position){b.setAttribute('aria-current','location');b.classList.add('is-current');b.append(el('span','🙂','maze-marker'));}else if(index===state.start||index===state.goal)b.append(el('span',index===state.start?'🚩':'🏁','maze-marker'));
-        if(state.visited.includes(index))b.classList.add('is-visited');if(index===state.pendingIndex)b.classList.add('is-pending');if(index===state.goal)b.classList.add('is-exit');cell.append(b);
+        b.append(el('strong',state.cells[index].word));
+        if(index===state.position){
+          b.setAttribute('aria-current','location');b.classList.add('is-current');
+          const pawn=el('span','🧍','maze-marker');pawn.setAttribute('aria-hidden','true');b.append(pawn);
+        }
+        if(state.visited.includes(index))b.classList.add('is-visited');if(index===state.pendingIndex)b.classList.add('is-pending');
+        if(index===state.start)b.classList.add('is-start');if(index===state.goal)b.classList.add('is-exit');cell.append(b);
       }line.append(cell);
-    }board.append(line);}left.append(sceneHost,el('p','🚩 起点　🏁 出口　🙂 小人的位置','maze-legend'));layout.append(left);
-    const desk=el('section',undefined,'maze-desk'),progress=el('p',`已走 ${state.steps} 步`,'maze-progress');progress.id='maze-progress';progress.setAttribute('role','status');desk.append(progress);
+    }board.append(line);}left.append(sceneHost);layout.append(left);
+    const desk=el('section',undefined,'maze-desk'),progress=el('p',`已认读 ${state.steps} 次`,'maze-progress');progress.id='maze-progress';progress.setAttribute('role','status');desk.append(progress);
+    const encounter=state.move?.encounter;
     if(state.phase==='complete'){
       const arrival=el('p','小人正在迈出最后一步…','maze-arrival-message');arrival.id='maze-arrival-message';arrival.hidden=true;const celebration=el('div',undefined,'maze-celebration');celebration.id='maze-celebration';if(newlyWon)celebration.classList.add('is-new-win');celebration.append(el('div','🏆 ✨','maze-trophy'),el('h4','观察 + 认字，找到出口！'));desk.append(arrival,celebration);
     }else{
-      const prompt=el('div',undefined,'maze-read-prompt'),word=state.pendingIndex===null?null:state.cells[state.pendingIndex];prompt.append(el('span',word?'请大声读出这个字':'先观察，再选择相邻格','maze-kicker'));
-      if(word){const han=el('strong',word.word);han.id='maze-read-word';prompt.append(han);if(model.showPinyin&&word.pinyin)prompt.append(el('small',word.pinyin,'maze-read-pinyin'));}else prompt.append(el('p','只走上下左右一格。走到死路，可以退回来。'));desk.append(prompt);
+      const prompt=el('div',undefined,'maze-read-prompt'),word=state.pendingIndex===null?null:state.cells[state.pendingIndex];
+      if(encounter){
+        const effect=mazeEncounters[encounter.kind];
+        prompt.id='maze-encounter';prompt.dataset.kind=encounter.kind;prompt.setAttribute('role','status');
+        const icon=el('span',effect.icon,'maze-encounter-icon');icon.setAttribute('aria-hidden','true');
+        prompt.append(icon,el('strong',`${effect.name}！${effect.text}`,'maze-encounter-result'));
+      }else{
+        prompt.append(el('span',word?'请大声读出这个字':'先观察，再选择相邻格','maze-kicker'));
+        if(word){const han=el('strong',word.word);han.id='maze-read-word';prompt.append(han);if(model.showPinyin&&word.pinyin)prompt.append(el('small',word.pinyin,'maze-read-pinyin'));}else prompt.append(el('p','只走上下左右一格。走到死路，可以退回来。'));
+      }
+      desk.append(prompt);
       const confirm=button('maze-confirm','读对了，前进一步',true),cancel=button('maze-cancel','先不走，重新选');confirm.disabled=cancel.disabled=state.pendingIndex===null;desk.append(confirm,cancel,el('p','读错先重读；老师确认后才移动。','maze-note'));
     }
-    const feedback=el('p',state.feedback,'maze-feedback');feedback.setAttribute('role','status');desk.append(feedback);layout.append(desk);host.append(layout);
+    const feedback=el('p',encounter?'':state.feedback,'maze-feedback');feedback.setAttribute('role','status');desk.append(feedback);layout.append(desk);host.append(layout);
     const controls=el('div',undefined,'maze-bottom-controls');controls.append(button('maze-restart','再走一张迷宫'));host.append(controls);
   }
   host.addEventListener('click',event=>{const b=event.target.closest('button');if(!b||b.disabled||!host.contains(b))return;if(b.dataset.mazeCell!==undefined){if(!sceneView?.isAnimating)dispatch('cell',Number(b.dataset.mazeCell));return;}const intent={'maze-start':'start','maze-confirm':'confirm','maze-cancel':'cancel','maze-restart':'restart'}[b.id];if(sceneView?.isAnimating&&['confirm','cancel'].includes(intent))return;if(intent)dispatch(intent);},{signal:controller.signal});

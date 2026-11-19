@@ -15,10 +15,26 @@ it('selection never moves; teacher confirmation is required and walls or non-adj
   const target=neighbors(initial.position,initial.grid)[0],selected=selectMazeCell(initial,target);expect(selected.position).toBe(initial.position);expect(selected.steps).toBe(0);expect(cancelMazeStep(selected).pendingIndex).toBeNull();
   const moved=confirmMazeStep(selected);expect(moved.position).toBe(target);expect(moved.steps).toBe(1);expect(confirmMazeStep(moved)).toBe(moved);expect(initial.position).toBe(initial.start);
 });
-it('a route must be read step by step, completion is terminal, and new rounds/inputs remain independent',()=>{
-  const input=words();let state=createMazeState({words:input});input[0].word='改';expect(state.words[0].word).toBe('中');const path=route(state);for(const index of path.slice(1))state=confirmMazeStep(selectMazeCell(state,index));
+it('a route reaches the exit after the three one-time encounters, and new rounds are independent',()=>{
+  const input=words();let state=createMazeState({words:input});input[0].word='改';expect(state.words[0].word).toBe('中');
+  const path=route(state);
+  const effects=[];
+  for (let attempts=0;state.phase==='play'&&attempts<path.length+6;attempts++) {
+    const from=path.indexOf(state.position);
+    const selected=selectMazeCell(state,path[from+1]);
+    expect(selected.position).toBe(state.position);
+    state=confirmMazeStep(selected);
+    const encounter=state.move?.encounter;
+    if (!encounter) continue;
+    effects.push(encounter.kind);
+    const offset={bomb:-1,hedgehog:-2,butterfly:3}[encounter.kind];
+    expect(state.position).toBe(path[from+1+offset]);
+    const direction=Math.sign(offset);
+    expect(state.move.path).toEqual(Array.from({length:1+Math.abs(offset)},(_,i)=>path[from+1+i*direction]));
+  }
+  expect(effects).toEqual(['bomb','hedgehog','butterfly']);
   expect(state.phase).toBe('complete');expect(state.position).toBe(state.goal);expect(state.steps).toBe(path.length-1);expect(selectMazeCell(state,path.at(-2))).toBe(state);expect(confirmMazeStep(state)).toBe(state);expect(Object.isFrozen(state.grid)).toBe(true);
-  const next=createMazeState({words:state.words});expect(next.steps).toBe(0);expect(next.position).toBe(next.start);
+  const next=createMazeState({words:state.words});expect(next.steps).toBe(0);expect(next.position).toBe(next.start);expect(next.usedTraps).toEqual([]);
   for(const bad of [[],[{id:'a',word:'abc'}],[{id:'a',word:'中'},{id:'a',word:'人'}]])expect(()=>createMazeState({words:bad})).toThrow();
 });
 it('a large personal-grade pool remains playable without truncating or rejecting saved characters',()=>{
