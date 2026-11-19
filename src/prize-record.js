@@ -118,7 +118,7 @@ export function mountPrizeRecord(app) {
     marks.setAttribute('role', 'img');
     marks.setAttribute('aria-label', `已积攒 ${stamps} 个章，满 10 个可兑换礼物`);
     for (let index = 0; index < 10; index++) {
-      const mark = node('span', index < stamps ? '★' : '', index < stamps ? 'prize-stamp is-filled' : 'prize-stamp');
+      const mark = node('span', index < stamps ? '♥' : '', index < stamps ? 'prize-stamp is-filled' : 'prize-stamp');
       mark.setAttribute('aria-hidden', 'true');
       marks.append(mark);
     }
