@@ -38,6 +38,11 @@ test('the explorer walks onto a bomb, reveals it, and retreats only on the first
   await page.locator('#maze-confirm').click();
   await expect(scene.locator('.maze-effect-badge')).toBeVisible();
   await expect(scene).toHaveAttribute('data-avatar-cell',String(route[3]));
+  await expect(scene).toHaveAttribute('data-expression','startled');
+  expect((await scene.locator('.maze-effect-badge').boundingBox()).width).toBeGreaterThan(110);
+  await page.waitForTimeout(850);
+  await expect(scene.locator('.maze-effect-badge')).toBeVisible();
+  await expect(scene).toHaveAttribute('data-avatar-cell',String(route[3]));
   await expect(page.locator('#maze-encounter')).toHaveText(/炸弹！后退 1 步/);
   await expect(trap).toBeDisabled();
   await expect(scene).toHaveAttribute('data-motion','idle');
@@ -46,6 +51,24 @@ test('the explorer walks onto a bomb, reveals it, and retreats only on the first
   await expect(scene).toHaveAttribute('data-motion','idle');
   await expect(scene).toHaveAttribute('data-avatar-cell',String(route[3]));
   await expect(page.locator('#maze-encounter')).toHaveCount(0);
+});
+test('maze English directions are optional and independent of pronunciation hints',async({page})=>{
+  await page.goto('/?mode=maze');
+  const english=page.getByRole('checkbox',{name:'英文指令'}),pinyin=page.getByRole('checkbox',{name:'拼音提示'});
+  await expect(english).toBeVisible();
+  await expect(english).not.toBeChecked();
+  await english.check();
+  await expect(page.locator('#maze-start').getByText('Start the maze',{exact:true})).toBeVisible();
+  await page.locator('#maze-start').click();
+  await page.locator('[data-maze-cell="10"]').click();
+  await expect(page.getByText('Read this character aloud.',{exact:true})).toBeVisible();
+  await expect(page.locator('#maze-read-word [lang=en], [data-maze-cell] [lang=en]')).toHaveCount(0);
+  await expect(pinyin).not.toBeChecked();
+  await pinyin.check();
+  await expect(page.locator('.maze-read-pinyin')).toBeVisible();
+  await english.uncheck();
+  await expect(page.getByText('Read this character aloud.',{exact:true})).toHaveCount(0);
+  await expect(page.locator('.maze-read-pinyin')).toBeVisible();
 });
 test('projected character buttons support touch and fit both phone and projector',async({browser,baseURL})=>{
   const context=await browser.newContext({baseURL,viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'no-preference'}),page=await context.newPage();await page.goto('/?mode=maze');const saved=await page.evaluate(()=>localStorage.getItem('hanzi-flip.question-bank'));await page.locator('#maze-start').tap();await expect(page.locator('#maze-scene canvas')).toBeVisible();await page.locator('[data-maze-cell="10"]').tap();await page.locator('#maze-confirm').tap();await expect(page.locator('#maze-scene')).toHaveAttribute('data-avatar-cell','10');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'docs/codex/poison/maze-3d-mobile.png',fullPage:true});

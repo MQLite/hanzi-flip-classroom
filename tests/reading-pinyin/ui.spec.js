@@ -46,7 +46,8 @@ test('building translates the directions while keeping the drawn word and readin
   await page.locator('#mode-poison').click();
   await expect(toggle).not.toBeChecked();
   await page.locator('#mode-maze').click();
-  await expect(toggle).toBeHidden();
+  await expect(toggle).toBeVisible();
+  await expect(toggle).not.toBeChecked();
   await page.locator('#mode-building').click();
   await expect(toggle).toBeChecked();
   await expect(page.locator('#hanzi-building')).toHaveAttribute('data-phase','cleared');

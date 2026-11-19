@@ -5,9 +5,9 @@ const sample=(random,n)=>{const value=Number(random());return Math.floor((Number
 function neighbors(index,grid){return [index-9,index+9,index-1,index+1].filter(n=>n>=0&&n<81&&grid[n]&&Math.abs(Math.floor(n/9)-Math.floor(index/9))+Math.abs(n%9-index%9)===1);}
 
 export const mazeEncounters=Object.freeze({
-  bomb:Object.freeze({icon:'💣', name:'炸弹', text:'后退 1 步', steps:-1}),
-  hedgehog:Object.freeze({icon:'🦔', name:'刺猬', text:'后退 2 步', steps:-2}),
-  butterfly:Object.freeze({icon:'🦋', name:'蝴蝶', text:'前进 3 步', steps:3}),
+  bomb:Object.freeze({icon:'💣', name:'炸弹', text:'后退 1 步', english:'Bomb! Go back 1 step.', steps:-1}),
+  hedgehog:Object.freeze({icon:'🦔', name:'刺猬', text:'后退 2 步', english:'Hedgehog! Go back 2 steps.', steps:-2}),
+  butterfly:Object.freeze({icon:'🦋', name:'蝴蝶', text:'前进 3 步', english:'Butterfly! Move forward 3 steps.', steps:3}),
 });
 
 function routeToExit(grid){

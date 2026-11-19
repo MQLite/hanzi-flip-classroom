@@ -94,6 +94,7 @@ const optionalPinyinModes=new Set(['building','maze','poison']);
 function englishInstructionHost(){
   if(gameMode==='building')return $('#hanzi-building');
   if(gameMode==='poison')return $('#witch-poison');
+  if(gameMode==='maze')return $('#hanzi-maze');
   return null;
 }
 const englishInstructionToggle=$('#english-instructions');
@@ -179,6 +180,8 @@ let poisonState=null,poisonWon=false,poisonPool=null,poisonSelectedIds=[],poison
 let poisonSoundEnabled=true;
 $('.lesson-toolbar').insertAdjacentHTML('beforeend','<label id="poison-sound-label" hidden><input id="poison-sound" type="checkbox" checked> 中毒与解救音效</label>');
 $('#poison-sound').onchange=event=>{poisonSoundEnabled=event.target.checked;render();};
+$('.lesson-toolbar').insertAdjacentHTML('beforeend','<label id="maze-sound-label" hidden><input id="maze-sound" type="checkbox" checked> 机关音效</label>');
+$('#maze-sound').onchange=event=>mazeView.setSoundEnabled(event.target.checked);
 let buildingState=null,buildingPool=null,buildingSelectedIds=[],buildingStructure='house',buildingSentenceId='';
 let mazeState=null,mazePool=null;
 let constructionPool=null,puzzleState=null,strokeState=null,handwritingState=null;
@@ -589,6 +592,7 @@ function switchMode(mode, linkedSelection, journeyTransfer=false) {
   $('#hanzi-building').hidden=mode!=='building';$('#mode-building').setAttribute('aria-pressed',String(mode==='building'));
   $('#witch-poison').hidden=mode!=='poison';$('#mode-poison').setAttribute('aria-pressed',String(mode==='poison'));
   $('#poison-sound-label').hidden=mode!=='poison';$('#poison-sound').checked=poisonSoundEnabled;
+  $('#maze-sound-label').hidden=mode!=='maze';
   $('#mole').hidden=mode!=='mole';$('#mole-content-label').hidden=mode!=='mole';$('#mole-content').value=moleType;
   $('#mode-mole').setAttribute('aria-pressed',String(mode==='mole'));
   $('.classroom').hidden=mode==='explore';
@@ -882,7 +886,9 @@ function render() {
   if(gameMode==='maze'){
     strokeCleanup?.();strokeCleanup=null;cardStrokeCleanup?.();cardStrokeCleanup=null;cardStrokeKey=null;cardStrokeView=null;$('#card-face').replaceChildren();
     for(const id of ['#extension-toggle','#extension-hint','#extension'])$(id).hidden=true;
-    $('#round-caption').textContent='观察岔路 · 读字前进';mazeView.update({state:mazeState,pool:mazePool,showPinyin});return;
+    $('#round-caption').textContent='观察岔路 · 读字前进';mazeView.update({state:mazeState,pool:mazePool,showPinyin});
+    syncEnglishInstructions($('#hanzi-maze'));
+    return;
   }
   if(gameMode==='building'){
     strokeCleanup?.();strokeCleanup=null;cardStrokeCleanup?.();cardStrokeCleanup=null;cardStrokeKey=null;cardStrokeView=null;

@@ -78,15 +78,73 @@
   font-size: clamp(20px, 3.2vw, 53px);
 }
 .maze-effect-badge {
-  padding: .16em;
-  border: 2px solid #e2bf72;
-  border-radius: 50%;
-  background: #fff3c9;
-  box-shadow: 0 4px 18px #62451952;
-  font-size: clamp(32px, 4vw, 66px);
-  line-height: 1;
+  top: 46%;
+  left: 50%;
+  z-index: 5;
+  isolation: isolate;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: clamp(12px, 2vw, 28px);
+  width: min(clamp(272px, 24vw, 390px), 90%);
+  border: 3px solid #c58e52;
+  border-radius: 23px;
+  background: #fff3d2;
+  color: #5c3429;
+  box-shadow: 0 10px 38px #413c3080;
+  text-align: center;
 }
 .maze-effect-badge[hidden] { display: none; }
+.maze-effect-badge[data-kind="hedgehog"] { background: #fff0d8; border-color: #9f754e; color: #583921; }
+.maze-effect-badge[data-kind="butterfly"] { background: #e7f7fa; border-color: #64969b; color: #24575f; }
+.maze-effect-icon {
+  position: relative;
+  font: 600 clamp(72px, 10vw, 155px)/1.08 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;
+}
+.maze-effect-message { font: 750 clamp(19px, 2.2vw, 36px)/1.2 system-ui, sans-serif; }
+.maze-effect-message .game-instruction-english { font-size: clamp(11px, 1.4vw, 19px); }
+@media (prefers-reduced-motion: no-preference) {
+  .maze-effect-badge[data-kind="bomb"] .maze-effect-icon { animation: maze-bomb-pop 1s ease-in-out both; }
+  .maze-effect-badge[data-kind="bomb"] .maze-effect-icon::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: .12em;
+    border-radius: 50%;
+    border: 4px solid #dd9662;
+    animation: maze-bomb-ring 1s ease-out both;
+  }
+  .maze-effect-badge[data-kind="hedgehog"] .maze-effect-icon { animation: maze-hedgehog-roll 1.18s ease-in-out both; }
+  .maze-effect-badge[data-kind="butterfly"] .maze-effect-icon { animation: maze-butterfly-flutter 1.4s ease-in-out both; }
+}
+@keyframes maze-bomb-pop {
+  0% { transform: scale(.78) rotate(-8deg); }
+  25% { transform: scale(1.04) rotate(6deg); }
+  40% { transform: scale(.92) rotate(-7deg); }
+  58% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+@keyframes maze-bomb-ring {
+  0%, 45% { opacity: 0; transform: scale(.55); }
+  57% { opacity: .8; transform: scale(.9); }
+  100% { opacity: 0; transform: scale(1.65); }
+}
+@keyframes maze-hedgehog-roll {
+  0% { transform: translateX(18%) rotate(18deg) scale(.86); }
+  32% { transform: translateX(-13%) rotate(-24deg) scale(.94); }
+  57% { transform: translateX(6%) rotate(12deg); }
+  76% { transform: translateX(-4%) rotate(-7deg); }
+  100% { transform: none; }
+}
+@keyframes maze-butterfly-flutter {
+  0% { transform: translate(-11%, 12%) rotate(-14deg) scaleX(.62); }
+  15% { transform: translate(-8%, 1%) rotate(-9deg) scaleX(1.07); }
+  33% { transform: translate(-3%, -3%) rotate(5deg) scaleX(.56); }
+  50% { transform: translate(3%, -10%) rotate(8deg) scaleX(1.08); }
+  65% { transform: translate(5%, -14%) rotate(12deg) scaleX(.64); }
+  82% { transform: translate(3%, -7%) rotate(6deg) scaleX(1.04); }
+  100% { transform: none; }
+}
 .maze-encounter-rules {
   display: flex;
   flex-wrap: wrap;
@@ -100,9 +158,18 @@
 }
 #maze-encounter { background: #fff1d4; border-color: #ddbf7c; }
 #maze-encounter[data-kind="butterfly"] { background: #e6f1f1; border-color: #9cbebc; }
-.maze-layout:has(.maze-stage[data-encounter-pending]) #maze-encounter > * { visibility: hidden; }
+.maze-layout:has(.maze-stage[data-encounter-pending]) #maze-encounter > *,
+.maze-layout:has(.maze-effect-badge:not([hidden])) #maze-encounter .maze-encounter-icon { visibility: hidden; }
 .maze-encounter-icon { font-size: clamp(45px, 5.2vw, 84px); line-height: 1; }
 #maze-encounter .maze-encounter-result { font: 750 clamp(18px, 1.9vw, 31px)/1.4 system-ui, sans-serif; }
+#hanzi-maze.show-english-instructions .maze-motion-status { padding: 2px 4px; line-height: 14px; }
+.maze-motion-status .game-instruction-english { margin: 0; font-size: 10px; line-height: 13px; }
+.maze-bottom-controls button { display: inline-flex; align-items: center; gap: 8px; }
+.maze-bottom-controls .game-instruction-english { margin: 0; }
+.maze-landmark .game-instruction-english { margin: 0; line-height: 1; }
+.maze-landmark--start .game-instruction-english { color: #fff; }
+#maze-sound-label { display: flex; flex-direction: row; align-items: center; gap: 5px; white-space: nowrap; }
+#maze-sound-label[hidden] { display: none; }
 @media (max-width: 1000px) and (min-width: 721px) {
   .maze-layout { grid-template-columns: minmax(0, 1fr) 250px; gap: 18px; }
 }
