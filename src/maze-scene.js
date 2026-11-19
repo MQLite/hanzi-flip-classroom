@@ -38,9 +38,11 @@ export function createMazeScene(host,board,{onBusyChange=()=>{}}={}){
     for(const button of board.querySelectorAll('[data-maze-cell]')){
       const index=Number(button.dataset.mazeCell);button.classList.toggle('has-pawn',index===state?.position||(motion?.kind==='walk'&&index===motion.from));
       if(simple||!available){for(const key of ['position','left','top','width','height','transform'])button.style.removeProperty(key);button.querySelector('strong').style.removeProperty('font-size');continue;}
-      if(!width||!height)continue;const point=new THREE.Vector3(...mazePoint(index)).project(camera),horizontal=new THREE.Vector3(mazePoint(index)[0]+.87,.14,mazePoint(index)[2]).project(camera),vertical=new THREE.Vector3(mazePoint(index)[0],.14,mazePoint(index)[2]+.87).project(camera);
+      if(!width||!height)continue;const point=new THREE.Vector3(...mazePoint(index)).project(camera),horizontal=new THREE.Vector3(mazePoint(index)[0]+.94,.14,mazePoint(index)[2]).project(camera),vertical=new THREE.Vector3(mazePoint(index)[0],.14,mazePoint(index)[2]+.94).project(camera);
       const w=Math.abs(horizontal.x-point.x)*width/2,h=Math.abs(vertical.y-point.y)*height/2;
-      Object.assign(button.style,{position:'absolute',left:`${(point.x+1)*width/2}px`,top:`${(1-point.y)*height/2}px`,width:`${w}px`,height:`${h}px`,transform:'translate(-50%,-50%)'});button.querySelector('strong').style.fontSize=`${Math.max(15,Math.min(24,w*.67,h*.82))}px`;
+      Object.assign(button.style,{position:'absolute',left:`${(point.x+1)*width/2}px`,top:`${(1-point.y)*height/2}px`,width:`${w}px`,height:`${h}px`,transform:'translate(-50%,-50%)'});
+      const label=button.querySelector('strong'),length=Math.max(1,Array.from(label.textContent).length);
+      label.style.fontSize=`${Math.max(12,Math.min(64,(w-4)/length,h-3))}px`;
     }
   }
   function draw(){if(disposed||!active||document.hidden||simple||!available||!renderer)return;try{renderer.render(scene,camera);}catch{fallback();}}

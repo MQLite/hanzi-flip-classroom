@@ -8,8 +8,13 @@ it('maps actual start and exit cells to a consistent3D board and only walks one 
   for(const [from,to]of [[9,11],[8,9],[9,19],[-1,0]])expect(()=>sampleMazeWalk(from,to,.5)).toThrow();
 });
 it('keeps board, avatar and exit celebration bounds in frame on phone and projector',()=>{
-  for(const aspect of [346/360,432/420,365/330]){
+  const bounds=[
+    {xs:[-4.85,4.85],ys:[-.3,.65],zs:[-4.85,4.85]},
+    {xs:[-4.3,4.3],ys:[.14,1.35],zs:[-4.3,4.3]},
+    {xs:[3.2,4.8],ys:[.14,2.9],zs:[2.15,3.85]},
+  ];
+  for(const aspect of [346/360,432/420,365/330,852/440,1098/780]){
     const frame=mazeCameraFrame(aspect),camera=new THREE.OrthographicCamera(frame.left,frame.right,frame.top,frame.bottom,.1,80);camera.position.set(...frame.position);camera.lookAt(...frame.target);camera.updateMatrixWorld(true);camera.updateProjectionMatrix();
-    for(const x of [-4.8,4.8])for(const y of [-.25,2.9])for(const z of [-4.8,4.8]){const point=new THREE.Vector3(x,y,z).project(camera);expect(Math.abs(point.x)).toBeLessThan(.96);expect(Math.abs(point.y)).toBeLessThan(.96);}
+    for(const {xs,ys,zs}of bounds)for(const x of xs)for(const y of ys)for(const z of zs){const point=new THREE.Vector3(x,y,z).project(camera);expect(Math.abs(point.x)).toBeLessThan(.96);expect(Math.abs(point.y)).toBeLessThan(.96);}
   }
 });

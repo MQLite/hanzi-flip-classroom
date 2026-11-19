@@ -24,5 +24,17 @@ test('no WebGL retains the complete native read-gated maze',async({page})=>{
 });
 test('projected character buttons support touch and fit both phone and projector',async({browser,baseURL})=>{
   const context=await browser.newContext({baseURL,viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'no-preference'}),page=await context.newPage();await page.goto('/?mode=maze');const saved=await page.evaluate(()=>localStorage.getItem('hanzi-flip.question-bank'));await page.locator('#maze-start').tap();await expect(page.locator('#maze-scene canvas')).toBeVisible();await page.locator('[data-maze-cell="10"]').tap();await page.locator('#maze-confirm').tap();await expect(page.locator('#maze-scene')).toHaveAttribute('data-avatar-cell','10');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'docs/codex/poison/maze-3d-mobile.png',fullPage:true});
-  await page.setViewportSize({width:1280,height:720});await expect(page.locator('[data-maze-cell="9"]')).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollHeight)).toBeLessThanOrEqual(720);await page.locator('[data-maze-cell="9"]').click();await expect(page.locator('#maze-read-word')).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollHeight)).toBeLessThanOrEqual(720);await page.screenshot({path:'docs/codex/poison/maze-3d-projector.png',fullPage:true});expect(await page.evaluate(()=>localStorage.getItem('hanzi-flip.question-bank'))).toBe(saved);await context.close();
+  for(const {width,height,minFont}of [{width:1280,height:720,minFont:30},{width:1920,height:1080,minFont:55}]){
+    await page.setViewportSize({width,height});await expect(page.locator('[data-maze-cell="9"]')).toBeVisible();
+    await expect.poll(()=>page.locator('[data-maze-cell="9"] strong').evaluate(n=>parseFloat(getComputedStyle(n).fontSize))).toBeGreaterThanOrEqual(minFont);
+    expect((await page.locator('.maze-world').boundingBox()).width).toBeGreaterThan(650);
+    expect(await page.evaluate(()=>document.documentElement.scrollHeight)).toBeLessThanOrEqual(height);
+    const clipped=await page.locator('[data-maze-cell]').evaluateAll(nodes=>nodes.filter(n=>{const cell=n.getBoundingClientRect(),world=n.closest('.maze-stage').querySelector('.maze-world').getBoundingClientRect();return cell.left<world.left||cell.right>world.right||cell.top<world.top||cell.bottom>world.bottom;}).length);
+    expect(clipped).toBe(0);
+    await page.screenshot({path:`docs/codex/poison/maze-3d-projector-${height}.png`,fullPage:true});
+  }
+  await page.locator('[data-maze-cell="9"]').click();await expect(page.locator('#maze-read-word')).toBeVisible();
+  await page.locator('#maze-scene-mode').click();await expect(page.locator('#maze-scene')).toHaveAttribute('data-render-mode','flat');
+  expect(parseFloat(await page.locator('[data-maze-cell="9"] strong').evaluate(n=>getComputedStyle(n).fontSize))).toBeGreaterThanOrEqual(50);
+  expect(await page.evaluate(()=>localStorage.getItem('hanzi-flip.question-bank'))).toBe(saved);await context.close();
 });

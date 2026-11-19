@@ -11,3 +11,41 @@
 @media(max-width:720px){.maze-stage{max-width:360px}.maze-world{height:360px}.maze-motion-status{font-size:9px;padding-inline:3px}.maze-scene-mode{font-size:9px;padding:4px 6px}}
 @media(prefers-reduced-motion:reduce){.maze-celebration.is-new-win{animation:none}}
 @media(min-width:1000px) and (max-height:800px){.maze-mode .maze-legend{display:none}#hanzi-maze>h3{margin-block:2px}.maze-mode .maze-course{margin:2px 0 4px;line-height:1.4}.maze-mode main{padding-bottom:0}.maze-read-prompt{padding:12px 10px;gap:9px}.maze-desk>button{margin:8px 0}.maze-note,.maze-feedback{margin:6px 0}}
+
+/* Give the board the main classroom area, with reading controls beside it. */
+.maze-mode { --maze-view-height: clamp(430px, calc(100dvh - 280px), 770px); }
+.maze-mode main { max-width: 1800px; }
+#hanzi-maze:is([data-phase="play"], [data-phase="complete"]) > :is(h3, .maze-course) { display: none; }
+.maze-layout {
+  grid-template-columns: minmax(0, 1fr) clamp(260px, 25vw, 360px);
+  gap: 24px;
+  max-width: none;
+}
+.maze-stage { width: 100%; max-width: 1100px; }
+.maze-world { height: auto; aspect-ratio: 1.18; max-height: var(--maze-view-height); }
+.maze-board { width: min(100%, var(--maze-view-height)); max-width: none; }
+.maze-cell button strong { font-size: clamp(22px, 2.8vw, 56px); font-weight: 600; line-height: 1; }
+.maze-stage[data-render-mode="3d"] .maze-cell button strong { line-height: 1; }
+.maze-legend { display: none; }
+.maze-motion-status { font-size: 12px; }
+.maze-scene-mode { font-size: 11px; padding: 6px 10px; }
+.maze-progress { font-size: 15px; }
+.maze-read-prompt { min-height: 200px; }
+.maze-read-prompt > strong { font-size: clamp(76px, 6.4vw, 110px); }
+.maze-read-pinyin { font-size: 22px; }
+.maze-desk > button { min-height: 48px; font-size: 16px; }
+.maze-note, .maze-feedback { font-size: 12px; }
+.maze-bottom-controls button { font-size: 12px; }
+@media (max-width: 1000px) and (min-width: 721px) {
+  .maze-layout { grid-template-columns: minmax(0, 1fr) 250px; gap: 18px; }
+}
+@media (max-width: 720px) {
+  .maze-mode .play-area { padding: 10px 5px; }
+  .maze-layout { grid-template-columns: 1fr; gap: 14px; }
+  .maze-stage { max-width: none; }
+  .maze-world { aspect-ratio: 1.02; max-height: none; }
+  .maze-board { width: 100%; }
+  .maze-read-prompt { min-height: 145px; }
+  .maze-read-prompt > strong { font-size: 64px; }
+  .maze-motion-status { font-size: 10px; }
+}
