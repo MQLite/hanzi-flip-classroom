@@ -6,6 +6,8 @@ import {chineseNumber, classCount, dateEnglish, datePart, englishNumber, line, n
 import './birthday-survey.css';
 
 const sessionKey = 'hanzi-flip.birthday-survey.v1';
+const classDatePrefix = id => `hanzi-flip.birthday-survey.class.v1:${encodeURIComponent(id)}:`;
+const classDateKey = (classId,studentId) => classDatePrefix(classId)+encodeURIComponent(studentId);
 const manualClass = 'survey/temporary';
 const dragType = 'application/x-birthday-token';
 const englishList = new Intl.ListFormat('en',{type:'conjunction'});
@@ -26,12 +28,15 @@ function restore() {
 }
 
 const saved = restore();
+const tabDates = new Map();
 const dates = new Map();
 if (Array.isArray(saved.dates)) {
   for (const row of saved.dates) {
     if (!Array.isArray(row)) continue;
     const [id,date] = row;
-    if (typeof id === 'string' && date && validBirthday(date.month,date.day)) dates.set(id,date);
+    if (typeof id === 'string' && date && validBirthday(date.month,date.day)) {
+      tabDates.set(id,{month:date.month,day:date.day});
+    }
   }
 }
 let temporary = Array.isArray(saved.temporary) ? saved.temporary.filter(student =>
@@ -57,8 +62,53 @@ function students() {
   return groups.find(group => group.id === groupId)?.students ?? [];
 }
 
+function readClassDate(classId,studentId) {
+  const key=classDateKey(classId,studentId);
+  const date=tabDates.get(studentId);
+  try {
+    const stored=localStorage.getItem(key);
+    if (stored!==null) {
+      tabDates.delete(studentId);
+      return JSON.parse(stored);
+    }
+    if (date) {
+      localStorage.setItem(key,JSON.stringify(date));
+      tabDates.delete(studentId);
+    }
+    return date;
+  } catch {
+    return tabDates.get(studentId);
+  }
+}
+
+function loadClassDates() {
+  dates.clear();
+  for (const {id} of students()) {
+    const date=groupId===manualClass ? tabDates.get(id) : readClassDate(groupId,id);
+    if (date && validBirthday(date.month,date.day)) dates.set(id,date);
+  }
+}
+
+function saveDate(date) {
+  if (groupId!==manualClass) {
+    try {
+      // A cleared record also supersedes any older copy left in a tab.
+      localStorage.setItem(classDateKey(groupId,activeId),JSON.stringify(date));
+    } catch {
+      renderCopy(status,line('The browser could not save this change. Please try again.',
+        part('浏览器未能保存这次修改，','liúlǎnqì wèi néng bǎocún zhè cì xiūgǎi,'),part('请重试。','qǐng chóngshì.')));
+      return false;
+    }
+  }
+  if (date && groupId===manualClass) tabDates.set(activeId,date);
+  else tabDates.delete(activeId);
+  if (date) dates.set(activeId,date);
+  else dates.delete(activeId);
+  return true;
+}
+
 function persist() {
-  try { sessionStorage.setItem(sessionKey,JSON.stringify({groupId,dates:[...dates],temporary,showPinyin,showEnglish})); }
+  try { sessionStorage.setItem(sessionKey,JSON.stringify({groupId,dates:[...tabDates],temporary,showPinyin,showEnglish})); }
   catch { /* Keep the current activity usable when browser storage is off. */ }
 }
 
@@ -249,6 +299,7 @@ function changeClass(id) {
   groupId=id;
   status.textContent='';
   revealed=false;
+  loadClassDates();
   renderClasses();
   chooseStudent(firstUnanswered());
   renderChart();
@@ -257,14 +308,16 @@ function changeClass(id) {
 
 select.addEventListener('change',()=>changeClass(select.value));
 window.addEventListener('storage',event=>{
-  if (event.key!==PRIZE_RECORD_KEY && event.key!==null) return;
-  classes.refresh();
-  groups=classes.get().record.classes;
-  if (groupId!==manualClass && !groups.some(group=>group.id===groupId)) {
-    changeClass(findBirthdayClass(groups)?.id ?? '');
-    return;
-  }
-  renderClasses();
+  if (event.key===PRIZE_RECORD_KEY || event.key===null) {
+    classes.refresh();
+    groups=classes.get().record.classes;
+    if (groupId!==manualClass && !groups.some(group=>group.id===groupId)) {
+      changeClass(findBirthdayClass(groups)?.id ?? '');
+      return;
+    }
+    renderClasses();
+  } else if (!groupId || groupId===manualClass || !event.key.startsWith(classDatePrefix(groupId))) return;
+  loadClassDates();
   if (!students().some(student=>student.id===activeId)) chooseStudent(firstUnanswered());
   else renderRecorder();
   renderChart();
@@ -276,7 +329,7 @@ get('survey-manual-form').addEventListener('submit',event=>{
   const prior=temporary;
   temporary=names.map((name,index)=>prior[index]?.name===name ? prior[index] : {id:'survey/'+crypto.randomUUID(),name});
   const currentIds=new Set(temporary.map(student=>student.id));
-  for (const student of prior) if (!currentIds.has(student.id)) dates.delete(student.id);
+  for (const student of prior) if (!currentIds.has(student.id)) tabDates.delete(student.id);
   get('survey-manual').open=false;
   changeClass(manualClass);
 });
@@ -292,7 +345,7 @@ dateForm.addEventListener('submit',event=>{
   const all=students();
   const active=all.find(student=>student.id===activeId);
   if (!active || !validBirthday(month,day)) return;
-  dates.set(activeId,{month,day});
+  if (!saveDate({month,day})) return;
   renderCopy(status,line(`Recorded ${active.name}’s birthday for ${dateEnglish(month,'month')} ${dateEnglish(day,'day')}.`,
     part('已记录：','yǐ jìlù:'),part(active.name+'，'),datePart(month,'month'),datePart(day,'day'),part('。')));
   const start=all.indexOf(active)+1;
@@ -303,7 +356,7 @@ dateForm.addEventListener('submit',event=>{
   persist();
 });
 get('survey-remove').addEventListener('click',()=>{
-  dates.delete(activeId);
+  if (!dates.has(activeId) || !saveDate(null)) return;
   revealed=false;
   chooseStudent(activeId);
   renderCopy(status,line('Cleared. You can enter the birthday again.',part('已清除，','yǐ qīngchú,'),part('可以重新录入。','kěyǐ chóngxīn lùrù.')));
@@ -359,6 +412,14 @@ get('survey-manual-names').value=temporary.map(student=>student.name).join('\n')
 journey.decorate();
 renderStaticSurveyCopy(document,{onJourney:Boolean(journey.returnUrl)});
 applyLanguages();
+// Transfer earlier recordings from all known classes before this tab is closed.
+for (const group of groups) {
+  for (const {id} of group.students) {
+    if (tabDates.has(id)) readClassDate(group.id,id);
+  }
+}
+loadClassDates();
 renderClasses();
 chooseStudent(firstUnanswered());
 renderChart();
+persist();

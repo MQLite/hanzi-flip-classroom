@@ -107,7 +107,9 @@ const fixed = {
   results: line('Which month has the most birthdays?',part('生日','shēngrì'),part('是几月','shì jǐ yuè'),part('的人','de rén'),part('最多？','zuì duō?')),
   reveal: line('Show the answer',part('揭晓','jiēxiǎo'),part('答案','dá’àn')),
   sharing: line('Who has a birthday in the same month?',part('还有谁和谁','hái yǒu shéi hé shéi'),part('同一个月','tóng yí ge yuè'),part('生日？','shēngrì?')),
-  footer: line('The month and day are saved in this tab.',part('生日调查','shēngrì diàochá'),part('只记录月和日，','zhǐ jìlù yuè hé rì,'),part('数据保存在当前标签页。','shùjù bǎocún zài dāngqián biāoqiānyè.')),
+  footer: line('Birthday months and days are saved by class in this browser. Temporary lists stay in this tab.',
+    part('生日只记录月和日，','shēngrì zhǐ jìlù yuè hé rì,'),part('按班级保存在此浏览器。','àn bānjí bǎocún zài cǐ liúlǎnqì.'),
+    part('临时名单只保留在当前标签页。','línshí míngdān zhǐ bǎoliú zài dāngqián biāoqiānyè.')),
 };
 
 export function renderStaticSurveyCopy(root,{onJourney=false}={}) {

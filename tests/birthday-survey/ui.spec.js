@@ -100,3 +100,45 @@ test('a fresh browser can enter a temporary class and record by taps without pag
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await page.screenshot({path:testInfo.outputPath('birthday-phone.png')});
 });
+
+test('saved birthdays and statistics survive closing the tab and stay separate by class',async({page,context})=>{
+  await page.goto('/birthday-survey.html');
+  await page.evaluate(({key,original,datesKey})=>{
+    localStorage.setItem(key,original);
+    // Earlier versions stored birthdays only in the tab, including for inactive classes.
+    sessionStorage.setItem(datesKey,JSON.stringify({groupId:'fr',dates:[
+      ['french-1',{month:2,day:29}],['private-other',{month:12,day:18}],
+    ]}));
+  },{key,original,datesKey});
+  await page.reload();
+  await expect(page.locator('.survey-cylinder')).toContainText('二十九号',{useInnerText:true});
+  await token(page,'month',2).click();
+  await token(page,'day',20).click();
+  await page.getByRole('button',{name:'记录生日',exact:true}).click();
+  await page.close();
+
+  const reopened=await context.newPage();
+  await reopened.goto('/birthday-survey.html');
+  const classPicker=reopened.getByLabel('奖励记录班级');
+  const cylinders=reopened.locator('.survey-cylinder');
+  await classPicker.selectOption('other');
+  await expect(cylinders).toHaveCount(1);
+  await expect(cylinders).toContainText('十八号',{useInnerText:true});
+  await classPicker.selectOption('fr');
+  await expect(cylinders).toHaveCount(2);
+  await expect(cylinders.nth(0)).toContainText('二十九号',{useInnerText:true});
+  await expect(cylinders.nth(1)).toContainText('二十号',{useInnerText:true});
+  await reopened.getByRole('button',{name:'揭晓答案'}).click();
+  await expect(reopened.locator('#survey-answer')).toContainText('二月生日的人最多，有两人。',{useInnerText:true});
+
+  await reopened.locator('[data-student="french-1"]').click();
+  await reopened.locator('#survey-remove').click();
+  await reopened.close();
+  const afterClearing=await context.newPage();
+  await afterClearing.goto('/birthday-survey.html');
+  await expect(afterClearing.locator('.survey-cylinder')).toHaveCount(1);
+  await expect(afterClearing.locator('.survey-cylinder')).toContainText('二十号',{useInnerText:true});
+  await afterClearing.getByLabel('奖励记录班级').selectOption('other');
+  await expect(afterClearing.locator('.survey-cylinder')).toContainText('十八号',{useInnerText:true});
+  expect(await afterClearing.evaluate(key=>localStorage.getItem(key),key)).toBe(original);
+});
