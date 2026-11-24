@@ -40,6 +40,8 @@ button:disabled { cursor: default; opacity: .48; }
 .survey-lesson { color: #4e7164; font-size: .88rem; font-weight: 650; margin: 7px 0 3px; }
 .survey h1 { margin: 0; font-size: clamp(26px,3.3vw,49px); line-height: 1.2; }
 .survey-jump { display: inline-block; margin-top: 6px; }
+.survey-teacher-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px; margin-top: 10px; }
+#survey-migration-status:empty { display: none; }
 .survey-language { position: absolute; top: 12px; right: 16px; display: flex; gap: 12px; }
 .survey-language label { display: inline-flex; align-items: center; gap: 4px; font-size: .9rem; }
 .survey-language input { accent-color: #275e51; }

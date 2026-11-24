@@ -165,3 +165,34 @@ test('saved birthdays and statistics survive closing the tab and stay separate b
   await expect(afterClearing.locator('.survey-cylinder')).toContainText('十八号',{useInnerText:true});
   expect(await afterClearing.evaluate(key=>localStorage.getItem(key),key)).toBe(original);
 });
+
+test('migration sends only rosters and birthday dates to the configured teacher page',async({page,context})=>{
+  const teacher='https://hanzi-birthday-teacher.carl0123.chatgpt.site/';
+  await page.addInitScript(({key,original})=>{
+    const sample=JSON.parse(original);
+    sample.classes[1].students[0].history=[{id:'private-stamp',kind:'homework',at:'2026-01-01T00:00:00.000Z'}];
+    localStorage.setItem(key,JSON.stringify(sample));
+  },{key,original});
+  await page.goto('/birthday-survey.html');
+  await token(page,'month',2).click();
+  await token(page,'day',14).click();
+  await page.locator('#survey-save').click();
+  const origin=new URL(page.url()).origin;
+  await context.route(teacher+'?from=hanzi',route=>route.fulfill({contentType:'text/html',body:`<script>
+    const sourceOrigin=${JSON.stringify(origin)};
+    addEventListener('message',event=>{
+      if (event.origin!==sourceOrigin || event.data?.nonce!=='test-transfer') return;
+      window.received=event.data.data;
+      opener.postMessage({type:'hanzi-birthday-imported'},sourceOrigin);
+    });
+    opener.postMessage({type:'hanzi-birthday-ready',nonce:'test-transfer'},sourceOrigin);
+  </script>`}));
+  const popupReady=page.waitForEvent('popup');
+  await page.locator('#survey-migrate').click();
+  const popup=await popupReady;
+  await expect.poll(()=>popup.evaluate(()=>window.received?.classes?.length)).toBe(2);
+  const received=await popup.evaluate(()=>window.received);
+  expect(received.classes[1].students[0]).toEqual({id:'french-1',name:roster[0].name,birthday:{month:2,day:14}});
+  expect(JSON.stringify(received)).not.toContain('private-stamp');
+  await expect(page.locator('#survey-migration-status')).toHaveText('记录已迁移到教师页。',{useInnerText:true});
+});

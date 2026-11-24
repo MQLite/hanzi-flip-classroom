@@ -105,6 +105,8 @@ const fixed = {
   lesson: line('Chinese Paradise · Book Two, Part A · Lesson Four',part('汉语乐园','Hànyǔ Lèyuán'),part(' · '),part('第二册上','dì èr cè shàng'),part(' · '),part('第四课','dì sì kè')),
   question: line('When is your birthday?',part('你的','nǐ de'),part('生日','shēngrì'),part('是','shì'),part('几月几号？','jǐ yuè jǐ hào?')),
   jump: line('See the birthday chart',part('看','kàn'),part('生日统计','shēngrì tǒngjì'),part(' ↓')),
+  teacher: line('Open the private teacher page',part('登录','dēnglù'),part('教师页','jiàoshī yè')),
+  migrate: line('Move this browser’s records to the teacher page',part('迁移到','qiānyí dào'),part('教师页','jiàoshī yè')),
   class: line('Prize Record class',part('奖励记录','jiǎnglì jìlù'),part('班级','bānjí')),
   temporary: line('Use a temporary list',part('使用','shǐyòng'),part('临时名单','línshí míngdān')),
   names: line('One name per line',part('每行','měi háng'),part('一个','yí ge'),part('姓名','xìngmíng')),

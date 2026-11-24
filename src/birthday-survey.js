@@ -7,6 +7,7 @@ import './birthday-survey.css';
 
 const classDatePrefix = id => `hanzi-flip.birthday-survey.class.v1:${encodeURIComponent(id)}:`;
 const classDateKey = (classId,studentId) => classDatePrefix(classId)+encodeURIComponent(studentId);
+const teacherPage = new URL('https://hanzi-birthday-teacher.carl0123.chatgpt.site/');
 const manualClass = 'survey/temporary';
 const dragType = 'application/x-birthday-token';
 const englishList = new Intl.ListFormat('en',{type:'conjunction'});
@@ -112,6 +113,7 @@ function renderClasses() {
   select.value = groupId;
   const french = findBirthdayClass(groups);
   const warning = classes.get().warning;
+  get('survey-migrate').disabled=!groups.some(group=>group.students.length);
   const count=students().length;
   const message=warning ? line('Prize Record is unavailable. Use a temporary list.',part('暂时无法读取奖励记录。','zànshí wúfǎ dúqǔ jiǎnglì jìlù.'),part('可以使用临时名单。','kěyǐ shǐyòng línshí míngdān.'))
     : groupId===manualClass ? line('Using a temporary list.',part('当前使用','dāngqián shǐyòng'),part('临时名单。','línshí míngdān.'))
@@ -121,6 +123,36 @@ function renderClasses() {
       part('本浏览器','běn liúlǎnqì'),part('没有找到','méiyǒu zhǎodào'),part(' Ecole Francaise。'),part('请用保存过奖励记录的','qǐng yòng bǎocún guo jiǎnglì jìlù de'),part('浏览器打开本站，','liúlǎnqì dǎkāi běnzhàn,'),part('或使用临时名单。','huò shǐyòng línshí míngdān.'));
   renderCopy(get('survey-roster-note'),message);
 }
+
+get('survey-teacher').href=teacherPage.href;
+let migrationWindow=null;
+let migrationSent=false;
+get('survey-migrate').addEventListener('click',()=>{
+  const transfer=new URL(teacherPage);
+  transfer.searchParams.set('from','hanzi');
+  migrationSent=false;
+  migrationWindow=window.open(transfer.href,'hanzi-birthday-teacher');
+  const message=migrationWindow
+    ? line('Sign in to the teacher page, then confirm the transfer there.',
+      part('请登录教师页，','qǐng dēnglù jiàoshī yè,'),part('再在教师页确认迁移。','zài zài jiàoshī yè quèrèn qiānyí.'))
+    : line('Allow pop-ups for this site and try again.',
+      part('请允许本站打开弹窗，','qǐng yǔnxǔ běnzhàn dǎkāi tánchuāng,'),part('然后重试。','ránhòu chóngshì.'));
+  renderCopy(get('survey-migration-status'),message);
+});
+window.addEventListener('message',event=>{
+  if (!migrationWindow || event.origin!==teacherPage.origin || event.source!==migrationWindow) return;
+  if (event.data?.type==='hanzi-birthday-ready' && !migrationSent && typeof event.data.nonce==='string') {
+    classes.refresh();
+    const snapshot=classes.get().record.classes.map(group=>({id:group.id,name:group.name,
+      students:group.students.map(student=>({id:student.id,name:student.name,birthday:readClassDate(group.id,student.id)??null}))}));
+    migrationSent=true;
+    migrationWindow.postMessage({type:'hanzi-birthday-roster',nonce:event.data.nonce,data:{schema:1,classes:snapshot}},teacherPage.origin);
+  } else if (event.data?.type==='hanzi-birthday-imported' && migrationSent) {
+    renderCopy(get('survey-migration-status'),line('Your records have been transferred to the teacher page.',
+      part('记录已迁移到','jìlù yǐ qiānyí dào'),part('教师页。','jiàoshī yè.')));
+    migrationWindow=null;
+  }
+});
 
 function chooseStudent(id) {
   activeId = id;
