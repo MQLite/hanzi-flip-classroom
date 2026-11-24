@@ -14,6 +14,7 @@ export default defineConfig({
         city: fileURLToPath(new URL('./city.html', import.meta.url)),
         doudouTime: fileURLToPath(new URL('./doudou-time.html', import.meta.url)),
         clockStop: fileURLToPath(new URL('./clock-stop.html', import.meta.url)),
+        birthdaySurvey: fileURLToPath(new URL('./birthday-survey.html', import.meta.url)),
         rivers: fileURLToPath(new URL('./rivers.html', import.meta.url)),
         room: fileURLToPath(new URL('./room.html', import.meta.url)),
       },

@@ -18,6 +18,10 @@ export const EXPLORATIONS=[{
   id:'clock-stop',source:'paradise',textbook:PARADISE_ID,stage:'2A',book:2,lesson:3,
   lessonTitle:'现在几点',title:'现在几点？',href:'./clock-stop.html',
 }, {
+  id:'birthday-survey',source:'paradise',textbook:PARADISE_ID,stage:'2A',book:2,lesson:4,
+  lessonTitle:'今天几月几号',title:'你的生日是几月几号？',href:'./birthday-survey.html',
+  description:'选班级，拖入同学的生日。看看哪一个月过生日的人最多。',
+}, {
   id:'two-rivers',source:'zhongwen',textbook:ZHONGWEN_ID,stage:'2',book:2,lesson:12,
   lessonTitle:'江河',title:'长江与黄河',href:'./rivers.html',
   description:'读出生字，坐船游长江。再读「读一读」里的词语，沿黄河一路到渤海。',
@@ -93,6 +97,17 @@ export function renderExplorations(root,selection,{urlForScenario}={}){
       tags.replaceChildren(ruby('6 轮','Liù lún'));
       link.replaceChildren(ruby('开始','Kāishǐ'),ruby('时钟','shízhōng'),ruby('游戏','yóuxì'));
       link.setAttribute('aria-label','开始时钟游戏');
+    }else if(scenario.id==='birthday-survey'){
+      card.classList.add('birthday-survey-card');
+      art.classList.add('birthday-survey-cover');
+      for(const count of [2,4,3,5,2]){
+        const column=document.createElement('span');
+        column.style.setProperty('--cover-count',count);
+        art.append(column);
+      }
+      meta.textContent='汉语乐园 · 2A · 第4课 今天几月几号';
+      tags.textContent='班级名单 · 生日统计';
+      link.textContent='开始生日调查';
     }else if(scenario.id==='two-rivers'){
       meta.textContent='中文（暨南大学版）· 第二册 · 第12课 江河';
       tags.textContent='长江 · 12 个生字　　黄河 · 12 个词语';

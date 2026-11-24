@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>生日调查 · 汉语乐园 2A</title>
+</head>
+<body>
+  <main class="survey">
+    <header class="survey-heading">
+      <a href="./?mode=explore&amp;source=paradise&amp;stage=2A&amp;lesson=4" aria-label="返回情景探索">← 返回情景探索</a>
+      <p class="survey-lesson">汉语乐园 2A · 第4课 今天几月几号</p>
+      <h1>你的生日是几月几号？</h1>
+      <a class="survey-jump" href="#results-title">看生日统计 ↓</a>
+    </header>
+    <section id="record" class="survey-panel" aria-label="生日录入">
+      <div class="survey-record-layout">
+        <aside class="survey-roster">
+          <label for="survey-class">奖励记录班级</label>
+          <select id="survey-class"></select>
+          <p id="survey-roster-note" class="survey-note"></p>
+          <details id="survey-manual">
+            <summary>使用临时名单</summary>
+            <form id="survey-manual-form">
+              <label for="survey-manual-names">每行一个姓名</label>
+              <textarea id="survey-manual-names" rows="3" required></textarea>
+              <button type="submit">使用这份名单</button>
+            </form>
+          </details>
+          <p id="survey-progress" class="survey-progress" aria-live="polite"></p>
+          <ul id="survey-roster"></ul>
+        </aside>
+        <div class="survey-entry">
+          <p class="survey-note">把月份、日期拖进对应的格子，也可以直接点选。</p>
+          <h3 id="survey-student"></h3>
+          <form id="survey-date-form">
+            <div class="survey-date-slots">
+              <div data-drop="month"><span>月份</span><strong id="survey-month-value">—</strong></div>
+              <div data-drop="day"><span>日期</span><strong id="survey-day-value">—</strong></div>
+            </div>
+            <div class="survey-entry-actions">
+              <button class="primary" id="survey-save" type="submit" disabled>记录生日</button>
+              <button id="survey-remove" type="button" hidden>清除这条生日</button>
+            </div>
+            <p id="survey-status" class="survey-note" role="status"></p>
+          </form>
+          <div class="survey-palette">
+            <div><h4>选月份</h4><div id="survey-months" class="survey-tokens"></div></div>
+            <div><h4>选日期</h4><div id="survey-days" class="survey-tokens"></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="results" class="survey-panel survey-results" aria-labelledby="results-title">
+      <div class="survey-party-flags" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="survey-section-heading">
+        <div>
+          <h2 id="results-title">生日是几月的人最多？</h2>
+          <p id="survey-result-progress"></p>
+        </div>
+        <div class="survey-result-actions">
+          <button type="button" id="survey-reveal" class="primary" disabled>揭晓答案</button>
+          <button type="button" id="survey-finish" hidden>完成调查</button>
+        </div>
+      </div>
+      <div id="survey-answer" role="status" hidden></div>
+      <div id="survey-chart"></div>
+      <div class="survey-sharing">
+        <p>还有谁和谁同一个月生日？</p>
+      </div>
+    </section>
+    <footer>生日调查仅记录月和日，数据随当前标签页保存。</footer>
+  </main>
+  <script type="module" src="/src/birthday-survey.js"></script>
+</body>
+</html>
