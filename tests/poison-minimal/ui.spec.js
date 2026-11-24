@@ -106,6 +106,7 @@ test('other lessons retain their own exact antidote sentence without source capt
 
 test('alternating character choices stays recognizable through every rotating hairstyle',async({page},testInfo)=>{
  await readPoison(page);
+ const expectedStyles={男孩:['crew-cut','curls','short','side-part'],女孩:['bob','braids','long','ponytail']};
  const artwork=page.locator('.poison-rescued-child');
  const skin=artwork.locator('[data-skin]').first();
  const hair=artwork.locator('[data-hair]').first();
@@ -139,6 +140,7 @@ test('alternating character choices stays recognizable through every rotating ha
    expect(appearance[1]).not.toBe(previous[1]);
   }
   const style=await hair.getAttribute('data-hair');
+  expect(expectedStyles[character]).toContain(style);
   const glasses=await artwork.locator('[data-glasses]').count()>0;
   const variants=appearancesByCharacter.get(character)??[];
   variants.push({skin:appearance[0],style,glasses});
@@ -148,11 +150,11 @@ test('alternating character choices stays recognizable through every rotating ha
   await expect(skin).toHaveAttribute('fill',appearance[0]);
   await expect(hair).toHaveAttribute('d',appearance[1]);
   await expect(artwork.locator('[data-glasses]')).toHaveCount(Number(glasses));
-  if(['ponytail','braids'].includes(style))await artwork.screenshot({path:testInfo.outputPath(`rescue-${index+1}.png`)});
+  if(['ponytail','braids','crew-cut','side-part'].includes(style))await artwork.screenshot({path:testInfo.outputPath(`${style}.png`)});
  }
- for(const variants of appearancesByCharacter.values()){
+ for(const [character,variants] of appearancesByCharacter){
   expect(new Set(variants.map(variant=>variant.skin)).size).toBe(5);
-  expect(variants.map(variant=>variant.style).sort()).toEqual(['bob','braids','curls','long','ponytail','short']);
+  expect([...new Set(variants.map(variant=>variant.style))].sort()).toEqual(expectedStyles[character]);
   expect(new Set(variants.map(variant=>variant.glasses))).toEqual(new Set([true,false]));
  }
 });

@@ -20,8 +20,13 @@ export function createAntidoteBottle() {
 }
 
 const skinTones = ['#ffd2a5', '#9d5e43', '#ebac79', '#75412f', '#c58356'];
-const hairStyles = [
+const boyHairStyles = [
   {name:'short',front:'M49 55q-7-27 16-32l-2-9 15 6 10-12 7 10q38 0 33 36-23-3-35-20-20 22-44 21z'},
+  {name:'crew-cut',front:'M48 58c-4-15 4-30 17-36 12-6 34-6 47 1 13 7 20 19 16 34l-7-7v-9q-33 9-66 0v9z'},
+  {name:'curls',front:'M49 61q-12-4-7-15-7-12 4-20 1-14 16-14 8-12 22-6 13-7 23 4 16-2 21 11 14 5 12 17 8 13-12 23l-3-15q-10 6-20-2-10 8-21 0-10 8-22 3l-8 10z'},
+  {name:'side-part',front:'M47 59q-5-24 14-38 21-14 48-6 22 8 20 42l-8-4-3-14q-15 2-24-12-14 25-40 25l-2 8z'},
+];
+const girlHairStyles = [
   {
     name:'ponytail',
     back:'M119 35q20-18 35-2 11 12 5 33-7 20 7 39-18 3-27-11-9-14-5-29 4-15-9-15z',
@@ -34,7 +39,6 @@ const hairStyles = [
     front:'M47 65q-3-35 15-47 26-18 50-2 20 12 17 49-24-9-41-28-16 20-41 28z',
     detail:'<path d="m35 75 13 6m-16 8 13 5m-16 9 12 4m100-32-13 6m16 8-13 5m16 9-12 4" fill="none" stroke="#fff" stroke-opacity=".36" stroke-width="2.5"/><path d="m24 111 13 4m115-4-13 4" fill="none" stroke="#ed9da5" stroke-width="5"/>',
   },
-  {name:'curls',front:'M49 61q-12-4-7-15-7-12 4-20 1-14 16-14 8-12 22-6 13-7 23 4 16-2 21 11 14 5 12 17 8 13-12 23l-3-15q-10 6-20-2-10 8-21 0-10 8-22 3l-8 10z'},
   {name:'bob',back:'M54 38Q33 54 38 96l-5 21q20 8 40-17h30q20 25 40 17l-5-21q5-42-16-58z',front:'M48 65q-7-47 34-51 46-5 47 48-22-2-34-24-15 23-47 27z'},
   {name:'long',back:'M53 41Q27 61 38 106l-8 25q12 11 41 2l6-40h22l6 40q29 9 41-2l-8-25q11-45-15-65z',front:'M47 69q-7-51 38-56 42-2 45 54-20-8-30-29-13 17-42 19l-5 17z'},
 ];
@@ -80,6 +84,7 @@ function outfitMarkup(character, color) {
 
 export function createRescuedChild(character, appearance=0) {
   const skin = skinTones[appearance % skinTones.length];
+  const hairStyles = character === 'girl' ? girlHairStyles : boyHairStyles;
   const hair = hairStyles[appearance % hairStyles.length];
   const hairColor = hairColors[(appearance + Math.floor(appearance / hairStyles.length)) % hairColors.length];
   const shirt = shirtColors[appearance % shirtColors.length];
