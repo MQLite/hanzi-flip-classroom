@@ -212,7 +212,8 @@ function preparePoison(){
   if(selection.source!=='personal')selection={...selection,scope:'lesson'};
   poisonPool=getPoisonChallengePool({...selection,grade},bank.questions);
   poisonAntidoteId=poisonPool.sentences[0]?.id??'';
-  poisonSelectedIds=poisonPool.words.slice(0,12).map(word=>word.id);poisonState=null;poisonWon=false;
+  poisonSelectedIds=poisonPool.words.slice(0,poisonPool.defaultSelectionLimit??12).map(word=>word.id);
+  poisonState=null;poisonWon=false;
 }
 $('.lesson-toolbar').insertAdjacentHTML('beforeend','<label id="mole-content-label" hidden>练习内容<select id="mole-content" aria-label="打地鼠练习内容"><option value="mixed">生字＋词语</option><option value="characters">只练生字</option><option value="words">只练词语</option></select></label>');
 $('#help-dialog').insertAdjacentHTML('beforeend','<p>打地鼠：使用当前课次已收录的生字和词语，也可只练生字或词语。每轮最多9个不同词，学生读对后老师点击对应地鼠，挥锤、加一星，读完可再玩一轮；没有倒计时，不会自动消失。所有词读对后播放庆祝特效。可开启拼音提示，每词仅计一次分，切换游戏保留本页进度。</p>');

@@ -25,6 +25,16 @@ const PARADISE_CALENDAR_READING = [
   ['睡觉', 'shuì jiào'], ['起床', 'qǐ chuáng'],
 ];
 const PARADISE_CALENDAR_REVIEW = new Set(['星期几', '几月', '几号', '昨晚', '睡觉', '起床']);
+const PARADISE_CALENDAR_DIALOGUE_DATES = [
+  ['五月一号', 'wǔ yuè yī hào'], ['十一月十一号', 'shí yī yuè shí yī hào'],
+  ['十二月二十五号', 'shí èr yuè èr shí wǔ hào'], ['六月十八号', 'liù yuè shí bā hào'],
+  ['九月十号', 'jiǔ yuè shí hào'],
+];
+const PARADISE_CALENDAR_REVIEW_DATES = [
+  ['二月十五号', 'èr yuè shí wǔ hào'], ['三月九号', 'sān yuè jiǔ hào'],
+  ['四月二十号', 'sì yuè èr shí hào'], ['七月三十号', 'qī yuè sān shí hào'],
+  ['十月十号', 'shí yuè shí hào'],
+];
 const paradiseCards = (lesson, entries) => entries.map(([word, pinyin]) => ({id:`poison/paradise/2A/${lesson}/${word}`, word, pinyin}));
 
 // Share the existing verified single-lesson pool; this game has no nine-word minimum.
@@ -48,7 +58,13 @@ export function getPoisonChallengePool(selection, questions = []) {
     const dialogue = paradiseCards(lesson, PARADISE_CALENDAR_DIALOGUE);
     const reading = paradiseCards(lesson, PARADISE_CALENDAR_READING);
     const review = [...dialogue, ...reading].filter(card => PARADISE_CALENDAR_REVIEW.has(card.word));
-    return {...pool, words:[...core, ...dialogue], readingWords:[...core, ...reading], reviewWords:[...core, ...review]};
+    return {
+      ...pool,
+      words:[...core, ...dialogue, ...paradiseCards(lesson, PARADISE_CALENDAR_DIALOGUE_DATES)],
+      defaultSelectionLimit:16,
+      readingWords:[...core, ...reading],
+      reviewWords:[...core, ...review, ...paradiseCards(lesson, PARADISE_CALENDAR_REVIEW_DATES)],
+    };
   }
   const textbook = textbookForSource(source);
   const course = source === 'personal' ? null : coursesForTextbook(textbook).find(item => item.stage === stage && item.lesson === lesson);

@@ -71,13 +71,15 @@ test('Paradise 2A lesson 3 uses the two lesson lists and the ten-word review', a
   await expect(page.getByRole('dialog',{name:'女巫被打败了！'})).toBeVisible();
 });
 
-test('Paradise 2A lesson 4 keeps calendar expressions intact in every round', async ({page}) => {
+test('Paradise 2A lesson 4 keeps all complete date cards selected and displays them in the intended rounds', async ({page}) => {
   await page.goto('/?mode=poison&source=paradise&stage=2A&lesson=4');
   const keyWords = ['今天','昨天','明天','星期'];
   const rounds = [
-    [...keyWords,'星期日','星期几','几月','几号','八月','二十一号'],
+    [...keyWords,'星期日','星期几','几月','几号','八月','二十一号',
+      '五月一号','十一月十一号','十二月二十五号','六月十八号','九月十号'],
     [...keyWords,'闹钟','太阳','屋里','昨晚','睡觉','起床'],
-    [...keyWords,'星期几','几月','几号','昨晚','睡觉','起床'],
+    [...keyWords,'星期几','几月','几号','昨晚','睡觉','起床',
+      '二月十五号','三月九号','四月二十号','七月三十号','十月十号'],
   ];
   const host = page.locator('#witch-poison');
   await expect(host.locator('[data-poison-choice][aria-pressed=true] .poison-term')).toHaveText(rounds[0]);
@@ -87,6 +89,12 @@ test('Paradise 2A lesson 4 keeps calendar expressions intact in every round', as
     if (index > 0) await host.locator('#poison-begin-hide').click();
     const cards = host.locator('[data-poison-card]');
     expect((await cards.locator('.poison-term').allTextContents()).sort()).toEqual([...terms].sort());
+    if (index === 0) {
+      await page.locator('#pinyin').check();
+      const longDate = cards.filter({has:page.getByText('十二月二十五号',{exact:true})});
+      await expect(longDate.locator('.poison-pinyin')).toHaveText('shí èr yuè èr shí wǔ hào');
+      await page.locator('#pinyin').uncheck();
+    }
     const [poison] = await hide(page);
     await host.locator(`[data-poison-card="${poison}"]`).click();
     await host.locator('#poison-antidote-skip').click();
