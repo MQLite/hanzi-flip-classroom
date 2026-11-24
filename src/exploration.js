@@ -105,7 +105,7 @@ export function renderExplorations(root,selection,{urlForScenario}={}){
         column.style.setProperty('--cover-count',count);
         art.append(column);
       }
-      meta.textContent='汉语乐园 · 2A · 第4课 今天几月几号';
+      meta.textContent='汉语乐园 · 第二册上 · 第四课 今天几月几号';
       tags.textContent='班级名单 · 生日统计';
       link.textContent='开始生日调查';
     }else if(scenario.id==='two-rivers'){

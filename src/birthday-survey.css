@@ -39,7 +39,19 @@ button:disabled { cursor: default; opacity: .48; }
 .survey-heading a { color: #366455; font-size: .9rem; text-underline-offset: 3px; }
 .survey-lesson { color: #4e7164; font-size: .88rem; font-weight: 650; margin: 7px 0 3px; }
 .survey h1 { margin: 0; font-size: clamp(26px,3.3vw,49px); line-height: 1.2; }
-.survey-jump { position: absolute; right: 19px; top: 12px; }
+.survey-jump { display: inline-block; margin-top: 6px; }
+.survey-language { position: absolute; top: 12px; right: 16px; display: flex; gap: 12px; }
+.survey-language label { display: inline-flex; align-items: center; gap: 4px; font-size: .9rem; }
+.survey-language input { accent-color: #275e51; }
+.survey rt, .survey-gloss { display: none; }
+.survey-show-pinyin .survey rt { display: ruby-text; font: 600 .58em/1.2 system-ui,sans-serif; color: inherit; }
+.survey-show-english .survey-gloss { display: block; font: 500 clamp(.7rem,.8em,1rem)/1.23 system-ui,sans-serif; white-space: normal; overflow-wrap: anywhere; }
+.survey h1 .survey-gloss { font-size: clamp(.92rem,1.8vw,1.3rem); }
+.survey h2 .survey-gloss { font-size: .94rem; }
+.survey-tokens .survey-gloss,.survey-roster-date .survey-gloss,.survey-cylinder .survey-gloss { font-size: .64rem; }
+.survey-show-pinyin .survey-tokens rt { font-size: .55em; }
+.survey-show-pinyin .survey-axis-label rt { font-size: .62em; }
+.survey-show-english .survey-axis-label .survey-gloss { font-size: .61rem; }
 .survey-panel {
   margin-top: 12px;
   background: #fffdf6;
@@ -65,7 +77,7 @@ button:disabled { cursor: default; opacity: .48; }
 #survey-roster { display: grid; gap: 4px; max-height: 226px; overflow: auto; padding: 2px; margin: 0; list-style: none; }
 #survey-roster button { display: flex; align-items: center; width: 100%; gap: 8px; justify-content: space-between; text-align: left; padding: 6px 9px; }
 .survey-name { overflow-wrap: anywhere; min-width: 0; }
-#survey-roster small { flex: 0 0 auto; color: #4b6d61; font-size: .73rem; white-space: nowrap; }
+.survey-roster-date { flex: 0 1 auto; text-align: right; color: #436358; font-size: .75rem; }
 #survey-roster button[aria-pressed="true"] { border: 2px solid #62927a; background: #def1df; font-weight: 750; }
 #survey-student { margin: 4px 0 12px; color: #234d43; font-size: clamp(23px,3vw,44px); overflow-wrap: anywhere; }
 .survey-date-slots { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -87,6 +99,7 @@ button:disabled { cursor: default; opacity: .48; }
 .survey-palette h4 { margin: 8px 0 5px; }
 .survey-palette > div + div { margin-top: 12px; }
 .survey-tokens { display: grid; grid-template-columns: repeat(12,minmax(0,1fr)); gap: 5px; }
+body:is(.survey-show-pinyin,.survey-show-english) #survey-days { grid-template-columns: repeat(auto-fit,minmax(78px,1fr)); }
 .survey-tokens button { min-width: 0; cursor: grab; padding: 4px 2px; white-space: nowrap; }
 .survey-tokens button:active { cursor: grabbing; }
 .survey-tokens button[aria-pressed="true"] { color: #193e34; background: #cae5cd; border-color: #76a18c; font-weight: 750; }
@@ -109,7 +122,8 @@ button:disabled { cursor: default; opacity: .48; }
 .survey-party-flags i:nth-child(4n+3) { background: #87c9bd; }
 .survey-party-flags i:nth-child(4n) { background: #a897d8; }
 .survey-chart-grid {
-  --person-height: 64px;
+  --base-person-height: 64px;
+  --person-height: calc(var(--base-person-height) + var(--pinyin-room, 0px) + var(--english-room, 0px));
   --top-space: 29px;
   display: grid;
   grid-template-columns: 48px minmax(0,1fr);
@@ -117,10 +131,14 @@ button:disabled { cursor: default; opacity: .48; }
   border-radius: 15px;
   background: #fdf5f7;
 }
+.survey-show-pinyin .survey-chart-grid { --pinyin-room: 13px; --top-space: 35px; }
+.survey-show-english .survey-chart-grid { --english-room: 17px; --top-space: 35px; }
+.survey-show-pinyin.survey-show-english .survey-chart-grid { --top-space: 55px; }
 .survey-axis { padding-top: var(--top-space); border-right: 1px solid #e4d2dc; position: relative; }
 .survey-axis-label { position: absolute; top: 3px; width: 100%; text-align: center; font-size: .71rem; font-weight: 700; color: #557468; }
 .survey-y-ticks { margin: 0; padding: 0; position: relative; list-style: none; height: calc(var(--rows) * var(--person-height)); }
-.survey-y-ticks li { position: absolute; bottom: calc(var(--tick) * var(--person-height)); right: 7px; transform: translateY(50%); font-weight: 650; font-size: .8rem; }
+.survey-y-ticks li { position: absolute; bottom: calc(var(--tick) * var(--person-height)); right: 7px; max-width: calc(100% - 9px); transform: translateY(50%); text-align: right; font-weight: 650; font-size: .8rem; }
+.survey-show-english .survey-y-ticks .survey-gloss { font-size: .61rem; }
 .survey-chart-scroll { overflow: auto; border-radius: 0 15px 15px 0; }
 .survey-chart-months {
   display: grid;
@@ -192,14 +210,22 @@ button:disabled { cursor: default; opacity: .48; }
 .survey footer { padding: 11px 4px; color: #517167; font-size: .78rem; }
 @media(max-width:960px) {
   .survey-tokens { grid-template-columns: repeat(8,minmax(0,1fr)); }
+  body:is(.survey-show-pinyin,.survey-show-english) .survey-tokens { grid-template-columns: repeat(6,minmax(0,1fr)); }
+}
+@media(max-width:800px) {
+  .survey-record-layout { grid-template-columns: 1fr; }
 }
 @media(max-width:640px) {
   .survey { padding-top: 10px; }
   .survey-heading { padding: 16px 14px 22px; }
-  .survey-jump { right: 14px; top: 16px; }
-  .survey-record-layout { grid-template-columns: 1fr; }
+  .survey-language { top: 14px; right: 14px; }
   .survey-section-heading { flex-wrap: wrap; gap: 8px; }
   #survey-roster { max-height: 128px; }
   .survey-tokens { grid-template-columns: repeat(7,minmax(0,1fr)); }
+  body:is(.survey-show-pinyin,.survey-show-english) .survey-tokens { grid-template-columns: repeat(5,minmax(0,1fr)); }
   .survey-chart-grid { grid-template-columns: 36px minmax(0,1fr); }
+  body:is(.survey-show-pinyin,.survey-show-english) .survey-chart-grid { grid-template-columns: 51px minmax(0,1fr); }
+}
+@media(max-width:360px) {
+  body:is(.survey-show-pinyin,.survey-show-english) .survey-tokens { grid-template-columns: repeat(4,minmax(0,1fr)); }
 }

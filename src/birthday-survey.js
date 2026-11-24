@@ -1,11 +1,16 @@
 import {findBirthdayClass,groupBirthdays,monthLength,validBirthday} from './birthday-survey-data.js';
 import {createPrizeRecordStore, PRIZE_RECORD_KEY} from './prize-record-store.js';
 import {bindExplorationJourney} from './island-exploration.js';
+import {chineseNumber, classCount, dateEnglish, datePart, englishNumber, line, numberPart, part,
+  progressCopy, renderCopy, renderStaticSurveyCopy} from './birthday-survey-language.js';
 import './birthday-survey.css';
 
 const sessionKey = 'hanzi-flip.birthday-survey.v1';
 const manualClass = 'survey/temporary';
 const dragType = 'application/x-birthday-token';
+const englishList = new Intl.ListFormat('en',{type:'conjunction'});
+const copied = (tag,copy,className) => renderCopy(element(tag,undefined,className),copy);
+const dateCopy = (value,kind) => line(dateEnglish(value,kind),datePart(value,kind));
 const monthColors = ['#98c6be','#96bdce','#c0adcf','#dba4b5','#edb29b','#ebc47f','#eed68f','#d0d68a','#a8cb92','#93c4a5','#9ab8d5','#b2afdb'];
 const get = id => document.getElementById(id);
 const element = (tag,text,className) => {
@@ -44,6 +49,8 @@ let groupId = saved.groupId === manualClass && temporary.length ? manualClass
 let activeId = '', month = 0, day = 0;
 let revealed = false;
 let finished = false;
+let showPinyin = saved.showPinyin===true;
+let showEnglish = saved.showEnglish===true;
 
 function students() {
   if (groupId === manualClass) return temporary;
@@ -51,7 +58,7 @@ function students() {
 }
 
 function persist() {
-  try { sessionStorage.setItem(sessionKey,JSON.stringify({groupId,dates:[...dates],temporary})); }
+  try { sessionStorage.setItem(sessionKey,JSON.stringify({groupId,dates:[...dates],temporary,showPinyin,showEnglish})); }
   catch { /* Keep the current activity usable when browser storage is off. */ }
 }
 
@@ -62,11 +69,14 @@ function renderClasses() {
   select.value = groupId;
   const french = findBirthdayClass(groups);
   const warning = classes.get().warning;
-  get('survey-roster-note').textContent = warning ? '暂时无法读取奖励记录。可以先使用临时名单。'
-    : groupId === manualClass ? '当前使用临时名单。'
-    : groupId ? '已导入 '+students().length+' 位学生。'
-    : french ? '请选择要调查的班级。'
-    : '本浏览器没有找到 Ecole Francaise。打开保存过奖励记录的网站和浏览器，或使用临时名单。';
+  const count=students().length;
+  const message=warning ? line('Prize Record is unavailable. Use a temporary list.',part('暂时无法读取奖励记录。','zànshí wúfǎ dúqǔ jiǎnglì jìlù.'),part('可以使用临时名单。','kěyǐ shǐyòng línshí míngdān.'))
+    : groupId===manualClass ? line('Using a temporary list.',part('当前使用','dāngqián shǐyòng'),part('临时名单。','línshí míngdān.'))
+    : groupId ? line('Imported '+classCount(count)+'.',part('已导入','yǐ dǎorù'),numberPart(count,{people:true}),part('位学生。','wèi xuésheng.'))
+    : french ? line('Choose a class.',part('请选择','qǐng xuǎnzé'),part('要调查的班级。','yào diàochá de bānjí.'))
+    : line('Ecole Francaise was not found. Open the site in the browser with the saved Prize Record, or use a temporary list.',
+      part('本浏览器','běn liúlǎnqì'),part('没有找到','méiyǒu zhǎodào'),part(' Ecole Francaise。'),part('请用保存过奖励记录的','qǐng yòng bǎocún guo jiǎnglì jìlù de'),part('浏览器打开本站，','liúlǎnqì dǎkāi běnzhàn,'),part('或使用临时名单。','huò shǐyòng línshí míngdān.'));
+  renderCopy(get('survey-roster-note'),message);
 }
 
 function chooseStudent(id) {
@@ -85,8 +95,9 @@ function firstUnanswered() {
 function renderRecorder() {
   const all = students();
   const active = all.find(student=>student.id===activeId);
-  get('survey-student').textContent = active?.name ?? '先选择班级或输入临时名单';
-  get('survey-progress').textContent = `已记录 ${all.filter(student=>dates.has(student.id)).length} / ${all.length} 人`;
+  if (active) get('survey-student').textContent=active.name;
+  else renderCopy(get('survey-student'),line('Choose a class or enter a temporary list.',part('先选择班级','xiān xuǎnzé bānjí'),part('或输入临时名单','huò shūrù línshí míngdān')));
+  renderCopy(get('survey-progress'),progressCopy(all.filter(student=>dates.has(student.id)).length,all.length));
   roster.replaceChildren();
   for (const student of all) {
     const item = element('li');
@@ -95,7 +106,9 @@ function renderRecorder() {
     pick.type = 'button';
     pick.dataset.student = student.id;
     pick.setAttribute('aria-pressed',String(student.id===activeId));
-    pick.append(element('span',student.name,'survey-name'),element('small',birthday ? `${birthday.month}月${birthday.day}号` : '待记录'));
+    const date=birthday ? line(dateEnglish(birthday.month,'month')+' '+dateEnglish(birthday.day,'day'),datePart(birthday.month,'month'),datePart(birthday.day,'day'))
+      : line('To record',part('待记录','dài jìlù'));
+    pick.append(element('span',student.name,'survey-name'),copied('span',date,'survey-roster-date'));
     item.append(pick);
     roster.append(item);
   }
@@ -103,8 +116,8 @@ function renderRecorder() {
 }
 
 function renderDate() {
-  get('survey-month-value').textContent = month ? `${month}月` : '—';
-  get('survey-day-value').textContent = day ? `${day}号` : '—';
+  renderCopy(get('survey-month-value'),dateCopy(month,'month'));
+  renderCopy(get('survey-day-value'),dateCopy(day,'day'));
   get('survey-save').disabled = !activeId || !validBirthday(month,day);
   get('survey-remove').hidden = !dates.has(activeId);
   for (const token of document.querySelectorAll('[data-date-token]')) {
@@ -116,24 +129,24 @@ function renderDate() {
   }
 }
 
-function setPart(part,value) {
+function setPart(kind,value) {
   if (!activeId || !Number.isInteger(value) || value<1) return;
   status.textContent = '';
-  if (part==='month' && value<=12) {
+  if (kind==='month' && value<=12) {
     month=value;
     if (day>monthLength(month)) {
       day=0;
-      status.textContent='这个月没有所选日期，请重新选几号。';
+      renderCopy(status,line('That day does not exist in this month. Choose another day.',part('这个月没有所选日期，','zhè ge yuè méiyǒu suǒ xuǎn rìqī,'),part('请重新选。','qǐng chóngxīn xuǎn.')));
     }
-  } else if (part==='day' && value<=(month ? monthLength(month) : 31)) {
+  } else if (kind==='day' && value<=(month ? monthLength(month) : 31)) {
     day=value;
   }
   renderDate();
 }
 
-function addTokens(container,part,count,suffix) {
+function addTokens(container,part,count) {
   for (let value=1;value<=count;value++) {
-    const token = element('button',value+suffix);
+    const token = copied('button',dateCopy(value,part));
     token.type='button';
     token.dataset.dateToken=part;
     token.dataset.value=value;
@@ -156,22 +169,22 @@ function renderChart() {
   const all = students();
   const result = groupBirthdays(all,dates);
   const rows = Math.max(3,result.max);
-  get('survey-result-progress').textContent = `已记录 ${result.recorded} / ${all.length} 人`;
+  renderCopy(get('survey-result-progress'),progressCopy(result.recorded,all.length));
   get('survey-reveal').disabled = !result.recorded;
   get('survey-finish').hidden = !revealed || !result.recorded;
   get('survey-finish').disabled = finished;
-  get('survey-finish').textContent = finished ? '调查完成' : '完成调查';
+  renderCopy(get('survey-finish'),finished ? line('Finished',part('调查完成','diàochá wánchéng')) : line('Finish the survey',part('完成调查','wánchéng diàochá')));
 
   const plot = element('div',undefined,'survey-chart-grid');
   plot.style.setProperty('--rows',rows);
   const longestName = result.months.flat().reduce((longest,{name})=>
     Math.max(longest,Array.from(name).reduce((size,character)=>size + (/\p{Script=Han}/u.test(character) ? 2 : 1),0)),0);
-  plot.style.setProperty('--person-height',Math.max(64,Math.ceil(longestName / 8) * 14 + 24)+'px');
+  plot.style.setProperty('--base-person-height',Math.max(64,Math.ceil(longestName / 8) * 14 + 24)+'px');
   const axis = element('div',undefined,'survey-axis');
-  axis.append(element('span','人数','survey-axis-label'));
+  axis.append(copied('span',line('People',part('人数','rénshù')),'survey-axis-label'));
   const ticks = element('ol',undefined,'survey-y-ticks');
   for (let count=0;count<=rows;count++) {
-    const tick = element('li',String(count));
+    const tick = copied('li',line(englishNumber(count),numberPart(count)));
     tick.style.setProperty('--tick',count);
     ticks.append(tick);
   }
@@ -186,12 +199,12 @@ function renderChart() {
     const monthColumn=element('section',undefined,'survey-month-column');
     monthColumn.style.setProperty('--month-color',monthColors[index]);
     const count = birthdays.length;
-    const label = element('h3',monthNumber+'月');
-    label.setAttribute('aria-label',`${monthNumber}月，${count} 人`);
+    const label = copied('h3',dateCopy(monthNumber,'month'));
+    label.setAttribute('aria-label',`${chineseNumber(monthNumber)}月，${chineseNumber(count,{people:true})}人`);
     const stack = element('ul',undefined,'survey-stack');
     for (const birthday of birthdays) {
       const cylinder = element('li',undefined,'survey-cylinder');
-      cylinder.append(element('strong',birthday.name),element('span',birthday.day+'号'));
+      cylinder.append(element('strong',birthday.name),copied('span',dateCopy(birthday.day,'day')));
       stack.append(cylinder);
     }
     stack.lastElementChild?.classList.add('survey-cake-top');
@@ -202,24 +215,30 @@ function renderChart() {
   scroller.append(columns);
   plot.append(axis,scroller);
   const priorScroll = chart.querySelector('.survey-chart-scroll')?.scrollLeft ?? 0;
-  chart.replaceChildren(plot,element('p','月份','survey-x-label'));
+  chart.replaceChildren(plot,copied('p',line('Months',part('月份','yuèfèn')),'survey-x-label'));
   scroller.scrollLeft=priorScroll;
 
   const answer=get('survey-answer');
   answer.hidden=!revealed || !result.recorded;
   answer.replaceChildren();
   if (answer.hidden) return;
-  const winningMonths=result.leaders.map(value=>value+'月').join('、');
-  const summary=result.leaders.length===1 ? `${winningMonths}生日的人最多，有 ${result.max} 人。`
-    : `${winningMonths}并列最多，各有 ${result.max} 人。`;
-  answer.append(element('strong',summary));
+  const winningMonths=result.leaders.flatMap((value,index)=>index ? [part('、'),datePart(value,'month')] : [datePart(value,'month')]);
+  const winners=englishList.format(result.leaders.map(value=>dateEnglish(value,'month')));
+  const unique=result.leaders.length===1;
+  const english=unique ? `${winners} has the most birthdays with ${classCount(result.max)}.`
+    : `${winners} tie for first with ${classCount(result.max)} each.`;
+  answer.append(copied('strong',line(english,...winningMonths,
+    unique ? part('生日的人最多，有','shēngrì de rén zuì duō, yǒu') : part('并列最多，各有','bìngliè zuì duō, gè yǒu'),
+    numberPart(result.max,{people:true}),part('人。','rén.'))));
   const shared=result.months.flatMap((birthdays,index)=>birthdays.length>1 ? [[index+1,birthdays]] : []);
   if (shared.length) {
     const details=element('details');
-    details.append(element('summary','看看同一个月生日的同学'));
+    details.append(copied('summary',line('See who shares a birthday month',part('看看同一个月','kànkan tóng yí ge yuè'),part('生日的同学','shēngrì de tóngxué'))));
     const list=element('ul');
     for (const [sameMonth,birthdays] of shared) {
-      list.append(element('li',`${birthdays.map(item=>item.name).join('、')}的生日都在${sameMonth}月。`));
+      const names=birthdays.map(item=>item.name);
+      list.append(copied('li',line(`${englishList.format(names)} have birthdays in ${dateEnglish(sameMonth,'month')}.`,part(names.join('、')),
+        part('的生日都在','de shēngrì dōu zài'),datePart(sameMonth,'month'),part('。'))));
     }
     details.append(list);
     answer.append(details);
@@ -274,7 +293,8 @@ dateForm.addEventListener('submit',event=>{
   const active=all.find(student=>student.id===activeId);
   if (!active || !validBirthday(month,day)) return;
   dates.set(activeId,{month,day});
-  status.textContent=`已记录：${active.name}，${month}月${day}号。`;
+  renderCopy(status,line(`Recorded ${active.name}’s birthday for ${dateEnglish(month,'month')} ${dateEnglish(day,'day')}.`,
+    part('已记录：','yǐ jìlù:'),part(active.name+'，'),datePart(month,'month'),datePart(day,'day'),part('。')));
   const start=all.indexOf(active)+1;
   const next=[...all.slice(start),...all.slice(0,start)].find(student=>!dates.has(student.id));
   revealed=false;
@@ -286,7 +306,7 @@ get('survey-remove').addEventListener('click',()=>{
   dates.delete(activeId);
   revealed=false;
   chooseStudent(activeId);
-  status.textContent='已清除，可以重新录入。';
+  renderCopy(status,line('Cleared. You can enter the birthday again.',part('已清除，','yǐ qīngchú,'),part('可以重新录入。','kěyǐ chóngxīn lùrù.')));
   renderChart();
   persist();
 });
@@ -301,9 +321,11 @@ for (const slot of dateForm.querySelectorAll('[data-drop]')) {
   slot.addEventListener('drop',event=>{
     event.preventDefault();
     slot.classList.remove('survey-drop-over');
-    const [part,value]=event.dataTransfer.getData(dragType).split(':');
-    if (part===slot.dataset.drop) setPart(part,Number(value));
-    else if (part) status.textContent=part==='month'?'把月份拖到「月份」格。':'把日期拖到「日期」格。';
+    const [kind,value]=event.dataTransfer.getData(dragType).split(':');
+    if (kind===slot.dataset.drop) setPart(kind,Number(value));
+    else if (kind) renderCopy(status,kind==='month'
+      ? line('Drop the month in the Month box.',part('把月份拖到「月份」格。','bǎ yuèfèn tuō dào “yuèfèn” gé.'))
+      : line('Drop the day in the Day box.',part('把日期拖到「日期」格。','bǎ rìqī tuō dào “rìqī” gé.')));
   });
 }
 get('survey-reveal').addEventListener('click',()=>{
@@ -315,11 +337,28 @@ get('survey-finish').addEventListener('click',()=>{
   renderChart();
   journey.reportComplete();
 });
-addTokens(get('survey-months'),'month',12,'月');
-addTokens(get('survey-days'),'day',31,'号');
+const pinyinToggle=get('survey-pinyin'),englishToggle=get('survey-english');
+function applyLanguages() {
+  document.body.classList.toggle('survey-show-pinyin',showPinyin);
+  document.body.classList.toggle('survey-show-english',showEnglish);
+  pinyinToggle.checked=showPinyin;
+  englishToggle.checked=showEnglish;
+}
+for (const toggle of [pinyinToggle,englishToggle]) {
+  toggle.addEventListener('change',()=>{
+    showPinyin=pinyinToggle.checked;
+    showEnglish=englishToggle.checked;
+    applyLanguages();
+    persist();
+  });
+}
+addTokens(get('survey-months'),'month',12);
+addTokens(get('survey-days'),'day',31);
 get('survey-student').setAttribute('aria-live','polite');
 get('survey-manual-names').value=temporary.map(student=>student.name).join('\n');
 journey.decorate();
+renderStaticSurveyCopy(document,{onJourney:Boolean(journey.returnUrl)});
+applyLanguages();
 renderClasses();
 chooseStudent(firstUnanswered());
 renderChart();
