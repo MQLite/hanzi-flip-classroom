@@ -2,10 +2,9 @@ import {findBirthdayClass,groupBirthdays,monthLength,validBirthday} from './birt
 import {createPrizeRecordStore, PRIZE_RECORD_KEY} from './prize-record-store.js';
 import {bindExplorationJourney} from './island-exploration.js';
 import {chineseNumber, classCount, dateEnglish, datePart, englishNumber, line, numberPart, part,
-  progressCopy, renderCopy, renderStaticSurveyCopy} from './birthday-survey-language.js';
+  progressCopy, readSurveyTab, renderCopy, renderStaticSurveyCopy, writeSurveyTab} from './birthday-survey-language.js';
 import './birthday-survey.css';
 
-const sessionKey = 'hanzi-flip.birthday-survey.v1';
 const classDatePrefix = id => `hanzi-flip.birthday-survey.class.v1:${encodeURIComponent(id)}:`;
 const classDateKey = (classId,studentId) => classDatePrefix(classId)+encodeURIComponent(studentId);
 const manualClass = 'survey/temporary';
@@ -22,12 +21,7 @@ const element = (tag,text,className) => {
   return node;
 };
 
-function restore() {
-  try { return JSON.parse(sessionStorage.getItem(sessionKey)) ?? {}; }
-  catch { return {}; }
-}
-
-const saved = restore();
+const saved = readSurveyTab();
 const tabDates = new Map();
 const dates = new Map();
 if (Array.isArray(saved.dates)) {
@@ -108,8 +102,7 @@ function saveDate(date) {
 }
 
 function persist() {
-  try { sessionStorage.setItem(sessionKey,JSON.stringify({groupId,dates:[...tabDates],temporary,showPinyin,showEnglish})); }
-  catch { /* Keep the current activity usable when browser storage is off. */ }
+  writeSurveyTab({groupId,dates:[...tabDates],temporary,showPinyin,showEnglish});
 }
 
 function renderClasses() {

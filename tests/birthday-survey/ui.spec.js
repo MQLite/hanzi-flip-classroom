@@ -11,6 +11,29 @@ const original = JSON.stringify({version:1,selectedClassId:'other',classes:[
 ]});
 const token = (page,part,value) => page.locator(`[data-date-token="${part}"][data-value="${value}"]`);
 
+test('the lesson entry card shows language options and carries them into the survey',async({page})=>{
+  await page.setViewportSize({width:390,height:844});
+  await page.goto('/?mode=explore&source=paradise&stage=2A&lesson=4');
+  const card=page.locator('.birthday-survey-card');
+  const pinyin=card.getByRole('checkbox',{name:'拼音',exact:true});
+  const english=card.getByRole('checkbox',{name:'英语',exact:true});
+  const heading=card.getByRole('heading');
+  await expect(heading.locator('rt').first()).toBeHidden();
+  await expect(heading.locator('[lang=en]')).toBeHidden();
+  await pinyin.check();
+  await expect(heading.locator('rt').first()).toBeVisible();
+  await english.check();
+  await expect(heading.locator('[lang=en]')).toHaveText('When is your birthday?');
+  await expect(heading.locator('[lang=en]')).toBeVisible();
+  await pinyin.uncheck();
+  await expect(heading.locator('rt').first()).toBeHidden();
+  await pinyin.check();
+  await page.getByRole('link',{name:'开始生日调查'}).click();
+  await expect(page.locator('#survey-pinyin')).toBeChecked();
+  await expect(page.locator('#survey-english')).toBeChecked();
+  await expect(page.locator('h1 [lang=en]')).toBeVisible();
+});
+
 test('lesson 4 opens the survey, imports the right 16 students and charts the dates entered by drag or click',async({page},testInfo)=>{
   await page.addInitScript(({key,original})=>localStorage.setItem(key,original),{key,original});
   await page.goto('/?mode=explore&source=paradise&stage=2A&lesson=4');

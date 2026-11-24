@@ -1822,6 +1822,12 @@ body:not(.workshop-mode) #restart { margin-left: auto; }
 .exploration-card .exploration-meta{font-size:12px;color:#7a754f}
 .exploration-card .exploration-tags{font-size:12px;margin:22px 0}
 .exploration-card small[lang="en"]{display:block;font-family:system-ui,sans-serif;font-size:.875rem;font-weight:500;line-height:1.35}
+.birthday-card-languages { display:flex; flex-wrap:wrap; gap:8px 12px; margin-bottom:12px; }
+.birthday-card-languages label { display:inline-flex; align-items:center; gap:7px; padding:5px 10px; border:1px solid #cddbc6; border-radius:8px; background:#fffef8; cursor:pointer; }
+.birthday-card-languages input { margin:0; accent-color:#275e51; }
+.birthday-survey-card:not(.birthday-card-pinyin) rt,
+.birthday-survey-card:not(.birthday-card-english) small[lang="en"] { display:none; }
+.birthday-survey-card rt { font-family:system-ui,sans-serif; font-size:.55em; }
 .exploration-enter{display:inline-flex;align-items:center;min-height:44px;justify-content:center;padding:12px 26px;text-decoration:none;border-radius:9px;font-weight:700;background:#314a3b;color:#fff6e3}
 .exploration-enter:hover{background:#49654b}
 .exploration-enter:focus-visible{outline:3px solid #9ba96a;outline-offset:4px}

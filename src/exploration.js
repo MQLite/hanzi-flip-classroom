@@ -1,6 +1,7 @@
 import {ZHONGWEN_ID,PARADISE_ID,coursesForTextbook,stagesForTextbook} from './curriculum.js';
 import {ruby,gloss} from './ruby.js';
 import {CITY_TOUR_STAGES} from './city-tour-data.js';
+import {birthdayPreviewCopy,readSurveyTab,renderCopy,writeSurveyTab} from './birthday-survey-language.js';
 
 // Scenario content is separate from character and vocabulary question banks.
 export const EXPLORATIONS=[{
@@ -45,6 +46,28 @@ export function explorationCourses(textbook){
   }
   return courses;
 }
+
+function addBirthdayLanguageControls(card,content){
+  const controls=document.createElement('div');
+  controls.className='birthday-card-languages';
+  const saved=readSurveyTab();
+  const options=[['拼音','showPinyin','birthday-card-pinyin'],['英语','showEnglish','birthday-card-english']];
+  for(const [text,key,className] of options){
+    const label=document.createElement('label');
+    const input=document.createElement('input');
+    input.type='checkbox';
+    input.checked=saved[key]===true;
+    card.classList.toggle(className,input.checked);
+    input.addEventListener('change',()=>{
+      card.classList.toggle(className,input.checked);
+      writeSurveyTab({...readSurveyTab(),[key]:input.checked});
+    });
+    label.append(input,text);
+    controls.append(label);
+  }
+  content.prepend(controls);
+}
+
 export function renderExplorations(root,selection,{urlForScenario}={}){
   root.replaceChildren();
   const scenarios=matchingExplorations(selection);
@@ -105,9 +128,10 @@ export function renderExplorations(root,selection,{urlForScenario}={}){
         column.style.setProperty('--cover-count',count);
         art.append(column);
       }
-      meta.textContent='汉语乐园 · 第二册上 · 第四课 今天几月几号';
-      tags.textContent='班级名单 · 生日统计';
-      link.textContent='开始生日调查';
+      for(const [key,node] of Object.entries({meta,title,description,tags,link})) renderCopy(node,birthdayPreviewCopy[key]);
+      title.setAttribute('aria-label',scenario.title);
+      link.setAttribute('aria-label','开始生日调查');
+      addBirthdayLanguageControls(card,content);
     }else if(scenario.id==='two-rivers'){
       meta.textContent='中文（暨南大学版）· 第二册 · 第12课 江河';
       tags.textContent='长江 · 12 个生字　　黄河 · 12 个词语';

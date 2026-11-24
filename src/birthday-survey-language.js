@@ -1,5 +1,17 @@
 import {ruby} from './ruby.js';
 
+const surveyTabKey = 'hanzi-flip.birthday-survey.v1';
+
+export function readSurveyTab() {
+  try { return JSON.parse(sessionStorage.getItem(surveyTabKey)) ?? {}; }
+  catch { return {}; }
+}
+
+export function writeSurveyTab(data) {
+  try { sessionStorage.setItem(surveyTabKey,JSON.stringify(data)); }
+  catch { /* The current page still works when browser storage is off. */ }
+}
+
 const digits = '零一二三四五六七八九';
 const positions = ['', '十', '百', '千'];
 const readings = {零:'líng',一:'yī',二:'èr',三:'sān',四:'sì',五:'wǔ',六:'liù',七:'qī',八:'bā',九:'jiǔ',
@@ -110,6 +122,17 @@ const fixed = {
   footer: line('Birthday months and days are saved by class in this browser. Temporary lists stay in this tab.',
     part('生日只记录月和日，','shēngrì zhǐ jìlù yuè hé rì,'),part('按班级保存在此浏览器。','àn bānjí bǎocún zài cǐ liúlǎnqì.'),
     part('临时名单只保留在当前标签页。','línshí míngdān zhǐ bǎoliú zài dāngqián biāoqiānyè.')),
+};
+
+export const birthdayPreviewCopy = {
+  meta: line('Chinese Paradise · Book Two, Part A · Lesson Four: What’s the date today?',
+    ...fixed.lesson.parts,part(' '),part('今天','jīntiān'),part('几月几号','jǐ yuè jǐ hào')),
+  title: fixed.question,
+  description: line('Choose a class and drag in each birthday. Find out which month has the most birthdays.',
+    part('选班级，','xuǎn bānjí,'),part('拖入','tuō rù'),part('同学的生日。','tóngxué de shēngrì.'),
+    part('看看','kànkan'),part('哪一个月','nǎ yí ge yuè'),part('过生日的人最多。','guò shēngrì de rén zuì duō.')),
+  tags: line('Class roster · Birthday chart',part('班级名单','bānjí míngdān'),part(' · '),part('生日统计','shēngrì tǒngjì')),
+  link: line('Start the birthday survey',part('开始','kāishǐ'),part('生日调查','shēngrì diàochá')),
 };
 
 export function renderStaticSurveyCopy(root,{onJourney=false}={}) {
