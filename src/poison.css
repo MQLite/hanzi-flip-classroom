@@ -102,6 +102,7 @@
 .poison-rescued-child { grid-area: 1 / 1; width: 72%; max-width: 195px; }
 .poison-rescued-child svg,.poison-rescue-dose svg { display: block; width: 100%; }
 .poison-rescued-child svg { overflow: visible; }
+.poison-character-caption { display: block; color: #3b5141; font-size: clamp(16px, 2vw, 22px); font-weight: 700; text-align: center; }
 .poison-magic-art.is-feeding .poison-frog { display: block; animation: poison-frog-sip .9s both; }
 .poison-magic-art.is-feeding .poison-rescued-child {
   --poison-appear-time: 1.25s;

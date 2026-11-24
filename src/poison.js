@@ -3,6 +3,7 @@ import {createPoisonWitch} from './poison-witch.js';
 import {createAntidoteBottle,createRescuedChild} from './poison-rescue-art.js';
 import {withEnglishInstruction} from './english-instructions.js';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
+const characterOptions = {boy:{label:'男孩',english:'Boy'},girl:{label:'女孩',english:'Girl'}};
 const actionEnglish = {
   'poison-start': 'Start',
   'poison-begin-hide': 'Ready to hide the poison',
@@ -23,7 +24,7 @@ function term(word,pinyin){
 }
 export function createPoisonView(host,dispatch){
   let model={},key=null,cardNodes=[],controller=new AbortController(),active=false,rescueCharacter='boy';const audio=createPoisonAudio();
-  let nextAppearance=0;
+  const nextAppearance={boy:0,girl:3};
   function button(id,label,kind='',english=actionEnglish[id]){
     const b=el('button',label,kind);b.id=id;
     return withEnglishInstruction(b,english);
@@ -68,7 +69,7 @@ export function createPoisonView(host,dispatch){
     const feed=button('poison-rescue','喂解药','primary');feed.prepend(createAntidoteBottle());
     const choices=el('div',undefined,'poison-character-options');
     choices.setAttribute('role','radiogroup');choices.setAttribute('aria-label','变回男孩或女孩');
-    for(const [value,label,english] of [['boy','男孩','Boy'],['girl','女孩','Girl']]){
+    for(const [value,{label,english}] of Object.entries(characterOptions)){
       const option=el('label'),radio=el('input');
       radio.type='radio';radio.name='poison-character';radio.value=value;radio.checked=value===rescueCharacter;
       option.append(radio,withEnglishInstruction(el('span',label),english));choices.append(option);
@@ -97,8 +98,13 @@ export function createPoisonView(host,dispatch){
       }
       if(state.antidoteStatus==='rescued'){
         art.classList.add('is-rescued');
-        art.setAttribute('aria-label',`小青蛙吃下解药，变回${state.rescuedCharacter==='girl'?'女孩':'男孩'}`);
-        const child=el('span',undefined,'poison-rescued-child');child.append(createRescuedChild(state.rescuedCharacter,state.rescuedAppearance));art.append(child);
+        const {label}=characterOptions[state.rescuedCharacter];
+        art.setAttribute('aria-label',`小青蛙吃下解药，变回${label}`);
+        const child=el('span',undefined,'poison-rescued-child');
+        const caption=el('span',label,'poison-character-caption');
+        caption.setAttribute('aria-hidden','true');
+        child.append(createRescuedChild(state.rescuedCharacter,state.rescuedAppearance),caption);
+        art.append(child);
         if(animateRescue){
           art.classList.add('is-feeding');
           const dose=el('span',undefined,'poison-rescue-dose');dose.append(createAntidoteBottle());art.append(dose);
@@ -160,8 +166,10 @@ export function createPoisonView(host,dispatch){
     if(b.dataset.poisonCard){dispatch('card',b.dataset.poisonCard);return;}
     if(b.id==='poison-rescue'){
       if(model.state?.antidoteStatus!=='reading')return;
-      dispatch('rescue',{character:rescueCharacter,appearance:nextAppearance});
-      nextAppearance++;
+      const character=host.querySelector('input[name="poison-character"]:checked')?.value;
+      if(!character)return;
+      dispatch('rescue',{character,appearance:nextAppearance[character]});
+      nextAppearance[character]++;
       return;
     }
     const intent={'poison-start':'start','poison-begin-hide':'hide','poison-seal':'seal','poison-read':'read','poison-next':'repeat-round','poison-continue':'advance-round','poison-prepare':'prepare','poison-antidote':'antidote','poison-change-lesson':'change-lesson','poison-antidote-skip':'skip-antidote','poison-restart-challenge':'restart-challenge'}[b.id];

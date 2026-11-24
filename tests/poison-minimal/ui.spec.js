@@ -57,7 +57,7 @@ test('poison aftermath keeps only the required phrases, real antidote sentence a
  await expectCheeringPose(page.getByRole('img',{name:'小青蛙吃下解药，变回女孩'}));
  expect(await page.locator('.poison-rescued-child').evaluate(node=>node.getAnimations({subtree:true}).length)).toBe(0);
  await page.screenshot({path:testInfo.outputPath('girl-rescue.png')});
- await expect(page.locator('#poison-next')).toBeVisible();expect(await visibleCopy(page)).toBe('');
+ await expect(page.locator('#poison-next')).toBeVisible();expect(await visibleCopy(page)).toBe('女孩');
 });
 
 test('the teacher can feed the potion to restore a boy and see the transformation on a phone',async({page},testInfo)=>{
@@ -104,15 +104,17 @@ test('other lessons retain their own exact antidote sentence without source capt
  await expect(page.locator('#poison-magic')).not.toContainText('教材第');await page.locator('#poison-antidote-skip').click();await page.locator('#poison-next').click();await expect(page.locator('#witch-poison')).toHaveAttribute('data-phase','cover');
 });
 
-test('both character choices rotate skin, hair, ponytails, braids and glasses',async({page},testInfo)=>{
+test('alternating character choices stays recognizable through every rotating hairstyle',async({page},testInfo)=>{
  await readPoison(page);
  const artwork=page.locator('.poison-rescued-child');
  const skin=artwork.locator('[data-skin]').first();
  const hair=artwork.locator('[data-hair]').first();
+ const pinyin=page.locator('#pinyin');
  const appearancesByCharacter=new Map();
  let previous;
  for(let index=0;index<12;index++){
-  const character=index<6?'男孩':'女孩';
+  const boy=index%2===0;
+  const character=boy?'男孩':'女孩';
   if(index>0){
    await page.locator('#poison-next').click();
    await page.locator('#poison-begin-hide').click();
@@ -124,8 +126,12 @@ test('both character choices rotate skin, hair, ponytails, braids and glasses',a
   }
   await page.locator('#poison-antidote').click();
   await page.getByRole('radio',{name:character,exact:true}).check();
+  await pinyin.setChecked(!await pinyin.isChecked());
+  await expect(page.getByRole('radio',{name:character,exact:true})).toBeChecked();
   await page.getByRole('button',{name:'喂解药',exact:true}).click();
   await expect(page.getByRole('img',{name:`小青蛙吃下解药，变回${character}`})).toBeVisible();
+  await expect(artwork.locator('.poison-character-caption')).toHaveText(character);
+  await expect(artwork.locator('[data-outfit]')).toHaveAttribute('data-outfit',boy?'shorts':'dress');
   await expect(skin).toHaveCount(1);
   const appearance=[await skin.getAttribute('fill'),await hair.getAttribute('d')];
   if(previous){
@@ -138,7 +144,7 @@ test('both character choices rotate skin, hair, ponytails, braids and glasses',a
   variants.push({skin:appearance[0],style,glasses});
   appearancesByCharacter.set(character,variants);
   previous=appearance;
-  await page.locator('#pinyin').setChecked(index%2===0);
+  await pinyin.setChecked(!await pinyin.isChecked());
   await expect(skin).toHaveAttribute('fill',appearance[0]);
   await expect(hair).toHaveAttribute('d',appearance[1]);
   await expect(artwork.locator('[data-glasses]')).toHaveCount(Number(glasses));

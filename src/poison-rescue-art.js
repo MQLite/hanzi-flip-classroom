@@ -63,8 +63,22 @@ const cheeringDecoration = `
     <path d="m12 74 5 4m144-22 5-5m-144 91 5-5m137-39 4 2" stroke="#d59749" stroke-width="3"/>
   </g>`;
 
+function outfitMarkup(character, color) {
+  if (character === 'girl') return `
+    <g data-outfit="dress">
+      <path d="M72 102h32l-2 25 18 28H56l18-28z" fill="${color}"/>
+      <path d="M79 104q9 13 18 0M74 128h28" fill="none" stroke="#fff7e8" stroke-width="4"/>
+      <path d="m81 136-6 15m20-15 6 15" fill="none" stroke="#403249" stroke-width="2.4"/>
+    </g>`;
+  return `
+    <g data-outfit="shorts">
+      <path d="M66 134h44v27H92l-4-12-4 12H66z" fill="#4d657e"/>
+      <path d="M73 102h30l6 35H67z" fill="${color}"/>
+      <path d="M70 127h36" fill="none" stroke="#fff7e8" stroke-width="5"/>
+    </g>`;
+}
+
 export function createRescuedChild(character, appearance=0) {
-  const girl = character === 'girl';
   const skin = skinTones[appearance % skinTones.length];
   const hair = hairStyles[appearance % hairStyles.length];
   const hairColor = hairColors[(appearance + Math.floor(appearance / hairStyles.length)) % hairColors.length];
@@ -76,14 +90,15 @@ export function createRescuedChild(character, appearance=0) {
     <g class="poison-child-figure" stroke="#403249" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
       ${hair.back?`<path d="${hair.back}" fill="${hairColor}"/>`:''}
       ${hair.detail??''}
-      <path d="M70 144v32l-13 6h24l7-35m17-3v32l13 6H95l-7-35" fill="#4d657e"/>
+      <path d="M69 145h15v33H69zM92 145h15v33H92z" fill="${skin}"/>
+      <path d="M69 173h15v9H57q0-6 12-9zm23 0h15q12 3 12 9H92z" fill="#4d657e"/>
       <path d="${cheeringArms}" fill="none" stroke-width="13"/>
       <path d="${cheeringArms}" fill="none" stroke="${skin}" stroke-width="8"/>
       <g fill="${skin}" stroke-width="2.7">
         <path data-cheering-hand d="${closedHand}" transform="translate(33 85) rotate(-16)"/>
         <path data-cheering-hand d="${closedHand}" transform="translate(144 76) rotate(16)"/>
       </g>
-      <path d="M73 101h30l${girl?'18 49H55':'10 49H63'}z" fill="${shirt}"/>
+      ${outfitMarkup(character, shirt)}
       <circle data-skin cx="88" cy="62" r="40" fill="${skin}"/>
       <path data-hair="${hair.name}" d="${hair.front}" fill="${hairColor}"/>
       <path d="M67 66q3-5 6 0m30 0q3-5 6 0" stroke="#281c25" fill="none" stroke-width="3"/>
