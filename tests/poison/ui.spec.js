@@ -71,6 +71,30 @@ test('Paradise 2A lesson 3 uses the two lesson lists and the ten-word review', a
   await expect(page.getByRole('dialog',{name:'女巫被打败了！'})).toBeVisible();
 });
 
+test('Paradise 2A lesson 4 keeps calendar expressions intact in every round', async ({page}) => {
+  await page.goto('/?mode=poison&source=paradise&stage=2A&lesson=4');
+  const keyWords = ['今天','昨天','明天','星期'];
+  const rounds = [
+    [...keyWords,'星期日','星期几','几月','几号','八月','二十一号'],
+    [...keyWords,'闹钟','太阳','屋里','昨晚','睡觉','起床'],
+    [...keyWords,'星期几','几月','几号','昨晚','睡觉','起床'],
+  ];
+  const host = page.locator('#witch-poison');
+  await expect(host.locator('[data-poison-choice][aria-pressed=true] .poison-term')).toHaveText(rounds[0]);
+  await prepare(page);
+  for (const [index, terms] of rounds.entries()) {
+    await expect(host).toHaveAttribute('data-round', String(index + 1));
+    if (index > 0) await host.locator('#poison-begin-hide').click();
+    const cards = host.locator('[data-poison-card]');
+    expect((await cards.locator('.poison-term').allTextContents()).sort()).toEqual([...terms].sort());
+    const [poison] = await hide(page);
+    await host.locator(`[data-poison-card="${poison}"]`).click();
+    await host.locator('#poison-antidote-skip').click();
+    await host.locator('#poison-continue').click();
+  }
+  await expect(page.getByRole('dialog',{name:'女巫被打败了！'})).toBeVisible();
+});
+
 test('all three classroom rounds read lesson cards, hide fresh poison and celebrate after the third round', async ({page}, testInfo) => {
   await page.setViewportSize({width:1280,height:720});
   await page.goto('/?mode=poison&source=zhongwen&stage=2&lesson=12');

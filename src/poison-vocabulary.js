@@ -12,7 +12,20 @@ const PARADISE_TIME_READING = [
   ['两只', 'liǎng zhī'], ['在', 'zài'], ['山上', 'shān shàng'], ['几只', 'jǐ zhī'], ['下山冈', 'xià shān gāng'],
 ];
 const PARADISE_TIME_REVIEW = new Set(['早上', '几点', '半', '点', '晚上', '现在', '两点', '小', '在', '几只']);
-const paradiseTimeCards = entries => entries.map(([word, pinyin]) => ({id:`poison/paradise/2A/3/${word}`, word, pinyin}));
+
+const PARADISE_CALENDAR_CORE = [
+  ['今天', 'jīn tiān'], ['昨天', 'zuó tiān'], ['明天', 'míng tiān'], ['星期', 'xīng qī'],
+];
+const PARADISE_CALENDAR_DIALOGUE = [
+  ['星期日', 'xīng qī rì'], ['星期几', 'xīng qī jǐ'], ['几月', 'jǐ yuè'], ['几号', 'jǐ hào'],
+  ['八月', 'bā yuè'], ['二十一号', 'èr shí yī hào'],
+];
+const PARADISE_CALENDAR_READING = [
+  ['闹钟', 'nào zhōng'], ['太阳', 'tài yáng'], ['屋里', 'wū li'], ['昨晚', 'zuó wǎn'],
+  ['睡觉', 'shuì jiào'], ['起床', 'qǐ chuáng'],
+];
+const PARADISE_CALENDAR_REVIEW = new Set(['星期几', '几月', '几号', '昨晚', '睡觉', '起床']);
+const paradiseCards = (lesson, entries) => entries.map(([word, pinyin]) => ({id:`poison/paradise/2A/${lesson}/${word}`, word, pinyin}));
 
 // Share the existing verified single-lesson pool; this game has no nine-word minimum.
 export function getPoisonPool(selection,questions=[]){
@@ -25,10 +38,17 @@ export function getPoisonChallengePool(selection, questions = []) {
   const pool = getPoisonPool(selection, questions);
   const {source, stage, lesson, grade} = selection;
   if (source === 'paradise' && stage === '2A' && lesson === 3) {
-    const words = paradiseTimeCards(PARADISE_TIME_WORDS);
-    const readingWords = paradiseTimeCards(PARADISE_TIME_READING);
+    const words = paradiseCards(lesson, PARADISE_TIME_WORDS);
+    const readingWords = paradiseCards(lesson, PARADISE_TIME_READING);
     const reviewWords = [...words, ...readingWords].filter(card => PARADISE_TIME_REVIEW.has(card.word));
     return {...pool, words, readingWords, reviewWords};
+  }
+  if (source === 'paradise' && stage === '2A' && lesson === 4) {
+    const core = paradiseCards(lesson, PARADISE_CALENDAR_CORE);
+    const dialogue = paradiseCards(lesson, PARADISE_CALENDAR_DIALOGUE);
+    const reading = paradiseCards(lesson, PARADISE_CALENDAR_READING);
+    const review = [...dialogue, ...reading].filter(card => PARADISE_CALENDAR_REVIEW.has(card.word));
+    return {...pool, words:[...core, ...dialogue], readingWords:[...core, ...reading], reviewWords:[...core, ...review]};
   }
   const textbook = textbookForSource(source);
   const course = source === 'personal' ? null : coursesForTextbook(textbook).find(item => item.stage === stage && item.lesson === lesson);
