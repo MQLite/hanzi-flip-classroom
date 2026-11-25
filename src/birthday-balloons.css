@@ -75,6 +75,21 @@
 .balloon-flying .balloon-paired { animation: birthday-balloon-flight .75s ease-in both; }
 .balloon-cue { min-height: 3.4em; margin: 10px 0 0; font-size: clamp(18px,2.5vw,32px); font-weight: 650; }
 .balloon-next { margin-top: 10px; }
+.balloon-flight-progress {
+  display: grid;
+  grid-template-columns: auto minmax(60px,1fr);
+  align-items: center;
+  gap: 4px 12px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border: 1px solid #d3dbcc;
+  border-radius: 9px;
+  background: #f6f8ef;
+  font-size: .9rem;
+}
+.balloon-flight-count, .balloon-flight-names { margin: 0; }
+.balloon-flight-bar { width: 100%; height: .65rem; accent-color: #4d8f78; }
+.balloon-flight-names { grid-column: 1 / -1; overflow-wrap: anywhere; }
 #balloon-chart { margin-block: 8px; padding: 7px 10px; border: 1px solid #d3dbcc; border-radius: 9px; }
 #balloon-chart > summary { cursor: pointer; font-size: 1.05rem; font-weight: 700; }
 #balloon-chart .survey-results { border: 0; padding-inline: 0; }

@@ -1,4 +1,4 @@
-import {createBirthdayBalloonDeck} from './birthday-survey-data.js';
+import {birthdayBalloonParticipants,createBirthdayBalloonDeck} from './birthday-survey-data.js';
 import {chineseNumber,dateEnglish,datePart,englishNumber,line,numberPart,part,renderCopy} from './birthday-survey-language.js';
 import './birthday-balloons.css';
 
@@ -25,7 +25,31 @@ function dateCopy({month,day}) {
 
 export function mountBirthdayBalloons(root,onComplete) {
   let drawBatch, batch=[], index=0, timer, rosterKey;
+  let participants=[], flown;
+  const flownByClass=new Map();
   const animations=matchMedia('(prefers-reduced-motion: reduce)');
+  const footer=element('div','balloon-flight-progress');
+  const count=element('p','balloon-flight-count');
+  const bar=element('progress','balloon-flight-bar');
+  const names=element('p','balloon-flight-names');
+  count.setAttribute('aria-live','polite');
+  bar.setAttribute('aria-label','已放飞进度');
+  footer.hidden=true;
+  footer.append(count,bar,names);
+  root.after(footer);
+
+  function renderFlightProgress() {
+    const total=participants.length;
+    footer.hidden=!total;
+    if (!total) return;
+    const completed=participants.filter(({id})=>flown.has(id));
+    renderCopy(count,line(`Released ${englishNumber(completed.length)} of ${englishNumber(total)}`,
+      part('已放飞','yǐ fàngfēi'),part(' '),numberPart(completed.length),part(' / '),numberPart(total)));
+    bar.max=total;
+    bar.value=completed.length;
+    names.hidden=!completed.length;
+    names.textContent=completed.map(({name})=>name).join('、');
+  }
 
   function drawNextBatch() {
     batch=drawBatch();
@@ -100,6 +124,8 @@ export function mountBirthdayBalloons(root,onComplete) {
         scene.classList.add('balloon-flying');
         timer=setTimeout(()=>{
           const keepFocus=choices.contains(document.activeElement);
+          flown.add(round.id);
+          renderFlightProgress();
           index++;
           if (index===batch.length) showComplete(keepFocus);
           else renderRound(keepFocus);
@@ -118,6 +144,10 @@ export function mountBirthdayBalloons(root,onComplete) {
       if (rosterKey===nextKey) return;
       rosterKey=nextKey;
       clearTimeout(timer);
+      participants=birthdayBalloonParticipants(students,dates);
+      if (!flownByClass.has(groupId)) flownByClass.set(groupId,new Set());
+      flown=flownByClass.get(groupId);
+      renderFlightProgress();
       drawBatch=createBirthdayBalloonDeck(students,dates);
       drawNextBatch();
     },

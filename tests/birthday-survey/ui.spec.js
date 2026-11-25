@@ -39,6 +39,11 @@ test('Level Two uses the selected survey class, counts to three and flies a matc
   const dateLabels = ['十五','十六','十七','十八','十九','二十','二十一','二十二','二十三','二十四','二十五','二十六','二十七','二十八','二十九'];
   const name = page.locator('.balloon-name');
   const cue = page.locator('.balloon-cue');
+  const progress = page.getByRole('progressbar',{name:'已放飞进度'});
+  const flownNames = page.locator('.balloon-flight-names');
+  await expect(progress).toHaveAttribute('max','15');
+  await expect(progress).toHaveAttribute('value','0');
+  await expect(flownNames).toBeHidden();
   const matched = new Set();
   for (let round=0;round<5;round++) {
     const current = await name.textContent();
@@ -54,6 +59,7 @@ test('Level Two uses the selected survey class, counts to three and flies a matc
       await wrong.click();
       await expect(cue).toContainText('再试一次。');
       await expect(page.locator('.balloon-paired')).toHaveCount(0);
+      await expect(progress).toHaveAttribute('value','0');
     }
     await correct.click();
     await expect(page.locator('.balloon-paired')).toHaveCount(2);
@@ -67,17 +73,24 @@ test('Level Two uses the selected survey class, counts to three and flies a matc
       await expect(page.locator('.balloon-flying .balloon-paired')).toHaveCount(2);
     }
     await page.clock.runFor(2400);
+    await expect(progress).toHaveAttribute('value',String(round+1));
+    await expect(flownNames).toContainText(current);
   }
   const next = page.getByRole('button',{name:'换一批同学'});
   await expect(next).toBeVisible();
   await next.click();
   expect(matched.has(await name.textContent())).toBe(false);
+  await expect(progress).toHaveAttribute('value','5');
+  expect(new Set((await flownNames.textContent()).split('、'))).toEqual(matched);
   await page.setViewportSize({width:390,height:844});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await page.screenshot({path:testInfo.outputPath('balloons-phone.png')});
   await page.locator('#survey-class').selectOption('other');
   await expect(name).toHaveCount(0);
   await expect(page.locator('.balloon-empty')).toBeVisible();
+  await expect(progress).toBeHidden();
+  await page.locator('#survey-class').selectOption('fr');
+  await expect(progress).toHaveAttribute('value','5');
 });
 
 test('the lesson entry card shows language options and carries them into the survey',async({page})=>{
