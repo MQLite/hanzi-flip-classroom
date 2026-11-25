@@ -1,7 +1,7 @@
 import {ZHONGWEN_ID,PARADISE_ID,coursesForTextbook,stagesForTextbook} from './curriculum.js';
 import {ruby,gloss} from './ruby.js';
 import {CITY_TOUR_STAGES} from './city-tour-data.js';
-import {birthdayPreviewCopy,readSurveyTab,renderCopy,writeSurveyTab} from './birthday-survey-language.js';
+import {birthdayBalloonsPreviewCopy,birthdayPreviewCopy,readSurveyTab,renderCopy,writeSurveyTab} from './birthday-survey-language.js';
 
 // Scenario content is separate from character and vocabulary question banks.
 export const EXPLORATIONS=[{
@@ -22,6 +22,9 @@ export const EXPLORATIONS=[{
   id:'birthday-survey',source:'paradise',textbook:PARADISE_ID,stage:'2A',book:2,lesson:4,
   lessonTitle:'今天几月几号',title:'你的生日是几月几号？',href:'./birthday-survey.html',
   description:'选班级，拖入同学的生日。看看哪一个月过生日的人最多。',
+}, {
+  id:'birthday-balloons',source:'paradise',textbook:PARADISE_ID,stage:'2A',book:2,lesson:4,
+  lessonTitle:'今天几月几号',title:'生日气球',href:'./birthday-survey.html?activity=balloons',
 }, {
   id:'two-rivers',source:'zhongwen',textbook:ZHONGWEN_ID,stage:'2',book:2,lesson:12,
   lessonTitle:'江河',title:'长江与黄河',href:'./rivers.html',
@@ -47,7 +50,7 @@ export function explorationCourses(textbook){
   return courses;
 }
 
-function addBirthdayLanguageControls(card,content){
+function addBirthdayLanguageControls(card,content,root){
   const controls=document.createElement('div');
   controls.className='birthday-card-languages';
   const saved=readSurveyTab();
@@ -56,10 +59,14 @@ function addBirthdayLanguageControls(card,content){
     const label=document.createElement('label');
     const input=document.createElement('input');
     input.type='checkbox';
+    input.dataset.birthdayLanguage=key;
     input.checked=saved[key]===true;
     card.classList.toggle(className,input.checked);
     input.addEventListener('change',()=>{
-      card.classList.toggle(className,input.checked);
+      for (const other of root.querySelectorAll(`[data-birthday-language="${key}"]`)) {
+        other.checked=input.checked;
+        other.closest('.exploration-card').classList.toggle(className,input.checked);
+      }
       writeSurveyTab({...readSurveyTab(),[key]:input.checked});
     });
     label.append(input,text);
@@ -131,7 +138,16 @@ export function renderExplorations(root,selection,{urlForScenario}={}){
       for(const [key,node] of Object.entries({meta,title,description,tags,link})) renderCopy(node,birthdayPreviewCopy[key]);
       title.setAttribute('aria-label',scenario.title);
       link.setAttribute('aria-label','开始生日调查');
-      addBirthdayLanguageControls(card,content);
+      addBirthdayLanguageControls(card,content,root);
+    }else if(scenario.id==='birthday-balloons'){
+      card.classList.add('birthday-balloons-card');
+      art.classList.add('birthday-balloons-cover');
+      art.append(document.createElement('span'),document.createElement('span'));
+      for(const [key,node] of Object.entries({meta,title,description,link})) renderCopy(node,birthdayBalloonsPreviewCopy[key]);
+      tags.remove();
+      title.setAttribute('aria-label',scenario.title);
+      link.setAttribute('aria-label','开始生日气球');
+      addBirthdayLanguageControls(card,content,root);
     }else if(scenario.id==='two-rivers'){
       meta.textContent='中文（暨南大学版）· 第二册 · 第12课 江河';
       tags.textContent='长江 · 12 个生字　　黄河 · 12 个词语';

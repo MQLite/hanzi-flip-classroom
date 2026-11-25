@@ -11,6 +11,75 @@ const original = JSON.stringify({version:1,selectedClassId:'other',classes:[
 ]});
 const token = (page,part,value) => page.locator(`[data-date-token="${part}"][data-value="${value}"]`);
 
+test('Level Two uses the selected survey class, counts to three and flies a matched pair',async({page},testInfo)=>{
+  const saved = roster.slice(0,15).map(({id},index)=>[id,{month:2,day:index+15}]);
+  await page.addInitScript(({key,original,saved})=>{
+    localStorage.setItem(key,original);
+    for (const [id,date] of saved) localStorage.setItem(`hanzi-flip.birthday-survey.class.v1:fr:${id}`,JSON.stringify(date));
+  },{key,original,saved});
+  await page.goto('/?mode=explore&source=paradise&stage=2A&lesson=4');
+  await expect(page.getByRole('link',{name:'开始生日气球'})).toBeVisible();
+  await page.getByRole('link',{name:'开始生日调查'}).click();
+  await expect(page.locator('.survey-cylinder')).toHaveCount(15);
+  await page.getByRole('link',{name:'第二关 · 生日气球'}).click();
+  await expect(page.getByRole('heading',{name:'生日气球',exact:true})).toBeVisible();
+  await expect(page.locator('#survey-class')).toHaveValue('fr');
+  await expect(page.locator('#record')).toBeHidden();
+  await page.locator('#balloon-chart summary').click();
+  await expect(page.locator('.survey-cylinder')).toHaveCount(15);
+  await page.locator('#balloon-chart summary').click();
+  await page.locator('#survey-pinyin').check();
+  await page.locator('#survey-english').check();
+  await expect(page.locator('.balloon-date rt').first()).toBeVisible();
+  await expect(page.locator('.balloon-date [lang=en]').first()).toBeVisible();
+  await page.screenshot({path:testInfo.outputPath('balloons-projector.png')});
+  await page.locator('#survey-pinyin').uncheck();
+  await page.locator('#survey-english').uncheck();
+  await page.clock.install();
+  const dateLabels = ['十五','十六','十七','十八','十九','二十','二十一','二十二','二十三','二十四','二十五','二十六','二十七','二十八','二十九'];
+  const name = page.locator('.balloon-name');
+  const cue = page.locator('.balloon-cue');
+  const matched = new Set();
+  for (let round=0;round<5;round++) {
+    const current = await name.textContent();
+    const studentIndex = roster.findIndex(student=>student.name===current);
+    expect(studentIndex).toBeGreaterThanOrEqual(0);
+    expect(studentIndex).toBeLessThan(15);
+    expect(matched.has(current)).toBe(false);
+    matched.add(current);
+    const label = `二月${dateLabels[studentIndex]}号`;
+    const correct = page.getByRole('button',{name:label,exact:true});
+    if (round===0) {
+      const wrong = page.getByRole('group',{name:'选日期'}).getByRole('button',{name:new RegExp(`^(?!${label}$)`) });
+      await wrong.click();
+      await expect(cue).toContainText('再试一次。');
+      await expect(page.locator('.balloon-paired')).toHaveCount(0);
+    }
+    await correct.click();
+    await expect(page.locator('.balloon-paired')).toHaveCount(2);
+    if (round===0) {
+      await expect(cue).toContainText('一！',{useInnerText:true});
+      await page.clock.runFor(540);
+      await expect(cue).toContainText('二！',{useInnerText:true});
+      await page.clock.runFor(540);
+      await expect(cue).toContainText('三！',{useInnerText:true});
+      await page.clock.runFor(540);
+      await expect(page.locator('.balloon-flying .balloon-paired')).toHaveCount(2);
+    }
+    await page.clock.runFor(2400);
+  }
+  const next = page.getByRole('button',{name:'换一批同学'});
+  await expect(next).toBeVisible();
+  await next.click();
+  expect(matched.has(await name.textContent())).toBe(false);
+  await page.setViewportSize({width:390,height:844});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await page.screenshot({path:testInfo.outputPath('balloons-phone.png')});
+  await page.locator('#survey-class').selectOption('other');
+  await expect(name).toHaveCount(0);
+  await expect(page.locator('.balloon-empty')).toBeVisible();
+});
+
 test('the lesson entry card shows language options and carries them into the survey',async({page})=>{
   await page.setViewportSize({width:390,height:844});
   await page.goto('/?mode=explore&source=paradise&stage=2A&lesson=4');

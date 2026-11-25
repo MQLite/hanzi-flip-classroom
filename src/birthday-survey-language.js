@@ -104,6 +104,10 @@ const fixed = {
   map: line('Back to island map',part('← '),part('返回','fǎnhuí'),part('小岛地图','xiǎodǎo dìtú')),
   lesson: line('Chinese Paradise · Book Two, Part A · Lesson Four',part('汉语乐园','Hànyǔ Lèyuán'),part(' · '),part('第二册上','dì èr cè shàng'),part(' · '),part('第四课','dì sì kè')),
   question: line('When is your birthday?',part('你的','nǐ de'),part('生日','shēngrì'),part('是','shì'),part('几月几号？','jǐ yuè jǐ hào?')),
+  balloonsTitle: line('Birthday Balloons',part('生日','shēngrì'),part('气球','qìqiú')),
+  balloonsLink: line('Level Two · Birthday Balloons',part('第二关','dì èr guān'),part(' · '),part('生日','shēngrì'),part('气球','qìqiú')),
+  balloonChart: line('Look at the birthday chart',part('看','kàn'),part('生日图','shēngrì tú')),
+  surveyLink: line('Level One · Birthday Survey',part('第一关','dì yī guān'),part(' · '),part('生日调查','shēngrì diàochá')),
   jump: line('See the birthday chart',part('看','kàn'),part('生日统计','shēngrì tǒngjì'),part(' ↓')),
   teacher: line('Open the private teacher page',part('登录','dēnglù'),part('教师页','jiàoshī yè')),
   migrate: line('Move this browser’s records to the teacher page',part('迁移到','qiānyí dào'),part('教师页','jiàoshī yè')),
@@ -127,14 +131,20 @@ const fixed = {
 };
 
 export const birthdayPreviewCopy = {
-  meta: line('Chinese Paradise · Book Two, Part A · Lesson Four: What’s the date today?',
-    ...fixed.lesson.parts,part(' '),part('今天','jīntiān'),part('几月几号','jǐ yuè jǐ hào')),
+  meta: line('Lesson Four · Level One',part('第四课','dì sì kè'),part(' · '),part('第一关','dì yī guān')),
   title: fixed.question,
   description: line('Choose a class and drag in each birthday. Find out which month has the most birthdays.',
     part('选班级，','xuǎn bānjí,'),part('拖入','tuō rù'),part('同学的生日。','tóngxué de shēngrì.'),
     part('看看','kànkan'),part('哪一个月','nǎ yí ge yuè'),part('过生日的人最多。','guò shēngrì de rén zuì duō.')),
   tags: line('Class roster · Birthday chart',part('班级名单','bānjí míngdān'),part(' · '),part('生日统计','shēngrì tǒngjì')),
   link: line('Start the birthday survey',part('开始','kāishǐ'),part('生日调查','shēngrì diàochá')),
+};
+
+export const birthdayBalloonsPreviewCopy = {
+  meta: line('Lesson Four · Level Two',part('第四课','dì sì kè'),part(' · '),part('第二关','dì èr guān')),
+  title: fixed.balloonsTitle,
+  description: line('Read the date and match the balloons.',part('读日期，','dú rìqī,'),part('配气球。','pèi qìqiú.')),
+  link: line('Start Birthday Balloons',part('开始','kāishǐ'),part('生日气球','shēngrì qìqiú')),
 };
 
 export function renderStaticSurveyCopy(root,{onJourney=false}={}) {

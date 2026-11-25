@@ -1,0 +1,93 @@
+.survey-jump + .survey-jump { margin-inline-start: 18px; }
+.balloon-toolbar, #balloon-class { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.balloon-toolbar { justify-content: space-between; }
+#balloon-class label { font-weight: 650; }
+#balloon-class select { width: auto; max-width: 100%; }
+.balloon-toolbar a { color: #366455; }
+#birthday-balloon-game { padding-block: 8px; text-align: center; }
+.balloon-progress { margin: 8px 0; color: #48665b; }
+.survey .balloon-prompt {
+  margin: 8px 0 18px;
+  font-size: clamp(24px, 3vw, 40px);
+  overflow-wrap: anywhere;
+}
+.balloon-scene {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  align-items: center;
+  max-width: 860px;
+  margin: auto;
+  padding: 20px clamp(8px, 3vw, 35px) 34px;
+  gap: clamp(12px, 3vw, 30px);
+  overflow: hidden;
+  border: 1px solid #d1ded1;
+  border-radius: 18px;
+  background: radial-gradient(ellipse at 50% 36%,#fffdf3 20%,#e6efe1 100%);
+}
+.balloon-choices { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: clamp(9px,2vw,22px); }
+.birthday-balloon {
+  --balloon-fill: #f4dc9c;
+  --balloon-border: #aa8a4e;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1.08;
+  min-width: 0;
+  min-height: 125px;
+  max-width: 232px;
+  margin: 0 auto 12px;
+  padding: 12px 8px 17px;
+  border: 2px solid var(--balloon-border);
+  border-radius: 51% 51% 49% 49% / 46% 46% 56% 56%;
+  color: #243f38;
+  background: radial-gradient(ellipse at 30% 21%,#fff9 0%,transparent 49%),var(--balloon-fill);
+  box-shadow: inset -4px -7px 15px #45534415;
+  font-size: clamp(20px, 3vw, 39px);
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.balloon-name { --balloon-fill: #e8c8e4; --balloon-border: #987398; display: grid; place-items: center; }
+.balloon-date { container-type: inline-size; }
+.balloon-date-copy { display: block; font-size: clamp(19px,calc(93cqi / var(--date-length)),37px); }
+.balloon-date-copy ruby { white-space: nowrap; }
+.balloon-date:last-child { --balloon-fill: #c9e5df; --balloon-border: #6c9b8d; }
+.balloon-date:hover:not([aria-disabled="true"]) { background: radial-gradient(ellipse at 32% 24%,#fff 0%,transparent 72%),var(--balloon-fill); }
+.birthday-balloon::before, .birthday-balloon::after { content: ''; position: absolute; left: 50%; pointer-events: none; }
+.birthday-balloon::before {
+  top: 100%;
+  width: 12px;
+  height: 9px;
+  transform: translate(-50%, -2px);
+  background: var(--balloon-border);
+  clip-path: polygon(50% 0,100% 100%,0 100%);
+}
+.birthday-balloon::after {
+  top: calc(100% + 7px);
+  width: 10px;
+  height: 27px;
+  border-left: 1px solid #6d8074;
+  border-bottom-left-radius: 65%;
+}
+.balloon-date[aria-disabled="true"] { cursor: default; }
+.balloon-matched .balloon-date:not(.balloon-paired) { opacity: .38; }
+.balloon-matched .balloon-paired { outline: 3px solid #528773; outline-offset: -2px; }
+.balloon-flying .balloon-paired { animation: birthday-balloon-flight .75s ease-in both; }
+.balloon-cue { min-height: 3.4em; margin: 10px 0 0; font-size: clamp(18px,2.5vw,32px); font-weight: 650; }
+.balloon-next { margin-top: 10px; }
+#balloon-chart { margin-block: 8px; padding: 7px 10px; border: 1px solid #d3dbcc; border-radius: 9px; }
+#balloon-chart > summary { cursor: pointer; font-size: 1.05rem; font-weight: 700; }
+#balloon-chart .survey-results { border: 0; padding-inline: 0; }
+@keyframes birthday-balloon-flight {
+  0% { transform: translateY(0); opacity: 1; }
+  45% { opacity: 1; }
+  100% { transform: translateY(-115%); opacity: 0; }
+}
+@media (max-width: 600px) {
+  .balloon-scene { grid-template-columns: minmax(0,1fr); gap: 14px; }
+  .balloon-name { width: min(45%,180px); aspect-ratio: 1 / 1; margin-bottom: 23px; }
+  .balloon-cue { min-height: 2.8em; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .balloon-flying .balloon-paired { animation: none; opacity: 0; }
+}

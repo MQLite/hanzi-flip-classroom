@@ -14,8 +14,9 @@
         <label><input type="checkbox" id="survey-english"> 英语</label>
       </div>
       <p class="survey-lesson" data-survey-copy="lesson">汉语乐园 · 第二册上 · 第四课</p>
-      <h1 data-survey-copy="question" aria-label="你的生日是几月几号？">你的生日是几月几号？</h1>
-      <a class="survey-jump" href="#results-title" aria-label="看生日统计" data-survey-copy="jump">看生日统计 ↓</a>
+      <h1 id="birthday-title" data-survey-copy="question" aria-label="你的生日是几月几号？">你的生日是几月几号？</h1>
+      <a id="survey-chart-link" class="survey-jump" href="#results-title" aria-label="看生日统计" data-survey-copy="jump">看生日统计 ↓</a>
+      <a id="survey-balloons-link" class="survey-jump" href="./birthday-survey.html?activity=balloons" aria-label="第二关 · 生日气球" data-survey-copy="balloonsLink">第二关 · 生日气球</a>
       <div class="survey-teacher-tools">
         <a id="survey-teacher" target="_blank" rel="noopener" data-survey-copy="teacher">登录教师页</a>
         <button id="survey-migrate" type="button" data-survey-copy="migrate" disabled>迁移到教师页</button>
@@ -61,6 +62,16 @@
       </div>
     </section>
 
+    <section id="balloon-level" class="survey-panel" aria-labelledby="birthday-title" hidden>
+      <div class="balloon-toolbar">
+        <div id="balloon-class"></div>
+        <a id="balloon-survey-link" href="./birthday-survey.html" aria-label="第一关 · 生日调查" data-survey-copy="surveyLink">第一关 · 生日调查</a>
+      </div>
+      <details id="balloon-chart" hidden>
+        <summary data-survey-copy="balloonChart" aria-label="看生日图">看生日图</summary>
+      </details>
+      <div id="birthday-balloon-game"></div>
+    </section>
     <section id="results" class="survey-panel survey-results" aria-labelledby="results-title">
       <div class="survey-party-flags" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
       <div class="survey-section-heading">

@@ -1,6 +1,7 @@
 import {findBirthdayClass,groupBirthdays,monthLength,validBirthday} from './birthday-survey-data.js';
 import {createPrizeRecordStore, PRIZE_RECORD_KEY} from './prize-record-store.js';
 import {bindExplorationJourney} from './island-exploration.js';
+import {mountBirthdayBalloons} from './birthday-balloons.js';
 import {chineseNumber, classCount, dateEnglish, datePart, englishNumber, line, numberPart, part,
   progressCopy, readSurveyTab, renderCopy, renderStaticSurveyCopy, writeSurveyTab} from './birthday-survey-language.js';
 import './birthday-survey.css';
@@ -23,6 +24,7 @@ const element = (tag,text,className) => {
 };
 
 const saved = readSurveyTab();
+const balloonMode = new URLSearchParams(location.search).get('activity') === 'balloons';
 const tabDates = new Map();
 const dates = new Map();
 if (Array.isArray(saved.dates)) {
@@ -37,7 +39,8 @@ if (Array.isArray(saved.dates)) {
 let temporary = Array.isArray(saved.temporary) ? saved.temporary.filter(student =>
   typeof student?.id === 'string' && typeof student.name === 'string') : [];
 const classes = createPrizeRecordStore();
-const journey = bindExplorationJourney('birthday-survey');
+const journey = bindExplorationJourney(balloonMode ? 'birthday-balloons' : 'birthday-survey');
+const balloonGame = balloonMode ? mountBirthdayBalloons(get('birthday-balloon-game'),()=>journey.reportComplete()) : null;
 const select = get('survey-class');
 const roster = get('survey-roster');
 const status = get('survey-status');
@@ -82,6 +85,7 @@ function loadClassDates() {
     const date=groupId===manualClass ? tabDates.get(id) : readClassDate(groupId,id);
     if (date && validBirthday(date.month,date.day)) dates.set(id,date);
   }
+  balloonGame?.setRoster(groupId,students(),dates);
 }
 
 function saveDate(date) {
@@ -246,7 +250,7 @@ function renderChart() {
   const rows = Math.max(3,result.max);
   renderCopy(get('survey-result-progress'),progressCopy(result.recorded,all.length));
   get('survey-reveal').disabled = !result.recorded;
-  get('survey-finish').hidden = !revealed || !result.recorded;
+  get('survey-finish').hidden = balloonMode || !revealed || !result.recorded;
   get('survey-finish').disabled = finished;
   renderCopy(get('survey-finish'),finished ? line('Finished',part('调查完成','diàochá wánchéng')) : line('Finish the survey',part('完成调查','wánchéng diàochá')));
 
@@ -434,6 +438,31 @@ addTokens(get('survey-months'),'month',12);
 addTokens(get('survey-days'),'day',31);
 get('survey-student').setAttribute('aria-live','polite');
 get('survey-manual-names').value=temporary.map(student=>student.name).join('\n');
+const activityLink = new URL(location.href);
+activityLink.hash='';
+if (balloonMode) {
+  activityLink.searchParams.delete('activity');
+  if (journey.returnUrl) activityLink.searchParams.set('islandScenario','birthday-survey');
+  get('balloon-survey-link').href=activityLink.href;
+  get('record').hidden=true;
+  get('survey-balloons-link').hidden=true;
+  get('survey-migration-status').hidden=true;
+  document.querySelector('.survey-teacher-tools').hidden=true;
+  get('survey-chart-link').hidden=true;
+  get('birthday-title').dataset.surveyCopy='balloonsTitle';
+  get('birthday-title').setAttribute('aria-label','生日气球');
+  document.title='生日气球 · 汉语乐园 第二册上';
+  get('balloon-class').append(document.querySelector('label[for="survey-class"]'), select);
+  get('balloon-level').hidden=false;
+  get('balloon-chart').append(get('results'));
+  get('balloon-chart').hidden=false;
+  get('survey-reveal').hidden=true;
+  document.querySelector('.survey-sharing').hidden=true;
+} else {
+  activityLink.searchParams.set('activity','balloons');
+  if (journey.returnUrl) activityLink.searchParams.set('islandScenario','birthday-balloons');
+  get('survey-balloons-link').href=activityLink.href;
+}
 journey.decorate();
 renderStaticSurveyCopy(document,{onJourney:Boolean(journey.returnUrl)});
 applyLanguages();

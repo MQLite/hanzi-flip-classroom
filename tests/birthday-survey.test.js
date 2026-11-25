@@ -1,5 +1,5 @@
 import {expect,it} from 'vitest';
-import {findBirthdayClass, groupBirthdays, monthLength, validBirthday} from '../src/birthday-survey-data.js';
+import {createBirthdayBalloonDeck, findBirthdayClass, groupBirthdays, monthLength, validBirthday} from '../src/birthday-survey-data.js';
 import {chineseNumber, dateEnglish, datePart} from '../src/birthday-survey-language.js';
 
 it('writes Chinese dates, read-aloud counts and English ordinals without decimal digits',()=>{
@@ -31,4 +31,29 @@ it('accepts leap-day birthdays and excludes impossible or stale dates',()=>{
   expect(result.recorded).toBe(2);
   expect(result.leaders).toEqual([2,5]);
   expect(groupBirthdays(students,new Map()).leaders).toEqual([]);
+});
+
+it('uses the fifteen recorded birthdays in three batches without asking about the missing student',()=>{
+  const students = Array.from({length:16},(_,i)=>({id:String(i),name:`Student ${i+1}`}));
+  const dates = new Map(students.slice(0,15).map(({id},i)=>[id,{month:2,day:i+15}]));
+  const nextBatch = createBirthdayBalloonDeck(students,dates,()=>.75);
+  const batches = [nextBatch(),nextBatch(),nextBatch()];
+  expect(batches.map(batch=>batch.length)).toEqual([5,5,5]);
+  const rounds = batches.flat();
+  expect(new Set(rounds.map(({name})=>name))).toEqual(new Set(students.slice(0,15).map(({name})=>name)));
+  for (const {name,options,correctIndex} of rounds) {
+    const {id} = students.find(student=>student.name===name);
+    expect(options[correctIndex]).toEqual(dates.get(id));
+    expect(options[1-correctIndex]).not.toEqual(options[correctIndex]);
+  }
+  expect(nextBatch()).toHaveLength(5);
+});
+
+it('can offer two distinct valid dates when a class has only one recorded date',()=>{
+  const students = [{id:'a',name:'甲'},{id:'b',name:'乙'}];
+  const dates = new Map(students.map(({id})=>[id,{month:2,day:29}]));
+  const batch = createBirthdayBalloonDeck(students,dates,()=>0)();
+  expect(batch).toHaveLength(2);
+  for (const {options} of batch) expect(options).toEqual([{month:2,day:29},{month:2,day:28}]);
+  expect(createBirthdayBalloonDeck(students,new Map())()).toEqual([]);
 });

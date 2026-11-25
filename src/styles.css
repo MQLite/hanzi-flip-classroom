@@ -1825,9 +1825,42 @@ body:not(.workshop-mode) #restart { margin-left: auto; }
 .birthday-card-languages { display:flex; flex-wrap:wrap; gap:8px 12px; margin-bottom:12px; }
 .birthday-card-languages label { display:inline-flex; align-items:center; gap:7px; padding:5px 10px; border:1px solid #cddbc6; border-radius:8px; background:#fffef8; cursor:pointer; }
 .birthday-card-languages input { margin:0; accent-color:#275e51; }
-.birthday-survey-card:not(.birthday-card-pinyin) rt,
-.birthday-survey-card:not(.birthday-card-english) small[lang="en"] { display:none; }
-.birthday-survey-card rt { font-family:system-ui,sans-serif; font-size:.55em; }
+:is(.birthday-survey-card,.birthday-balloons-card):not(.birthday-card-pinyin) rt,
+:is(.birthday-survey-card,.birthday-balloons-card):not(.birthday-card-english) small[lang="en"] { display:none; }
+:is(.birthday-survey-card,.birthday-balloons-card) rt { font-family:system-ui,sans-serif; font-size:.55em; }
+.exploration-cover.birthday-balloons-cover {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:14px;
+  background:radial-gradient(ellipse at 42% 36%,#fff8df,#d9ecdf 75%);
+}
+.birthday-balloons-cover::before { display:none; }
+.birthday-balloons-cover span {
+  position:relative;
+  width:clamp(55px,9vw,94px);
+  aspect-ratio:1 / 1.12;
+  margin-bottom:35px;
+  border:1px solid #b78eae;
+  border-radius:52% 52% 48% 48% / 46% 46% 55% 55%;
+  background:radial-gradient(ellipse at 30% 25%,#ffffff90,transparent 45%),#eac4de;
+  transform:rotate(-14deg) translateY(6px);
+}
+.birthday-balloons-cover span:last-child {
+  border-color:#b49559;
+  background-color:#f5d990;
+  transform:rotate(13deg) translateY(-6px);
+}
+.birthday-balloons-cover span::after {
+  content:'';
+  position:absolute;
+  top:100%;
+  left:50%;
+  width:9px;
+  height:48px;
+  border-left:1px solid #6b8875;
+  border-bottom-left-radius:65%;
+}
 .exploration-enter{display:inline-flex;align-items:center;min-height:44px;justify-content:center;padding:12px 26px;text-decoration:none;border-radius:9px;font-weight:700;background:#314a3b;color:#fff6e3}
 .exploration-enter:hover{background:#49654b}
 .exploration-enter:focus-visible{outline:3px solid #9ba96a;outline-offset:4px}
