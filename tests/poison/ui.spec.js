@@ -103,6 +103,40 @@ test('Paradise 2A lesson 4 keeps all complete date cards selected and displays t
   await expect(page.getByRole('dialog',{name:'女巫被打败了！'})).toBeVisible();
 });
 
+test('long date cards use larger text and fit the projector board with pinyin on', async ({page}, testInfo) => {
+  await page.goto('/?mode=poison&source=paradise&stage=2A&lesson=4');
+  await prepare(page);
+  await page.locator('#pinyin').check();
+  const cards = page.locator('[data-poison-card]');
+  const mediumDate = cards.getByText('十一月十一号',{exact:true});
+  const longestDate = cards.getByText('十二月二十五号',{exact:true});
+  const layout = term => term.evaluate(node => {
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const card = node.closest('button').getBoundingClientRect();
+    const text = Array.from(range.getClientRects());
+    return {
+      size:parseFloat(getComputedStyle(node).fontSize),
+      lines:text.length,
+      inside:text.every(rect => rect.left>=card.left && rect.right<=card.right && rect.bottom<=card.bottom),
+    };
+  });
+  for (const [width,height,minMedium,minLongest] of [[1024,768,30,26],[1280,720,37,32],[1920,1080,39,34]]) {
+    await page.setViewportSize({width,height});
+    for (const [term,minSize] of [[mediumDate,minMedium],[longestDate,minLongest]]) {
+      const result = await layout(term);
+      expect(result.size).toBeGreaterThanOrEqual(minSize);
+      expect(result).toMatchObject({lines:1,inside:true});
+    }
+    await page.locator('.poison-grid').screenshot({path:testInfo.outputPath(`calendar-${width}.png`)});
+  }
+  await hide(page);
+  expect(await layout(longestDate)).toMatchObject({lines:1,inside:true});
+  await page.setViewportSize({width:390,height:844});
+  expect((await layout(longestDate)).inside).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
 test('all three classroom rounds read lesson cards, hide fresh poison and celebrate after the third round', async ({page}, testInfo) => {
   await page.setViewportSize({width:1280,height:720});
   await page.goto('/?mode=poison&source=zhongwen&stage=2&lesson=12');

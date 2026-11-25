@@ -19,7 +19,9 @@ const actionEnglish = {
 };
 function term(word,pinyin){
   const box=el('span',undefined,'poison-word'),han=el('strong',word.word,'poison-term');
-  han.style.setProperty('--poison-size',`${word.word.length<=2?32:word.word.length<=4?27:word.word.length<=8?21:17}px`);box.append(han);
+  const length=[...word.word].length;
+  han.style.setProperty('--poison-length',String(length));
+  han.style.setProperty('--poison-size',`${length<=2?32:length<=4?27:length<=8?21:17}px`);box.append(han);
   if(pinyin&&word.pinyin)box.append(el('small',word.pinyin,'poison-pinyin'));return box;
 }
 export function createPoisonView(host,dispatch){
