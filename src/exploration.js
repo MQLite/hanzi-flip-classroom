@@ -33,6 +33,10 @@ export const EXPLORATIONS=[{
   id:'room-escape',source:'zhongwen',textbook:ZHONGWEN_ID,stage:'1',book:1,lesson:3,
   lessonTitle:'识字（三）',title:'密室逃脱',href:'./room.html',
   description:'出口锁住了。读懂十二条汉字线索，跟猫咪找到钥匙，一起打开房门。',
+}, {
+  id:'birthday-calendar',source:'zhongwen',textbook:ZHONGWEN_ID,stage:'1',book:1,lesson:4,
+  lessonTitle:'识字（四）',title:'你的生日是几月几日？',href:'./birthday-calendar.html',
+  description:'依次说一说生日，再一起看班级的生日大日历。',
 }];
 
 export function matchingExplorations({source,stage,lesson}){
@@ -148,6 +152,14 @@ export function renderExplorations(root,selection,{urlForScenario}={}){
       title.setAttribute('aria-label',scenario.title);
       link.setAttribute('aria-label','开始生日气球');
       addBirthdayLanguageControls(card,content,root);
+    }else if(scenario.id==='birthday-calendar'){
+      meta.textContent='中文（暨南大学版）· 第一册 · 第4课 识字（四）';
+      tags.textContent='班级名单 · 十二个月的生日';
+      art.classList.add('birthday-calendar-cover');
+      const calendar=document.createElement('div');
+      for(let day=0;day<12;day++) calendar.append(document.createElement('span'));
+      art.append(calendar);
+      link.textContent='开始生日调查';
     }else if(scenario.id==='two-rivers'){
       meta.textContent='中文（暨南大学版）· 第二册 · 第12课 江河';
       tags.textContent='长江 · 12 个生字　　黄河 · 12 个词语';

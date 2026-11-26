@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>你的生日是几月几日？ · 中文第一册</title>
+</head>
+<body>
+  <main class="survey birthday-calendar">
+    <header class="survey-heading">
+      <a href="./?mode=explore&amp;source=zhongwen&amp;stage=1&amp;lesson=4" aria-label="返回情景探索">← 返回情景探索</a>
+      <div class="survey-language">
+        <label><input type="checkbox" id="calendar-pinyin"> 拼音</label>
+        <label><input type="checkbox" id="calendar-english"> 英语</label>
+      </div>
+      <p class="survey-lesson">《中文》暨南大学版 · 第一册 · 第四课 识字（四）</p>
+      <h1 id="calendar-title" aria-label="你的生日是几月几日？">你的生日是几月几日？</h1>
+    </header>
+
+    <div class="survey-panel calendar-toolbar">
+      <label for="calendar-class">班级 <select id="calendar-class"></select></label>
+      <div class="calendar-view-buttons">
+        <button id="calendar-record-view" type="button" aria-controls="calendar-record" aria-pressed="true">录入生日</button>
+        <button id="calendar-show-view" class="primary" type="button" aria-controls="calendar-display" aria-pressed="false">看大日历</button>
+      </div>
+      <p id="calendar-storage-note" role="status" class="calendar-storage-note" hidden></p>
+    </div>
+
+    <section class="survey-panel calendar-record" id="calendar-record" aria-label="录入生日">
+      <aside class="calendar-class-settings">
+        <details id="calendar-add-class" open>
+          <summary>添加班级</summary>
+          <form id="calendar-class-form">
+            <label for="calendar-class-name">班级名称</label>
+            <input id="calendar-class-name" required maxlength="80" autocomplete="off">
+            <button type="submit">保存班级</button>
+          </form>
+        </details>
+        <details id="calendar-add-students" hidden>
+          <summary>添加同学</summary>
+          <form id="calendar-students-form">
+            <label for="calendar-student-names">每行一个姓名</label>
+            <textarea id="calendar-student-names" rows="5" required></textarea>
+            <button type="submit">添加到本班</button>
+          </form>
+        </details>
+      </aside>
+      <div class="calendar-record-main">
+        <p id="calendar-record-empty"></p>
+        <form id="calendar-birthday-form" hidden>
+          <label for="calendar-student">现在请谁回答？</label>
+          <select id="calendar-student"></select>
+          <p id="calendar-answer-line" class="calendar-answer-line"></p>
+          <div class="calendar-date-fields">
+            <label for="calendar-month">月份 <select id="calendar-month" required></select></label>
+            <label for="calendar-day">日期 <select id="calendar-day" required></select></label>
+          </div>
+          <div class="calendar-view-buttons">
+            <button class="primary" id="calendar-save-birthday" type="submit">记录生日</button>
+            <button type="button" id="calendar-skip-student">下一位</button>
+          </div>
+        </form>
+        <p id="calendar-entry-status" class="calendar-entry-status" role="status"></p>
+        <p id="calendar-recorded-count"></p>
+      </div>
+    </section>
+
+    <section class="survey-panel" id="calendar-display" aria-labelledby="calendar-display-title" hidden>
+      <div class="calendar-display-heading">
+        <div><h2 id="calendar-display-title" tabindex="-1">班级生日大日历</h2><p id="calendar-display-count"></p></div>
+        <div class="calendar-view-buttons">
+          <button id="calendar-show-year" type="button" hidden>回全年</button>
+          <button id="calendar-finish" type="button" hidden>完成调查</button>
+        </div>
+      </div>
+      <div id="calendar-grid"></div>
+    </section>
+    <footer>班级名单和生日月日保存在当前浏览器里。</footer>
+  </main>
+  <script type="module" src="/src/birthday-calendar.js"></script>
+</body>
+</html>

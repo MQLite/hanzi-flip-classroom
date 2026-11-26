@@ -1,0 +1,73 @@
+import {expect,test} from '@playwright/test';
+
+test('lesson four lets the teacher enter birthdays in order and view a persistent calendar for each class',async({page},testInfo)=>{
+  await page.goto('/?mode=explore&source=zhongwen&stage=1&lesson=4');
+  await page.getByRole('link',{name:'开始生日调查'}).click();
+  await expect(page.getByRole('heading',{name:'你的生日是几月几日？'})).toBeVisible();
+
+  const classes=page.getByRole('combobox',{name:'班级',exact:true});
+  const records=page.getByRole('button',{name:'录入生日'});
+  const view=page.getByRole('button',{name:'看大日历'});
+  const classmates=page.getByLabel('现在请谁回答？');
+  const month=page.getByRole('combobox',{name:'月份',exact:true});
+  const day=page.getByRole('combobox',{name:'日期',exact:true});
+
+  async function addClass(name,names){
+    await records.click();
+    const settings=page.locator('#calendar-add-class');
+    if (!await settings.locator('form').isVisible()) {
+      await settings.locator('summary').click();
+    }
+    await page.getByLabel('班级名称').fill(name);
+    await page.getByRole('button',{name:'保存班级'}).click();
+    await expect(classes.locator('option:checked')).toHaveText(name);
+    await page.getByLabel('每行一个姓名').fill(names);
+    await page.getByRole('button',{name:'添加到本班'}).click();
+  }
+
+  async function recordBirthday(m,d){
+    await month.selectOption(String(m));
+    await day.selectOption(String(d));
+    await page.getByRole('button',{name:'记录生日',exact:true}).click();
+  }
+
+  await addClass('周六一班','小安\n小乐\n小雨');
+  await expect(classmates.locator('option:checked')).toHaveText('小安');
+  await recordBirthday(2,29);
+  await expect(classmates.locator('option:checked')).toHaveText('小乐');
+  await page.getByRole('button',{name:'下一位'}).click();
+  await expect(classmates.locator('option:checked')).toHaveText('小雨');
+  await recordBirthday(2,29);
+  await expect(classmates.locator('option:checked')).toHaveText('小乐');
+  await month.selectOption('4');
+  await expect(day.locator('option[value="31"]')).toHaveCount(0);
+  await recordBirthday(4,30);
+  await expect(page.locator('#calendar-recorded-count')).toHaveText(/已记录\s*三\s*人，共\s*三\s*人/,{useInnerText:true});
+
+  await view.click();
+  await expect(page.locator('.calendar-month-card')).toHaveCount(12);
+  await expect(page.getByRole('button',{name:'查看十二月日历'})).toBeInViewport();
+  await expect(page.locator('[data-month="2"] .calendar-birthday')).toContainText('二十九日');
+  await expect(page.locator('[data-month="2"] .calendar-person')).toHaveText('小安、小雨');
+  await expect(page.locator('[data-month="4"] .calendar-person')).toHaveText('小乐');
+  await page.screenshot({path:testInfo.outputPath('class-birthday-year.png')});
+  await page.getByRole('button',{name:'查看二月日历'}).click();
+  await expect(page.locator('.calendar-day-cell')).toHaveCount(29);
+  await expect(page.locator('[data-day="29"] .calendar-person')).toHaveText(['小安','小雨']);
+  await page.screenshot({path:testInfo.outputPath('class-birthday-month.png'),fullPage:true});
+
+  await addClass('周日二班','Amy');
+  await expect(classmates.locator('option:checked')).toHaveText('Amy');
+  await recordBirthday(8,5);
+  await view.click();
+  await expect(page.locator('.calendar-person')).toHaveText(['Amy']);
+  await classes.selectOption({label:'周六一班'});
+  await expect(page.locator('[data-month="2"] .calendar-person')).toHaveText('小安、小雨');
+  await page.reload();
+  await expect(classes.locator('option:checked')).toHaveText('周六一班');
+  await view.click();
+  await expect(page.locator('[data-month="4"] .calendar-person')).toHaveText('小乐');
+  await page.setViewportSize({width:390,height:844});
+  await page.getByRole('button',{name:'查看二月日历'}).click();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});

@@ -15,6 +15,7 @@ export default defineConfig({
         doudouTime: fileURLToPath(new URL('./doudou-time.html', import.meta.url)),
         clockStop: fileURLToPath(new URL('./clock-stop.html', import.meta.url)),
         birthdaySurvey: fileURLToPath(new URL('./birthday-survey.html', import.meta.url)),
+        birthdayCalendar: fileURLToPath(new URL('./birthday-calendar.html', import.meta.url)),
         rivers: fileURLToPath(new URL('./rivers.html', import.meta.url)),
         room: fileURLToPath(new URL('./room.html', import.meta.url)),
       },

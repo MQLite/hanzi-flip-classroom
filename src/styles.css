@@ -1861,6 +1861,27 @@ body:not(.workshop-mode) #restart { margin-left: auto; }
   border-left:1px solid #6b8875;
   border-bottom-left-radius:65%;
 }
+.exploration-cover.birthday-calendar-cover {
+  display:grid;
+  place-items:center;
+  background:radial-gradient(ellipse at 48% 35%,#fbf3d9,#dcecdf 80%);
+}
+.birthday-calendar-cover::before { display:none; }
+.birthday-calendar-cover > div {
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:clamp(4px,1vw,10px);
+  width:min(60%,220px);
+  padding:clamp(8px,1.5vw,16px);
+  border:2px solid #a0b5a0;
+  border-top:clamp(14px,2.8vw,29px) solid #528273;
+  border-radius:13px;
+  background:#fffdf4;
+  box-shadow:0 9px 14px #3a5b441c;
+}
+.birthday-calendar-cover span { aspect-ratio:1; border-radius:4px; background:#e6efe2; }
+.birthday-calendar-cover span:nth-child(5n + 2) { background:#e8c8e4; }
+.birthday-calendar-cover span:nth-child(5n + 4) { background:#f4dc9c; }
 .exploration-enter{display:inline-flex;align-items:center;min-height:44px;justify-content:center;padding:12px 26px;text-decoration:none;border-radius:9px;font-weight:700;background:#314a3b;color:#fff6e3}
 .exploration-enter:hover{background:#49654b}
 .exploration-enter:focus-visible{outline:3px solid #9ba96a;outline-offset:4px}
