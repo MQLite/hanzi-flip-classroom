@@ -14,7 +14,7 @@
         <label><input type="checkbox" id="calendar-english"> 英语</label>
       </div>
       <p class="survey-lesson">《中文》暨南大学版 · 第一册 · 第四课 识字（四）</p>
-      <h1 id="calendar-title" aria-label="你的生日是几月几日？">你的生日是几月几日？</h1>
+      <h1 id="calendar-title" data-calendar-copy="question" aria-label="你的生日是几月几日？">你的生日是几月几日？</h1>
     </header>
 
     <div class="survey-panel calendar-toolbar">
@@ -48,8 +48,8 @@
       <div class="calendar-record-main">
         <p id="calendar-record-empty"></p>
         <form id="calendar-birthday-form" hidden>
-          <label for="calendar-student">现在请谁回答？</label>
-          <select id="calendar-student"></select>
+          <label for="calendar-student" data-calendar-copy="answerer">现在请谁回答？</label>
+          <select id="calendar-student" aria-label="现在请谁回答？"></select>
           <p id="calendar-answer-line" class="calendar-answer-line"></p>
           <div class="calendar-date-fields">
             <label for="calendar-month">月份 <select id="calendar-month" required></select></label>
@@ -58,6 +58,7 @@
           <div class="calendar-view-buttons">
             <button class="primary" id="calendar-save-birthday" type="submit">记录生日</button>
             <button type="button" id="calendar-skip-student">下一位</button>
+            <button id="calendar-delete-birthday" class="calendar-delete-button" type="button" hidden>删除生日</button>
           </div>
         </form>
         <p id="calendar-entry-status" class="calendar-entry-status" role="status"></p>
@@ -75,7 +76,15 @@
       </div>
       <div id="calendar-grid"></div>
     </section>
-    <footer>班级名单和生日月日保存在当前浏览器里。</footer>
+    <dialog class="calendar-delete-dialog" id="calendar-delete-dialog" aria-labelledby="calendar-delete-title" aria-describedby="calendar-delete-message">
+      <h2 id="calendar-delete-title" data-calendar-copy="deleteTitle" aria-label="删除生日？">删除生日？</h2>
+      <p id="calendar-delete-message"></p>
+      <form method="dialog" class="calendar-view-buttons">
+        <button value="cancel" autofocus>取消</button>
+        <button class="calendar-delete-button" value="delete">确认删除</button>
+      </form>
+    </dialog>
+    <footer data-calendar-copy="footer">班级名单和生日日期保存在当前浏览器里。</footer>
   </main>
   <script type="module" src="/src/birthday-calendar.js"></script>
 </body>

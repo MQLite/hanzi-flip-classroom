@@ -1,4 +1,5 @@
 import {createBirthdayCalendarStore} from './birthday-calendar-store.js';
+import {birthdayCalendarShowsPinyin,calendarCopy,calendarNotice,setBirthdayCalendarPinyin} from './birthday-calendar-language.js';
 import {groupBirthdays,monthLength,validBirthday} from './birthday-survey-data.js';
 import {chineseNumber,dateEnglish,datePart,line,numberPart,part,progressCopy,readSurveyTab,renderCopy,writeSurveyTab} from './birthday-survey-language.js';
 import {bindExplorationJourney} from './island-exploration.js';
@@ -10,6 +11,7 @@ const journey=bindExplorationJourney('birthday-calendar');
 const get=id=>document.getElementById(id);
 const monthSelect=get('calendar-month'), daySelect=get('calendar-day'), studentSelect=get('calendar-student');
 const classSelect=get('calendar-class'), entryStatus=get('calendar-entry-status'), grid=get('calendar-grid');
+const deleteButton=get('calendar-delete-birthday'), deleteDialog=get('calendar-delete-dialog');
 const chineseMonth=month=>chineseNumber(month)+'月';
 const chineseDay=day=>chineseNumber(day)+'日';
 const classIn=(record,id)=>record.classes.find(group=>group.id===id);
@@ -17,6 +19,7 @@ const currentClass=()=>classIn(state,state.selectedClassId);
 const currentStudents=()=>currentClass()?.students ?? [];
 const monthOptions=Array.from({length:12},(_,i)=>new Option(chineseMonth(i+1),i+1));
 let state=store.refresh(), studentId='', displayMonth=0, showingCalendar=false;
+let deleteRequest;
 
 function make(tag,className,text) {
   const node=document.createElement(tag);
@@ -35,7 +38,7 @@ function showSentence() {
   const hasDate=validBirthday(month,day);
   renderCopy(get('calendar-answer-line'),line(
     hasDate ? `My birthday is on ${dateEnglish(month,'month')} ${dateEnglish(day,'day')}.` : 'My birthday is on …',
-    part('我的生日','wǒ de shēngrì'),part('是','shì'),
+    part('我的生日','Wǒ de shēngrì'),part('是','shì'),
     hasDate ? datePart(month,'month') : part('___月','yuè'),
     hasDate ? dayPart(day) : part('___日','rì'),part('。')));
   get('calendar-save-birthday').disabled=!hasDate;
@@ -56,6 +59,7 @@ function selectStudent(id) {
   studentSelect.value=studentId;
   monthSelect.value=student?.birthday?.month ?? '';
   drawDays(student?.birthday?.day);
+  deleteButton.hidden=!student?.birthday;
 }
 
 function nextStudent({unrecorded=false}={}) {
@@ -70,7 +74,7 @@ function renderRecord(roster,recorded) {
   get('calendar-add-students').hidden=!hasClass;
   get('calendar-birthday-form').hidden=!roster.length;
   get('calendar-record-empty').hidden=Boolean(roster.length);
-  get('calendar-record-empty').textContent=hasClass ? '添加同学后，就可以开始逐个录入生日。' : '先添加班级。';
+  renderCopy(get('calendar-record-empty'),hasClass ? calendarCopy.missingStudents : calendarCopy.missingClass);
   studentSelect.replaceChildren(...roster.map(student=>new Option(student.name,student.id)));
   const active=roster.find(student=>student.id===studentId) ?? roster.find(student=>!student.birthday) ?? roster[0];
   selectStudent(active?.id);
@@ -142,7 +146,7 @@ function renderCalendar(months) {
 function render() {
   const warning=store.warning();
   get('calendar-storage-note').hidden=!warning;
-  get('calendar-storage-note').textContent=warning;
+  if (warning) renderCopy(get('calendar-storage-note'),calendarNotice[warning]);
   classSelect.replaceChildren(
     ...state.classes.map(group=>new Option(group.name,group.id)));
   if (!state.classes.length) classSelect.add(new Option('请添加班级',''));
@@ -171,7 +175,7 @@ async function update(change,after=()=>{}) {
   } catch (error) {
     render();
     const notice=get('calendar-storage-note');
-    notice.textContent=error.message || '请重试。';
+    renderCopy(notice,calendarNotice[error.message] ?? calendarNotice.retry);
     notice.hidden=false;
   }
 }
@@ -211,7 +215,7 @@ get('calendar-students-form').addEventListener('submit',event=>{
   if (!names.length) return;
   update(record=>{
     const group=classIn(record,id);
-    if (!group) throw new Error('请重新选择班级。');
+    if (!group) throw new Error('missingClass');
     const existing=new Set(group.students.map(student=>student.name));
     for (const name of new Set(names)) {
       if (!existing.has(name)) group.students.push({id:crypto.randomUUID(),name,birthday:null});
@@ -234,11 +238,36 @@ get('calendar-birthday-form').addEventListener('submit',event=>{
   if (!student || !validBirthday(month,day)) return;
   update(record=>{
     const entry=classIn(record,id)?.students.find(item=>item.id===chosen);
-    if (!entry) throw new Error('请重新选择同学。');
+    if (!entry) throw new Error('missingStudent');
     entry.birthday={month,day};
   },()=>{
-    entryStatus.textContent=`${student.name} · ${chineseMonth(month)}${chineseDay(day)} 已记录。`;
+    renderCopy(entryStatus,line('',part(student.name+' · '),datePart(month,'month'),dayPart(day),part('已记录。','yǐ jìlù.')));
     studentId=nextStudent({unrecorded:true});
+  });
+});
+
+deleteButton.addEventListener('click',()=>{
+  const student=currentStudents().find(item=>item.id===studentId);
+  if (!student?.birthday) return;
+  deleteRequest={classId:state.selectedClassId,student};
+  renderCopy(get('calendar-delete-message'),line(`Delete the birthday for ${student.name}?`,
+    part('要删除','Yào shānchú'),part(' '+student.name+' '),part('的','de'),part('生日吗？','shēngrì ma?')));
+  deleteDialog.returnValue='';
+  deleteDialog.showModal();
+});
+
+deleteDialog.addEventListener('close',()=>{
+  const request=deleteRequest;
+  deleteRequest=undefined;
+  if (deleteDialog.returnValue!=='delete' || !request) return;
+  const {classId,student}=request;
+  update(record=>{
+    const entry=classIn(record,classId)?.students.find(item=>item.id===student.id);
+    if (!entry) throw new Error('missingStudent');
+    entry.birthday=null;
+  },()=>{
+    renderCopy(entryStatus,line('',part('已删除','Yǐ shānchú'),part(' '+student.name+' '),part('的','de'),part('生日。','shēngrì.')));
+    studentSelect.focus({preventScroll:true});
   });
 });
 
@@ -254,17 +283,23 @@ get('calendar-show-year').addEventListener('click',()=>{
 });
 get('calendar-finish').addEventListener('click',()=>journey.reportComplete());
 
-for (const [id,key,className] of [['calendar-pinyin','showPinyin','survey-show-pinyin'],['calendar-english','showEnglish','survey-show-english']]) {
-  const toggle=get(id);
-  toggle.checked=readSurveyTab()[key]===true;
-  document.body.classList.toggle(className,toggle.checked);
-  toggle.addEventListener('change',()=>{
-    document.body.classList.toggle(className,toggle.checked);
-    writeSurveyTab({...readSurveyTab(),[key]:toggle.checked});
-  });
-}
-renderCopy(get('calendar-title'),line('When is your birthday?',part('你的','nǐ de'),part('生日','shēngrì'),
-  part('是','shì'),part('几月几日？','jǐ yuè jǐ rì?')));
+const pinyinToggle=get('calendar-pinyin');
+pinyinToggle.checked=birthdayCalendarShowsPinyin();
+document.body.classList.toggle('survey-show-pinyin',pinyinToggle.checked);
+pinyinToggle.addEventListener('change',()=>{
+  document.body.classList.toggle('survey-show-pinyin',pinyinToggle.checked);
+  setBirthdayCalendarPinyin(pinyinToggle.checked);
+});
+
+const englishToggle=get('calendar-english');
+englishToggle.checked=readSurveyTab().showEnglish===true;
+document.body.classList.toggle('survey-show-english',englishToggle.checked);
+englishToggle.addEventListener('change',()=>{
+  document.body.classList.toggle('survey-show-english',englishToggle.checked);
+  writeSurveyTab({...readSurveyTab(),showEnglish:englishToggle.checked});
+});
+
+for (const node of document.querySelectorAll('[data-calendar-copy]')) renderCopy(node,calendarCopy[node.dataset.calendarCopy]);
 monthSelect.replaceChildren(new Option('选月份',''),...monthOptions);
 get('calendar-add-class').open=!currentClass();
 get('calendar-add-students').open=Boolean(currentClass())&&!currentStudents().length;

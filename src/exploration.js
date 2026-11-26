@@ -2,6 +2,7 @@ import {ZHONGWEN_ID,PARADISE_ID,coursesForTextbook,stagesForTextbook} from './cu
 import {ruby,gloss} from './ruby.js';
 import {CITY_TOUR_STAGES} from './city-tour-data.js';
 import {birthdayBalloonsPreviewCopy,birthdayPreviewCopy,readSurveyTab,renderCopy,writeSurveyTab} from './birthday-survey-language.js';
+import {birthdayCalendarShowsPinyin,calendarCopy} from './birthday-calendar-language.js';
 
 // Scenario content is separate from character and vocabulary question banks.
 export const EXPLORATIONS=[{
@@ -36,7 +37,6 @@ export const EXPLORATIONS=[{
 }, {
   id:'birthday-calendar',source:'zhongwen',textbook:ZHONGWEN_ID,stage:'1',book:1,lesson:4,
   lessonTitle:'识字（四）',title:'你的生日是几月几日？',href:'./birthday-calendar.html',
-  description:'依次说一说生日，再一起看班级的生日大日历。',
 }];
 
 export function matchingExplorations({source,stage,lesson}){
@@ -153,6 +153,11 @@ export function renderExplorations(root,selection,{urlForScenario}={}){
       link.setAttribute('aria-label','开始生日气球');
       addBirthdayLanguageControls(card,content,root);
     }else if(scenario.id==='birthday-calendar'){
+      card.classList.add('birthday-calendar-card');
+      card.classList.toggle('birthday-card-pinyin',birthdayCalendarShowsPinyin());
+      renderCopy(title,calendarCopy.question);
+      title.setAttribute('aria-label',scenario.title);
+      renderCopy(description,calendarCopy.intro);
       meta.textContent='中文（暨南大学版）· 第一册 · 第4课 识字（四）';
       tags.textContent='班级名单 · 十二个月的生日';
       art.classList.add('birthday-calendar-cover');

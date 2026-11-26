@@ -28,7 +28,7 @@ export function createBirthdayCalendarStore() {
       state=next;
     } catch (error) {
       memoryOnly=true;
-      warning=error instanceof SyntaxError ? '已有记录无法读取，本次修改暂存在这个页面。' : '浏览器储存无法使用，本次修改暂存在这个页面。';
+      warning=error instanceof SyntaxError ? 'unreadable' : 'unavailable';
     }
     return state;
   }
@@ -36,13 +36,13 @@ export function createBirthdayCalendarStore() {
     const commit=()=>{
       const next=structuredClone(refresh());
       change(next);
-      if (!validCalendar(next)) throw new Error('记录未能保存，请重试。');
+      if (!validCalendar(next)) throw new Error('invalidRecord');
       state=next;
       if (!memoryOnly) {
         try { localStorage.setItem(BIRTHDAY_CALENDAR_KEY,JSON.stringify(state)); }
         catch {
           memoryOnly=true;
-          warning='浏览器未能保存，本次修改暂存在这个页面。';
+          warning='unsaved';
         }
       }
       return state;

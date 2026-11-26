@@ -35,6 +35,19 @@
 .calendar-date-fields { margin-bottom: 12px; }
 .calendar-date-fields label { display: grid; gap: 4px; }
 .calendar-entry-status:empty { display: none; }
+.calendar-delete-button { color: #8a3633; border-color: #d9bdb7; }
+.calendar-delete-button:hover:not(:disabled) { background: #f8e9e3; border-color: #a65951; }
+.calendar-delete-dialog {
+  width: min(28rem, calc(100% - 32px));
+  padding: clamp(18px, 3vw, 28px);
+  border: 1px solid #c5d1c4;
+  border-radius: 16px;
+  background: #fffdf6;
+  color: #23463e;
+  overflow-wrap: anywhere;
+}
+.calendar-delete-dialog::backdrop { background: rgb(23 45 36 / .45); }
+.calendar-delete-dialog .calendar-view-buttons { justify-content: end; }
 .calendar-record-main #calendar-recorded-count, .calendar-display-heading p { margin: 8px 0 0; color: #50665a; }
 .calendar-display-heading { margin-bottom: 16px; }
 .calendar-display-heading h2 { overflow-wrap: anywhere; }
